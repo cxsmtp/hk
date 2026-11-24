@@ -1,7 +1,5 @@
 # Microsoft Foundry and Copilot Surfaces
 
-> Imported reference documentation from the selected original worktree. Prior deployment, version and test claims below are historical source context, not current acceptance. See [the collaboration README](../README.md) for verified results and remaining limits. Commands require an isolated, explicitly configured environment.
-
 
 Hawk treats Microsoft Foundry and Microsoft Copilot as first-class surfaces inside the existing AI Action Control Plane. They are not separate product modules.
 

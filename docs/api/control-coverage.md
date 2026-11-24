@@ -1,7 +1,5 @@
 # Control Coverage API and methodology
 
-> Imported reference documentation from the selected original worktree. Prior deployment, version and test claims below are historical source context, not current acceptance. See [the collaboration README](../../README.md) for verified results and remaining limits. Commands require an isolated, explicitly configured environment.
-
 
 Control Coverage answers how much of the AI activity Hawk has observed can be discovered, attributed, authorized before execution, and proved after execution. It is an operational control metric derived from tenant telemetry and Hawk evidence. It must not be used to estimate unobserved estate or as a substitute for risk severity.
 

@@ -91,7 +91,7 @@ def _definition(db, *, template_decision: str = "block", surfaces: list[str] | N
         default_rollout="MONITORING",
         exception_guidance="Use an exact, time-bound exception.",
         known_blind_spots=["No DOM-level claim without a verified browser control point."],
-        owner_publisher="trinya",
+        owner_publisher="hawk",
         release_notes="Initial controlled release.",
     )
 
@@ -125,7 +125,7 @@ def test_templates_are_typed_and_never_executable(tmp_path) -> None:
                             "decision": "block",
                         }
                     ],
-                    owner_publisher="trinya",
+                    owner_publisher="hawk",
                 )
     finally:
         engine.dispose()
@@ -654,7 +654,7 @@ def test_three_way_update_preserves_customer_overrides_bulk_assignment_and_tenan
                         "decision": "require_approval",
                     },
                 ],
-                owner_publisher="trinya",
+                owner_publisher="hawk",
             )
             comparison = compare_policy_pack_update(
                 db, tenant_id=tenant.id, instance_id=instance.id, new_definition_id=second.id

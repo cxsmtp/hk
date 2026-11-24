@@ -173,7 +173,7 @@ def main() -> int:
                 if report["postgres_timezone"] != "UTC" or report["postgres_unix_socket_directories"]:
                     raise RuntimeError("Owned PostgreSQL must use UTC and TCP-only private test connectivity")
         run("createdb", [tools["paths"]["createdb"], "-h", "127.0.0.1", "-p", str(pg_port),
-                         "-U", "hawk_local", "hawk_collaboration_test"])
+                         "-U", "hawk_local", "hawk_test"])
         redis_config = state / "redis.conf"
         redis_config.touch(mode=0o600)
         redis_config.write_text(f'bind 127.0.0.1\nprotected-mode yes\nport {redis_port}\ndir "{state}"\n'
@@ -194,9 +194,9 @@ def main() -> int:
         else:
             raise RuntimeError("Owned Redis identity/readiness did not pass")
         env.update({"HAWK_DISPOSABLE_TEST_ENV": "1",
-                    "DATABASE_URL": f"postgresql+psycopg2://hawk_local:{password}@127.0.0.1:{pg_port}/hawk_collaboration_test",
+                    "DATABASE_URL": f"postgresql+psycopg2://hawk_local:{password}@127.0.0.1:{pg_port}/hawk_test",
                     "REDIS_URL": f"redis://127.0.0.1:{redis_port}/0"})
-        command = [sys.executable, str(ROOT / "tools/collaboration/run_api_integration.py")]
+        command = [sys.executable, str(ROOT / "tools/dev/run_api_integration.py")]
         for option, enabled in (("--web", args.web or args.browser_smoke), ("--browser-smoke", args.browser_smoke), ("--serve", args.serve)):
             if enabled: command.append(option)
         if args.browser_executable:

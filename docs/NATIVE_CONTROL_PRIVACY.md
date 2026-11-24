@@ -1,7 +1,5 @@
 # Native Control Privacy
 
-> Imported reference documentation from the selected original worktree. Prior deployment, version and test claims below are historical source context, not current acceptance. See [the collaboration README](../README.md) for verified results and remaining limits. Commands require an isolated, explicitly configured environment.
-
 
 Native controls default to canonical metadata and hashes: action class, tool fingerprint, parameter/target/destination hashes, identity binding, timestamps, result classification, and evidence references.
 

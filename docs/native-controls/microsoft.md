@@ -1,7 +1,5 @@
 # Microsoft
 
-> Imported reference documentation from the selected original worktree. Prior deployment, version and test claims below are historical source context, not current acceptance. See [the collaboration README](../../README.md) for verified results and remaining limits. Commands require an isolated, explicitly configured environment.
-
 
 - Verified local capability: the exact Microsoft Agent Framework `1.15.0` Function middleware proof path verifies local Function-tool, parameter and target binding only. It does not verify a provider-native lifecycle, Foundry hosted model/runtime, hosted tools/MCP, APIM, or generic Microsoft-wide control surface.
 - Verified fallback: Hawk `gateway_inline` for Direct API, version `hawk-openai-compatible-v1`.

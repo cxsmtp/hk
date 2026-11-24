@@ -24,7 +24,7 @@ def test_repository_identity_normalizes_common_github_references_without_name_on
         "provider": "github",
         "host": "github.com",
         "organization_login": "ACME",
-        "repository_name": "trinya-corporate-code",
+        "repository_name": "hawk-corporate-code",
         "repository_id": "987654321",
         "node_id": "R_kgDOExample",
         "visibility": "private",
@@ -33,17 +33,17 @@ def test_repository_identity_normalizes_common_github_references_without_name_on
     }
 
     for value in (
-        "https://github.com/ACME/trinya-corporate-code",
-        "https://github.com/acme/trinya-corporate-code.git",
-        "git@github.com:ACME/trinya-corporate-code.git",
-        "ssh://git@github.com/ACME/trinya-corporate-code.git",
+        "https://github.com/ACME/hawk-corporate-code",
+        "https://github.com/acme/hawk-corporate-code.git",
+        "git@github.com:ACME/hawk-corporate-code.git",
+        "ssh://git@github.com/ACME/hawk-corporate-code.git",
     ):
         resolved = normalize_repository_reference(value, verified_repositories=[approved])
         assert resolved["matched_immutable_identity"] is True
         assert resolved["repository_id"] == "987654321"
 
     lookalike = normalize_repository_reference(
-        "https://github.com/ACM3/trinya-corporate-code",
+        "https://github.com/ACM3/hawk-corporate-code",
         verified_repositories=[approved],
     )
     assert lookalike["matched_immutable_identity"] is False
@@ -57,7 +57,7 @@ def test_strict_single_repository_boundary_allows_approved_repo_and_blocks_unapp
             "provider": "github",
             "host": "github.com",
             "organization_login": "ACME",
-            "repository_name": "trinya-corporate-code",
+            "repository_name": "hawk-corporate-code",
             "repository_id": "987654321",
             "node_id": "R_kgDOExample",
             "visibility": "private",
@@ -72,7 +72,7 @@ def test_strict_single_repository_boundary_allows_approved_repo_and_blocks_unapp
 
     allowed = decide_repository_boundary(
         policy,
-        repository_reference="https://github.com/acme/trinya-corporate-code.git",
+        repository_reference="https://github.com/acme/hawk-corporate-code.git",
         operation="REPOSITORY_PULL",
         branch="feature/demo",
         device_assurance="MANAGED_COMPLIANT",
@@ -93,7 +93,7 @@ def test_strict_single_repository_boundary_allows_approved_repo_and_blocks_unapp
 
     main_push = decide_repository_boundary(
         policy,
-        repository_reference="git@github.com:ACME/trinya-corporate-code.git",
+        repository_reference="git@github.com:ACME/hawk-corporate-code.git",
         operation="REPOSITORY_PUSH",
         branch="main",
         device_assurance="MANAGED_COMPLIANT",
@@ -110,7 +110,7 @@ def test_control_package_reports_requirement_traceability_and_no_fake_provider_c
             "provider": "github",
             "host": "github.com",
             "organization_login": "ACME",
-            "repository_name": "trinya-corporate-code",
+            "repository_name": "hawk-corporate-code",
             "repository_id": "987654321",
             "node_id": "R_kgDOExample",
             "visibility": "private",
@@ -179,7 +179,7 @@ def test_unmanaged_device_strict_account_policy_denies_access_when_download_cont
             "provider": "github",
             "host": "github.com",
             "organization_login": "ACME",
-            "repository_name": "trinya-corporate-code",
+            "repository_name": "hawk-corporate-code",
             "repository_id": "987654321",
             "node_id": "R_kgDOExample",
             "visibility": "private",
@@ -192,7 +192,7 @@ def test_unmanaged_device_strict_account_policy_denies_access_when_download_cont
 
     denied = decide_repository_boundary(
         policy,
-        repository_reference="https://github.com/acme/trinya-corporate-code",
+        repository_reference="https://github.com/acme/hawk-corporate-code",
         operation="REPOSITORY_PULL",
         branch="feature/demo",
         device_assurance="UNMANAGED",

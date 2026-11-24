@@ -23,7 +23,7 @@ test("accepts only the three named acceptance profiles", async () => {
       profile,
       ...(profile === "claude"
         ? {
-          repositoryScope: "github.com/dang070298/New-project-Hawki-ai-",
+          repositoryScope: "github.com/hawk-demo/governed-repo",
           keychainService: CLAUDE_KEYCHAIN_SERVICE,
           keychainAccount: CLAUDE_KEYCHAIN_ACCOUNT,
           sessionId: CLAUDE_SESSION_ID,
@@ -49,7 +49,7 @@ test("accepts only the three named acceptance profiles", async () => {
   assert.throws(
     () => buildLaunchConfig({
       profile: "claude",
-      repositoryScope: "github.com/dang070298/New-project-Hawki-ai-",
+      repositoryScope: "github.com/hawk-demo/governed-repo",
       capabilityTokenReader: () => "capability-from-keychain",
       keychainService: CLAUDE_KEYCHAIN_SERVICE,
       keychainAccount: CLAUDE_KEYCHAIN_ACCOUNT,
@@ -61,7 +61,7 @@ test("accepts only the three named acceptance profiles", async () => {
   assert.throws(
     () => buildLaunchConfig({
       profile: "claude",
-      repositoryScope: "github.com/dang070298/New-project-Hawki-ai-",
+      repositoryScope: "github.com/hawk-demo/governed-repo",
       sessionId: CLAUDE_SESSION_ID,
       capabilityTokenReader: () => "capability-from-keychain",
       ...paths(configPath),
@@ -162,7 +162,7 @@ test("Claude reads a capability token once and keeps it out of launch arguments"
   const capabilityToken = "capability-from-keychain";
   const launch = buildLaunchConfig({
     profile: "claude",
-    repositoryScope: "github.com/dang070298/New-project-Hawki-ai-",
+    repositoryScope: "github.com/hawk-demo/governed-repo",
     keychainService: CLAUDE_KEYCHAIN_SERVICE,
     keychainAccount: CLAUDE_KEYCHAIN_ACCOUNT,
     sessionId: CLAUDE_SESSION_ID,
@@ -192,7 +192,7 @@ test("Claude accepts exactly one terminal Keychain newline", async () => {
   for (const token of ["capability-lf\n", "capability-crlf\r\n"]) {
     const launch = buildLaunchConfig({
       profile: "claude",
-      repositoryScope: "github.com/dang070298/New-project-Hawki-ai-",
+      repositoryScope: "github.com/hawk-demo/governed-repo",
       keychainService: CLAUDE_KEYCHAIN_SERVICE,
       keychainAccount: CLAUDE_KEYCHAIN_ACCOUNT,
       sessionId: CLAUDE_SESSION_ID,
@@ -221,7 +221,7 @@ test("Claude rejects unavailable or malformed Keychain capability tokens", async
     assert.throws(
       () => buildLaunchConfig({
         profile: "claude",
-        repositoryScope: "github.com/dang070298/New-project-Hawki-ai-",
+        repositoryScope: "github.com/hawk-demo/governed-repo",
         keychainService: CLAUDE_KEYCHAIN_SERVICE,
         keychainAccount: CLAUDE_KEYCHAIN_ACCOUNT,
         sessionId: CLAUDE_SESSION_ID,
@@ -234,7 +234,7 @@ test("Claude rejects unavailable or malformed Keychain capability tokens", async
   assert.throws(
     () => buildLaunchConfig({
       profile: "claude",
-      repositoryScope: "github.com/dang070298/New-project-Hawki-ai-",
+      repositoryScope: "github.com/hawk-demo/governed-repo",
       keychainService: CLAUDE_KEYCHAIN_SERVICE,
       keychainAccount: CLAUDE_KEYCHAIN_ACCOUNT,
       sessionId: CLAUDE_SESSION_ID,
@@ -260,7 +260,7 @@ test("Claude requires bounded single-line Keychain references", async () => {
     assert.throws(
       () => buildLaunchConfig({
         profile: "claude",
-        repositoryScope: "github.com/dang070298/New-project-Hawki-ai-",
+        repositoryScope: "github.com/hawk-demo/governed-repo",
         ...refs,
         sessionId: CLAUDE_SESSION_ID,
         capabilityTokenReader: () => "capability-from-keychain",
@@ -288,7 +288,7 @@ test("Claude requires a bounded persisted session identifier", async () => {
     assert.throws(
       () => buildLaunchConfig({
         profile: "claude",
-        repositoryScope: "github.com/dang070298/New-project-Hawki-ai-",
+        repositoryScope: "github.com/hawk-demo/governed-repo",
         keychainService: CLAUDE_KEYCHAIN_SERVICE,
         keychainAccount: CLAUDE_KEYCHAIN_ACCOUNT,
         sessionId,
@@ -305,14 +305,14 @@ test("direct launcher parsing retains Claude Keychain references", () => {
   assert.deepEqual(
     launcher.parseLaunchArguments([
       "claude",
-      "--repository-scope", "github.com/dang070298/New-project-Hawki-ai-",
+      "--repository-scope", "github.com/hawk-demo/governed-repo",
       "--keychain-service", CLAUDE_KEYCHAIN_SERVICE,
       "--keychain-account", CLAUDE_KEYCHAIN_ACCOUNT,
       "--session-id", CLAUDE_SESSION_ID,
     ]),
     {
       profile: "claude",
-      repositoryScope: "github.com/dang070298/New-project-Hawki-ai-",
+      repositoryScope: "github.com/hawk-demo/governed-repo",
       keychainService: CLAUDE_KEYCHAIN_SERVICE,
       keychainAccount: CLAUDE_KEYCHAIN_ACCOUNT,
       sessionId: CLAUDE_SESSION_ID,
@@ -327,7 +327,7 @@ test("repository-scoped launch binds the proxy to one exact GitHub repository", 
 
   const launch = buildLaunchConfig({
     profile: "cli",
-    repositoryScope: "github.com/dang070298/New-project-Hawki-ai-",
+    repositoryScope: "github.com/hawk-demo/governed-repo",
     ...paths(configPath),
   });
 
@@ -337,8 +337,8 @@ test("repository-scoped launch binds the proxy to one exact GitHub repository", 
       "/test/hawk-mcp-proxy.mjs",
       "--endpoint-socket", "/test/agent.sock",
       "--endpoint-device-thumbprint", VALID_PIN,
-      "--server-id", "github-pull-requests--dang070298--new-project-hawki-ai-",
-      "--repository-scope", "github.com/dang070298/new-project-hawki-ai-",
+      "--server-id", "github-pull-requests--hawk-demo--governed-repo",
+      "--repository-scope", "github.com/hawk-demo/governed-repo",
       "--session-id", "github-pr-cli-20260809",
     ],
   );
@@ -346,7 +346,7 @@ test("repository-scoped launch binds the proxy to one exact GitHub repository", 
   assert.throws(
     () => buildLaunchConfig({
       profile: "cli",
-      repositoryScope: "github.com/dang070298/../other",
+      repositoryScope: "github.com/hawk-demo/../other",
       ...paths(configPath),
     }),
     /GitHub repository scope must be github\.com\/<owner>\/<repository>/i,

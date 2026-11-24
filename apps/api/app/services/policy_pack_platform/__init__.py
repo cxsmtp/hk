@@ -1,2 +1,2 @@
-"""Reusable configuration platform for typed Trinya policy packs."""
+"""Reusable configuration platform for typed Hawk policy packs."""
 

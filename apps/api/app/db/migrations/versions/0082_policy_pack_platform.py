@@ -36,7 +36,7 @@ def upgrade() -> None:
     op.create_table(
         "policy_pack_definitions",
         sa.Column("publisher_tenant_id", sa.String(36), sa.ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True),
-        sa.Column("publisher_ref", sa.String(128), nullable=False, server_default="trinya"),
+        sa.Column("publisher_ref", sa.String(128), nullable=False, server_default="hawk"),
         sa.Column("stable_pack_id", sa.String(128), nullable=False),
         sa.Column("version", sa.String(64), nullable=False),
         sa.Column("name", sa.String(255), nullable=False),
@@ -58,7 +58,7 @@ def upgrade() -> None:
         sa.Column("default_rollout", sa.String(32), nullable=False, server_default="MONITORING"),
         sa.Column("exception_guidance", sa.Text(), nullable=False, server_default=""),
         sa.Column("known_blind_spots", sa.JSON(), nullable=False, server_default=sa.text("'[]'")),
-        sa.Column("owner_publisher", sa.String(255), nullable=False, server_default="trinya"),
+        sa.Column("owner_publisher", sa.String(255), nullable=False, server_default="hawk"),
         sa.Column("release_notes", sa.Text(), nullable=False, server_default=""),
         sa.Column("state", sa.String(16), nullable=False, server_default="DRAFT"),
         sa.Column("id", sa.String(36), nullable=False),

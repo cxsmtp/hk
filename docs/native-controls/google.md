@@ -1,7 +1,5 @@
 # Google / Gemini
 
-> Imported reference documentation from the selected original worktree. Prior deployment, version and test claims below are historical source context, not current acceptance. See [the collaboration README](../../README.md) for verified results and remaining limits. Commands require an isolated, explicitly configured environment.
-
 
 - Gemini CLI native adapter: exact-version capability evidence exists for `0.54.4`; the adapter remains `experimental` and is not production eligible.
 - Verified on that exact binary: prompt/turn block, model-request block, tool, shell, file and benign MCP pre-action control, destination binding for the fixture MCP server, provider-reported post-tool correlation, tamper/bypass detection, signed callback authentication and replay rejection.

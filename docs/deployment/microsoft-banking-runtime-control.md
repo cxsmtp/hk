@@ -235,7 +235,7 @@ Secrets must remain in bank-controlled Key Vault/KMS/HSM or workload-identity ex
 ### Start and health
 
 ```bash
-cd "/Volumes/X10 Pro/New project/repo"
+cd "/opt/hawk"
 ./infra/scripts/hawk_demo_stack.sh up
 ./infra/scripts/hawk_demo_stack.sh status
 curl -fsS http://127.0.0.1:8000/health

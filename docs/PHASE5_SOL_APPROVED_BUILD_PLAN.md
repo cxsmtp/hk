@@ -856,7 +856,7 @@ IMPLEMENTATION_TASK {
       legacy-named manifest assigned only to WU-00I
     - .dockerignore, infra/Dockerfile.api, infra/docker-compose.demo.yml
   frozen_interfaces:
-    - exact context /Volumes/X10 Pro/New project/repo; Dockerfile
+    - exact context /opt/hawk; Dockerfile
       infra/Dockerfile.api; platform linux/arm64; tag hawk-api-demo:local
     - Buildx v0.36.0-desktop.1 metadata and history/attachment interfaces;
       SLSA provenance version v1 and mode max
@@ -1132,7 +1132,7 @@ IMPLEMENTATION_TASK
 ### Immutable PH5-WU-00I and PH5-WU-00M execution guards
 
 These are the only permitted guard commands and expected results. Run them
-from `/Volumes/X10 Pro/New project/repo` with `set -euo pipefail`. Any command
+from `/opt/hawk` with `set -euo pipefail`. Any command
 error, extra/missing row, or value mismatch is `BLOCKED`; there is no worker
 waiver. Commands must not print `.env` or credentials.
 
@@ -1144,7 +1144,7 @@ tag, retag, or replacement step. The immutable manifest's legacy filename does
 not alter that exclusive ownership.
 
 ```bash
-test "$PWD" = '/Volumes/X10 Pro/New project/repo'
+test "$PWD" = '/opt/hawk'
 test -z "${HAWK_BUILD_CONTEXT+x}"
 test -z "${DOCKERFILE+x}"
 test "$(uname -m)" = arm64
@@ -1195,8 +1195,8 @@ env -u HAWK_BUILD_CONTEXT -u DOCKERFILE BUILDX_METADATA_PROVENANCE=max \
   --platform linux/arm64 \
   --metadata-file /tmp/ph5-wu00i-build-metadata.json \
   --label io.hawk.phase5.build-input-manifest=a094565e294a2f8ff72672d018e0f156f4c196c9fb3e99cbd969dd59f5685ff1 \
-  --file '/Volumes/X10 Pro/New project/repo/infra/Dockerfile.api' \
-  --tag hawk-api-demo:local '/Volumes/X10 Pro/New project/repo'
+  --file '/opt/hawk/infra/Dockerfile.api' \
+  --tag hawk-api-demo:local '/opt/hawk'
 test -s /tmp/ph5-wu00i-build-metadata.json
 python3 - <<'PY'
 import hashlib, json, re
@@ -1570,7 +1570,7 @@ is `BLOCKED`; only PH5-M0-IMAGE can approve the captured exact values.
 
 ```bash
 test "$(docker inspect hawk-demo-db-1 --format '{{index .Config.Labels "com.docker.compose.project"}}|{{index .Config.Labels "com.docker.compose.project.config_files"}}|{{.Config.Image}}|{{range .Mounts}}{{.Name}}|{{.Destination}}|{{.Type}}{{end}}')" = \
-  'hawk-demo|/Volumes/X10 Pro/New project/repo/infra/docker-compose.demo.yml|postgres:16|hawk_demo_postgres_data|/var/lib/postgresql/data|volume'
+  'hawk-demo|/opt/hawk/infra/docker-compose.demo.yml|postgres:16|hawk_demo_postgres_data|/var/lib/postgresql/data|volume'
 test "$(docker volume inspect hawk_demo_postgres_data --format '{{.Name}}|{{.Driver}}|{{.CreatedAt}}')" = \
   'hawk_demo_postgres_data|local|2026-08-13T07:23:21Z'
 test "$(docker inspect hawk-demo-seed-demo-1 --format '{{.Id}}|{{.State.StartedAt}}|{{.State.ExitCode}}')" = \
@@ -1839,7 +1839,7 @@ SELECT 'post_open_transactions',count(*) FROM pg_stat_activity WHERE datname=cur
 SELECT 'post_prepared_transactions',count(*) FROM pg_prepared_xacts WHERE database=current_database();
 SQL
 test "$(docker inspect hawk-demo-db-1 --format '{{index .Config.Labels "com.docker.compose.project"}}|{{index .Config.Labels "com.docker.compose.project.config_files"}}|{{.Config.Image}}|{{range .Mounts}}{{.Name}}|{{.Destination}}|{{.Type}}{{end}}')" = \
-  'hawk-demo|/Volumes/X10 Pro/New project/repo/infra/docker-compose.demo.yml|postgres:16|hawk_demo_postgres_data|/var/lib/postgresql/data|volume'
+  'hawk-demo|/opt/hawk/infra/docker-compose.demo.yml|postgres:16|hawk_demo_postgres_data|/var/lib/postgresql/data|volume'
 test "$(docker volume inspect hawk_demo_postgres_data --format '{{.Name}}|{{.Driver}}|{{.CreatedAt}}')" = \
   'hawk_demo_postgres_data|local|2026-08-13T07:23:21Z'
 test "$(docker inspect hawk-demo-seed-demo-1 --format '{{.Id}}|{{.State.StartedAt}}|{{.State.ExitCode}}')" = \

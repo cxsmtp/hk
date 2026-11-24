@@ -1,7 +1,5 @@
 # HMAIR controlled-lab endpoint discovery runbook
 
-> Imported reference documentation from the selected original worktree. Prior deployment, version and test claims below are historical source context, not current acceptance. See [the collaboration README](../README.md) for verified results and remaining limits. Commands require an isolated, explicitly configured environment.
-
 
 ## Purpose and boundary
 
@@ -149,7 +147,7 @@ receipt; do not use a dashboard count as evidence of endpoint coverage.
 
 State the result as:
 
-> Trinya completed a metadata-only observation from one enrolled lab endpoint.
+> Hawk completed a metadata-only observation from one enrolled lab endpoint.
 > The result is limited to the declared local sources and does not represent
 > organisation-wide discovery or coverage of browser activity, MCP runtime,
 > LLM runtime, SaaS, cloud, identity, repositories, network, or databases.

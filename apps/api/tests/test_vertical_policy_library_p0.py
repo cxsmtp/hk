@@ -54,15 +54,15 @@ def test_vendor_catalog_covers_every_requested_vertical_with_unique_stable_ids()
         "real_estate": 17,
     } == {vertical: sum(spec["vertical"] == vertical for spec in specs) for vertical in {spec["vertical"] for spec in specs}}
     assert {
-        "trinya:bfsi-retail",
-        "trinya:insurance-underwriting",
-        "trinya:telecom-network-engineering",
-        "trinya:payments-merchant-onboarding",
-        "trinya:real-estate-sales",
-        "trinya:india-ai-governance",
-        "trinya:india-rbi-free-ai",
-        "trinya:india-sebi-ai-governance",
-        "trinya:agentic-ai-governance",
+        "hawk:bfsi-retail",
+        "hawk:insurance-underwriting",
+        "hawk:telecom-network-engineering",
+        "hawk:payments-merchant-onboarding",
+        "hawk:real-estate-sales",
+        "hawk:india-ai-governance",
+        "hawk:india-rbi-free-ai",
+        "hawk:india-sebi-ai-governance",
+        "hawk:agentic-ai-governance",
     } <= set(stable_ids)
     assert {"uai-001", "uai-018"} <= {template["template_id"] for spec in specs for template in spec["templates"]}
     assert all(spec["framework_mappings"].get("disclaimer") for spec in specs)
@@ -86,13 +86,13 @@ def test_catalog_seeds_typed_templates_and_rejects_unknown_reference_status(tmp_
             assert len(definitions) >= 80
             assert {row.vertical for row in definitions} >= {"universal", "india", "bfsi", "insurance", "telecom", "payments", "real_estate"}
             assert db.scalar(select(PolicyPackTemplate).where(PolicyPackTemplate.template_id == "uai-017")) is not None
-            assert db.scalar(select(PolicyPackDefinition).where(PolicyPackDefinition.stable_pack_id == "trinya:bfsi-retail")) is not None
+            assert db.scalar(select(PolicyPackDefinition).where(PolicyPackDefinition.stable_pack_id == "hawk:bfsi-retail")) is not None
 
             with pytest.raises(PolicyPackPlatformError, match="reference_mapping_status_invalid"):
                 create_policy_pack_definition(
                     db,
                     publisher_tenant_id=None,
-                    stable_pack_id="trinya:invalid-reference-status",
+                    stable_pack_id="hawk:invalid-reference-status",
                     version="1.0.0",
                     name="Invalid reference status",
                     description="Should not persist.",
@@ -124,21 +124,21 @@ def test_india_and_agentic_governance_framework_overlays_are_actionable_without_
 
     specs = {spec["stable_pack_id"]: spec for spec in vendor_policy_pack_specs()}
     expected = {
-        "trinya:india-ai-governance": {
+        "hawk:india-ai-governance": {
             "meity-india-ai-governance-guidelines-2025",
             "dpdp-act-2023",
             "dpdp-rules-2025",
         },
-        "trinya:india-rbi-free-ai": {
+        "hawk:india-rbi-free-ai": {
             "rbi-free-ai-2025",
             "rbi-it-governance-risk-controls-assurance-2023",
             "rbi-it-outsourcing-2023",
         },
-        "trinya:india-sebi-ai-governance": {
+        "hawk:india-sebi-ai-governance": {
             "sebi-ai-ml-reporting-2019",
             "sebi-cscrf-2024",
         },
-        "trinya:agentic-ai-governance": {
+        "hawk:agentic-ai-governance": {
             "imda-agentic-ai-governance-framework-2026",
             "imda-generative-ai-governance-framework-2024",
             "mitre-atlas",
@@ -171,9 +171,9 @@ def test_framework_atlas_groups_references_to_actionable_policy_pack_overlays(tm
             assert "rbi-free-ai-2025" in cards
             assert "meity-india-ai-governance-guidelines-2025" in cards
             assert "imda-agentic-ai-governance-framework-2026" in cards
-            assert "trinya:india-rbi-free-ai" in cards["rbi-free-ai-2025"]["policy_pack_stable_ids"]
-            assert "trinya:india-ai-governance" in cards["meity-india-ai-governance-guidelines-2025"]["policy_pack_stable_ids"]
-            assert "trinya:agentic-ai-governance" in cards["imda-agentic-ai-governance-framework-2026"]["policy_pack_stable_ids"]
+            assert "hawk:india-rbi-free-ai" in cards["rbi-free-ai-2025"]["policy_pack_stable_ids"]
+            assert "hawk:india-ai-governance" in cards["meity-india-ai-governance-guidelines-2025"]["policy_pack_stable_ids"]
+            assert "hawk:agentic-ai-governance" in cards["imda-agentic-ai-governance-framework-2026"]["policy_pack_stable_ids"]
             assert cards["rbi-free-ai-2025"]["recommended_action"] == "Preview pack, simulate, then apply in Draft or Monitor."
             assert cards["rbi-free-ai-2025"]["claim_boundary"] == "Informative mapping only; not a compliance certification."
             rbi = cards["rbi-free-ai-2025"]
@@ -232,7 +232,7 @@ def test_vertical_pack_compiles_inherited_and_local_templates_with_source_lineag
             from app.services.policy_pack_platform.service import apply_policy_pack, ensure_builtin_policy_pack_catalog
 
             ensure_builtin_policy_pack_catalog(db)
-            retail = db.scalar(select(PolicyPackDefinition).where(PolicyPackDefinition.stable_pack_id == "trinya:bfsi-retail"))
+            retail = db.scalar(select(PolicyPackDefinition).where(PolicyPackDefinition.stable_pack_id == "hawk:bfsi-retail"))
             assert retail is not None
             result = apply_policy_pack(
                 db,
@@ -249,10 +249,10 @@ def test_vertical_pack_compiles_inherited_and_local_templates_with_source_lineag
             rules = result.policy_version.scope["scoped_rules"]
             template_lineage = result.policy_version.contract_json["policy_pack_platform"]["template_lineage"]
             assert any(rule["metadata"]["policy_pack_platform"]["template_id"] == "uai-001" for rule in rules)
-            assert any(item["source_pack"] == "trinya:universal-baseline" for item in template_lineage)
-            assert any(item["source_pack"] == "trinya:bfsi-retail" for item in template_lineage)
-            assert result.instance.lineage["definition_lineage"][0]["stable_pack_id"] == "trinya:universal-baseline"
-            assert result.instance.lineage["definition_lineage"][-1]["stable_pack_id"] == "trinya:bfsi-retail"
+            assert any(item["source_pack"] == "hawk:universal-baseline" for item in template_lineage)
+            assert any(item["source_pack"] == "hawk:bfsi-retail" for item in template_lineage)
+            assert result.instance.lineage["definition_lineage"][0]["stable_pack_id"] == "hawk:universal-baseline"
+            assert result.instance.lineage["definition_lineage"][-1]["stable_pack_id"] == "hawk:bfsi-retail"
     finally:
         engine.dispose()
 
@@ -266,7 +266,7 @@ def test_inherited_template_customization_is_tenant_scoped_and_no_seeded_high_im
             from app.services.policy_pack_platform.service import apply_policy_pack, ensure_builtin_policy_pack_catalog
 
             ensure_builtin_policy_pack_catalog(db)
-            retail = db.scalar(select(PolicyPackDefinition).where(PolicyPackDefinition.stable_pack_id == "trinya:bfsi-retail"))
+            retail = db.scalar(select(PolicyPackDefinition).where(PolicyPackDefinition.stable_pack_id == "hawk:bfsi-retail"))
             assert retail is not None
             result = apply_policy_pack(
                 db,
@@ -302,7 +302,7 @@ def test_typed_customer_parameters_bind_only_declared_catalog_condition_values(t
             )
 
             ensure_builtin_policy_pack_catalog(db)
-            retail = db.scalar(select(PolicyPackDefinition).where(PolicyPackDefinition.stable_pack_id == "trinya:bfsi-retail"))
+            retail = db.scalar(select(PolicyPackDefinition).where(PolicyPackDefinition.stable_pack_id == "hawk:bfsi-retail"))
             assert retail is not None
             result = apply_policy_pack(
                 db,
@@ -361,7 +361,7 @@ def test_parent_publication_does_not_silently_change_an_applied_customer_instanc
             from app.services.policy_pack_platform.vendor_catalog import vendor_policy_pack_specs
 
             ensure_builtin_policy_pack_catalog(db)
-            retail = db.scalar(select(PolicyPackDefinition).where(PolicyPackDefinition.stable_pack_id == "trinya:bfsi-retail"))
+            retail = db.scalar(select(PolicyPackDefinition).where(PolicyPackDefinition.stable_pack_id == "hawk:bfsi-retail"))
             assert retail is not None
             applied = apply_policy_pack(
                 db,
@@ -376,7 +376,7 @@ def test_parent_publication_does_not_silently_change_an_applied_customer_instanc
                 requested_by_ref=f"user:{owner.id}",
             )
             prior_lineage = list(applied.instance.lineage["definition_lineage"])
-            baseline = next(spec for spec in vendor_policy_pack_specs() if spec["stable_pack_id"] == "trinya:universal-baseline")
+            baseline = next(spec for spec in vendor_policy_pack_specs() if spec["stable_pack_id"] == "hawk:universal-baseline")
             baseline["version"] = "1.0.1"
             create_policy_pack_definition(db, **baseline)
 
@@ -388,7 +388,7 @@ def test_parent_publication_does_not_silently_change_an_applied_customer_instanc
                 actor_ref=f"user:{owner.id}",
             )
             assert transitioned.lineage["definition_lineage"] == prior_lineage
-            assert next(item for item in prior_lineage if item["stable_pack_id"] == "trinya:universal-baseline")["version"] == "1.0.0"
+            assert next(item for item in prior_lineage if item["stable_pack_id"] == "hawk:universal-baseline")["version"] == "1.0.0"
     finally:
         engine.dispose()
 

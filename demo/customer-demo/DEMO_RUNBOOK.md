@@ -12,8 +12,8 @@ before the demonstration. Enter the Hawk owner password only in Terminal and
 never paste it into chat or slides.
 
 ```bash
-python3 "/Volumes/X10 Pro/New project/repo/demo/customer-demo/tools/hawk_refresh_github_demo_authority.py"
-python3 "/Volumes/X10 Pro/New project/repo/demo/customer-demo/tools/hawk_refresh_claude_demo_authority.py"
+python3 "/opt/hawk/demo/customer-demo/tools/hawk_refresh_github_demo_authority.py"
+python3 "/opt/hawk/demo/customer-demo/tools/hawk_refresh_claude_demo_authority.py"
 ```
 
 Each helper creates an approval-bound capability lasting up to 55 minutes. The Codex helper
@@ -48,7 +48,7 @@ Start a fresh Codex task after the short-lived authority has been created.
 ### Allowed corporate repository read
 
 ```text
-Use only the hawk-github-approved-repo-demo MCP server. List up to five open pull requests from dang070298/New-project-Hawki-ai-. Stop after the tool returns. Report only pull-request number, title, state, and URL, or the exact Hawk error.
+Use only the hawk-github-approved-repo-demo MCP server. List up to five open pull requests from hawk-demo/governed-repo. Stop after the tool returns. Report only pull-request number, title, state, and URL, or the exact Hawk error.
 ```
 
 Expected: the tool is advertised, its current fingerprint is approved, and the
@@ -69,7 +69,7 @@ This creates a real branch and pull request in the approved non-production
 repository. Do not merge it during the demonstration.
 
 ```text
-Use only the hawk-github-approved-repo-demo MCP server and only the repository dang070298/New-project-Hawki-ai-. Create a branch named hawk-governed-demo-20260911. On that branch create docs/hawk-governed-demo.md with exactly these two lines:
+Use only the hawk-github-approved-repo-demo MCP server and only the repository hawk-demo/governed-repo. Create a branch named hawk-governed-demo-20260911. On that branch create docs/hawk-governed-demo.md with exactly these two lines:
 # Hawk governed repository demo
 Documentation-only test. No production behavior changed.
 Then open a pull request to the repository's default branch titled "Hawk governed repository boundary demo" with body "Documentation-only governed MCP demonstration. Do not merge." Do not merge, close, or modify anything else. Return the branch name and pull-request URL, or the exact Hawk error.
@@ -86,7 +86,7 @@ configuration.
 
 Paste the two Codex Desktop prompts above, in this order:
 
-1. allowed read in `dang070298/New-project-Hawki-ai-`;
+1. allowed read in `hawk-demo/governed-repo`;
 2. blocked read in `github/github-mcp-server`.
 
 Do not repeat the PR-creation prompt if the desktop test already created the PR.
@@ -101,7 +101,7 @@ Open **Settings → Developer → Local MCP servers** and confirm
 ### Allowed read
 
 ```text
-Use only the hawk-github-pr-claude MCP server. List up to five open pull requests from dang070298/New-project-Hawki-ai-. Stop after the tool returns. Report only pull-request number, title, state, and URL, or the exact Hawk error.
+Use only the hawk-github-pr-claude MCP server. List up to five open pull requests from hawk-demo/governed-repo. Stop after the tool returns. Report only pull-request number, title, state, and URL, or the exact Hawk error.
 ```
 
 ### Blocked mismatch

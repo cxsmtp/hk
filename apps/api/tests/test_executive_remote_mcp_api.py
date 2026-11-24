@@ -13,7 +13,7 @@ from apps.api.app.services.executive_remote_mcp_service import (
 def test_remote_mcp_metadata_is_connector_friendly_and_truthful() -> None:
     metadata = build_executive_remote_mcp_metadata()
 
-    assert metadata["name"] == "trinya-executive-remote-mcp"
+    assert metadata["name"] == "hawk-executive-remote-mcp"
     assert metadata["transport"] == "streamable-http"
     assert metadata["auth"]["type"] == "bearer"
     assert metadata["auth"]["tenant_header"] == "X-Tenant-ID"

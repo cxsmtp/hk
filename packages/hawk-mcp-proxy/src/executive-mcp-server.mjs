@@ -100,7 +100,7 @@ export class ExecutiveMcpServer {
           protocolVersion: "2024-11-05",
           capabilities: { tools: {} },
           serverInfo: {
-            name: "trinya-executive-mcp",
+            name: "hawk-executive-mcp",
             version: "0.1.0",
           },
         },

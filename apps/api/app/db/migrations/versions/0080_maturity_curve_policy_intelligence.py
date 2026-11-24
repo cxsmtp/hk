@@ -1,4 +1,4 @@
-"""Add Trinya maturity curve and policy-intelligence persistence.
+"""Add Hawk maturity curve and policy-intelligence persistence.
 
 Revision ID: 0080_maturity_curve_policy_intelligence
 Revises: 0079_instruction_tool_provenance_integration

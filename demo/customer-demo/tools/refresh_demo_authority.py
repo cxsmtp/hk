@@ -20,7 +20,7 @@ from pathlib import Path
 API = os.environ.get("HAWK_API_BASE", "http://127.0.0.1:8000").rstrip("/")
 AGENT_ID = "f97765af-0679-4ed2-97c8-eb928b79b710"
 AI_SYSTEM_ID = "e9625bdf-653d-48da-8757-6c9a4ebf34a3"
-REPOSITORY = "github.com/dang070298/New-project-Hawki-ai-"
+REPOSITORY = "github.com/hawk-demo/governed-repo"
 TOOLS = [
     "list_pull_requests",
     "pull_request_read",

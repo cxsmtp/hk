@@ -1,7 +1,5 @@
 # Azure AI Foundry
 
-> Imported reference documentation from the selected original worktree. Prior deployment, version and test claims below are historical source context, not current acceptance. See [the collaboration README](../../README.md) for verified results and remaining limits. Commands require an isolated, explicitly configured environment.
-
 
 - Verified native capability: None for AI Foundry; native lifecycle enforcement is `unverified`.
 - Verified fallback: Hawk `gateway_inline` for Direct API, version `hawk-openai-compatible-v1`.

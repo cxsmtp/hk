@@ -431,7 +431,7 @@ export function DiscoveryScanOperations() {
             <div>
               <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-violet-200/75">Production control · preflight first</p>
               <h2 className="mt-1 text-sm font-semibold text-white">Production Deep Scan</h2>
-              <p className="mt-1 max-w-4xl text-[11px] leading-5 text-slate-400">Use the selected registered targets and collectors below. A connected adapter is not coverage. This release produces a bounded result for selected sources only; Trinya cannot claim organization-wide coverage until every authorized surface has reconciled completion evidence.</p>
+              <p className="mt-1 max-w-4xl text-[11px] leading-5 text-slate-400">Use the selected registered targets and collectors below. A connected adapter is not coverage. This release produces a bounded result for selected sources only; Hawk cannot claim organization-wide coverage until every authorized surface has reconciled completion evidence.</p>
             </div>
           </div>
           <TruthBadge value="bounded partial" />
@@ -460,7 +460,7 @@ export function DiscoveryScanOperations() {
           {deepScanPreflight.required_gaps.length ? <div className="mt-3 rounded-lg border border-amber-300/15 bg-amber-300/[0.03] p-2 text-[10px] leading-4 text-amber-100/85"><strong>Required source gaps:</strong> {deepScanPreflight.required_gaps.map(formatDiscoveryLabel).join(" · ")}. Not connected sources remain gaps; they are never treated as no AI activity.</div> : null}
         </div> : null}
         {deepScanCoverage ? <div className="mt-4 rounded-xl border border-cyan-300/15 bg-cyan-300/[0.025] p-3"><p className="font-mono text-[9px] uppercase tracking-[0.16em] text-cyan-100/80">Selected Deep Scan source coverage</p><div className="mt-2 grid gap-2 xl:grid-cols-2">{deepScanCoverage.sources.map((source) => <div key={`${source.target_id}-${source.collector_id}`} className="rounded-lg border border-white/[0.06] bg-black/10 p-2.5"><div className="flex items-center justify-between gap-2"><p className="text-[11px] text-slate-200">{formatDiscoveryLabel(source.target_type)}</p><TruthBadge value={source.coverage_state} /></div><p className="mt-1 font-mono text-[9px] text-slate-600">Observed {source.observed_count} / {source.expected_count ?? "unknown"} · {formatDiscoveryLabel(source.readiness)}</p>{source.reason ? <p className="mt-1 text-[10px] text-amber-100/75">{formatDiscoveryLabel(source.reason)}</p> : null}</div>)}</div></div> : null}
-        <p className="mt-4 text-[10px] leading-4 text-slate-600">Not connected means Trinya has no authorized, current evidence path for that source. It does not mean the organization has no AI use there.</p>
+        <p className="mt-4 text-[10px] leading-4 text-slate-600">Not connected means Hawk has no authorized, current evidence path for that source. It does not mean the organization has no AI use there.</p>
       </section>
 
       <div className="mt-4 grid gap-4 2xl:grid-cols-[1.1fr_0.9fr]">

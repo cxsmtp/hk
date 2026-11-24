@@ -1,7 +1,5 @@
 # Deployment Quick Starts
 
-> Imported reference documentation from the selected original worktree. Prior deployment, version and test claims below are historical source context, not current acceptance. See [the collaboration README](../README.md) for verified results and remaining limits. Commands require an isolated, explicitly configured environment.
-
 
 This document defines the approved onboarding contract for Browser, Endpoint, Runtime, and SaaS & APIs deployments. Quick starts reuse existing integration, gateway, endpoint, browser, and setup actions. They do not create a new gateway, collector system, policy engine, event pipeline, or dashboard.
 

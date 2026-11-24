@@ -5,9 +5,9 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: hawk_collaboration_test
+      POSTGRES_DB: hawk_test
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d hawk_collaboration_test"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d hawk_test"]
       interval: 3s
       timeout: 3s
       retries: 30
@@ -27,7 +27,7 @@ services:
       target: test
     environment:
       HAWK_DISPOSABLE_TEST_ENV: "1"
-      DATABASE_URL: "postgresql+psycopg2://postgres:postgres@db:5432/hawk_collaboration_test"
+      DATABASE_URL: "postgresql+psycopg2://postgres:postgres@db:5432/hawk_test"
       REDIS_URL: "redis://redis:6379/0"
       RUNNER_TEMP: /test-results
     depends_on:
@@ -35,7 +35,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: ["python", "/workspace/tools/collaboration/run_api_integration.py"]
+    command: ["python", "/workspace/tools/dev/run_api_integration.py"]
     volumes:
       - test-results:/test-results
 volumes:

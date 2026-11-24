@@ -126,8 +126,8 @@ codex mcp add hawk-demo \
   --env HAWK_SESSION_ID=codex-demo-block-session \
   --env HAWK_MCP_LAB_DIR=/private/tmp/hawk-mcp-terminal-lab-codex-demo \
   --env HAWK_MCP_STDIO_FRAMING=ndjson \
-  -- /usr/local/bin/node "/Volumes/X10 Pro/New project/repo/packages/hawk-mcp-proxy/bin/hawk-mcp-proxy.mjs" \
-  -- /usr/local/bin/node "/Volumes/X10 Pro/New project/repo/packages/hawk-mcp-proxy/examples/manual-terminal/manual-mcp-server.mjs"
+  -- /usr/local/bin/node "/opt/hawk/packages/hawk-mcp-proxy/bin/hawk-mcp-proxy.mjs" \
+  -- /usr/local/bin/node "/opt/hawk/packages/hawk-mcp-proxy/examples/manual-terminal/manual-mcp-server.mjs"
 
 codex mcp list
 ```
@@ -165,7 +165,7 @@ codex mcp add hawk-endpoint \
   --env HAWK_MCP_SERVER_ID=filesystem \
   --env HAWK_SESSION_ID=codex-endpoint-session \
   --env HAWK_MCP_STDIO_FRAMING=ndjson \
-  -- /usr/local/bin/node "/Volumes/X10 Pro/New project/repo/packages/hawk-mcp-proxy/bin/hawk-mcp-proxy.mjs" \
+  -- /usr/local/bin/node "/opt/hawk/packages/hawk-mcp-proxy/bin/hawk-mcp-proxy.mjs" \
   -- /path/to/the/real/mcp-server command-argument
 ```
 

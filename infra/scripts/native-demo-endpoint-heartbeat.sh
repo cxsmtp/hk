@@ -3,22 +3,22 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-TRINYA_API="${TRINYA_API:-http://127.0.0.1:8000}"
+HAWK_EXEC_API="${HAWK_EXEC_API:-http://127.0.0.1:8000}"
 
-if [[ -z "${TRINYA_EMAIL:-}" ]]; then
-  read -r -p "Trinya owner/admin email: " TRINYA_EMAIL
+if [[ -z "${HAWK_EXEC_EMAIL:-}" ]]; then
+  read -r -p "Hawk owner/admin email: " HAWK_EXEC_EMAIL
 fi
-if [[ -z "${TRINYA_PASSWORD:-}" ]]; then
-  read -r -s -p "Trinya password: " TRINYA_PASSWORD
+if [[ -z "${HAWK_EXEC_PASSWORD:-}" ]]; then
+  read -r -s -p "Hawk password: " HAWK_EXEC_PASSWORD
   echo
 fi
 
 login_json="$(
-  printf '{"email":"%s","password":"%s"}' "$TRINYA_EMAIL" "$TRINYA_PASSWORD" |
+  printf '{"email":"%s","password":"%s"}' "$HAWK_EXEC_EMAIL" "$HAWK_EXEC_PASSWORD" |
     curl --silent --show-error --fail-with-body \
       -H 'Content-Type: application/json' \
       --data-binary @- \
-      "$TRINYA_API/auth/login"
+      "$HAWK_EXEC_API/auth/login"
 )"
 
 tenant_id="$(
@@ -33,10 +33,10 @@ token="$(
 device_id="$(hostname | tr -c 'A-Za-z0-9._:-' '-')-local-native-demo"
 
 python3 "$REPO_ROOT/infra/scripts/endpoint_agent.py" \
-  --api-url "$TRINYA_API" \
+  --api-url "$HAWK_EXEC_API" \
   --tenant-id "$tenant_id" \
   --token "$token" \
-  --user-id "$TRINYA_EMAIL" \
+  --user-id "$HAWK_EXEC_EMAIL" \
   --device-id "$device_id" \
   --location "local-native-demo" \
   --allow-local-http-api \

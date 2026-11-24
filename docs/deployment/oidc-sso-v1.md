@@ -1,7 +1,5 @@
 # OIDC SSO v1 deployment note
 
-> Imported reference documentation from the selected original worktree. Prior deployment, version and test claims below are historical source context, not current acceptance. See [the collaboration README](../../README.md) for verified results and remaining limits. Commands require an isolated, explicitly configured environment.
-
 
 Hawk’s v1 enterprise sign-in supports configuration-backed authorization-code
 PKCE for one tenant-specific Microsoft Entra ID authority and one Okta issuer.

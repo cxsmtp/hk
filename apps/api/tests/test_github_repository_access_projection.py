@@ -173,7 +173,7 @@ def test_developer_ai_setup_projection_normalizes_repo_client_decision_and_evide
         host="github.com",
         external_repository_id="R_personal",
         node_id="NODE_personal",
-        full_name="dang070298/personal-test",
+        full_name="hawk-demo/personal-test",
         visibility="private",
         lifecycle_state="ACTIVE",
         default_branch="main",
@@ -217,7 +217,7 @@ def test_developer_ai_setup_projection_normalizes_repo_client_decision_and_evide
         ai_connections=[connection],
         unauthorized_attempts=[
             {
-                "repository": "dang070298/personal-test",
+                "repository": "hawk-demo/personal-test",
                 "operation": "REPOSITORY_PULL_REQUEST_CREATE",
                 "tool": "create_pull_request",
                 "decision": "BLOCK",
@@ -227,7 +227,7 @@ def test_developer_ai_setup_projection_normalizes_repo_client_decision_and_evide
     )
 
     assert projection["approved_repository"]["full_name"] == "acme/approved-app"
-    assert projection["blocked_repository"]["full_name"] == "dang070298/personal-test"
+    assert projection["blocked_repository"]["full_name"] == "hawk-demo/personal-test"
     assert projection["ai_clients"][0]["ai_client"] == "Claude Code"
     assert projection["ai_clients"][0]["provider"] == "anthropic"
     assert projection["ai_clients"][0]["model"] == "claude-sonnet-4.6"

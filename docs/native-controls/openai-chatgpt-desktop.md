@@ -1,7 +1,5 @@
 # OpenAI ChatGPT Desktop composite control
 
-> Imported reference documentation from the selected original worktree. Prior deployment, version and test claims below are historical source context, not current acceptance. See [the collaboration README](../../README.md) for verified results and remaining limits. Commands require an isolated, explicitly configured environment.
-
 
 Status date: 2026-08-12  
 Adapter: `chatgpt_desktop_composite`  

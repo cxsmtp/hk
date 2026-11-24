@@ -82,7 +82,7 @@ test("repository-scoped GitHub proxy blocks a mismatched repository before child
   const harness = await startProxyHarness({
     hawkServer,
     mcpServerId: "github-pull-requests",
-    repositoryScope: "github.com/dang070298/New-project-Hawki-ai-",
+    repositoryScope: "github.com/hawk-demo/governed-repo",
     toolLists: [[{ ...defaultTool(), name: "create_pull_request" }]],
   });
   t.after(() => harness.close());
@@ -104,7 +104,7 @@ test("repository-scoped GitHub proxy blocks a mismatched repository before child
   assert.equal(hawkServer.authorizeRequests.length, 1);
   assert.equal(
     hawkServer.authorizeRequests[0].tool_usage_meta.mcp_server_id,
-    "github-pull-requests--dang070298--new-project-hawki-ai-",
+    "github-pull-requests--hawk-demo--governed-repo",
   );
   assert.equal(hawkServer.authorizeRequests[0].resource, "github.com/github/github-mcp-server");
   assert.equal((await harness.childMessages()).some((message) => message.method === "tools/call"), false);
@@ -115,7 +115,7 @@ test("repository-scoped GitHub proxy forwards the exact approved repository", as
   const harness = await startProxyHarness({
     hawkServer,
     mcpServerId: "github-pull-requests",
-    repositoryScope: "github.com/dang070298/New-project-Hawki-ai-",
+    repositoryScope: "github.com/hawk-demo/governed-repo",
     toolLists: [[{ ...defaultTool(), name: "create_pull_request" }]],
   });
   t.after(() => harness.close());
@@ -127,7 +127,7 @@ test("repository-scoped GitHub proxy forwards the exact approved repository", as
     method: "tools/call",
     params: {
       name: "create_pull_request",
-      arguments: { owner: "Dang070298", repo: "New-project-Hawki-ai-" },
+      arguments: { owner: "Hawk-Demo", repo: "Governed-Repo" },
     },
   });
 
@@ -136,11 +136,11 @@ test("repository-scoped GitHub proxy forwards the exact approved repository", as
   assert.equal(hawkServer.authorizeRequests.length, 1);
   assert.equal(
     hawkServer.authorizeRequests[0].resource,
-    "github.com/dang070298/new-project-hawki-ai-",
+    "github.com/hawk-demo/governed-repo",
   );
   assert.equal(
     hawkServer.authorizeRequests[0].tool_usage_meta.mcp_server_id,
-    "github-pull-requests--dang070298--new-project-hawki-ai-",
+    "github-pull-requests--hawk-demo--governed-repo",
   );
   assert.equal((await harness.childMessages()).some((message) => message.method === "tools/call"), true);
 });

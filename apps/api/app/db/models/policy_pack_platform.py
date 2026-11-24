@@ -78,7 +78,7 @@ class PolicyPackDefinition(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     # ``publisher_tenant_id`` is NULL only for vendor-owned configuration. A
     # tenant can read vendor definitions but can modify only its own rows.
     publisher_tenant_id: Mapped[str | None] = mapped_column(ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True)
-    publisher_ref: Mapped[str] = mapped_column(String(128), nullable=False, default="trinya")
+    publisher_ref: Mapped[str] = mapped_column(String(128), nullable=False, default="hawk")
     stable_pack_id: Mapped[str] = mapped_column(String(128), nullable=False)
     version: Mapped[str] = mapped_column(String(64), nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -100,7 +100,7 @@ class PolicyPackDefinition(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     default_rollout: Mapped[str] = mapped_column(String(32), nullable=False, default="MONITORING")
     exception_guidance: Mapped[str] = mapped_column(Text, nullable=False, default="")
     known_blind_spots: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
-    owner_publisher: Mapped[str] = mapped_column(String(255), nullable=False, default="trinya")
+    owner_publisher: Mapped[str] = mapped_column(String(255), nullable=False, default="hawk")
     release_notes: Mapped[str] = mapped_column(Text, nullable=False, default="")
     state: Mapped[str] = mapped_column(String(16), nullable=False, default="DRAFT")
 

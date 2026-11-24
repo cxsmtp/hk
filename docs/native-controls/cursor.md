@@ -1,7 +1,5 @@
 # Cursor native control
 
-> Imported reference documentation from the selected original worktree. Prior deployment, version and test claims below are historical source context, not current acceptance. See [the collaboration README](../../README.md) for verified results and remaining limits. Commands require an isolated, explicitly configured environment.
-
 
 ## Current truth
 
@@ -9,7 +7,7 @@
 - Overall maturity: **Experimental**. It is not eligible for production adapter selection.
 - Exact verified Cursor Agent CLI release: `2026.08.11-e8db854`.
 - Approved signed desktop package inspected alongside the CLI: Cursor `3.15.6`, commit `a1f686545fd0ce8917bbd2449f733551a9bce420`.
-- Installed locations: `/Users/ayushmaandang/Applications/Cursor.app` and `/Users/ayushmaandang/.local/share/cursor-agent/versions/2026.08.11-e8db854/cursor-agent` (with `agent` and `cursor-agent` links in `~/.local/bin`).
+- Installed locations: `/Users/hawk-operator/Applications/Cursor.app` and `/Users/hawk-operator/.local/share/cursor-agent/versions/2026.08.11-e8db854/cursor-agent` (with `agent` and `cursor-agent` links in `~/.local/bin`).
 - Acceptance scope: the local Cursor Agent CLI using a tenant-bound ES256 Hawk hook in a user hook source. Desktop Agent Chat, Tab, cloud agents, subagents and the enterprise/MDM source are not covered by this result.
 
 ## Individually verified capabilities

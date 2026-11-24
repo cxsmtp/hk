@@ -29,9 +29,9 @@ const SAFE_ENVIRONMENT_NAMES = new Set([
   "TMPDIR",
 ]);
 const TOOL_SCOPE = "list_pull_requests,pull_request_read,create_branch,create_or_update_file,create_pull_request";
-export const GITHUB_CLI_PATH = "/Users/ayushmaandang/.local/bin/gh";
+export const GITHUB_CLI_PATH = process.env.HAWK_GITHUB_CLI_PATH || "/usr/local/bin/gh";
 export const GITHUB_CLI_SHA256 = "eedbfd5b8071027fe6326826eded48d274f1ec9d93f9239d9ba778ea1f479ac9";
-const GITHUB_AUTH_SCOPE = "github.com/jd2402247-sudo/trinya-governed-ai-demo-private";
+const GITHUB_AUTH_SCOPE = "github.com/jd2402247-sudo/hawk-governed-ai-demo-private";
 const GITHUB_AUTH_ERROR = "GitHub CLI credential unavailable";
 const GITHUB_ACCOUNT_ERROR = "Existing GitHub CLI account must be explicitly selected";
 const CLAUDE_CAPABILITY_TOKEN_ERROR = "Claude capability token unavailable";

@@ -16,11 +16,11 @@ try {
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
   }
 
-  const apiUrl = String(options.api || process.env.TRINYA_API_URL || "https://api.hawk.localhost:3443").replace(/\/+$/, "");
-  const repoRoot = options.repo || process.env.TRINYA_REPO_ROOT || process.cwd();
-  const nodePath = options.node || process.env.TRINYA_NODE_PATH || "/usr/local/bin/node";
-  const tenantId = options.tenant || process.env.TRINYA_TENANT_ID;
-  const accessToken = options.token || process.env.TRINYA_ACCESS_TOKEN;
+  const apiUrl = String(options.api || process.env.HAWK_EXEC_API_URL || "https://api.hawk.localhost:3443").replace(/\/+$/, "");
+  const repoRoot = options.repo || process.env.HAWK_EXEC_REPO_ROOT || process.cwd();
+  const nodePath = options.node || process.env.HAWK_EXEC_NODE_PATH || "/usr/local/bin/node";
+  const tenantId = options.tenant || process.env.HAWK_EXEC_TENANT_ID;
+  const accessToken = options.token || process.env.HAWK_EXEC_ACCESS_TOKEN;
 
   const credentials = tenantId && accessToken
     ? { tenantId, accessToken }
@@ -52,8 +52,8 @@ try {
 async function loginForToken({ apiUrl }) {
   const terminal = createInterface({ input: process.stdin, output: process.stderr });
   try {
-    const email = (await terminal.question("Trinya owner/admin email: ")).trim();
-    const password = await hiddenQuestion(terminal, "Trinya password: ");
+    const email = (await terminal.question("Hawk owner/admin email: ")).trim();
+    const password = await hiddenQuestion(terminal, "Hawk password: ");
     const response = await fetch(`${apiUrl}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -109,15 +109,15 @@ async function hiddenQuestion(terminal, prompt) {
 function buildTestPrompts() {
   return {
     claude_or_codex_summary:
-      "Use the Trinya Executive MCP to get an executive summary for the last 30 days. Return only the summary and mention which MCP tool was used.",
+      "Use the Hawk Executive MCP to get an executive summary for the last 30 days. Return only the summary and mention which MCP tool was used.",
     blocked_actions:
-      "Use the Trinya Executive MCP to query executive metrics for blocked actions grouped by application for the last 30 days. Return the top 10 rows and mention which MCP tool was used.",
+      "Use the Hawk Executive MCP to query executive metrics for blocked actions grouped by application for the last 30 days. Return the top 10 rows and mention which MCP tool was used.",
     github_visibility:
-      "Use the Trinya Executive MCP to query executive metrics for github_repositories for the last 30 days. Return repositories, AI tools involved, and policy decision summary if present.",
+      "Use the Hawk Executive MCP to query executive metrics for github_repositories for the last 30 days. Return repositories, AI tools involved, and policy decision summary if present.",
     tokens_and_spend:
-      "Use the Trinya Executive MCP to query tokens, then spend, for the last 30 days. Explain whether the values are provider-reported, estimated, or unavailable.",
+      "Use the Hawk Executive MCP to query tokens, then spend, for the last 30 days. Explain whether the values are provider-reported, estimated, or unavailable.",
     presentation:
-      "Use the Trinya Executive MCP to create an executive presentation titled 'AI Governance Executive Brief' for the last 30 days. Return the generated file path and do not include raw prompts.",
+      "Use the Hawk Executive MCP to create an executive presentation titled 'AI Governance Executive Brief' for the last 30 days. Return the generated file path and do not include raw prompts.",
   };
 }
 
@@ -153,10 +153,10 @@ function stringifyDetail(detail) {
 
 function printUsage() {
   console.log(`Usage:
-  setup-trinya-executive-mcp [--api URL] [--repo PATH] [--tenant ID --token TOKEN]
+  setup-hawk-executive-mcp [--api URL] [--repo PATH] [--tenant ID --token TOKEN]
 
 Examples:
-  node packages/hawk-mcp-proxy/bin/setup-trinya-executive-mcp.mjs --insecure-local-tls
-  node packages/hawk-mcp-proxy/bin/setup-trinya-executive-mcp.mjs --tenant "$TRINYA_TENANT_ID" --token "$TRINYA_ACCESS_TOKEN"
+  node packages/hawk-mcp-proxy/bin/setup-hawk-executive-mcp.mjs --insecure-local-tls
+  node packages/hawk-mcp-proxy/bin/setup-hawk-executive-mcp.mjs --tenant "$HAWK_EXEC_TENANT_ID" --token "$HAWK_EXEC_ACCESS_TOKEN"
 `);
 }

@@ -49,7 +49,7 @@ test-integration-down: require-test-project
 
 wait-postgres:
 	@for i in $$(seq 1 60); do \
-		if $(TEST_COMPOSE) exec -T db pg_isready -U postgres -d hawk_collaboration_test >/dev/null 2>&1; then \
+		if $(TEST_COMPOSE) exec -T db pg_isready -U postgres -d hawk_test >/dev/null 2>&1; then \
 			echo "postgres is ready"; \
 			exit 0; \
 		fi; \

@@ -1,7 +1,5 @@
 # Pilot Role Mapping Guide
 
-> Imported reference documentation from the selected original worktree. Prior deployment, version and test claims below are historical source context, not current acceptance. See [the collaboration README](../README.md) for verified results and remaining limits. Commands require an isolated, explicitly configured environment.
-
 
 Use this guide to map pilot users to business functions without relying on browser extension local state.
 

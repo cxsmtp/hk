@@ -60,7 +60,7 @@ Postgres.app or `/Library/PostgreSQL` assumptions in the bootstrap.
 
 ```sh
 mkdir -p .runtime
-apps/api/.venv/bin/python tools/collaboration/native_local.py \
+apps/api/.venv/bin/python tools/dev/native_local.py \
   --config infra/native-local.example.json --check
 ```
 
@@ -72,7 +72,7 @@ without creating data, connecting to services or applying migrations.
 ## Run and verify the whole local stack
 
 ```sh
-apps/api/.venv/bin/python tools/collaboration/native_local.py \
+apps/api/.venv/bin/python tools/dev/native_local.py \
   --config infra/native-local.example.json --browser-smoke
 ```
 
@@ -108,7 +108,7 @@ committed. The runner stops only processes it started and preserves their data.
 Add `--serve` to keep the verified development stack running after acceptance:
 
 ```sh
-apps/api/.venv/bin/python tools/collaboration/native_local.py \
+apps/api/.venv/bin/python tools/dev/native_local.py \
   --config infra/native-local.example.json --web --serve
 ```
 
