@@ -1,0 +1,63 @@
+name: Endpoint software checks
+
+on:
+  push:
+    paths:
+      - "apps/endpoint-agent/**"
+      - ".github/workflows/endpoint-tests.yml"
+  pull_request:
+    paths:
+      - "apps/endpoint-agent/**"
+      - ".github/workflows/endpoint-tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  software:
+    name: Endpoint software and native compiler tests
+    runs-on: macos-26
+    timeout-minutes: 20
+    env:
+      # Match the SDK used by the native source/compiler acceptance checks.
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+    defaults:
+      run:
+        working-directory: apps/endpoint-agent
+        shell: bash
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "20.20.2"
+      - name: Install the frozen endpoint environment
+        run: |
+          xcodebuild -version
+          xcrun --show-sdk-version
+          python -m pip install uv==0.11.6
+          uv sync --frozen --extra dev --extra fast --python 3.12
+      - name: Run software checks without installed-provider acceptance
+        run: |
+          export HOME="$(mktemp -d /tmp/hawk-ep-home.XXXXXX)"
+          export TMPDIR="$(mktemp -d /tmp/hawk-ep.XXXXXX)"
+          export PYTHONPATH="$PWD/src"
+          export PATH="$PWD/.venv/bin:$PATH"
+          .venv/bin/python -m pytest -vv --tb=short tests \
+            --deselect=tests/test_claude_binary_acceptance.py::test_installed_claude_2_1_183_honors_signed_hawk_allow_block_and_timeout \
+            --deselect=tests/test_gemini_binary_acceptance.py::test_installed_gemini_binary_acceptance \
+            --deselect=tests/test_cursor_binary_acceptance.py::test_exact_cursor_release_runs_signed_capability_level_acceptance \
+            --deselect=tests/test_chatgpt_desktop_live_install.py::test_installed_chatgpt_identity_matches_manifest_and_fails_closed_on_invalid_signature \
+            2>&1 | tee "$RUNNER_TEMP/endpoint-software-output.txt"
+          exit ${PIPESTATUS[0]}
+      - name: Upload endpoint software results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: endpoint-software-output
+          path: ${{ runner.temp }}/endpoint-software-output.txt

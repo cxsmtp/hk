@@ -1,0 +1,19 @@
+# Deliberately narrow production overlay for the H2 browser/runtime source
+# registration path.  It inherits the currently deployed API image and adds
+# only the reviewed H2 files, avoiding unrelated dirty-worktree changes.
+FROM hawk-api-demo:local
+
+USER root
+
+COPY --chown=1000:1000 apps/api/app/api/routers/discovery_surface_sources.py /workspace/apps/api/app/api/routers/discovery_surface_sources.py
+COPY --chown=1000:1000 apps/api/app/services/hmair/surface_source_registration_service.py /workspace/apps/api/app/services/hmair/surface_source_registration_service.py
+COPY --chown=1000:1000 apps/api/app/services/hmair/deep_scan_readiness_service.py /workspace/apps/api/app/services/hmair/deep_scan_readiness_service.py
+COPY --chown=1000:1000 apps/api/app/services/hmair/deep_scan_source_service.py /workspace/apps/api/app/services/hmair/deep_scan_source_service.py
+COPY --chown=1000:1000 apps/api/app/services/browser_extension_service.py /workspace/apps/api/app/services/browser_extension_service.py
+COPY --chown=1000:1000 apps/api/app/api/routers/__init__.py /workspace/apps/api/app/api/routers/__init__.py
+COPY --chown=1000:1000 apps/api/app/api/routers/extension.py /workspace/apps/api/app/api/routers/extension.py
+COPY --chown=1000:1000 apps/api/app/main.py /workspace/apps/api/app/main.py
+COPY --chown=1000:1000 apps/api/app/db/models/audit.py /workspace/apps/api/app/db/models/audit.py
+COPY --chown=1000:1000 apps/api/app/db/migrations/versions/0086_expand_audit_resource_reference.py /workspace/apps/api/app/db/migrations/versions/0086_expand_audit_resource_reference.py
+
+USER 1000

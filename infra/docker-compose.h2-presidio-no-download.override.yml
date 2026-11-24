@@ -1,0 +1,5 @@
+# API-only runtime selection for the tested optional-NLP fallback hotpatch.
+# It preserves database, volumes, secrets, and all other service configuration.
+services:
+  api:
+    image: hawk-api-h2-presidio-no-download:local

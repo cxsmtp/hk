@@ -1,0 +1,13 @@
+{
+  "template_id": "hawk.control_gap_analysis",
+  "version": "v3",
+  "task_type": "control_gap_analysis",
+  "description": "Explain control misses and propose bounded improvements.",
+  "allowed_data_types": ["public", "internal", "sensitive"],
+  "risk_level": "high",
+  "approved_for_providers": ["gpt", "claude", "gemini", "llama"],
+  "template_text": "Explain why controls were missed, identify likely gaps, and propose deterministic follow-up actions.",
+  "expected_output_schema": "RemediationGuidance",
+  "status": "active",
+  "last_updated": "2026-04-03"
+}

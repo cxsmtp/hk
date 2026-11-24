@@ -1,0 +1,120 @@
+{
+  "schema_version": "1.0.0",
+  "category_id": "coding_exposure",
+  "factor_definitions": {
+    "capability_filesystem": {"kind": "capability", "state": "filesystem_write", "confidence": 0.94, "verification": "verified", "freshness": "fresh"},
+    "capability_filesystem_stale": {"kind": "capability", "state": "filesystem_write", "confidence": 0.94, "verification": "verified", "freshness": "stale"},
+    "reach_filesystem": {"kind": "reachability", "state": "filesystem:verified", "confidence": 0.92, "verification": "verified", "freshness": "fresh"},
+    "reach_external": {"kind": "reachability", "state": "internet:verified", "confidence": 0.92, "verification": "verified", "freshness": "fresh"},
+    "reach_not_reachable": {"kind": "reachability", "state": "filesystem:not_reachable", "confidence": 0.95, "verification": "verified", "freshness": "fresh"},
+    "permission_write": {"kind": "permission", "state": "write", "confidence": 0.88, "verification": "verified", "freshness": "fresh"},
+    "permission_scoped": {"kind": "permission", "state": "scoped_read", "confidence": 0.9, "verification": "verified", "freshness": "fresh"},
+    "permission_admin": {"kind": "permission", "state": "admin", "confidence": 0.9, "verification": "verified", "freshness": "fresh"},
+    "permission_removed": {"kind": "permission", "state": "removed", "confidence": 0.96, "verification": "verified", "freshness": "fresh"},
+    "identity_primary": {"kind": "identity", "state": "workload_identity:active", "confidence": 0.9, "verification": "verified", "freshness": "fresh"},
+    "identity_secondary": {"kind": "identity", "state": "service_principal:active", "confidence": 0.91, "verification": "verified", "freshness": "fresh"},
+    "identity_removed": {"kind": "identity_removal", "state": "removed", "confidence": 0.96, "verification": "verified", "freshness": "fresh"},
+    "governance_unapproved": {"kind": "governance", "state": "unapproved", "confidence": 0.9, "verification": "verified", "freshness": "fresh"},
+    "governance_inline": {"kind": "governance", "state": "approved", "confidence": 0.9, "verification": "verified", "freshness": "fresh"},
+    "coverage_authorization_missing": {"kind": "coverage", "state": "authorization:not_covered", "confidence": null, "verification": "verified", "freshness": "fresh"},
+    "coverage_authorization_covered": {"kind": "coverage", "state": "authorization:covered", "confidence": null, "verification": "verified", "freshness": "fresh"},
+    "coverage_evidence_covered": {"kind": "coverage", "state": "evidence:covered", "confidence": null, "verification": "verified", "freshness": "fresh"},
+    "usage_active": {"kind": "usage", "state": "active", "confidence": 0.91, "verification": "verified", "freshness": "fresh"},
+    "usage_high": {"kind": "usage", "state": "high_usage", "confidence": 0.93, "verification": "verified", "freshness": "fresh"},
+    "action_exact_block": {"kind": "ai_action", "state": "block:inline", "confidence": null, "verification": "partially_verified", "freshness": "fresh"}
+  },
+  "cases": [
+    {
+      "case_id": "filesystem-capability-added",
+      "before_factors": ["reach_filesystem", "permission_write", "identity_primary", "governance_unapproved", "coverage_authorization_missing"],
+      "after_factors": ["capability_filesystem", "reach_filesystem", "permission_write", "identity_primary", "governance_unapproved", "coverage_authorization_missing"],
+      "expected": {"before_extent": "unknown", "after_extent": "material", "relation": "increased", "required_event": "exposure_changed"}
+    },
+    {
+      "case_id": "governance-enabled",
+      "before_factors": ["capability_filesystem", "reach_filesystem", "permission_write", "identity_primary", "governance_unapproved", "coverage_authorization_missing"],
+      "after_factors": ["capability_filesystem", "reach_filesystem", "permission_write", "identity_primary", "governance_inline", "coverage_authorization_missing"],
+      "expected": {"before_extent": "material", "after_extent": "material", "relation": "governance_improved", "required_event": "exposure_changed"}
+    },
+    {
+      "case_id": "coverage-improved",
+      "before_factors": ["capability_filesystem", "reach_filesystem", "permission_write", "identity_primary", "governance_unapproved", "coverage_authorization_missing"],
+      "after_factors": ["capability_filesystem", "reach_filesystem", "permission_write", "identity_primary", "governance_unapproved", "coverage_authorization_covered", "coverage_evidence_covered"],
+      "expected": {"before_extent": "material", "after_extent": "material", "relation": "coverage_improved", "required_event": "exposure_coverage_improved"}
+    },
+    {
+      "case_id": "permission-verifiably-removed",
+      "before_factors": ["capability_filesystem", "reach_filesystem", "permission_write", "identity_primary", "governance_unapproved", "coverage_authorization_missing"],
+      "after_factors": ["capability_filesystem", "reach_filesystem", "permission_removed", "identity_primary", "governance_unapproved", "coverage_authorization_missing"],
+      "expected": {"before_extent": "material", "after_extent": "limited", "relation": "reduced", "required_event": "exposure_reduced"}
+    },
+    {
+      "case_id": "identity-verifiably-removed",
+      "before_factors": ["capability_filesystem", "reach_filesystem", "permission_write", "identity_primary", "governance_unapproved", "coverage_authorization_missing"],
+      "after_factors": ["capability_filesystem", "reach_filesystem", "permission_write", "identity_removed", "governance_unapproved", "coverage_authorization_missing"],
+      "expected": {"before_extent": "material", "after_extent": "limited", "relation": "reduced", "required_event": "exposure_reduced"}
+    },
+    {
+      "case_id": "usage-increased",
+      "before_factors": ["capability_filesystem", "reach_external", "permission_admin", "identity_primary", "governance_unapproved", "coverage_authorization_missing", "usage_active"],
+      "after_factors": ["capability_filesystem", "reach_external", "permission_admin", "identity_primary", "governance_unapproved", "coverage_authorization_missing", "usage_high"],
+      "expected": {"before_extent": "material", "after_extent": "broad", "relation": "increased", "required_event": "exposure_increased"}
+    },
+    {
+      "case_id": "reachability-conflict",
+      "before_factors": ["capability_filesystem", "reach_filesystem", "permission_write", "identity_primary", "governance_unapproved", "coverage_authorization_missing"],
+      "after_factors": ["capability_filesystem", "reach_filesystem", "reach_not_reachable", "permission_write", "identity_primary", "governance_unapproved", "coverage_authorization_missing"],
+      "expected": {"before_extent": "material", "after_extent": "unknown", "relation": "conflicted", "required_event": "exposure_changed"}
+    },
+    {
+      "case_id": "evidence-became-stale",
+      "before_factors": ["capability_filesystem", "reach_filesystem", "permission_write", "identity_primary", "governance_unapproved", "coverage_authorization_missing"],
+      "after_factors": ["capability_filesystem_stale", "reach_filesystem", "permission_write", "identity_primary", "governance_unapproved", "coverage_authorization_missing"],
+      "expected": {"before_extent": "material", "after_extent": "unknown", "relation": "verification_degraded", "required_event": "exposure_changed"}
+    },
+    {
+      "case_id": "exact-action-blocked",
+      "before_factors": ["capability_filesystem", "reach_filesystem", "permission_write", "identity_primary", "governance_unapproved", "coverage_authorization_missing"],
+      "after_factors": ["capability_filesystem", "reach_filesystem", "permission_write", "identity_primary", "governance_unapproved", "coverage_authorization_missing", "action_exact_block"],
+      "expected": {"before_extent": "material", "after_extent": "material", "relation": "exact_block_only", "required_event": "exposure_changed"}
+    },
+    {
+      "case_id": "cross-tenant-reference",
+      "before_factors": ["capability_filesystem", "reach_filesystem", "permission_write", "identity_primary", "governance_unapproved", "coverage_authorization_missing"],
+      "after_factors": [],
+      "expected": {"relation": "hard_rejection"}
+    },
+    {
+      "case_id": "identical-replay",
+      "before_factors": ["capability_filesystem", "reach_filesystem", "permission_write", "identity_primary", "governance_unapproved", "coverage_authorization_missing"],
+      "after_factors": ["capability_filesystem", "reach_filesystem", "permission_write", "identity_primary", "governance_unapproved", "coverage_authorization_missing"],
+      "expected": {"before_extent": "material", "after_extent": "material", "relation": "identical"}
+    },
+    {
+      "case_id": "changed-evidence-replay",
+      "before_factors": ["capability_filesystem", "reach_filesystem", "permission_scoped", "identity_primary", "governance_unapproved", "coverage_authorization_missing"],
+      "after_factors": ["capability_filesystem", "reach_filesystem", "permission_write", "identity_primary", "governance_unapproved", "coverage_authorization_missing"],
+      "expected": {"before_extent": "limited", "after_extent": "material", "relation": "digest_changed", "required_event": "exposure_increased"}
+    },
+    {
+      "case_id": "coverage-absent",
+      "before_factors": ["capability_filesystem", "reach_filesystem", "permission_write", "identity_primary", "governance_unapproved"],
+      "after_factors": ["capability_filesystem", "reach_filesystem", "permission_write", "identity_primary", "governance_unapproved"],
+      "expected": {"before_extent": "unknown", "after_extent": "unknown", "relation": "coverage_unknown"}
+    },
+    {
+      "case_id": "risk-score-only-change",
+      "before_factors": ["capability_filesystem", "reach_filesystem", "permission_write", "identity_primary", "governance_unapproved", "coverage_authorization_missing"],
+      "after_factors": ["capability_filesystem", "reach_filesystem", "permission_write", "identity_primary", "governance_unapproved", "coverage_authorization_missing"],
+      "before_risk_score": 0.01,
+      "after_risk_score": 0.99,
+      "expected": {"before_extent": "material", "after_extent": "material", "relation": "risk_unchanged"}
+    },
+    {
+      "case_id": "projection-non-persistence",
+      "before_factors": ["capability_filesystem", "reach_filesystem", "permission_write", "identity_primary", "governance_unapproved", "coverage_authorization_missing"],
+      "after_factors": ["capability_filesystem", "reach_filesystem", "permission_write", "identity_primary", "governance_unapproved", "coverage_authorization_missing"],
+      "expected": {"before_extent": "material", "after_extent": "material", "relation": "no_persistent_writes"}
+    }
+  ]
+}

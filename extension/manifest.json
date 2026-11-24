@@ -1,0 +1,132 @@
+{
+  "manifest_version": 3,
+  "name": "Hawk AI",
+  "description": "Enterprise AI discovery and lightweight browser-layer interaction security integrated with backend control plane.",
+  "version": "0.1.9",
+  "incognito": "spanning",
+  "options_page": "options.html",
+  "background": {
+    "service_worker": "dist/service-worker.js",
+    "type": "module"
+  },
+  "permissions": [
+    "storage",
+    "alarms",
+    "tabs",
+    "nativeMessaging",
+    "declarativeNetRequest"
+  ],
+  "host_permissions": [
+    "http://localhost:8000/*",
+    "http://localhost/*",
+    "https://localhost/*",
+    "http://127.0.0.1/*",
+    "https://127.0.0.1/*",
+    "http://*.localhost/*",
+    "https://*.localhost/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chat.openai.com/*",
+        "https://chatgpt.com/*",
+        "https://platform.openai.com/*",
+        "https://claude.ai/*",
+        "https://console.anthropic.com/*",
+        "https://gemini.google.com/*",
+        "https://aistudio.google.com/*",
+        "https://notebooklm.google.com/*",
+        "https://copilot.microsoft.com/*",
+        "https://perplexity.ai/*",
+        "https://www.perplexity.ai/*",
+        "https://poe.com/*",
+        "https://grok.com/*",
+        "https://x.ai/*",
+        "https://you.com/*",
+        "https://www.you.com/*",
+        "https://mail.google.com/*",
+        "https://hotmail.com/*",
+        "https://www.hotmail.com/*",
+        "https://outlook.com/*",
+        "https://www.outlook.com/*",
+        "https://live.com/*",
+        "https://www.live.com/*",
+        "https://outlook.office.com/*",
+        "https://outlook.live.com/*",
+        "https://*.slack.com/*",
+        "https://app.slack.com/*",
+        "https://*.acme.ai/*",
+        "http://localhost/*",
+        "https://localhost/*",
+        "http://127.0.0.1/*",
+        "https://127.0.0.1/*",
+        "http://*.localhost/*",
+        "https://*.localhost/*"
+      ],
+      "js": [
+        "dist/content-script.js"
+      ],
+      "all_frames": true,
+      "match_about_blank": true,
+      "run_at": "document_idle"
+    }
+  ],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "default_rules",
+        "enabled": true,
+        "path": "rules/default_rules.json"
+      }
+    ]
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "dist/*"
+      ],
+      "matches": [
+        "https://chat.openai.com/*",
+        "https://chatgpt.com/*",
+        "https://platform.openai.com/*",
+        "https://claude.ai/*",
+        "https://console.anthropic.com/*",
+        "https://gemini.google.com/*",
+        "https://aistudio.google.com/*",
+        "https://notebooklm.google.com/*",
+        "https://copilot.microsoft.com/*",
+        "https://perplexity.ai/*",
+        "https://www.perplexity.ai/*",
+        "https://poe.com/*",
+        "https://grok.com/*",
+        "https://x.ai/*",
+        "https://you.com/*",
+        "https://www.you.com/*",
+        "https://mail.google.com/*",
+        "https://hotmail.com/*",
+        "https://www.hotmail.com/*",
+        "https://outlook.com/*",
+        "https://www.outlook.com/*",
+        "https://live.com/*",
+        "https://www.live.com/*",
+        "https://outlook.office.com/*",
+        "https://outlook.live.com/*",
+        "https://*.slack.com/*",
+        "https://app.slack.com/*",
+        "https://*.acme.ai/*",
+        "http://localhost/*",
+        "https://localhost/*",
+        "http://127.0.0.1/*",
+        "https://127.0.0.1/*",
+        "http://*.localhost/*",
+        "https://*.localhost/*"
+      ]
+    }
+  ],
+  "action": {
+    "default_title": "Hawk AI"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'self'; style-src 'self' 'unsafe-inline';"
+  }
+}

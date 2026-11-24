@@ -1,0 +1,199 @@
+x-production-backend-hardening: &production-backend-hardening
+  read_only: true
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  pids_limit: 512
+  mem_limit: 2g
+  cpus: 2.0
+  init: true
+  tmpfs:
+    - /tmp:size=128m,mode=1777
+  volumes:
+    - hawk_runtime_state:/run/hawk
+
+x-production-backend-environment: &production-backend-environment
+  DATABASE_URL: ""
+  DATABASE_URL_FILE: /run/secrets/database_url
+  REDIS_URL: ""
+  REDIS_URL_FILE: /run/secrets/redis_url
+  CELERY_BROKER_URL: ""
+  CELERY_BROKER_URL_FILE: /run/secrets/celery_broker_url
+  CELERY_RESULT_BACKEND: ""
+  CELERY_RESULT_BACKEND_FILE: /run/secrets/celery_result_backend
+  SECRET_KEY: ""
+  SECRET_KEY_FILE: /run/secrets/secret_key
+  SECRET_KEY_LOCK_PEPPER: ""
+  SECRET_KEY_LOCK_PEPPER_FILE: /run/secrets/secret_key_lock_pepper
+  SECRET_KEY_LOCK_FILE: /run/hawk/secret_key.lock
+  CONNECTOR_SECRETS_KEY: ""
+  CONNECTOR_SECRETS_KEY_FILE: /run/secrets/connector_secrets_key
+  CONNECTOR_SECRETS_KDF_SALT: ""
+  CONNECTOR_SECRETS_KDF_SALT_FILE: /run/secrets/connector_secrets_kdf_salt
+  ENFORCEMENT_PAYLOADS_KEY: ""
+  ENFORCEMENT_PAYLOADS_KEY_FILE: /run/secrets/enforcement_payloads_key
+  ONPREM_BUNDLE_SIGNING_SECRET: ""
+  ONPREM_BUNDLE_SIGNING_SECRET_FILE: /run/secrets/onprem_bundle_signing_secret
+  CANONICAL_ACTION_BINDING_KEY: ""
+  CANONICAL_ACTION_BINDING_KEY_FILE: /run/secrets/canonical_action_binding_key
+  RECEIPT_SIGNING_KEYS_JSON: ""
+  RECEIPT_SIGNING_KEYS_JSON_FILE: /run/secrets/receipt_signing_keys_json
+  ACCOUNT_BOUNDARY_PSEUDONYMIZATION_KEY: ""
+  ACCOUNT_BOUNDARY_PSEUDONYMIZATION_KEY_FILE: /run/secrets/account_boundary_pseudonymization_key
+
+x-production-backend-secrets: &production-backend-secrets
+  - database_url
+  - redis_url
+  - celery_broker_url
+  - celery_result_backend
+  - secret_key
+  - secret_key_lock_pepper
+  - connector_secrets_key
+  - connector_secrets_kdf_salt
+  - enforcement_payloads_key
+  - onprem_bundle_signing_secret
+  - canonical_action_binding_key
+  - receipt_signing_keys_json
+  - account_boundary_pseudonymization_key
+
+services:
+  db:
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets:
+      - postgres_password
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 512
+    mem_limit: 2g
+    cpus: 2.0
+
+  redis:
+    command:
+      - sh
+      - -ec
+      - exec redis-server --appendonly yes --appendfsync everysec --requirepass "$$(cat /run/secrets/redis_password)"
+    secrets:
+      - redis_password
+    volumes:
+      - hawk_demo_redis_data:/data
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    mem_limit: 768m
+    cpus: 1.0
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - REDISCLI_AUTH="$$(cat /run/secrets/redis_password)" redis-cli ping | grep -q PONG
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+
+  migrate:
+    <<: *production-backend-hardening
+    environment:
+      <<: *production-backend-environment
+      COMPONENT_TYPE: api
+    secrets: *production-backend-secrets
+
+  seed-demo:
+    <<: *production-backend-hardening
+    environment:
+      <<: *production-backend-environment
+      COMPONENT_TYPE: api
+    command: ["python", "/workspace/infra/scripts/production_bootstrap.py"]
+    secrets: *production-backend-secrets
+
+  api:
+    <<: *production-backend-hardening
+    volumes:
+      - hawk_runtime_state:/run/hawk
+      - hawk_artifacts:/artifacts
+    environment:
+      <<: *production-backend-environment
+      COMPONENT_TYPE: api
+    secrets: *production-backend-secrets
+
+  worker:
+    <<: *production-backend-hardening
+    volumes:
+      - hawk_runtime_state:/run/hawk
+      - hawk_artifacts:/artifacts
+    environment:
+      <<: *production-backend-environment
+      COMPONENT_TYPE: worker
+    secrets: *production-backend-secrets
+
+  celery-beat:
+    <<: *production-backend-hardening
+    volumes:
+      - hawk_runtime_state:/run/hawk
+      - hawk_artifacts:/artifacts
+    environment:
+      <<: *production-backend-environment
+      COMPONENT_TYPE: celery_beat
+    command:
+      - celery
+      - -A
+      - app.jobs.celery_app.celery_app
+      - beat
+      - --loglevel=info
+      - --schedule
+      - /tmp/celerybeat-schedule
+    secrets: *production-backend-secrets
+
+  web:
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 512
+    mem_limit: 1g
+    cpus: 1.0
+    init: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+
+secrets:
+  postgres_password:
+    file: ${POSTGRES_PASSWORD_FILE:?POSTGRES_PASSWORD_FILE is required}
+  redis_password:
+    file: ${REDIS_PASSWORD_FILE:?REDIS_PASSWORD_FILE is required}
+  database_url:
+    file: ${DATABASE_URL_FILE:?DATABASE_URL_FILE is required}
+  redis_url:
+    file: ${REDIS_URL_FILE:?REDIS_URL_FILE is required}
+  celery_broker_url:
+    file: ${CELERY_BROKER_URL_FILE:?CELERY_BROKER_URL_FILE is required}
+  celery_result_backend:
+    file: ${CELERY_RESULT_BACKEND_FILE:?CELERY_RESULT_BACKEND_FILE is required}
+  secret_key:
+    file: ${SECRET_KEY_FILE:?SECRET_KEY_FILE is required}
+  secret_key_lock_pepper:
+    file: ${SECRET_KEY_LOCK_PEPPER_FILE:?SECRET_KEY_LOCK_PEPPER_FILE is required}
+  connector_secrets_key:
+    file: ${CONNECTOR_SECRETS_KEY_FILE:?CONNECTOR_SECRETS_KEY_FILE is required}
+  connector_secrets_kdf_salt:
+    file: ${CONNECTOR_SECRETS_KDF_SALT_FILE:?CONNECTOR_SECRETS_KDF_SALT_FILE is required}
+  enforcement_payloads_key:
+    file: ${ENFORCEMENT_PAYLOADS_KEY_FILE:?ENFORCEMENT_PAYLOADS_KEY_FILE is required}
+  onprem_bundle_signing_secret:
+    file: ${ONPREM_BUNDLE_SIGNING_SECRET_FILE:?ONPREM_BUNDLE_SIGNING_SECRET_FILE is required}
+  canonical_action_binding_key:
+    file: ${CANONICAL_ACTION_BINDING_KEY_FILE:?CANONICAL_ACTION_BINDING_KEY_FILE is required}
+  receipt_signing_keys_json:
+    file: ${RECEIPT_SIGNING_KEYS_JSON_FILE:?RECEIPT_SIGNING_KEYS_JSON_FILE is required}
+  account_boundary_pseudonymization_key:
+    file: ${ACCOUNT_BOUNDARY_PSEUDONYMIZATION_KEY_FILE:?ACCOUNT_BOUNDARY_PSEUDONYMIZATION_KEY_FILE is required}
+
+volumes:
+  hawk_runtime_state:
+    name: ${HAWK_RUNTIME_VOLUME_NAME:-hawk_production_runtime_state}
+  hawk_artifacts:
+    name: ${HAWK_ARTIFACT_VOLUME_NAME:-hawk_production_artifacts}

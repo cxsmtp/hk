@@ -1,0 +1,53 @@
+{
+  "schema": "hawk.macos-network-extension-build-contract",
+  "version": 2,
+  "verification_status": "unverified",
+  "activation_default": "off",
+  "managed_routing_default_enabled": false,
+  "source_ready_is_runtime_ready": false,
+  "functional_relay_implemented": true,
+  "source_application_attribution_child_family_verified": false,
+  "local_broker_cryptographic_authentication_implemented": true,
+  "routing_receipt_schema": 1,
+  "routing_receipt_algorithm": "p256_ecdsa_sha256_der",
+  "routing_receipt_max_lifetime_seconds": 900,
+  "routing_trust_anchor": "signed_bundle_policy_root",
+  "routing_broker_key_authorization_schema": 1,
+  "routing_broker_key_authorization_max_lifetime_seconds": 2592000,
+  "semantic_inspection_implemented": false,
+  "semantic_inspection_required_action": "fail_closed",
+  "routing_receipt_scope_binding": [
+    "application_signing_identifiers",
+    "destination_host_suffixes",
+    "policy_epoch",
+    "semantic_inspection_required"
+  ],
+  "provider_type": "transparent-proxy",
+  "minimum_macos_version": "15.0",
+  "scope": {
+    "source_app_signing_identifiers_required": true,
+    "destination_host_suffixes_required": true,
+    "empty_scope_allowed": false,
+    "out_of_scope_action": "bypass"
+  },
+  "reversibility": {
+    "disable_via_managed_configuration": true,
+    "stop_clears_active_configuration": true,
+    "mdm_remove_profile_supported": true
+  },
+  "runtime_evidence_required": [
+    "signed_network_extension_entitlement",
+    "mdm_routing_authorization",
+    "mdm_installation",
+    "hardened_developer_id_signature",
+    "accepted_notarization",
+    "valid_staple",
+    "remote_hardware_attestation",
+    "edr_coexistence",
+    "mdm_managed_ipc_trust_pin",
+    "functional_tcp_udp_relay_validation",
+    "local_broker_cryptographic_authentication",
+    "signed_artifact",
+    "target_os_acceptance"
+  ]
+}

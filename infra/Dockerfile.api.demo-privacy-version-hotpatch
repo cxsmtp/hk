@@ -1,0 +1,10 @@
+# Demo-safe API-only correction: preserve strict application-version metadata
+# while retaining the existing privacy behavior for all other payload fields.
+FROM hawk-api-h2-browser-audit:local
+
+USER root
+COPY --chown=1000:1000 apps/api/app/services/privacy_sanitizer.py /workspace/apps/api/app/services/privacy_sanitizer.py
+COPY --chown=1000:1000 apps/api/app/services/hmair/endpoint_snapshot_service.py /workspace/apps/api/app/services/hmair/endpoint_snapshot_service.py
+COPY --chown=1000:1000 apps/api/app/services/hmair/contracts.py /workspace/apps/api/app/services/hmair/contracts.py
+COPY --chown=1000:1000 apps/api/app/services/hmair/observation_service.py /workspace/apps/api/app/services/hmair/observation_service.py
+USER 1000

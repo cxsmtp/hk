@@ -1,0 +1,47 @@
+#!/usr/bin/env sh
+set -eu
+
+ROOT="${1:-$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)}"
+STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+QUARANTINE="${2:-/private/tmp/hawk-appledouble-quarantine-$STAMP}"
+MODE="${3:-workspace}"
+FILES="$QUARANTINE/files"
+MANIFEST="$QUARANTINE/manifest.txt"
+
+case "$ROOT" in
+  /|"")
+    echo "Refusing an unsafe AppleDouble root: $ROOT" >&2
+    exit 2
+    ;;
+esac
+
+mkdir -p "$FILES"
+: > "$MANIFEST"
+
+if [ "$MODE" = "git-metadata" ]; then
+  if [ "$(basename -- "$ROOT")" != ".git" ] || [ ! -f "$ROOT/HEAD" ]; then
+    echo "git-metadata mode requires an exact .git directory" >&2
+    exit 2
+  fi
+  find "$ROOT" -name '._*' -type f -print
+elif [ "$MODE" = "workspace" ]; then
+  find "$ROOT" \
+    -path "$ROOT/.git" -prune -o \
+    -path "$ROOT/apps/web/node_modules" -prune -o \
+    -path "$ROOT/apps/web/.next*" -prune -o \
+    -name '._*' -type f -print
+else
+  echo "Unknown AppleDouble cleanup mode: $MODE" >&2
+  exit 2
+fi |
+while IFS= read -r source; do
+  relative="${source#"$ROOT"/}"
+  destination="$FILES/$relative"
+  mkdir -p "$(dirname -- "$destination")"
+  mv -- "$source" "$destination"
+  printf '%s\n' "$relative" >> "$MANIFEST"
+done
+
+COUNT="$(wc -l < "$MANIFEST" | tr -d ' ')"
+echo "Moved $COUNT AppleDouble files to $QUARANTINE"
+echo "Restore paths are listed in $MANIFEST"

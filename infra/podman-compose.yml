@@ -1,0 +1,186 @@
+name: hawk-ai-podman
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    userns_mode: keep-id
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-aicontrol}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-aicontrol}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 5s
+
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    userns_mode: keep-id
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+
+  api:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.api
+    restart: unless-stopped
+    userns_mode: keep-id
+    user: "${PODMAN_UID:-1000}:${PODMAN_GID:-1000}"
+    env_file:
+      - ../.env
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-aicontrol}
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-aicontrol}
+      TEST_DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-aicontrol}
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      WEB_ORIGIN: http://localhost:3000
+      ARTIFACT_DIR: /artifacts
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command:
+      [
+        "bash",
+        "-lc",
+        "alembic -c app/db/migrations/alembic.ini upgrade head && python /workspace/infra/scripts/seed.py && uvicorn app.main:app --host 0.0.0.0 --port 8000",
+      ]
+    ports:
+      - "8000:8000"
+    volumes:
+      - artifacts_data:/artifacts
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  worker:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.api
+    restart: unless-stopped
+    userns_mode: keep-id
+    user: "${PODMAN_UID:-1000}:${PODMAN_GID:-1000}"
+    env_file:
+      - ../.env
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-aicontrol}
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-aicontrol}
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      ARTIFACT_DIR: /artifacts
+    depends_on:
+      api:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    command:
+      [
+        "bash",
+        "-lc",
+        "celery -A app.jobs.celery_app.celery_app worker --loglevel=info -Q default,monitoring,auditor,discovery",
+      ]
+    volumes:
+      - artifacts_data:/artifacts
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import os,sys; from redis import Redis; r=Redis.from_url(os.getenv('REDIS_URL','redis://redis:6379/0')); sys.exit(0 if r.get('control_plane:celery:worker_heartbeat') else 1)\""]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  scheduler:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.api
+    restart: unless-stopped
+    userns_mode: keep-id
+    user: "${PODMAN_UID:-1000}:${PODMAN_GID:-1000}"
+    env_file:
+      - ../.env
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-aicontrol}
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-aicontrol}
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      ARTIFACT_DIR: /artifacts
+    depends_on:
+      api:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    command: ["bash", "-lc", "celery -A app.jobs.celery_app.celery_app beat --loglevel=info"]
+    volumes:
+      - artifacts_data:/artifacts
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import os,sys; from redis import Redis; r=Redis.from_url(os.getenv('REDIS_URL','redis://redis:6379/0')); sys.exit(0 if r.get('control_plane:celery:beat_heartbeat') else 1)\""]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  web:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.web
+    restart: unless-stopped
+    userns_mode: keep-id
+    user: "${PODMAN_UID:-1000}:${PODMAN_GID:-1000}"
+    env_file:
+      - ../.env
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    command: ["bash", "-lc", "npm run dev -- --hostname 0.0.0.0 --port 3000"]
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3000').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 15s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+volumes:
+  postgres_data:
+  redis_data:
+  artifacts_data:

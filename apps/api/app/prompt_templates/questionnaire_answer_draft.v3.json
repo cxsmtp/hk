@@ -1,0 +1,13 @@
+{
+  "template_id": "hawk.questionnaire_answer_draft",
+  "version": "v3",
+  "task_type": "questionnaire_answer_draft",
+  "description": "Draft questionnaire answers constrained to available evidence.",
+  "allowed_data_types": ["public", "internal"],
+  "risk_level": "medium",
+  "approved_for_providers": ["gemini", "gpt", "claude", "llama"],
+  "template_text": "Draft answer content constrained to provided evidence and control mappings.",
+  "expected_output_schema": "RemediationGuidance",
+  "status": "active",
+  "last_updated": "2026-04-03"
+}

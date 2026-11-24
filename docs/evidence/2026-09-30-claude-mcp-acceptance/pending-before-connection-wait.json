@@ -1,0 +1,68 @@
+{
+  "child_call_count": 1,
+  "completed_phases": [
+    "isolated_api_ready",
+    "public_preflight",
+    "client_run_1"
+  ],
+  "completed_runs": [
+    {
+      "child_call_count": 1,
+      "client_result_subtype": "success",
+      "decision": "allow",
+      "event_id_hash": "65bc9094e72abf12bab81bc71f134d0585402a5060f5b662d36c106aafa1da1b",
+      "evidence_id_hash": "4fe188a3fe82c83f73be6d0be09760d1458e34dedc554330ae33b0eba7ab3dc9",
+      "exact_tool_advertised": true,
+      "exact_tool_use_count": 1,
+      "mcp_status": "connected",
+      "num_turns": 3,
+      "permission_denial_count": 0,
+      "prose_code": "prose_without_tool_call",
+      "run_id_hash": "f3d6aa70b223da550e29fc8e4af190fc9a190ad012fe3a91a8e4549564eaedbc",
+      "stop_reason": "end_turn",
+      "total_cost_usd": 0.0473649
+    }
+  ],
+  "current_phase_index": 2,
+  "current_run_id_hash": "5e95e90746c6f2a5ebe396c4923ff665d125a964e477a6e9f7e9fc53200e9232",
+  "reason": "phase_validation_failed",
+  "release_ready": false,
+  "safe_client_facts": {
+    "diagnostic_headline": "redacted redacted redacted redacted redacted redacted redacted redacted redacted redacted redacted redacted redacted redacted redacted redacted redacted",
+    "exact_tool_advertised": false,
+    "exact_tool_use_count": 0,
+    "exit_code": "other",
+    "hook_error_count": 0,
+    "hook_event_count": 2,
+    "is_error": false,
+    "mcp_status": "pending",
+    "num_turns": 1,
+    "permission_denial_count": 0,
+    "prose_code": "prose_without_tool_call",
+    "result_subtype": "success",
+    "stderr_category": "none",
+    "stop_reason": "end_turn",
+    "total_cost_usd": 0.0266
+  },
+  "safe_client_timeline": [
+    {
+      "event_order": 3,
+      "exact_tool_advertised": false,
+      "status": "pending",
+      "value_type": "string"
+    }
+  ],
+  "safe_correlated_event_projection": {
+    "decision": "none",
+    "event_id_hash": null,
+    "event_present": false,
+    "evidence_id_hash": null,
+    "evidence_present": false,
+    "final_reason": "none",
+    "guardian_codes": [],
+    "reasons": [],
+    "session_validation_reason": "none"
+  },
+  "status": "blocked",
+  "stderr_category": "none"
+}

@@ -1,0 +1,13 @@
+{
+  "template_id": "hawk.audit_summary",
+  "version": "v3",
+  "task_type": "audit_summary",
+  "description": "Create audit-safe summary from evidence.",
+  "allowed_data_types": ["public", "internal", "sensitive"],
+  "risk_level": "medium",
+  "approved_for_providers": ["gemini", "gpt", "claude", "llama"],
+  "template_text": "Produce an audit-safe narrative from linked evidence only. Highlight unknowns explicitly.",
+  "expected_output_schema": "RemediationGuidance",
+  "status": "active",
+  "last_updated": "2026-04-03"
+}

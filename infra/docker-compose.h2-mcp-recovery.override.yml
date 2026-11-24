@@ -1,0 +1,16 @@
+# Applies only the tested MCP recovery hotpatch.  It deliberately leaves
+# databases, volumes, and all unrelated services unchanged.
+services:
+  api:
+    image: hawk-api-h2-mcp-recovery:local
+  worker:
+    image: hawk-api-h2-mcp-recovery:local
+    environment:
+      MONITORING_HOURLY_COVERAGE_ENABLED: "false"
+    # The local 2 GiB worker repeatedly OOM-killed forked monitoring children,
+    # leaving an idle transaction.  A single process keeps the same queue and
+    # retry semantics without the fork-memory multiplier while this recovery
+    # image is active.
+    command: ["celery", "-A", "app.jobs.celery_app.celery_app", "worker", "--loglevel=info", "--pool=solo", "--concurrency", "1", "--prefetch-multiplier", "1", "-Q", "default,monitoring,auditor,discovery"]
+  celery-beat:
+    image: hawk-api-h2-mcp-recovery:local

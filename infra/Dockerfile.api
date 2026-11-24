@@ -1,0 +1,40 @@
+FROM python:3.11-slim@sha256:9c900dea9e8fb7e16277c179b555cc72d29a352dbc33cff48ad5a0412fd5bfc7 AS builder
+
+COPY apps/api/requirements.lock /tmp/requirements.lock
+RUN pip wheel --require-hashes --no-cache-dir --wheel-dir /wheels -r /tmp/requirements.lock
+
+FROM python:3.11-slim@sha256:9c900dea9e8fb7e16277c179b555cc72d29a352dbc33cff48ad5a0412fd5bfc7 AS api-base
+
+WORKDIR /workspace/apps/api
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+COPY apps/api/requirements.txt /tmp/requirements.txt
+COPY --from=builder /wheels /wheels
+RUN pip install --no-cache-dir --no-index --find-links=/wheels -r /tmp/requirements.txt \
+  && rm -rf /wheels /tmp/requirements.txt
+
+COPY apps/api /workspace/apps/api
+COPY packages /workspace/packages
+COPY docs/evidence /workspace/docs/evidence
+COPY infra/scripts /workspace/infra/scripts
+
+RUN useradd --uid 1000 --create-home --shell /bin/bash appuser \
+  && mkdir -p /artifacts /run/hawk \
+  && chown -R 1000:1000 /workspace /artifacts /run/hawk
+
+EXPOSE 8000
+USER 1000
+
+FROM api-base AS test
+COPY tools/collaboration /workspace/tools/collaboration
+COPY scripts /workspace/scripts
+USER root
+RUN mkdir -p /test-results && chown 1000:1000 /test-results
+USER 1000
+
+FROM api-base AS runtime
+USER root
+RUN pip uninstall -y pytest iniconfig pluggy
+USER 1000

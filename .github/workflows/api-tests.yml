@@ -1,0 +1,142 @@
+name: API Tests
+
+on:
+  push:
+    paths:
+      - "apps/api/**"
+      - ".github/workflows/api-tests.yml"
+      - "Makefile"
+      - "packages/**"
+      - "infra/scripts/**"
+      - "tools/collaboration/run_api_integration.py"
+  pull_request:
+    paths:
+      - "apps/api/**"
+      - ".github/workflows/api-tests.yml"
+      - "Makefile"
+      - "packages/**"
+      - "infra/scripts/**"
+      - "tools/collaboration/run_api_integration.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    name: Unit tests (SQLite, unit profile)
+    runs-on: ubuntu-latest
+    # The measured 5,000+ test suite exceeds 20 minutes on hosted runners.
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --require-hashes -r requirements.lock
+
+      - name: Run unit tests (SQLite, feature flags disabled per unit profile)
+        env:
+          PYTHONPATH: "${{ github.workspace }}:${{ github.workspace }}/apps/api"
+          TEST_PROFILE: unit
+          ENV: test
+          DATABASE_URL: "sqlite+pysqlite:///./hawk_ci_unit.db"
+          TEST_DATABASE_URL: "sqlite+pysqlite:///./hawk_ci_unit.db"
+          SECRET_KEY: "ci-unit-ephemeral-not-for-production"
+          SECRET_KEY_LOCK_ENABLED: "false"
+          CONNECTOR_SECRETS_KEY: "ci-unit-ephemeral-connector-key-not-for-production"
+          CONNECTOR_SECRETS_KDF_SALT: "ci-unit-ephemeral-kdf-salt-not-for-production"
+          ONPREM_BUNDLE_SIGNING_SECRET: "ci-unit-ephemeral-signing-not-for-production"
+          CANONICAL_ACTION_BINDING_KEY: "ci-unit-ephemeral-binding-key-0123456789abcd"
+          SIMULATION_EVIDENCE_DIR: "${{ runner.temp }}/hawk-unit-evidence"
+        run: |
+          # Unit profile disables HMAIR/CIE/integration surfaces and strict dependency checks.
+          # Results do not validate enabled integration behavior or production crypto.
+          # The manual-lab guard intentionally accepts only /private/tmp. Supply
+          # that private fixture root on this disposable Linux runner without
+          # relaxing the application's database boundary.
+          if [ ! -e /private/tmp ]; then
+            sudo install -d -m 0700 -o "$(id -u)" -g "$(id -g)" /private/tmp
+          fi
+          # Complete the batch so one failure does not hide later regressions.
+          python -m pytest -vv --tb=short tests/ -m "not integration and not e2e and not acceptance" --ignore=tests/integration --ignore=tests/e2e 2>&1 | tee "$RUNNER_TEMP/unit-test-output.txt"
+          exit ${PIPESTATUS[0]}
+
+      - name: Upload unit test output
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: unit-test-output
+          path: ${{ runner.temp }}/unit-test-output.txt
+
+  integration:
+    name: Integration tests (PostgreSQL 16 + Redis 7)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: hawk_collaboration_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --require-hashes -r requirements.lock
+
+      - name: Run isolated API, worker, beat, migrations and integration acceptance
+        env:
+          HAWK_DISPOSABLE_TEST_ENV: "1"
+          DATABASE_URL: "postgresql+psycopg2://postgres:postgres@localhost:5432/hawk_collaboration_test"
+          REDIS_URL: "redis://localhost:6379/0"
+        run: |
+          python ../../tools/collaboration/run_api_integration.py
+
+      - name: Upload integration results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: integration-results
+          path: |
+            ${{ runner.temp }}/hawk-integration-*/*.log
+            ${{ runner.temp }}/hawk-integration-*/*.json
+            ${{ runner.temp }}/hawk-integration-*/*.xml

@@ -1,0 +1,75 @@
+name: Component checks
+
+on:
+  push:
+    paths:
+      - "apps/web/**"
+      - "extension/**"
+      - "packages/**"
+      - "docs/**"
+      - ".github/workflows/component-tests.yml"
+  pull_request:
+    paths:
+      - "apps/web/**"
+      - "extension/**"
+      - "packages/**"
+      - "docs/**"
+      - ".github/workflows/component-tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  javascript:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Web build and UI unit tests
+            path: apps/web
+            command: npm run test:ui && npm run build
+          - name: Extension types, unit tests and build
+            path: extension
+            command: ./node_modules/.bin/tsc --noEmit -p tsconfig.json && npm test && npm run build
+          - name: SDK build and contract tests
+            path: packages/hawk-sdk
+            command: npm run build && npm test
+          - name: MCP stdio proxy tests
+            path: packages/hawk-mcp-proxy
+            command: npm test
+    defaults:
+      run:
+        working-directory: ${{ matrix.path }}
+        shell: bash
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "20.20.2"
+          cache: npm
+          cache-dependency-path: ${{ matrix.path }}/package-lock.json
+      - name: Install from the existing lockfile
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Install the SDK browser-bundle test dependency
+        if: matrix.path == 'packages/hawk-sdk'
+        run: npm ci --prefix ../../apps/web --ignore-scripts --no-audit --no-fund
+      - name: Prepare the protected MCP lab fixture root
+        if: matrix.path == 'packages/hawk-mcp-proxy'
+        run: |
+          # The existing manual-lab contract deliberately permits only this root.
+          # Create it privately on the disposable runner; do not relax that guard.
+          if [ ! -e /private/tmp ]; then
+            sudo install -d -m 0700 -o "$(id -u)" -g "$(id -g)" /private/tmp
+          fi
+      - name: Allocate a short isolated socket path
+        run: echo "TMPDIR=$(mktemp -d /tmp/hawk-ci.XXXXXX)" >> "$GITHUB_ENV"
+      - name: Execute component checks
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: ${{ matrix.command }}

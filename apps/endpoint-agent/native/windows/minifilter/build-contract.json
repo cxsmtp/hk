@@ -1,0 +1,42 @@
+{
+  "schema": "hawk.windows-minifilter-build-contract",
+  "version": 2,
+  "verification_status": "unverified",
+  "source_ready_is_runtime_ready": false,
+  "activation_default": "off",
+  "cloud_call_in_preoperation": false,
+  "local_signed_policy_required": true,
+  "file_memory_map_control": "unavailable",
+  "kernel_mode_cached_and_paging_io_control": "unavailable",
+  "exact_endpoint_permit_binding": "unavailable",
+  "pre_create_durable_file_id": "unavailable",
+  "stable_file_identity_context": [
+    "filesystem_type",
+    "volume_creation_time",
+    "volume_serial_number",
+    "file_internal_id_when_queryable"
+  ],
+  "supported_stable_filesystems": ["NTFS", "ReFS"],
+  "rename_link_destination_binding": "context_only_unverified",
+  "operations": [
+    "create",
+    "read",
+    "write",
+    "set_information",
+    "file_system_control",
+    "directory_control",
+    "query_information",
+    "set_security"
+  ],
+  "runtime_evidence_required": [
+    "signed_artifact",
+    "whql_or_attestation_signature",
+    "minifilter_installation",
+    "signed_local_policy",
+    "stable_object_identity_acceptance",
+    "symlink_hardlink_rename_replacement_race_acceptance",
+    "driver_verifier_acceptance",
+    "target_os_acceptance",
+    "edr_coexistence"
+  ]
+}

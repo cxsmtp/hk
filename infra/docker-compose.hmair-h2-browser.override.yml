@@ -1,0 +1,11 @@
+# Runtime image selection only.  This preserves the production service,
+# secret, volume, and network configuration from the existing compose files.
+services:
+  api:
+    image: hawk-api-h2-browser-audit:local
+  worker:
+    image: hawk-api-h2-browser-audit:local
+  celery-beat:
+    image: hawk-api-h2-browser-audit:local
+  migrate:
+    image: hawk-api-h2-browser-audit:local

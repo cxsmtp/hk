@@ -1,0 +1,52 @@
+{
+  "schema": "hawk.windows-wfp-build-contract",
+  "version": 2,
+  "verification_status": "unverified",
+  "source_ready_is_runtime_ready": false,
+  "activation_default": "off",
+  "cloud_call_in_classify": false,
+  "local_signed_policy_required": true,
+  "layers": ["FWPM_LAYER_ALE_AUTH_CONNECT_V4", "FWPM_LAYER_ALE_AUTH_CONNECT_V6"],
+  "protocols": ["TCP", "UDP"],
+  "icmp_and_other_protocols": "unavailable",
+  "destination_binding_version": 3,
+  "destination_binding_material": [
+    "address_family",
+    "protocol",
+    "remote_port",
+    "remote_interface_index",
+    "remote_address"
+  ],
+  "exact_endpoint_permit_binding": "source_implemented_unverified",
+  "flow_reauthorization_state_version": 2,
+  "policy_change_reauthorization_trigger": "atomic_ale_filter_bank_swap",
+  "expiry_reauthorization_trigger": "kernel_timer_passive_work_item",
+  "reauthorization_retry": "bounded_kernel_timer_until_ale_bank_swap_succeeds",
+  "arm_reauthorization_order": "repair_if_red_then_commit_epoch_then_mandatory_bank_swap_or_disarm",
+  "hot_policy_reauthorization_order": "repair_if_red_then_publish_epoch_then_mandatory_bank_swap_or_disarm",
+  "reauthorization_transition_failure": "health_unready_and_post_authority_failure_disarms",
+  "flow_reauthorization_binding": [
+    "policy_generation",
+    "policy_sequence",
+    "arm_session_epoch",
+    "process_instance_hash",
+    "requested_rights",
+    "destination_reference_hash"
+  ],
+  "permit_active_set_semantics": "atomic_exact_replacement",
+  "permit_replay_tracking": "bounded_fail_closed_bloom_projection",
+  "direct_quic_bypass_allowed": false,
+  "runtime_evidence_required": [
+    "signed_artifact",
+    "whql_or_attestation_signature",
+    "wfp_filter_installation",
+    "signed_local_policy",
+    "permit_match_mismatch_replay_expiry_acceptance",
+    "filter_bank_policy_change_reauthorization_acceptance",
+    "policy_expiry_existing_flow_reauthorization_acceptance",
+    "reauthorization_policy_and_interface_change_acceptance",
+    "tcp_udp_direct_ip_acceptance",
+    "target_os_acceptance",
+    "edr_coexistence"
+  ]
+}

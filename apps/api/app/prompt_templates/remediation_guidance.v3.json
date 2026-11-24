@@ -1,0 +1,13 @@
+{
+  "template_id": "hawk.remediation_guidance",
+  "version": "v3",
+  "task_type": "remediation_guidance",
+  "description": "Generate control-linked remediation guidance with approval awareness.",
+  "allowed_data_types": ["public", "internal", "sensitive", "restricted"],
+  "risk_level": "high",
+  "approved_for_providers": ["gpt", "claude", "gemini", "llama"],
+  "template_text": "Generate bounded remediation guidance tied to control_id, evidence refs, and CRQ context. Never emit autonomous enforcement commands.",
+  "expected_output_schema": "RemediationGuidance",
+  "status": "active",
+  "last_updated": "2026-04-03"
+}

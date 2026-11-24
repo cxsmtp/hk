@@ -1,0 +1,42 @@
+{
+  "name": "@hawk-ai/sdk",
+  "version": "0.2.0",
+  "description": "Hawk AI Action Control Plane SDK for app embeds, gateways, and developer control surfaces.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./endpoint": {
+      "types": "./dist/node-client.d.ts",
+      "import": "./dist/node-client.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "tsc -p tsconfig.test.json && tsc -p tsconfig.json && node --test tests/*.test.mjs"
+  },
+  "keywords": [
+    "hawk-ai",
+    "ai-action-control",
+    "llm-gateway",
+    "mcp",
+    "ai-security",
+    "owasp-llm",
+    "mitre-atlas",
+    "agentic-security"
+  ],
+  "license": "UNLICENSED",
+  "sideEffects": false,
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}

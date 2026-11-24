@@ -1,0 +1,27 @@
+{
+  "schema": "hawk.windows-process-control-build-contract",
+  "version": 2,
+  "verification_status": "unverified",
+  "source_ready_is_runtime_ready": false,
+  "activation_default": "off",
+  "cloud_call_in_process_callback": false,
+  "local_signed_policy_required": true,
+  "exact_endpoint_permit_binding": "unavailable",
+  "process_instance_material": [
+    "kernel_process_start_key",
+    "process_id",
+    "actual_binary_hash",
+    "launch_material_hash"
+  ],
+  "restart_lineage_behavior": "conservative_fail_closed_until_authoritative_seed",
+  "runtime_evidence_required": [
+    "signed_artifact",
+    "force_integrity_signature",
+    "process_callback_registration",
+    "signed_local_policy",
+    "pid_reuse_and_image_replacement_acceptance",
+    "blocked_child_nonexecution_acceptance",
+    "target_os_acceptance",
+    "edr_coexistence"
+  ]
+}

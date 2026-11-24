@@ -1,0 +1,173 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		C00100000000000000000001 /* HawkEndpointHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000001; };
+		C00100000000000000000012 /* HawkManagedConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000012; };
+		C00100000000000000000013 /* HawkEndpointPolicyClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000013; };
+		C00100000000000000000002 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B00300000000000000000001; };
+		C00100000000000000000003 /* SystemExtensions.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B00300000000000000000002; };
+		C00100000000000000000007 /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B00300000000000000000003; };
+		C00100000000000000000004 /* HawkEndpointSecurityExtension.systemextension in Embed */ = {isa = PBXBuildFile; fileRef = P00100000000000000000002; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		C00100000000000000000005 /* HawkNetworkFilterExtension.systemextension in Embed */ = {isa = PBXBuildFile; fileRef = P00100000000000000000003; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		C00100000000000000000006 /* HawkManagedRoutingExtension.systemextension in Embed */ = {isa = PBXBuildFile; fileRef = P00100000000000000000004; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+
+		C00200000000000000000001 /* HawkEndpointSecurityMain.c in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000002; };
+		C00200000000000000000002 /* HawkEndpointSecurityClient.c in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000003; };
+		C00200000000000000000003 /* HawkMacEndpointRequest.c in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000004; };
+		C00200000000000000000004 /* HawkMacPolicyBridge.c in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000006; };
+		C00200000000000000000005 /* HawkFloorDecisionEngine.c in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000009; };
+		C00200000000000000000006 /* HawkBoundedSHA256.c in Sources */ = {isa = PBXBuildFile; fileRef = B0010000000000000000000A; };
+		C00200000000000000000007 /* libEndpointSecurity.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = B00300000000000000000005; };
+		C00200000000000000000008 /* libbsm.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = B00300000000000000000006; };
+		C00200000000000000000009 /* HawkEndpointPolicyXPCService.m in Sources */ = {isa = PBXBuildFile; fileRef = B0010000000000000000000F; };
+		C0020000000000000000000A /* HawkMacPolicyWire.c in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000010; };
+		C0020000000000000000000B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B00300000000000000000007; };
+		C0020000000000000000000C /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B00300000000000000000008; };
+		C0020000000000000000000D /* HawkMacProcessLineage.c in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000014; };
+		C0020000000000000000000E /* HawkMacCodeIdentity.m in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000015; };
+
+		C00300000000000000000001 /* content-filter main.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0010000000000000000000B; };
+		C00300000000000000000002 /* HawkNetworkFilterDataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0010000000000000000000C; };
+		C00300000000000000000003 /* HawkMacNetworkBridge.c in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000007; };
+		C00300000000000000000004 /* HawkMacPolicyBridge.c in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000006; };
+		C00300000000000000000005 /* HawkFloorDecisionEngine.c in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000009; };
+		C00300000000000000000006 /* HawkBoundedSHA256.c in Sources */ = {isa = PBXBuildFile; fileRef = B0010000000000000000000A; };
+		C00300000000000000000007 /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B00300000000000000000003; };
+		C00300000000000000000008 /* Network.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B00300000000000000000004; };
+		C00300000000000000000009 /* libbsm.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = B00300000000000000000006; };
+		C0030000000000000000000A /* HawkMacPolicyWire.c in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000010; };
+		C0030000000000000000000B /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B00300000000000000000008; };
+		C0030000000000000000000C /* HawkMacCodeIdentity.m in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000015; };
+
+		C00400000000000000000001 /* routing main.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0010000000000000000000D; };
+		C00400000000000000000002 /* HawkTransparentProxyProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0010000000000000000000E; };
+		C00400000000000000000003 /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B00300000000000000000003; };
+		C00400000000000000000004 /* Network.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B00300000000000000000004; };
+		C00400000000000000000005 /* HawkRoutingReadinessReceipt.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000011; };
+        C00100000000000000000016 = {isa = PBXBuildFile; fileRef = B00100000000000000000016; };
+        C00100000000000000000017 = {isa = PBXBuildFile; fileRef = B00100000000000000000017; };
+        C00100000000000000000018 = {isa = PBXBuildFile; fileRef = B00100000000000000000011; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A10100000000000000000001 = {isa = PBXContainerItemProxy; containerPortal = A00000000000000000000001; proxyType = 1; remoteGlobalIDString = E00200000000000000000001; remoteInfo = HawkEndpointSecurityExtension; };
+		A10100000000000000000002 = {isa = PBXContainerItemProxy; containerPortal = A00000000000000000000001; proxyType = 1; remoteGlobalIDString = E00300000000000000000001; remoteInfo = HawkNetworkFilterExtension; };
+		A10100000000000000000003 = {isa = PBXContainerItemProxy; containerPortal = A00000000000000000000001; proxyType = 1; remoteGlobalIDString = E00400000000000000000001; remoteInfo = HawkManagedRoutingExtension; };
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D00100000000000000000004 = {isa = PBXCopyFilesBuildPhase; buildActionMask = 2147483647; dstPath = "Contents/Library/SystemExtensions"; dstSubfolderSpec = 1; files = (C00100000000000000000004, C00100000000000000000005, C00100000000000000000006, ); name = "Embed System Extensions"; runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		B00100000000000000000001 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = host/HawkEndpointHost.swift; sourceTree = "<group>"; };
+		B00100000000000000000002 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = endpoint-security/HawkEndpointSecurityMain.c; sourceTree = "<group>"; };
+		B00100000000000000000003 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = endpoint-security/HawkEndpointSecurityClient.c; sourceTree = "<group>"; };
+		B00100000000000000000004 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = endpoint-security/HawkMacEndpointRequest.c; sourceTree = "<group>"; };
+		B00100000000000000000006 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = shared/HawkMacPolicyBridge.c; sourceTree = "<group>"; };
+		B00100000000000000000007 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = shared/HawkMacNetworkBridge.c; sourceTree = "<group>"; };
+		B00100000000000000000009 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ../shared/HawkFloorDecisionEngine.c; sourceTree = "<group>"; };
+		B0010000000000000000000A = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ../shared/HawkBoundedSHA256.c; sourceTree = "<group>"; };
+		B0010000000000000000000B = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = content-filter/main.swift; sourceTree = "<group>"; };
+		B0010000000000000000000C = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = content-filter/HawkNetworkFilterDataProvider.swift; sourceTree = "<group>"; };
+		B0010000000000000000000D = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = network-extension/main.swift; sourceTree = "<group>"; };
+		B0010000000000000000000E = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = network-extension/HawkTransparentProxyProvider.swift; sourceTree = "<group>"; };
+		B0010000000000000000000F = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = endpoint-security/HawkEndpointPolicyXPCService.m; sourceTree = "<group>"; };
+		B00100000000000000000010 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = shared/HawkMacPolicyWire.c; sourceTree = "<group>"; };
+		B00100000000000000000011 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = network-extension/HawkRoutingReadinessReceipt.swift; sourceTree = "<group>"; };
+		B00100000000000000000012 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = host/HawkManagedConfiguration.swift; sourceTree = "<group>"; };
+		B00100000000000000000013 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = host/HawkEndpointPolicyClient.swift; sourceTree = "<group>"; };
+		B00100000000000000000014 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = endpoint-security/HawkMacProcessLineage.c; sourceTree = "<group>"; };
+		B00100000000000000000015 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = shared/HawkMacCodeIdentity.m; sourceTree = "<group>"; };
+		B00300000000000000000001 = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		B00300000000000000000002 = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemExtensions.framework; path = System/Library/Frameworks/SystemExtensions.framework; sourceTree = SDKROOT; };
+		B00300000000000000000003 = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = NetworkExtension.framework; path = System/Library/Frameworks/NetworkExtension.framework; sourceTree = SDKROOT; };
+		B00300000000000000000004 = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Network.framework; path = System/Library/Frameworks/Network.framework; sourceTree = SDKROOT; };
+		B00300000000000000000005 = {isa = PBXFileReference; lastKnownFileType = sourcecode.text-based-dylib-definition; name = libEndpointSecurity.tbd; path = usr/lib/libEndpointSecurity.tbd; sourceTree = SDKROOT; };
+		B00300000000000000000006 = {isa = PBXFileReference; lastKnownFileType = sourcecode.text-based-dylib-definition; name = libbsm.tbd; path = usr/lib/libbsm.tbd; sourceTree = SDKROOT; };
+		B00300000000000000000007 = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		B00300000000000000000008 = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		P00100000000000000000001 = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HawkEndpointHost.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		P00100000000000000000002 = {isa = PBXFileReference; explicitFileType = wrapper.system-extension; includeInIndex = 0; path = HawkEndpointSecurityExtension.systemextension; sourceTree = BUILT_PRODUCTS_DIR; };
+		P00100000000000000000003 = {isa = PBXFileReference; explicitFileType = wrapper.system-extension; includeInIndex = 0; path = HawkNetworkFilterExtension.systemextension; sourceTree = BUILT_PRODUCTS_DIR; };
+		P00100000000000000000004 = {isa = PBXFileReference; explicitFileType = wrapper.system-extension; includeInIndex = 0; path = HawkManagedRoutingExtension.systemextension; sourceTree = BUILT_PRODUCTS_DIR; };
+        B00100000000000000000016 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = host/HawkManagedApplyRequest.swift; sourceTree = "<group>"; };
+        B00100000000000000000017 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = host/HawkManagedRoutingAuthority.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D00100000000000000000002 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (C00100000000000000000002, C00100000000000000000003, C00100000000000000000007, ); runOnlyForDeploymentPostprocessing = 0; };
+		D00200000000000000000002 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (C00200000000000000000007, C00200000000000000000008, C0020000000000000000000B, C0020000000000000000000C, ); runOnlyForDeploymentPostprocessing = 0; };
+		D00300000000000000000002 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (C00300000000000000000007, C00300000000000000000008, C00300000000000000000009, C0030000000000000000000B, ); runOnlyForDeploymentPostprocessing = 0; };
+		D00400000000000000000002 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (C00400000000000000000003, C00400000000000000000004, ); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A00100000000000000000001 = {isa = PBXGroup; children = (B00100000000000000000001, B00100000000000000000002, B00100000000000000000003, B00100000000000000000004, B00100000000000000000006, B00100000000000000000007, B00100000000000000000009, B0010000000000000000000A, B0010000000000000000000B, B0010000000000000000000C, B0010000000000000000000D, B0010000000000000000000E, B0010000000000000000000F, B00100000000000000000010, B00100000000000000000011, B00100000000000000000012, B00100000000000000000013, B00100000000000000000014, B00100000000000000000015, B00100000000000000000016, B00100000000000000000017, A00100000000000000000003, A00100000000000000000002, ); sourceTree = "<group>"; };
+		A00100000000000000000002 = {isa = PBXGroup; children = (P00100000000000000000001, P00100000000000000000002, P00100000000000000000003, P00100000000000000000004, ); name = Products; sourceTree = "<group>"; };
+		A00100000000000000000003 = {isa = PBXGroup; children = (B00300000000000000000001, B00300000000000000000002, B00300000000000000000003, B00300000000000000000004, B00300000000000000000005, B00300000000000000000006, B00300000000000000000007, B00300000000000000000008, ); name = Frameworks; sourceTree = "<group>"; };
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		E00100000000000000000001 = {isa = PBXNativeTarget; buildConfigurationList = F10100000000000000000001; buildPhases = (D00100000000000000000001, D00100000000000000000002, D00100000000000000000003, D00100000000000000000004, ); buildRules = (); dependencies = (A20100000000000000000001, A20100000000000000000002, A20100000000000000000003, ); name = HawkEndpointHost; productName = HawkEndpointHost; productReference = P00100000000000000000001; productType = "com.apple.product-type.application"; };
+		E00200000000000000000001 = {isa = PBXNativeTarget; buildConfigurationList = F10200000000000000000001; buildPhases = (D00200000000000000000001, D00200000000000000000002, D00200000000000000000003, ); buildRules = (); dependencies = (); name = HawkEndpointSecurityExtension; productName = HawkEndpointSecurityExtension; productReference = P00100000000000000000002; productType = "com.apple.product-type.system-extension"; };
+		E00300000000000000000001 = {isa = PBXNativeTarget; buildConfigurationList = F10300000000000000000001; buildPhases = (D00300000000000000000001, D00300000000000000000002, D00300000000000000000003, ); buildRules = (); dependencies = (); name = HawkNetworkFilterExtension; productName = HawkNetworkFilterExtension; productReference = P00100000000000000000003; productType = "com.apple.product-type.system-extension"; };
+		E00400000000000000000001 = {isa = PBXNativeTarget; buildConfigurationList = F10400000000000000000001; buildPhases = (D00400000000000000000001, D00400000000000000000002, D00400000000000000000003, ); buildRules = (); dependencies = (); name = HawkManagedRoutingExtension; productName = HawkManagedRoutingExtension; productReference = P00100000000000000000004; productType = "com.apple.product-type.system-extension"; };
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A00000000000000000000001 = {isa = PBXProject; attributes = {BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 2600; LastUpgradeCheck = 2600; TargetAttributes = {E00100000000000000000001 = {CreatedOnToolsVersion = 26.0; }; E00200000000000000000001 = {CreatedOnToolsVersion = 26.0; }; E00300000000000000000001 = {CreatedOnToolsVersion = 26.0; }; E00400000000000000000001 = {CreatedOnToolsVersion = 26.0; }; }; }; buildConfigurationList = F10000000000000000000001; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en, Base, ); mainGroup = A00100000000000000000001; productRefGroup = A00100000000000000000002; projectDirPath = ""; projectRoot = ""; targets = (E00100000000000000000001, E00200000000000000000001, E00300000000000000000001, E00400000000000000000001, ); };
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		D00100000000000000000003 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		D00200000000000000000003 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		D00300000000000000000003 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		D00400000000000000000003 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D00100000000000000000001 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (C00100000000000000000001, C00100000000000000000012, C00100000000000000000013, C00100000000000000000016, C00100000000000000000017, C00100000000000000000018, ); runOnlyForDeploymentPostprocessing = 0; };
+		D00200000000000000000001 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (C00200000000000000000001, C00200000000000000000002, C00200000000000000000003, C00200000000000000000004, C00200000000000000000005, C00200000000000000000006, C00200000000000000000009, C0020000000000000000000A, C0020000000000000000000D, C0020000000000000000000E, ); runOnlyForDeploymentPostprocessing = 0; };
+		D00300000000000000000001 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (C00300000000000000000001, C00300000000000000000002, C00300000000000000000003, C00300000000000000000004, C00300000000000000000005, C00300000000000000000006, C0030000000000000000000A, C0030000000000000000000C, ); runOnlyForDeploymentPostprocessing = 0; };
+		D00400000000000000000001 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (C00400000000000000000001, C00400000000000000000002, C00400000000000000000005, ); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A20100000000000000000001 = {isa = PBXTargetDependency; target = E00200000000000000000001; targetProxy = A10100000000000000000001; };
+		A20100000000000000000002 = {isa = PBXTargetDependency; target = E00300000000000000000001; targetProxy = A10100000000000000000002; };
+		A20100000000000000000003 = {isa = PBXTargetDependency; target = E00400000000000000000001; targetProxy = A10100000000000000000003; };
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		F00000000000000000000001 = {isa = XCBuildConfiguration; buildSettings = {CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; GCC_C_LANGUAGE_STANDARD = c11; MACOSX_DEPLOYMENT_TARGET = 15.0; SDKROOT = macosx; SWIFT_VERSION = 5.0; HAWK_APPLE_TEAM_ID = ""; HAWK_CODE_SIGN_IDENTITY = "Apple Development"; HAWK_POLICY_SIGNING_PUBLIC_KEY_X963_BASE64 = ""; }; name = Debug; };
+		F00000000000000000000002 = {isa = XCBuildConfiguration; buildSettings = {CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; GCC_C_LANGUAGE_STANDARD = c11; MACOSX_DEPLOYMENT_TARGET = 15.0; SDKROOT = macosx; SWIFT_COMPILATION_MODE = wholemodule; SWIFT_VERSION = 5.0; HAWK_APPLE_TEAM_ID = ""; HAWK_CODE_SIGN_IDENTITY = "Developer ID Application"; HAWK_POLICY_SIGNING_PUBLIC_KEY_X963_BASE64 = ""; }; name = Release; };
+
+		F00100000000000000000001 = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_ENTITLEMENTS = host/HawkEndpointHost.entitlements; CODE_SIGN_IDENTITY = "$(HAWK_CODE_SIGN_IDENTITY)"; CODE_SIGN_STYLE = Manual; DEVELOPMENT_TEAM = "$(HAWK_APPLE_TEAM_ID)"; INFOPLIST_FILE = host/Info.plist; PRODUCT_BUNDLE_IDENTIFIER = ai.hawk.endpoint.host; PRODUCT_NAME = "$(TARGET_NAME)"; PROVISIONING_PROFILE_SPECIFIER = "$(HAWK_HOST_PROVISIONING_PROFILE)"; }; name = Debug; };
+		F00100000000000000000002 = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_ENTITLEMENTS = host/HawkEndpointHost.entitlements; CODE_SIGN_IDENTITY = "$(HAWK_CODE_SIGN_IDENTITY)"; CODE_SIGN_STYLE = Manual; DEVELOPMENT_TEAM = "$(HAWK_APPLE_TEAM_ID)"; INFOPLIST_FILE = host/Info.plist; PRODUCT_BUNDLE_IDENTIFIER = ai.hawk.endpoint.host; PRODUCT_NAME = "$(TARGET_NAME)"; PROVISIONING_PROFILE_SPECIFIER = "$(HAWK_HOST_PROVISIONING_PROFILE)"; }; name = Release; };
+
+		F00200000000000000000001 = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_ENTITLEMENTS = endpoint-security/EndpointSecurity.entitlements; CODE_SIGN_IDENTITY = "$(HAWK_CODE_SIGN_IDENTITY)"; CODE_SIGN_STYLE = Manual; DEVELOPMENT_TEAM = "$(HAWK_APPLE_TEAM_ID)"; HEADER_SEARCH_PATHS = ("$(SRCROOT)/../shared", "$(SRCROOT)/shared", "$(SRCROOT)/endpoint-security", ); INFOPLIST_FILE = endpoint-security/Info.plist; PRODUCT_BUNDLE_IDENTIFIER = ai.hawk.endpoint.endpoint-security; PRODUCT_NAME = "$(TARGET_NAME)"; PROVISIONING_PROFILE_SPECIFIER = "$(HAWK_ENDPOINT_SECURITY_PROVISIONING_PROFILE)"; }; name = Debug; };
+		F00200000000000000000002 = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_ENTITLEMENTS = endpoint-security/EndpointSecurity.entitlements; CODE_SIGN_IDENTITY = "$(HAWK_CODE_SIGN_IDENTITY)"; CODE_SIGN_STYLE = Manual; DEVELOPMENT_TEAM = "$(HAWK_APPLE_TEAM_ID)"; HEADER_SEARCH_PATHS = ("$(SRCROOT)/../shared", "$(SRCROOT)/shared", "$(SRCROOT)/endpoint-security", ); INFOPLIST_FILE = endpoint-security/Info.plist; PRODUCT_BUNDLE_IDENTIFIER = ai.hawk.endpoint.endpoint-security; PRODUCT_NAME = "$(TARGET_NAME)"; PROVISIONING_PROFILE_SPECIFIER = "$(HAWK_ENDPOINT_SECURITY_PROVISIONING_PROFILE)"; }; name = Release; };
+
+		F00300000000000000000001 = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_ENTITLEMENTS = content-filter/ContentFilter.entitlements; CODE_SIGN_IDENTITY = "$(HAWK_CODE_SIGN_IDENTITY)"; CODE_SIGN_STYLE = Manual; DEVELOPMENT_TEAM = "$(HAWK_APPLE_TEAM_ID)"; HEADER_SEARCH_PATHS = ("$(SRCROOT)/../shared", "$(SRCROOT)/shared", ); INFOPLIST_FILE = content-filter/Info.plist; PRODUCT_BUNDLE_IDENTIFIER = ai.hawk.endpoint.content-filter; PRODUCT_NAME = "$(TARGET_NAME)"; PROVISIONING_PROFILE_SPECIFIER = "$(HAWK_CONTENT_FILTER_PROVISIONING_PROFILE)"; }; name = Debug; };
+		F00300000000000000000002 = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_ENTITLEMENTS = content-filter/ContentFilter.entitlements; CODE_SIGN_IDENTITY = "$(HAWK_CODE_SIGN_IDENTITY)"; CODE_SIGN_STYLE = Manual; DEVELOPMENT_TEAM = "$(HAWK_APPLE_TEAM_ID)"; HEADER_SEARCH_PATHS = ("$(SRCROOT)/../shared", "$(SRCROOT)/shared", ); INFOPLIST_FILE = content-filter/Info.plist; PRODUCT_BUNDLE_IDENTIFIER = ai.hawk.endpoint.content-filter; PRODUCT_NAME = "$(TARGET_NAME)"; PROVISIONING_PROFILE_SPECIFIER = "$(HAWK_CONTENT_FILTER_PROVISIONING_PROFILE)"; }; name = Release; };
+
+		F00400000000000000000001 = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_ENTITLEMENTS = network-extension/NetworkExtension.entitlements; CODE_SIGN_IDENTITY = "$(HAWK_CODE_SIGN_IDENTITY)"; CODE_SIGN_STYLE = Manual; DEVELOPMENT_TEAM = "$(HAWK_APPLE_TEAM_ID)"; INFOPLIST_FILE = network-extension/Info.plist; PRODUCT_BUNDLE_IDENTIFIER = ai.hawk.endpoint.managed-routing; PRODUCT_NAME = "$(TARGET_NAME)"; PROVISIONING_PROFILE_SPECIFIER = "$(HAWK_ROUTING_PROVISIONING_PROFILE)"; }; name = Debug; };
+		F00400000000000000000002 = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_ENTITLEMENTS = network-extension/NetworkExtension.entitlements; CODE_SIGN_IDENTITY = "$(HAWK_CODE_SIGN_IDENTITY)"; CODE_SIGN_STYLE = Manual; DEVELOPMENT_TEAM = "$(HAWK_APPLE_TEAM_ID)"; INFOPLIST_FILE = network-extension/Info.plist; PRODUCT_BUNDLE_IDENTIFIER = ai.hawk.endpoint.managed-routing; PRODUCT_NAME = "$(TARGET_NAME)"; PROVISIONING_PROFILE_SPECIFIER = "$(HAWK_ROUTING_PROVISIONING_PROFILE)"; }; name = Release; };
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		F10000000000000000000001 = {isa = XCConfigurationList; buildConfigurations = (F00000000000000000000001, F00000000000000000000002, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		F10100000000000000000001 = {isa = XCConfigurationList; buildConfigurations = (F00100000000000000000001, F00100000000000000000002, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		F10200000000000000000001 = {isa = XCConfigurationList; buildConfigurations = (F00200000000000000000001, F00200000000000000000002, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		F10300000000000000000001 = {isa = XCConfigurationList; buildConfigurations = (F00300000000000000000001, F00300000000000000000002, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		F10400000000000000000001 = {isa = XCConfigurationList; buildConfigurations = (F00400000000000000000001, F00400000000000000000002, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+/* End XCConfigurationList section */
+	};
+	rootObject = A00000000000000000000001;
+}

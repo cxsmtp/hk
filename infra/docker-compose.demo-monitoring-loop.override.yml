@@ -1,0 +1,10 @@
+# Apply the same tested API package to every monitoring executor.  This avoids
+# a mixed API/worker deployment that can reintroduce the lifecycle feedback
+# loop.  It changes no database, volume, network, feature-flag, or tenant data.
+services:
+  api:
+    image: hawk-api-demo-monitoring-loop:v10
+  worker:
+    image: hawk-api-demo-monitoring-loop:v10
+  celery-beat:
+    image: hawk-api-demo-monitoring-loop:v10

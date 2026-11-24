@@ -1,0 +1,6 @@
+FROM hawk-api-h2-browser-audit:local
+
+USER root
+COPY apps/api/app/api/routers/ai_iam.py /workspace/apps/api/app/api/routers/ai_iam.py
+RUN chown appuser:appuser /workspace/apps/api/app/api/routers/ai_iam.py
+USER 1000

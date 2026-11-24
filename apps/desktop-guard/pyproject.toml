@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hawk-desktop-guard"
+version = "0.1.0"
+description = "Local Hawk AI desktop prompt guard for Claude Desktop and similar AI apps."
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+hawk-desktop-guard = "hawk_desktop_guard.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

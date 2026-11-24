@@ -1,0 +1,165 @@
+services:
+  db:
+    image: postgres:16
+    container_name: ai_control_test_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: aicontrol_test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d aicontrol_test"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  redis:
+    image: redis:7
+    container_name: ai_control_test_redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  api:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.api
+    container_name: ai_control_test_api
+    working_dir: /workspace/apps/api
+    environment:
+      ENV: test
+      TEST_PROFILE: integration
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/aicontrol_test
+      TEST_DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/aicontrol_test
+      REDIS_URL: redis://redis:6379/0
+      TEST_REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      PYTHONPATH: /workspace/apps/api
+      ARTIFACT_DIR: /workspace/artifacts
+      FAIL_SECURE_MODE: "true"
+      CONTROL_PLANE_STRICT_DEPENDENCY_CHECKS: "true"
+      WEB_ORIGIN: http://localhost:3000
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    command:
+      [
+        "bash",
+        "-lc",
+        "alembic -c app/db/migrations/alembic.ini upgrade head && python /workspace/infra/scripts/seed.py && python /workspace/infra/scripts/seed_e2e_fixtures.py && uvicorn app.main:app --host 0.0.0.0 --port 8000",
+      ]
+    volumes:
+      - ../apps/api:/workspace/apps/api
+      - ../packages:/workspace/packages
+      - ../infra/scripts:/workspace/infra/scripts
+      - ../artifacts:/workspace/artifacts
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=2)\""]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 20s
+
+  worker:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.api
+    container_name: ai_control_test_worker
+    working_dir: /workspace/apps/api
+    environment:
+      ENV: test
+      TEST_PROFILE: integration
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/aicontrol_test
+      TEST_DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/aicontrol_test
+      REDIS_URL: redis://redis:6379/0
+      TEST_REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      PYTHONPATH: /workspace/apps/api
+      ARTIFACT_DIR: /workspace/artifacts
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    command: ["bash", "-lc", "celery -A app.jobs.celery_app.celery_app worker --loglevel=info -Q default,monitoring,auditor,discovery"]
+    volumes:
+      - ../apps/api:/workspace/apps/api
+      - ../packages:/workspace/packages
+      - ../infra/scripts:/workspace/infra/scripts
+      - ../artifacts:/workspace/artifacts
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import os,sys; from redis import Redis; r=Redis.from_url(os.getenv('REDIS_URL','redis://redis:6379/0')); sys.exit(0 if r.get('control_plane:celery:worker_heartbeat') else 1)\""]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 20s
+
+  celery-beat:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.api
+    container_name: ai_control_test_celery_beat
+    working_dir: /workspace/apps/api
+    environment:
+      ENV: test
+      TEST_PROFILE: integration
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/aicontrol_test
+      TEST_DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/aicontrol_test
+      REDIS_URL: redis://redis:6379/0
+      TEST_REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      PYTHONPATH: /workspace/apps/api
+      ARTIFACT_DIR: /workspace/artifacts
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    command: ["bash", "-lc", "celery -A app.jobs.celery_app.celery_app beat --loglevel=info"]
+    volumes:
+      - ../apps/api:/workspace/apps/api
+      - ../packages:/workspace/packages
+      - ../infra/scripts:/workspace/infra/scripts
+      - ../artifacts:/workspace/artifacts
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import os,sys; from redis import Redis; r=Redis.from_url(os.getenv('REDIS_URL','redis://redis:6379/0')); sys.exit(0 if r.get('control_plane:celery:beat_heartbeat') else 1)\""]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 20s
+
+  web:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.web
+    container_name: ai_control_test_web
+    working_dir: /workspace/apps/web
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    command: ["bash", "-lc", "npm ci && npm run dev -- --hostname 0.0.0.0 --port 3000"]
+    volumes:
+      - ../apps/web:/workspace/apps/web
+      - ../packages:/workspace/packages
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3000/login').then(r=>process.exit((r.status>=200&&r.status<500)?0:1)).catch(()=>process.exit(1))\""]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 20s

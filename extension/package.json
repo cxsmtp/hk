@@ -1,0 +1,23 @@
+{
+  "name": "hawk-ai-extension",
+  "version": "0.1.9",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "package:pilot": "node scripts/package-pilot-extension.mjs",
+    "validate:pilot-package": "node scripts/validate-pilot-package.mjs",
+    "watch": "node build.mjs --watch",
+    "test": "vitest run --config vitest.config.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:live": "EXT_E2E_LIVE_BACKEND=1 playwright test tests/e2e/browser-extension.live.spec.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.2",
+    "@types/chrome": "^0.0.327",
+    "@types/node": "^22.19.11",
+    "esbuild": "^0.25.9",
+    "typescript": "^5.7.2",
+    "vitest": "^4.0.18"
+  }
+}

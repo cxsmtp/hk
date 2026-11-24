@@ -1,0 +1,1715 @@
+[
+  {
+    "route": "/",
+    "file": "apps/web/src/app/page.tsx",
+    "owner": "W1",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-applicable",
+      "ready-populated": "not-applicable",
+      "ready-empty": "not-applicable",
+      "unavailable": "not-applicable",
+      "stale": "not-applicable"
+    },
+    "notes": "Public illustrative product preview is prominently labelled sample data, not workspace data. Final desktop/mobile DOM and layout check confirmed note precedes the first sample metric: 560 < 794.5 at 1470px; 914 < 1522.5 at 393px. Body width matched viewport; override restored.",
+    "desktop": "observed",
+    "mobile": "observed"
+  },
+  {
+    "route": "/agui/ai-iam-approvals",
+    "file": "apps/web/src/app/agui/ai-iam-approvals/page.tsx",
+    "owner": "W2",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/agui/auditor-challenges",
+    "file": "apps/web/src/app/agui/auditor-challenges/page.tsx",
+    "owner": "W2",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/agui/findings-review",
+    "file": "apps/web/src/app/agui/findings-review/page.tsx",
+    "owner": "W2",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/agui/governance-approvals",
+    "file": "apps/web/src/app/agui/governance-approvals/page.tsx",
+    "owner": "W2",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/agui/policy-overrides",
+    "file": "apps/web/src/app/agui/policy-overrides/page.tsx",
+    "owner": "W2",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/agui/simulation-approvals",
+    "file": "apps/web/src/app/agui/simulation-approvals/page.tsx",
+    "owner": "W2",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/ai-ecosystem",
+    "file": "apps/web/src/app/ai-ecosystem/page.tsx",
+    "owner": "W1",
+    "local_views": [
+      {
+        "label": "Organization",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Departments",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Surface coverage",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Policies",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Attention",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Table fallback",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      }
+    ],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/ai-footprint",
+    "file": "apps/web/src/app/ai-footprint/page.tsx",
+    "owner": "W1",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "observed",
+    "states": {
+      "loading": "observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/ai-iam",
+    "file": "apps/web/src/app/ai-iam/page.tsx",
+    "owner": "W1",
+    "local_views": [
+      {
+        "label": "Identities",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Violations",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Policies",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Advanced AI IAM tools",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Identity investigation: Overview",
+        "desktop": "blocked",
+        "mobile": "blocked",
+        "notes": "Identity source returned unavailable; no real identity could be opened. No record was fabricated."
+      },
+      {
+        "label": "Identity investigation: Violations",
+        "desktop": "blocked",
+        "mobile": "blocked",
+        "notes": "Identity source returned unavailable; no real identity could be opened. No record was fabricated."
+      },
+      {
+        "label": "Identity investigation: Policy",
+        "desktop": "blocked",
+        "mobile": "blocked",
+        "notes": "Identity source returned unavailable; no real identity could be opened. No record was fabricated."
+      },
+      {
+        "label": "Identity investigation: Evidence",
+        "desktop": "blocked",
+        "mobile": "blocked",
+        "notes": "Identity source returned unavailable; no real identity could be opened. No record was fabricated."
+      }
+    ],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/ai-iam/agents/[id]",
+    "file": "apps/web/src/app/ai-iam/agents/[id]/page.tsx",
+    "owner": "W1",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "blocked",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "No genuine accessible record was available for the final check. No ID or data was fabricated. Full acceptance remains blocked.",
+    "desktop": "blocked",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/ai-tools-usage",
+    "file": "apps/web/src/app/ai-tools-usage/page.tsx",
+    "owner": "W2",
+    "local_views": [
+      {
+        "label": "Overview",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Providers",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Users & Departments",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Prompts & Actions",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "MCP & Tools",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Spend & Utilization",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Accounts & Devices",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Data, Uploads & Downloads",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Browser Extension",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Meeting AI",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Policies",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Coverage & Gaps",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Connector Health",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      }
+    ],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "observed",
+    "states": {
+      "loading": "observed",
+      "ready-populated": "observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/analytics",
+    "file": "apps/web/src/app/analytics/page.tsx",
+    "owner": "W1",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/assets",
+    "file": "apps/web/src/app/assets/page.tsx",
+    "owner": "W1",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "observed"
+  },
+  {
+    "route": "/auditor",
+    "file": "apps/web/src/app/auditor/page.tsx",
+    "owner": "W2",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "observed",
+    "states": {
+      "loading": "observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/auditor/conflicts",
+    "file": "apps/web/src/app/auditor/conflicts/page.tsx",
+    "owner": "W2",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "observed",
+    "states": {
+      "loading": "observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/control-coverage/source-control/github-repository-boundary",
+    "file": "apps/web/src/app/control-coverage/source-control/github-repository-boundary/page.tsx",
+    "owner": "W3",
+    "local_views": [
+      {
+        "label": "Repositories",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Accounts",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "People & teams",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "AI Connections",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Connection details and test tools",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      }
+    ],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/dashboard",
+    "file": "apps/web/src/app/dashboard/page.tsx",
+    "owner": "W1",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "observed",
+    "states": {
+      "loading": "observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/dashboard/command-center",
+    "file": "apps/web/src/app/dashboard/command-center/page.tsx",
+    "owner": "W1",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "observed"
+  },
+  {
+    "route": "/deploy",
+    "file": "apps/web/src/app/deploy/page.tsx",
+    "owner": "W3",
+    "local_views": [
+      {
+        "label": "Browser Extension",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "MCP Gateway",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "LLM Gateway",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Endpoint Agent",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      }
+    ],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/discovery/applications",
+    "file": "apps/web/src/app/discovery/applications/page.tsx",
+    "owner": "W1",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "observed",
+      "ready-populated": "observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/discovery/assets",
+    "file": "apps/web/src/app/discovery/assets/page.tsx",
+    "owner": "W1",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/discovery/assets/[id]",
+    "file": "apps/web/src/app/discovery/assets/[id]/page.tsx",
+    "owner": "W1",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "blocked",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "No genuine accessible record was available for the final check. No ID or data was fabricated. Full acceptance remains blocked.",
+    "desktop": "blocked",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/discovery/ecosystems",
+    "file": "apps/web/src/app/discovery/ecosystems/page.tsx",
+    "owner": "W1",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/discovery/ecosystems/[ecosystemId]",
+    "file": "apps/web/src/app/discovery/ecosystems/[ecosystemId]/page.tsx",
+    "owner": "W1",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "blocked",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "No genuine accessible record was available for the final check. No ID or data was fabricated. Full acceptance remains blocked.",
+    "desktop": "blocked",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/discovery/estate",
+    "file": "apps/web/src/app/discovery/estate/page.tsx",
+    "owner": "W1",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/discovery/executive-summary",
+    "file": "apps/web/src/app/discovery/executive-summary/page.tsx",
+    "owner": "W1",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "observed",
+      "ready-populated": "observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/discovery/findings",
+    "file": "apps/web/src/app/discovery/findings/page.tsx",
+    "owner": "W2",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "observed",
+      "ready-populated": "observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/discovery/findings/[id]",
+    "file": "apps/web/src/app/discovery/findings/[id]/page.tsx",
+    "owner": "W2",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/discovery/overview",
+    "file": "apps/web/src/app/discovery/overview/page.tsx",
+    "owner": "W1",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "observed",
+      "ready-populated": "observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/discovery/scans",
+    "file": "apps/web/src/app/discovery/scans/page.tsx",
+    "owner": "W1",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/discovery/trends",
+    "file": "apps/web/src/app/discovery/trends/page.tsx",
+    "owner": "W1",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "observed",
+      "ready-populated": "observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/discovery/unknown",
+    "file": "apps/web/src/app/discovery/unknown/page.tsx",
+    "owner": "W1",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/evidence",
+    "file": "apps/web/src/app/evidence/page.tsx",
+    "owner": "W2",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "observed",
+      "ready-populated": "observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/governance",
+    "file": "apps/web/src/app/governance/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/guided-demo",
+    "file": "apps/web/src/app/guided-demo/page.tsx",
+    "owner": "W1",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/integrations",
+    "file": "apps/web/src/app/integrations/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "observed"
+  },
+  {
+    "route": "/interaction-security",
+    "file": "apps/web/src/app/interaction-security/page.tsx",
+    "owner": "W2",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/login",
+    "file": "apps/web/src/app/login/page.tsx",
+    "owner": "W1",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Expired-session sign-in screen observed on desktop and 393px mobile. Inputs and sign-in action remained visible; mobile body width was 393px.",
+    "desktop": "observed",
+    "mobile": "observed"
+  },
+  {
+    "route": "/login/oidc/callback",
+    "file": "apps/web/src/app/login/oidc/callback/page.tsx",
+    "owner": "W1",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "observed",
+      "stale": "not-observed"
+    },
+    "notes": "No fabricated SSO parameters. Callback without a code first showed sign-in loading, then clear failure with Return to sign in. Observed desktop and 393px mobile; no overflow.",
+    "desktop": "observed",
+    "mobile": "observed"
+  },
+  {
+    "route": "/maturity",
+    "file": "apps/web/src/app/maturity/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/monitoring",
+    "file": "apps/web/src/app/monitoring/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "observed",
+      "ready-populated": "observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/observe",
+    "file": "apps/web/src/app/observe/page.tsx",
+    "owner": "W2",
+    "local_views": [
+      {
+        "label": "All activity",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Model requests",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Tool calls",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Repository actions",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Device actions",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Uploads",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Warnings",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Failures",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Blocked activity",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      }
+    ],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "observed",
+      "ready-populated": "observed",
+      "ready-empty": "not-observed",
+      "unavailable": "observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "observed"
+  },
+  {
+    "route": "/ops/jobs",
+    "file": "apps/web/src/app/ops/jobs/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/policies",
+    "file": "apps/web/src/app/policies/page.tsx",
+    "owner": "W3",
+    "local_views": [
+      {
+        "label": "Assignments",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Running policies",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Fine-tune and publish",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Scoped rules",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Policy library",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Approvals and rollout",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      }
+    ],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "observed"
+  },
+  {
+    "route": "/protect",
+    "file": "apps/web/src/app/protect/page.tsx",
+    "owner": "W3",
+    "local_views": [
+      {
+        "label": "Policy list",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Intent",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Scope",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Action",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Validate",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Publish",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      }
+    ],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "observed"
+  },
+  {
+    "route": "/runtime-intelligence",
+    "file": "apps/web/src/app/runtime-intelligence/page.tsx",
+    "owner": "W2",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/runtime-intelligence/action-graph/[id]",
+    "file": "apps/web/src/app/runtime-intelligence/action-graph/[id]/page.tsx",
+    "owner": "W2",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/runtime-intelligence/action-trace/[id]",
+    "file": "apps/web/src/app/runtime-intelligence/action-trace/[id]/page.tsx",
+    "owner": "W2",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/runtime-intelligence/activity-map",
+    "file": "apps/web/src/app/runtime-intelligence/activity-map/page.tsx",
+    "owner": "W2",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "observed",
+    "states": {
+      "loading": "observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/runtime-intelligence/agent-flows",
+    "file": "apps/web/src/app/runtime-intelligence/agent-flows/page.tsx",
+    "owner": "W2",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "observed",
+    "states": {
+      "loading": "observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/runtime-intelligence/chains/[id]/evidence",
+    "file": "apps/web/src/app/runtime-intelligence/chains/[id]/evidence/page.tsx",
+    "owner": "W2",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/runtime-intelligence/chains/[id]/graph",
+    "file": "apps/web/src/app/runtime-intelligence/chains/[id]/graph/page.tsx",
+    "owner": "W2",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/runtime-intelligence/context-graph",
+    "file": "apps/web/src/app/runtime-intelligence/context-graph/page.tsx",
+    "owner": "W2",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "observed",
+    "states": {
+      "loading": "observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/runtime-intelligence/overview",
+    "file": "apps/web/src/app/runtime-intelligence/overview/page.tsx",
+    "owner": "W2",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "observed",
+    "states": {
+      "loading": "observed",
+      "ready-populated": "observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/runtime-intelligence/patterns-anomalies",
+    "file": "apps/web/src/app/runtime-intelligence/patterns-anomalies/page.tsx",
+    "owner": "W2",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "observed",
+    "states": {
+      "loading": "observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/runtime-intelligence/recommendations",
+    "file": "apps/web/src/app/runtime-intelligence/recommendations/page.tsx",
+    "owner": "W2",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "observed",
+    "states": {
+      "loading": "observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/runtime-intelligence/transactions/[id]",
+    "file": "apps/web/src/app/runtime-intelligence/transactions/[id]/page.tsx",
+    "owner": "W2",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "blocked",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "No genuine accessible record was available for the final check. No ID or data was fabricated. Full acceptance remains blocked.",
+    "desktop": "blocked",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/runtime-intelligence/transactions/[id]/diagnostics",
+    "file": "apps/web/src/app/runtime-intelligence/transactions/[id]/diagnostics/page.tsx",
+    "owner": "W2",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "blocked",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "No genuine accessible record was available for the final check. No ID or data was fabricated. Full acceptance remains blocked.",
+    "desktop": "blocked",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/shadow-ai",
+    "file": "apps/web/src/app/shadow-ai/page.tsx",
+    "owner": "W1",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/simulations",
+    "file": "apps/web/src/app/simulations/page.tsx",
+    "owner": "W3",
+    "local_views": [
+      {
+        "label": "Run Explorer",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Packs",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Definitions",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Framework Coverage",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Control Coverage",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Traceability",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Catalog administration",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      }
+    ],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "observed",
+    "states": {
+      "loading": "observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/surface-coverage",
+    "file": "apps/web/src/app/surface-coverage/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/users",
+    "file": "apps/web/src/app/users/page.tsx",
+    "owner": "W1",
+    "local_views": [
+      {
+        "label": "Users",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Departments",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Organization",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Action Explorer",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "Groups",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "User 360: Overview",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "User 360: AI usage",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "User 360: AI Accounts & Tenants",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "User 360: Prompts & requests",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "User 360: AI actions",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "User 360: Policies & Policy Packs",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "User 360: Controls & evidence",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "User 360: Activity Lineage",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      },
+      {
+        "label": "User 360: Maturity & trends",
+        "desktop": "observed",
+        "mobile": "blocked",
+        "notes": "Opened in final authenticated browser pass. Available, empty and unavailable source states were preserved; no control was published or executed. This is navigation/render proof, not backend or enforcement acceptance."
+      }
+    ],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/validate",
+    "file": "apps/web/src/app/validate/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "observed",
+    "states": {
+      "loading": "observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  },
+  {
+    "route": "/validation/coverage",
+    "file": "apps/web/src/app/validation/coverage/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "source-reviewed",
+    "automated": "not-observed",
+    "browser": "observed",
+    "states": {
+      "loading": "observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
+    "desktop": "observed",
+    "mobile": "blocked"
+  }
+]

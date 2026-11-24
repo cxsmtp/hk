@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hawk-endpoint-agent"
+version = "0.2.1"
+description = "Hawk AI additive endpoint inline-control and discovery surface with evidence-backed per-adapter coverage."
+requires-python = ">=3.11"
+# Cryptography is mandatory because production authentication uses an encrypted
+# in-memory token vault and hardware-bound P-256 proof-of-possession signatures.
+dependencies = ["cryptography>=42"]
+
+[project.optional-dependencies]
+# Optional accelerators. The agent degrades gracefully to shelling out to OS
+# tooling (ps / lsof / system_profiler) when these are absent.
+fast = ["psutil>=5.9"]
+# Deep TLS inspection of AI hosts (mint the CA + per-host leaf certs). Without it
+# the proxy does host-level TLS control only, and says so.
+tls = ["cryptography>=42"]
+dev = ["pytest>=8"]
+# The Windows release builder checks this exact version before packaging. Build
+# it on the target Windows architecture; PyInstaller is not a cross-compiler.
+windows-build = ["pyinstaller==6.21.0", "cryptography==49.0.0", "psutil==7.2.2"]
+
+[project.scripts]
+hawk-endpoint-agent = "hawk_endpoint_agent.__main__:main"
+hawk-endpoint-metadata-scan = "hawk_endpoint_agent.metadata_scanner_cli:main"
+hawk-endpoint-control = "hawk_endpoint_agent.operator_cli:main"
+hawk-native-hook = "hawk_endpoint_agent.native_control.hook:main"
+hawk-native-control = "hawk_endpoint_agent.native_control.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+hawk_endpoint_agent = ["py.typed", "resources/*.ps1"]

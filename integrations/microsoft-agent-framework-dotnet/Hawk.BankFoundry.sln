@@ -1,0 +1,30 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hawk.AI.MicrosoftAgentFramework", "src\Hawk.AI.MicrosoftAgentFramework\Hawk.AI.MicrosoftAgentFramework.csproj", "{77D3AB21-6031-401B-8E8E-324B2B9A4374}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hawk.AI.MicrosoftAgentFramework.Tests", "tests\Hawk.AI.MicrosoftAgentFramework.Tests\Hawk.AI.MicrosoftAgentFramework.Tests.csproj", "{299B29E4-9BC5-4F07-A8BC-4D858239BD5B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hawk.BankFoundry.Reference", "samples\Hawk.BankFoundry.Reference\Hawk.BankFoundry.Reference.csproj", "{F9AE6C89-6AFE-4946-A80D-FC025602CE3B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{77D3AB21-6031-401B-8E8E-324B2B9A4374}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77D3AB21-6031-401B-8E8E-324B2B9A4374}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77D3AB21-6031-401B-8E8E-324B2B9A4374}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77D3AB21-6031-401B-8E8E-324B2B9A4374}.Release|Any CPU.Build.0 = Release|Any CPU
+		{299B29E4-9BC5-4F07-A8BC-4D858239BD5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{299B29E4-9BC5-4F07-A8BC-4D858239BD5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{299B29E4-9BC5-4F07-A8BC-4D858239BD5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{299B29E4-9BC5-4F07-A8BC-4D858239BD5B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9AE6C89-6AFE-4946-A80D-FC025602CE3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9AE6C89-6AFE-4946-A80D-FC025602CE3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9AE6C89-6AFE-4946-A80D-FC025602CE3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9AE6C89-6AFE-4946-A80D-FC025602CE3B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

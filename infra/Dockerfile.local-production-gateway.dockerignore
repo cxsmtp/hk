@@ -1,0 +1,8 @@
+._*
+**/._*
+.git
+.codex
+.hawk-quarantine
+.worktrees
+infra/artifacts
+infra/artifacts/**

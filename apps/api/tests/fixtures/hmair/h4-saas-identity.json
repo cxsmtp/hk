@@ -1,0 +1,16 @@
+{
+  "profiles": [
+    {"profile_id": "microsoft365_ai", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "github_ai", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "google_workspace_ai", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "slack_ai", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "salesforce_ai", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "servicenow_ai", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "atlassian_ai", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "notion_ai", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "zoom_ai", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "entra_ai_identity", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "okta_ai_identity", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "google_ai_identity", "evidence_mode": "metadata_only", "expected_state": "configured"}
+  ]
+}

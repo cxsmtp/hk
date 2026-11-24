@@ -1,0 +1,32 @@
+{
+  "name": "@hawk-ai/mcp-proxy",
+  "version": "0.1.0",
+  "description": "Vendor-neutral Hawk MCP stdio proxy for inline tool-call authorization.",
+  "type": "module",
+  "bin": {
+    "hawk-mcp-proxy": "./bin/hawk-mcp-proxy.mjs",
+    "trinya-executive-mcp": "./bin/trinya-executive-mcp.mjs",
+    "setup-trinya-executive-mcp": "./bin/setup-trinya-executive-mcp.mjs"
+  },
+  "files": [
+    "bin",
+    "examples",
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "manual:mcp": "node examples/manual-terminal/manual-mcp-client.mjs",
+    "manual:mcp:cleanup": "node examples/manual-terminal/manual-mcp-client.mjs cleanup",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "1.29.0"
+  },
+  "keywords": [
+    "hawk-ai",
+    "mcp",
+    "mcp-proxy",
+    "ai-action-control"
+  ],
+  "license": "UNLICENSED"
+}

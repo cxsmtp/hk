@@ -1,0 +1,19 @@
+services:
+  gateway:
+    image: hawk-local-production-gateway:local
+    build:
+      context: ${HAWK_BUILD_CONTEXT:-..}
+      dockerfile: infra/Dockerfile.local-production-gateway
+    container_name: hawk-local-production-gateway
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${HAWK_GATEWAY_HOST_PORT:-3443}:8443"
+    volumes:
+      - "${HAWK_LOCAL_TLS_DIR:?HAWK_LOCAL_TLS_DIR is required}:/certs:ro"
+    networks:
+      - hawk-production
+
+networks:
+  hawk-production:
+    name: ${HAWK_NETWORK_NAME:-hawk_production_local_network}
+    external: true

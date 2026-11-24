@@ -1,0 +1,6 @@
+{
+  "state_dir": ".runtime/native-run-001",
+  "postgres_bin": null,
+  "redis_bin": null,
+  "browser_executable": null
+}

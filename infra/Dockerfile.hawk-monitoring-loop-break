@@ -1,0 +1,3 @@
+FROM hawk-api-h2-mcp-recovery:local
+
+COPY apps/api/app/services/monitoring_service.py /workspace/apps/api/app/services/monitoring_service.py

@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hawk AI Settings</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        background: #f8fafc;
+        color: #0f172a;
+      }
+      .container {
+        max-width: 760px;
+        margin: 24px auto;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 24px;
+      }
+      p {
+        margin: 0 0 16px;
+        color: #475569;
+      }
+      .grid {
+        display: grid;
+        gap: 12px;
+      }
+      label {
+        font-size: 13px;
+        color: #334155;
+      }
+      .checkbox-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 2px;
+      }
+      .checkbox-row input {
+        width: auto;
+        margin: 0;
+      }
+      .checkbox-row span {
+        font-size: 13px;
+        color: #334155;
+      }
+      input, select {
+        width: 100%;
+        margin-top: 4px;
+        padding: 8px 10px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        font-size: 14px;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      button {
+        border: 1px solid #0f172a;
+        background: #0f172a;
+        color: #fff;
+        border-radius: 8px;
+        padding: 8px 12px;
+        cursor: pointer;
+      }
+      button.secondary {
+        border-color: #94a3b8;
+        background: #fff;
+        color: #0f172a;
+      }
+      .status {
+        margin-top: 16px;
+        font-size: 13px;
+        color: #334155;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 10px 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Extension Configuration</h1>
+      <p>Configure backend API and session auth for policy sync, telemetry, and interaction adjudication.</p>
+
+      <div class="grid">
+        <label>
+          Backend URL
+          <input id="backendUrl" placeholder="http://localhost:8000" />
+        </label>
+        <label>
+          Tenant ID
+          <input id="tenantId" placeholder="tenant uuid" />
+        </label>
+        <label>
+          Access Token Status
+          <input id="accessToken" type="text" placeholder="sign in to create a session" disabled />
+        </label>
+        <label>
+          Refresh Token Status
+          <input id="refreshToken" type="text" placeholder="sign in to create a session" disabled />
+        </label>
+        <label>
+          Browser
+          <select id="browser">
+            <option value="chrome">Chrome</option>
+            <option value="edge">Edge</option>
+            <option value="brave">Brave</option>
+          </select>
+        </label>
+        <label>
+          Browser Profile
+          <input id="browserProfile" placeholder="default" />
+        </label>
+        <label>
+          Pilot Device Label / Hostname
+          <input id="pilotHostname" placeholder="finance-macbook-01" />
+        </label>
+        <label>
+          Device Type
+          <select id="pilotDeviceType">
+            <option value="laptop">Laptop</option>
+            <option value="desktop">Desktop</option>
+            <option value="vm">VM</option>
+          </select>
+        </label>
+        <label>
+          OS Version
+          <input id="pilotOsVersion" placeholder="optional, e.g. 14.6.1 or 10.0.22631" />
+        </label>
+        <label>
+          Login Email
+          <input id="loginEmail" type="email" placeholder="owner@acme.ai" />
+        </label>
+        <label>
+          Login Password
+          <input id="loginPassword" type="password" placeholder="Enter your password" />
+        </label>
+      </div>
+
+      <div class="actions">
+        <button class="secondary" id="signInButton">Sign In & Fill Session</button>
+        <button id="saveButton">Save Settings</button>
+        <button class="secondary" id="syncButton">Sync Policy Now</button>
+      </div>
+
+      <div id="status" class="status">Loading...</div>
+    </div>
+    <script type="module" src="dist/options.js"></script>
+  </body>
+</html>

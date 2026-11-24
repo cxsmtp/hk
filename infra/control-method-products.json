@@ -1,0 +1,426 @@
+{
+  "schema": "hawk.control-method-products/1.0",
+  "release_ready": false,
+  "methods": [
+    {
+      "id": "browser_extension",
+      "root": "extension",
+      "version_source": "extension/package.json",
+      "sources": [
+        "extension/package.json",
+        "extension/tests/e2e/browser-extension.spec.ts"
+      ],
+      "lifecycle_gates": {
+        "clean_install": {
+          "state": "target_required",
+          "basis_reason": "A build and synthetic host test do not prove a clean installation in managed Chrome or Edge."
+        },
+        "restart": {
+          "state": "target_required",
+          "basis_reason": "Managed Chrome and Edge restart acceptance is absent."
+        },
+        "reconnect": {
+          "state": "target_required",
+          "basis_reason": "Managed browser reconnect acceptance is absent."
+        },
+        "allow": {
+          "state": "repository_verified",
+          "basis_reason": "Synthetic allow path is covered by the selected E2E source."
+        },
+        "deny": {
+          "state": "repository_verified",
+          "basis_reason": "Synthetic deny path is covered by the selected E2E source."
+        },
+        "approval": {
+          "state": "target_required",
+          "basis_reason": "Managed approval workflow acceptance is absent."
+        },
+        "revocation": {
+          "state": "target_required",
+          "basis_reason": "Managed revocation acceptance is absent."
+        },
+        "outage": {
+          "state": "target_required",
+          "basis_reason": "Managed browser outage acceptance is absent."
+        },
+        "upgrade": {
+          "state": "target_required",
+          "basis_reason": "Managed browser upgrade acceptance is absent."
+        },
+        "rollback": {
+          "state": "target_required",
+          "basis_reason": "Managed browser rollback acceptance is absent."
+        },
+        "evidence": {
+          "state": "repository_verified",
+          "basis_reason": "Repository source and test digests are emitted."
+        }
+      },
+      "checks": [
+        {
+          "name": "build",
+          "argv": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "cwd": "extension",
+          "timeout_seconds": 120
+        },
+        {
+          "name": "synthetic_e2e",
+          "argv": [
+            "npx",
+            "--no-install",
+            "playwright",
+            "test",
+            "tests/e2e/browser-extension.spec.ts"
+          ],
+          "cwd": "extension",
+          "timeout_seconds": 120
+        }
+      ],
+      "evidence": {
+        "state": "target_required",
+        "unverified_reason": "Pinned Chromium build and two complete synthetic E2E runs passed (20 of 20 checks) on distinct OS-assigned loopback fixture ports. Managed Chrome/Edge installation, restart, reconnect, upgrade, rollback, and customer-host acceptance remain unverified."
+      },
+      "release_ready": false,
+      "target_check": {
+        "id": "managed_browser_acceptance",
+        "runner": "extension/tests/e2e/browser-extension.spec.ts",
+        "proof_scope": "synthetic_browser_only",
+        "intended_target": "managed_chrome_and_edge",
+        "state": "target_required",
+        "blockers": [
+          "current_and_previous_signed_managed_packages_absent",
+          "managed_install_upgrade_rollback_acceptance_absent"
+        ]
+      }
+    },
+    {
+      "id": "mcp_gateway",
+      "root": "packages/hawk-mcp-proxy",
+      "version_source": "packages/hawk-mcp-proxy/package.json",
+      "sources": [
+        "packages/hawk-mcp-proxy/package.json",
+        "packages/hawk-mcp-proxy/package-lock.json",
+        "packages/hawk-mcp-proxy/src/proxy.mjs",
+        "packages/hawk-mcp-proxy/src/hawk-client.mjs",
+        "packages/hawk-mcp-proxy/tests/hawk-client.test.mjs",
+        "packages/hawk-mcp-proxy/examples/manual-terminal/read-only-mcp-server.mjs",
+        "packages/hawk-mcp-proxy/examples/manual-terminal/official-mcp-sdk-client.mjs",
+        "packages/hawk-mcp-proxy/tests/official-mcp-sdk-client.test.mjs",
+        "apps/api/tests/test_mcp_proxy_authorize_contract.py",
+        "infra/scripts/run_isolated_mcp_client_acceptance.py"
+      ],
+      "lifecycle_gates": {
+        "clean_install": {
+          "state": "target_required",
+          "basis_reason": "Package tests and a dry-run tarball do not prove clean installation on a remote MCP host."
+        },
+        "restart": {
+          "state": "target_required",
+          "basis_reason": "Remote MCP restart acceptance is absent."
+        },
+        "reconnect": {
+          "state": "target_required",
+          "basis_reason": "Remote MCP reconnect acceptance is absent."
+        },
+        "allow": {
+          "state": "repository_verified",
+          "basis_reason": "Local governed allow tests are covered."
+        },
+        "deny": {
+          "state": "repository_verified",
+          "basis_reason": "Local governed deny tests are covered."
+        },
+        "approval": {
+          "state": "target_required",
+          "basis_reason": "Interactive remote approval acceptance is absent."
+        },
+        "revocation": {
+          "state": "target_required",
+          "basis_reason": "Remote revocation acceptance is absent."
+        },
+        "outage": {
+          "state": "repository_verified",
+          "basis_reason": "Local fail-secure outage paths are tested."
+        },
+        "upgrade": {
+          "state": "target_required",
+          "basis_reason": "Remote upgrade acceptance is absent."
+        },
+        "rollback": {
+          "state": "target_required",
+          "basis_reason": "Remote rollback acceptance is absent."
+        },
+        "evidence": {
+          "state": "repository_verified",
+          "basis_reason": "Repository source and test digests are emitted."
+        }
+      },
+      "checks": [
+        {
+          "name": "unit",
+          "argv": [
+            "npm",
+            "test"
+          ],
+          "cwd": "packages/hawk-mcp-proxy",
+          "timeout_seconds": 120
+        },
+        {
+          "name": "package_dry_run",
+          "argv": [
+            "npm",
+            "pack",
+            "--dry-run",
+            "--json"
+          ],
+          "cwd": "packages/hawk-mcp-proxy",
+          "env": {
+            "NPM_CONFIG_CACHE": "/private/tmp/hawk-four-control-method-npm-cache"
+          },
+          "timeout_seconds": 60
+        }
+      ],
+      "evidence": {
+        "state": "target_required",
+        "unverified_reason": "A fresh isolated PostgreSQL, Redis, worker, beat, and API lab passed all eight strict control-plane checks. The official MCP TypeScript SDK 1.29.0 and actual Codex CLI 0.154.0 each completed three fresh synthetic read-only connections: allow, restart and reconnect allow, then exact agent_session_revoked denial. Each run had distinct correlated Hawk evidence and child call counts 1, 2, 2. The original write-action policy remains enforced. Claude Code connected and advertised the read tool without invoking it; its installed native hook signed a synthetic before-agent request, then the unchanged callback returned HTTP 500 and the hook failed closed with policy_service_unavailable. A rollback-only diagnostic did not reach the callback handler: native PostgreSQL on port 55432 rejected the connection with could not open file / No such file or directory; the file is unidentified. Claude lifecycle evidence is absent. Claude Code compatibility, customer-host acceptance, interactive approval, clean install, upgrade, and rollback remain unverified."
+      },
+      "release_ready": false,
+      "target_check": {
+        "id": "real_claude_code_mcp_acceptance",
+        "runner": "infra/scripts/run_isolated_mcp_client_acceptance.py",
+        "proof_scope": "isolated_local_client_only",
+        "intended_target": "supported_remote_mcp_host",
+        "state": "target_required",
+        "blockers": [
+          "current_and_previous_release_artifacts_absent",
+          "supported_target_host_acceptance_absent"
+        ]
+      }
+    },
+    {
+      "id": "llm_gateway",
+      "root": "apps/api",
+      "version_source": "apps/api/pyproject.toml",
+      "sources": [
+        "apps/api/app/services/llm_gateway_service.py",
+        "apps/api/app/api/routers/llm_gateway.py",
+        "apps/api/app/core/config.py",
+        "apps/api/app/services/brain/providers/openai_provider.py",
+        "apps/api/app/services/brain/providers/provider_factory.py",
+        "apps/api/app/services/ai_orchestration/providers.py",
+        "apps/api/tests/test_llm_gateway_integration.py",
+        "apps/api/tests/test_openai_provider_reasoning_effort.py",
+        "infra/scripts/run_isolated_llm_provider_acceptance.py"
+      ],
+      "lifecycle_gates": {
+        "clean_install": {
+          "state": "target_required",
+          "basis_reason": "Focused API tests with provider doubles do not prove a clean production gateway installation."
+        },
+        "restart": {
+          "state": "target_required",
+          "basis_reason": "Production gateway restart acceptance is absent."
+        },
+        "reconnect": {
+          "state": "target_required",
+          "basis_reason": "Live provider reconnect acceptance is absent."
+        },
+        "allow": {
+          "state": "repository_verified",
+          "basis_reason": "Governed request allow paths are covered."
+        },
+        "deny": {
+          "state": "repository_verified",
+          "basis_reason": "Sensitive and restricted deny paths are covered."
+        },
+        "approval": {
+          "state": "target_required",
+          "basis_reason": "Live approval acceptance is absent."
+        },
+        "revocation": {
+          "state": "target_required",
+          "basis_reason": "Live revocation acceptance is absent."
+        },
+        "outage": {
+          "state": "repository_verified",
+          "basis_reason": "Provider failure receipts are covered by doubles."
+        },
+        "upgrade": {
+          "state": "target_required",
+          "basis_reason": "Production upgrade acceptance is absent."
+        },
+        "rollback": {
+          "state": "target_required",
+          "basis_reason": "A provider transaction rollback test does not prove release-version rollback on a production gateway."
+        },
+        "evidence": {
+          "state": "repository_verified",
+          "basis_reason": "Focused source and test digests are emitted."
+        }
+      },
+      "checks": [
+        {
+          "name": "focused_api",
+          "argv": [
+            ".venv/bin/python",
+            "-m",
+            "pytest",
+            "tests/test_llm_gateway_integration.py::test_openai_compatible_chat_completions_governed_and_auditable",
+            "tests/test_llm_gateway_integration.py::test_llm_gateway_v1_chat_completions_blocks_sensitive_request",
+            "tests/test_llm_gateway_integration.py::test_chat_complete_pre_request_block_does_not_invoke_provider",
+            "tests/test_llm_gateway_integration.py::test_response_output_guardian_mutates_restricted_output",
+            "tests/test_llm_gateway_integration.py::test_selected_llm_provider_failure_keeps_known_failure_receipt_on_rollback"
+          ],
+          "cwd": "apps/api",
+          "env": {
+            "TEST_PROFILE": "unit",
+            "DATABASE_URL": "sqlite+pysqlite:///:memory:",
+            "TEST_DATABASE_URL": "sqlite+pysqlite:///:memory:",
+            "PYTHONPATH": "."
+          },
+          "timeout_seconds": 180
+        }
+      ],
+      "evidence": {
+        "state": "target_required",
+        "unverified_reason": "The exact local Ollama qwen3.5:9b digest, product-adapter preflight, and all eight strict isolated Hawk health checks passed. A fresh local run proved sensitive pre-provider block, benign real-provider allow, controlled fragmented api_key canary output, and benign allow after API restart with four distinct Hawk evidence IDs. Production provider fleet, clean install, upgrade, rollback, and customer acceptance remain unproven."
+      },
+      "release_ready": false,
+      "target_check": {
+        "id": "real_ollama_local_acceptance",
+        "runner": "infra/scripts/run_isolated_llm_provider_acceptance.py",
+        "proof_scope": "isolated_local_ollama_only",
+        "intended_target": "production_llm_gateway",
+        "state": "target_required",
+        "blockers": [
+          "two_immutable_api_image_or_build_digests_absent",
+          "migration_and_backup_recovery_proof_absent"
+        ]
+      }
+    },
+    {
+      "id": "endpoint_agent",
+      "root": "apps/endpoint-agent",
+      "version_source": "apps/endpoint-agent/pyproject.toml",
+      "sources": [
+        "apps/endpoint-agent/pyproject.toml",
+        "apps/endpoint-agent/tests/test_identity_health.py",
+        "apps/endpoint-agent/tests/test_native_endpoint_permit_binding.py"
+      ],
+      "lifecycle_gates": {
+        "clean_install": {
+          "state": "blocked",
+          "basis_reason": "Signed enrollment uses an untrusted adhoc helper."
+        },
+        "restart": {
+          "state": "target_required",
+          "basis_reason": "Enrolled device restart acceptance is absent."
+        },
+        "reconnect": {
+          "state": "target_required",
+          "basis_reason": "Enrolled device reconnect acceptance is absent."
+        },
+        "allow": {
+          "state": "repository_verified",
+          "basis_reason": "Local permit allow paths are tested."
+        },
+        "deny": {
+          "state": "repository_verified",
+          "basis_reason": "Local permit deny paths are tested."
+        },
+        "approval": {
+          "state": "target_required",
+          "basis_reason": "Managed device approval acceptance is absent."
+        },
+        "revocation": {
+          "state": "repository_verified",
+          "basis_reason": "Local old-token revocation is tested."
+        },
+        "outage": {
+          "state": "repository_verified",
+          "basis_reason": "Local identity failure paths are tested."
+        },
+        "upgrade": {
+          "state": "target_required",
+          "basis_reason": "Enrolled device upgrade acceptance is absent."
+        },
+        "rollback": {
+          "state": "target_required",
+          "basis_reason": "Enrolled device rollback acceptance is absent."
+        },
+        "evidence": {
+          "state": "repository_verified",
+          "basis_reason": "Repository source and test digests are emitted."
+        }
+      },
+      "checks": [
+        {
+          "name": "identity_and_permit",
+          "argv": [
+            "../api/.venv/bin/python",
+            "-m",
+            "pytest",
+            "tests/test_identity_health.py",
+            "tests/test_native_endpoint_permit_binding.py"
+          ],
+          "cwd": "apps/endpoint-agent",
+          "env": {
+            "PYTHONPATH": "src"
+          },
+          "timeout_seconds": 120
+        },
+        {
+          "name": "api_device_auth",
+          "argv": [
+            ".venv/bin/python",
+            "-m",
+            "pytest",
+            "tests/test_endpoint_device_auth.py",
+            "tests/test_endpoint_device_routes.py::test_endpoint_health_shows_identity_heartbeat_policy_and_command_acceptance",
+            "tests/test_endpoint_device_routes.py::test_admin_reenrollment_authorization_revokes_old_identity_and_blocks_old_token"
+          ],
+          "cwd": "apps/api",
+          "env": {
+            "TEST_PROFILE": "unit",
+            "DATABASE_URL": "sqlite+pysqlite:///:memory:",
+            "TEST_DATABASE_URL": "sqlite+pysqlite:///:memory:",
+            "PYTHONPATH": "."
+          },
+          "timeout_seconds": 180
+        }
+      ],
+      "evidence": {
+        "state": "blocked",
+        "unverified_reason": "Repository identity and permit tests exist, but signed enrollment and enrolled-device acceptance remain blocked by the untrusted adhoc helper."
+      },
+      "release_ready": false,
+      "target_check": {
+        "id": "signed_enrolled_device_acceptance",
+        "runner": null,
+        "proof_scope": "none",
+        "intended_target": "managed_enrolled_device",
+        "state": "blocked",
+        "blockers": [
+          "developer_id_notarization_mdm_enrollment_absent",
+          "untrusted_adhoc_identity_helper_blocks_reenrollment"
+        ]
+      }
+    }
+  ],
+  "promotion_requirements": {
+    "required_lifecycle_gates": [
+      "clean_install",
+      "upgrade",
+      "rollback",
+      "evidence"
+    ],
+    "minimum_distinct_successful_target_operations": 2,
+    "intended_target_required": true,
+    "distinct_current_and_previous_artifacts_required": true,
+    "same_version_reinstall_counts_as_upgrade_or_rollback": false
+  }
+}

@@ -1,0 +1,2453 @@
+[
+  {
+    "simulation_id": "SIM-IAM-001",
+    "name": "AI IAM Abuse 001: Identity Spoofing",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "identity_spoofing",
+    "severity": "high",
+    "description": "Use mismatched identity claims to gain elevated access.",
+    "adversarial_intent": "impersonate trusted identity",
+    "target_surface": "agent",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "identity_spoofing",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "ISO / IEC 42001",
+        "reference": "A.8",
+        "control_area": "AI Governance"
+      },
+      {
+        "framework": "EU AI Act",
+        "reference": "Art. 9",
+        "control_area": "Risk Management"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 246000,
+      "likelihood": 0.24,
+      "estimated_ale_range": "$86,100-$184,500/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-002",
+    "name": "AI IAM Abuse 002: Token Scope Escape",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "token_scope_escape",
+    "severity": "medium",
+    "description": "Replay access tokens across unauthorized scopes.",
+    "adversarial_intent": "reuse token beyond scope",
+    "target_surface": "agent",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "token_scope_escape",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION",
+        "POLICY_ENFORCEMENT_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION",
+      "POLICY_ENFORCEMENT_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "EU AI Act",
+        "reference": "Art. 9",
+        "control_area": "Risk Management"
+      },
+      {
+        "framework": "MITRE ATLAS",
+        "reference": "AML.TA0001",
+        "control_area": "Adversarial Tactics"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 272000,
+      "likelihood": 0.3,
+      "estimated_ale_range": "$95,200-$204,000/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-003",
+    "name": "AI IAM Abuse 003: Privilege Drift Exploit",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "privilege_drift_exploit",
+    "severity": "high",
+    "description": "Use stale over-broad grants to perform restricted actions.",
+    "adversarial_intent": "abuse drifted permissions",
+    "target_surface": "agent",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "privilege_drift_exploit",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "MITRE ATLAS",
+        "reference": "AML.TA0001",
+        "control_area": "Adversarial Tactics"
+      },
+      {
+        "framework": "OWASP GenAI Top 10",
+        "reference": "GAI01",
+        "control_area": "Prompt Safety"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 298000,
+      "likelihood": 0.36,
+      "estimated_ale_range": "$104,300-$223,500/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-004",
+    "name": "AI IAM Abuse 004: Orphaned Identity Use",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "orphaned_identity_use",
+    "severity": "medium",
+    "description": "Trigger actions from orphaned/non-owned AI identities.",
+    "adversarial_intent": "operate under unowned identity",
+    "target_surface": "agent",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "orphaned_identity_use",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "step_up",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "OWASP GenAI Top 10",
+        "reference": "GAI01",
+        "control_area": "Prompt Safety"
+      },
+      {
+        "framework": "OWASP Top 10 for LLM Applications",
+        "reference": "LLM01",
+        "control_area": "Prompt Injection"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 324000,
+      "likelihood": 0.42,
+      "estimated_ale_range": "$113,400-$243,000/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-005",
+    "name": "AI IAM Abuse 005: Delegation Abuse",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "delegation_abuse",
+    "severity": "high",
+    "description": "Exploit delegated rights after context changes.",
+    "adversarial_intent": "abuse delegated privileges",
+    "target_surface": "agent",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "delegation_abuse",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION",
+        "POLICY_ENFORCEMENT_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION",
+      "POLICY_ENFORCEMENT_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "OWASP Top 10 for LLM Applications",
+        "reference": "LLM01",
+        "control_area": "Prompt Injection"
+      },
+      {
+        "framework": "OWASP Top 10 for Agentic Applications",
+        "reference": "AGENT01",
+        "control_area": "Agent Abuse"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 350000,
+      "likelihood": 0.48,
+      "estimated_ale_range": "$122,499-$262,500/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-006",
+    "name": "AI IAM Abuse 006: Identity Spoofing",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "identity_spoofing",
+    "severity": "high",
+    "description": "Use mismatched identity claims to gain elevated access.",
+    "adversarial_intent": "impersonate trusted identity",
+    "target_surface": "agent",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "identity_spoofing",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "OWASP Top 10 for Agentic Applications",
+        "reference": "AGENT01",
+        "control_area": "Agent Abuse"
+      },
+      {
+        "framework": "Microsoft Responsible AI Standard",
+        "reference": "RS6",
+        "control_area": "Reliability & Safety"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 376000,
+      "likelihood": 0.54,
+      "estimated_ale_range": "$131,600-$282,000/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-007",
+    "name": "AI IAM Abuse 007: Token Scope Escape",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "token_scope_escape",
+    "severity": "critical",
+    "description": "Replay access tokens across unauthorized scopes.",
+    "adversarial_intent": "reuse token beyond scope",
+    "target_surface": "agent",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "token_scope_escape",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION",
+        "POLICY_ENFORCEMENT_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION",
+      "POLICY_ENFORCEMENT_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "Microsoft Responsible AI Standard",
+        "reference": "RS6",
+        "control_area": "Reliability & Safety"
+      },
+      {
+        "framework": "Google SAIF",
+        "reference": "SAIF-P2",
+        "control_area": "Secure Lifecycle"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 220000,
+      "likelihood": 0.6,
+      "estimated_ale_range": "$77,000-$165,000/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-008",
+    "name": "AI IAM Abuse 008: Privilege Drift Exploit",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "privilege_drift_exploit",
+    "severity": "medium",
+    "description": "Use stale over-broad grants to perform restricted actions.",
+    "adversarial_intent": "abuse drifted permissions",
+    "target_surface": "agent",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "privilege_drift_exploit",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "step_up",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "Google SAIF",
+        "reference": "SAIF-P2",
+        "control_area": "Secure Lifecycle"
+      },
+      {
+        "framework": "CSA AI Controls",
+        "reference": "AIC-04",
+        "control_area": "Control Validation"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 246000,
+      "likelihood": 0.66,
+      "estimated_ale_range": "$86,100-$184,500/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-009",
+    "name": "AI IAM Abuse 009: Orphaned Identity Use",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "orphaned_identity_use",
+    "severity": "high",
+    "description": "Trigger actions from orphaned/non-owned AI identities.",
+    "adversarial_intent": "operate under unowned identity",
+    "target_surface": "agent",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "orphaned_identity_use",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "CSA AI Controls",
+        "reference": "AIC-04",
+        "control_area": "Control Validation"
+      },
+      {
+        "framework": "NIST AI RMF",
+        "reference": "MAP/MEASURE",
+        "control_area": "Risk Measurement"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 272000,
+      "likelihood": 0.18,
+      "estimated_ale_range": "$95,200-$204,000/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-010",
+    "name": "AI IAM Abuse 010: Delegation Abuse",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "delegation_abuse",
+    "severity": "medium",
+    "description": "Exploit delegated rights after context changes.",
+    "adversarial_intent": "abuse delegated privileges",
+    "target_surface": "agent",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "delegation_abuse",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION",
+        "POLICY_ENFORCEMENT_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION",
+      "POLICY_ENFORCEMENT_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "NIST AI RMF",
+        "reference": "MAP/MEASURE",
+        "control_area": "Risk Measurement"
+      },
+      {
+        "framework": "ISO / IEC 42001",
+        "reference": "A.8",
+        "control_area": "AI Governance"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 298000,
+      "likelihood": 0.24,
+      "estimated_ale_range": "$104,300-$223,500/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-011",
+    "name": "AI IAM Abuse 011: Identity Spoofing",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "identity_spoofing",
+    "severity": "high",
+    "description": "Use mismatched identity claims to gain elevated access.",
+    "adversarial_intent": "impersonate trusted identity",
+    "target_surface": "agent",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "identity_spoofing",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "ISO / IEC 42001",
+        "reference": "A.8",
+        "control_area": "AI Governance"
+      },
+      {
+        "framework": "EU AI Act",
+        "reference": "Art. 9",
+        "control_area": "Risk Management"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 324000,
+      "likelihood": 0.3,
+      "estimated_ale_range": "$113,400-$243,000/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-012",
+    "name": "AI IAM Abuse 012: Token Scope Escape",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "token_scope_escape",
+    "severity": "high",
+    "description": "Replay access tokens across unauthorized scopes.",
+    "adversarial_intent": "reuse token beyond scope",
+    "target_surface": "agent",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "token_scope_escape",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "step_up",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION",
+        "POLICY_ENFORCEMENT_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION",
+      "POLICY_ENFORCEMENT_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "EU AI Act",
+        "reference": "Art. 9",
+        "control_area": "Risk Management"
+      },
+      {
+        "framework": "MITRE ATLAS",
+        "reference": "AML.TA0001",
+        "control_area": "Adversarial Tactics"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 350000,
+      "likelihood": 0.36,
+      "estimated_ale_range": "$122,499-$262,500/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-013",
+    "name": "AI IAM Abuse 013: Privilege Drift Exploit",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "privilege_drift_exploit",
+    "severity": "high",
+    "description": "Use stale over-broad grants to perform restricted actions.",
+    "adversarial_intent": "abuse drifted permissions",
+    "target_surface": "agent",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "privilege_drift_exploit",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "MITRE ATLAS",
+        "reference": "AML.TA0001",
+        "control_area": "Adversarial Tactics"
+      },
+      {
+        "framework": "OWASP GenAI Top 10",
+        "reference": "GAI01",
+        "control_area": "Prompt Safety"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 376000,
+      "likelihood": 0.42,
+      "estimated_ale_range": "$131,600-$282,000/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-014",
+    "name": "AI IAM Abuse 014: Orphaned Identity Use",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "orphaned_identity_use",
+    "severity": "critical",
+    "description": "Trigger actions from orphaned/non-owned AI identities.",
+    "adversarial_intent": "operate under unowned identity",
+    "target_surface": "agent",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "orphaned_identity_use",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "OWASP GenAI Top 10",
+        "reference": "GAI01",
+        "control_area": "Prompt Safety"
+      },
+      {
+        "framework": "OWASP Top 10 for LLM Applications",
+        "reference": "LLM01",
+        "control_area": "Prompt Injection"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 220000,
+      "likelihood": 0.48,
+      "estimated_ale_range": "$77,000-$165,000/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-015",
+    "name": "AI IAM Abuse 015: Delegation Abuse",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "delegation_abuse",
+    "severity": "high",
+    "description": "Exploit delegated rights after context changes.",
+    "adversarial_intent": "abuse delegated privileges",
+    "target_surface": "agent",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "delegation_abuse",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION",
+        "POLICY_ENFORCEMENT_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION",
+      "POLICY_ENFORCEMENT_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "OWASP Top 10 for LLM Applications",
+        "reference": "LLM01",
+        "control_area": "Prompt Injection"
+      },
+      {
+        "framework": "OWASP Top 10 for Agentic Applications",
+        "reference": "AGENT01",
+        "control_area": "Agent Abuse"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 246000,
+      "likelihood": 0.54,
+      "estimated_ale_range": "$86,100-$184,500/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-016",
+    "name": "AI IAM Abuse 016: Identity Spoofing",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "identity_spoofing",
+    "severity": "medium",
+    "description": "Use mismatched identity claims to gain elevated access.",
+    "adversarial_intent": "impersonate trusted identity",
+    "target_surface": "agent",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "identity_spoofing",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "step_up",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "OWASP Top 10 for Agentic Applications",
+        "reference": "AGENT01",
+        "control_area": "Agent Abuse"
+      },
+      {
+        "framework": "Microsoft Responsible AI Standard",
+        "reference": "RS6",
+        "control_area": "Reliability & Safety"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 272000,
+      "likelihood": 0.6,
+      "estimated_ale_range": "$95,200-$204,000/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-017",
+    "name": "AI IAM Abuse 017: Token Scope Escape",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "token_scope_escape",
+    "severity": "high",
+    "description": "Replay access tokens across unauthorized scopes.",
+    "adversarial_intent": "reuse token beyond scope",
+    "target_surface": "agent",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "token_scope_escape",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION",
+        "POLICY_ENFORCEMENT_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION",
+      "POLICY_ENFORCEMENT_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "Microsoft Responsible AI Standard",
+        "reference": "RS6",
+        "control_area": "Reliability & Safety"
+      },
+      {
+        "framework": "Google SAIF",
+        "reference": "SAIF-P2",
+        "control_area": "Secure Lifecycle"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 298000,
+      "likelihood": 0.66,
+      "estimated_ale_range": "$104,300-$223,500/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-018",
+    "name": "AI IAM Abuse 018: Privilege Drift Exploit",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "privilege_drift_exploit",
+    "severity": "high",
+    "description": "Use stale over-broad grants to perform restricted actions.",
+    "adversarial_intent": "abuse drifted permissions",
+    "target_surface": "agent",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "privilege_drift_exploit",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "Google SAIF",
+        "reference": "SAIF-P2",
+        "control_area": "Secure Lifecycle"
+      },
+      {
+        "framework": "CSA AI Controls",
+        "reference": "AIC-04",
+        "control_area": "Control Validation"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 324000,
+      "likelihood": 0.18,
+      "estimated_ale_range": "$113,400-$243,000/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-019",
+    "name": "AI IAM Abuse 019: Orphaned Identity Use",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "orphaned_identity_use",
+    "severity": "high",
+    "description": "Trigger actions from orphaned/non-owned AI identities.",
+    "adversarial_intent": "operate under unowned identity",
+    "target_surface": "agent",
+    "required_executor": "agent_executor",
+    "executable_status": "partially_executable",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "orphaned_identity_use",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "CSA AI Controls",
+        "reference": "AIC-04",
+        "control_area": "Control Validation"
+      },
+      {
+        "framework": "NIST AI RMF",
+        "reference": "MAP/MEASURE",
+        "control_area": "Risk Measurement"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 350000,
+      "likelihood": 0.24,
+      "estimated_ale_range": "$122,499-$262,500/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-020",
+    "name": "AI IAM Abuse 020: Delegation Abuse",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "delegation_abuse",
+    "severity": "medium",
+    "description": "Exploit delegated rights after context changes.",
+    "adversarial_intent": "abuse delegated privileges",
+    "target_surface": "agent",
+    "required_executor": "agent_executor",
+    "executable_status": "partially_executable",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "delegation_abuse",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "step_up",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION",
+        "POLICY_ENFORCEMENT_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION",
+      "POLICY_ENFORCEMENT_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "NIST AI RMF",
+        "reference": "MAP/MEASURE",
+        "control_area": "Risk Measurement"
+      },
+      {
+        "framework": "ISO / IEC 42001",
+        "reference": "A.8",
+        "control_area": "AI Governance"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 376000,
+      "likelihood": 0.3,
+      "estimated_ale_range": "$131,600-$282,000/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-021",
+    "name": "AI IAM Abuse 021: Identity Spoofing",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "identity_spoofing",
+    "severity": "critical",
+    "description": "Use mismatched identity claims to gain elevated access.",
+    "adversarial_intent": "impersonate trusted identity",
+    "target_surface": "agent",
+    "required_executor": "agent_executor",
+    "executable_status": "partially_executable",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "identity_spoofing",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "ISO / IEC 42001",
+        "reference": "A.8",
+        "control_area": "AI Governance"
+      },
+      {
+        "framework": "EU AI Act",
+        "reference": "Art. 9",
+        "control_area": "Risk Management"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 220000,
+      "likelihood": 0.36,
+      "estimated_ale_range": "$77,000-$165,000/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-022",
+    "name": "AI IAM Abuse 022: Token Scope Escape",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "token_scope_escape",
+    "severity": "medium",
+    "description": "Replay access tokens across unauthorized scopes.",
+    "adversarial_intent": "reuse token beyond scope",
+    "target_surface": "agent",
+    "required_executor": "agent_executor",
+    "executable_status": "partially_executable",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "token_scope_escape",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION",
+        "POLICY_ENFORCEMENT_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION",
+      "POLICY_ENFORCEMENT_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "EU AI Act",
+        "reference": "Art. 9",
+        "control_area": "Risk Management"
+      },
+      {
+        "framework": "MITRE ATLAS",
+        "reference": "AML.TA0001",
+        "control_area": "Adversarial Tactics"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 246000,
+      "likelihood": 0.42,
+      "estimated_ale_range": "$86,100-$184,500/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-023",
+    "name": "AI IAM Abuse 023: Privilege Drift Exploit",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "privilege_drift_exploit",
+    "severity": "high",
+    "description": "Use stale over-broad grants to perform restricted actions.",
+    "adversarial_intent": "abuse drifted permissions",
+    "target_surface": "gateway",
+    "required_executor": "gateway_executor",
+    "executable_status": "partially_executable",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "privilege_drift_exploit",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "MITRE ATLAS",
+        "reference": "AML.TA0001",
+        "control_area": "Adversarial Tactics"
+      },
+      {
+        "framework": "OWASP GenAI Top 10",
+        "reference": "GAI01",
+        "control_area": "Prompt Safety"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 272000,
+      "likelihood": 0.48,
+      "estimated_ale_range": "$95,200-$204,000/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-024",
+    "name": "AI IAM Abuse 024: Orphaned Identity Use",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "orphaned_identity_use",
+    "severity": "high",
+    "description": "Trigger actions from orphaned/non-owned AI identities.",
+    "adversarial_intent": "operate under unowned identity",
+    "target_surface": "gateway",
+    "required_executor": "gateway_executor",
+    "executable_status": "partially_executable",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "orphaned_identity_use",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "step_up",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "OWASP GenAI Top 10",
+        "reference": "GAI01",
+        "control_area": "Prompt Safety"
+      },
+      {
+        "framework": "OWASP Top 10 for LLM Applications",
+        "reference": "LLM01",
+        "control_area": "Prompt Injection"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 298000,
+      "likelihood": 0.54,
+      "estimated_ale_range": "$104,300-$223,500/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-025",
+    "name": "AI IAM Abuse 025: Delegation Abuse",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "delegation_abuse",
+    "severity": "high",
+    "description": "Exploit delegated rights after context changes.",
+    "adversarial_intent": "abuse delegated privileges",
+    "target_surface": "gateway",
+    "required_executor": "gateway_executor",
+    "executable_status": "partially_executable",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "delegation_abuse",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION",
+        "POLICY_ENFORCEMENT_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION",
+      "POLICY_ENFORCEMENT_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "OWASP Top 10 for LLM Applications",
+        "reference": "LLM01",
+        "control_area": "Prompt Injection"
+      },
+      {
+        "framework": "OWASP Top 10 for Agentic Applications",
+        "reference": "AGENT01",
+        "control_area": "Agent Abuse"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 324000,
+      "likelihood": 0.6,
+      "estimated_ale_range": "$113,400-$243,000/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-026",
+    "name": "AI IAM Abuse 026: Identity Spoofing",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "identity_spoofing",
+    "severity": "medium",
+    "description": "Use mismatched identity claims to gain elevated access.",
+    "adversarial_intent": "impersonate trusted identity",
+    "target_surface": "gateway",
+    "required_executor": "gateway_executor",
+    "executable_status": "partially_executable",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "identity_spoofing",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "OWASP Top 10 for Agentic Applications",
+        "reference": "AGENT01",
+        "control_area": "Agent Abuse"
+      },
+      {
+        "framework": "Microsoft Responsible AI Standard",
+        "reference": "RS6",
+        "control_area": "Reliability & Safety"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 350000,
+      "likelihood": 0.66,
+      "estimated_ale_range": "$122,499-$262,500/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-027",
+    "name": "AI IAM Abuse 027: Token Scope Escape",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "token_scope_escape",
+    "severity": "high",
+    "description": "Replay access tokens across unauthorized scopes.",
+    "adversarial_intent": "reuse token beyond scope",
+    "target_surface": "gateway",
+    "required_executor": "gateway_executor",
+    "executable_status": "partially_executable",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "token_scope_escape",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION",
+        "POLICY_ENFORCEMENT_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION",
+      "POLICY_ENFORCEMENT_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "Microsoft Responsible AI Standard",
+        "reference": "RS6",
+        "control_area": "Reliability & Safety"
+      },
+      {
+        "framework": "Google SAIF",
+        "reference": "SAIF-P2",
+        "control_area": "Secure Lifecycle"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 376000,
+      "likelihood": 0.18,
+      "estimated_ale_range": "$131,600-$282,000/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-028",
+    "name": "AI IAM Abuse 028: Privilege Drift Exploit",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "privilege_drift_exploit",
+    "severity": "critical",
+    "description": "Use stale over-broad grants to perform restricted actions.",
+    "adversarial_intent": "abuse drifted permissions",
+    "target_surface": "gateway",
+    "required_executor": "gateway_executor",
+    "executable_status": "partially_executable",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "privilege_drift_exploit",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "step_up",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "Google SAIF",
+        "reference": "SAIF-P2",
+        "control_area": "Secure Lifecycle"
+      },
+      {
+        "framework": "CSA AI Controls",
+        "reference": "AIC-04",
+        "control_area": "Control Validation"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 220000,
+      "likelihood": 0.24,
+      "estimated_ale_range": "$77,000-$165,000/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-029",
+    "name": "AI IAM Abuse 029: Orphaned Identity Use",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "orphaned_identity_use",
+    "severity": "high",
+    "description": "Trigger actions from orphaned/non-owned AI identities.",
+    "adversarial_intent": "operate under unowned identity",
+    "target_surface": "gateway",
+    "required_executor": "gateway_executor",
+    "executable_status": "partially_executable",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "orphaned_identity_use",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "CSA AI Controls",
+        "reference": "AIC-04",
+        "control_area": "Control Validation"
+      },
+      {
+        "framework": "NIST AI RMF",
+        "reference": "MAP/MEASURE",
+        "control_area": "Risk Measurement"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 246000,
+      "likelihood": 0.3,
+      "estimated_ale_range": "$86,100-$184,500/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-030",
+    "name": "AI IAM Abuse 030: Delegation Abuse",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "delegation_abuse",
+    "severity": "high",
+    "description": "Exploit delegated rights after context changes.",
+    "adversarial_intent": "abuse delegated privileges",
+    "target_surface": "gateway",
+    "required_executor": "gateway_executor",
+    "executable_status": "partially_executable",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "delegation_abuse",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION",
+        "POLICY_ENFORCEMENT_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION",
+      "POLICY_ENFORCEMENT_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "NIST AI RMF",
+        "reference": "MAP/MEASURE",
+        "control_area": "Risk Measurement"
+      },
+      {
+        "framework": "ISO / IEC 42001",
+        "reference": "A.8",
+        "control_area": "AI Governance"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 272000,
+      "likelihood": 0.36,
+      "estimated_ale_range": "$95,200-$204,000/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-031",
+    "name": "AI IAM Abuse 031: Identity Spoofing",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "identity_spoofing",
+    "severity": "high",
+    "description": "Use mismatched identity claims to gain elevated access.",
+    "adversarial_intent": "impersonate trusted identity",
+    "target_surface": "gateway",
+    "required_executor": "gateway_executor",
+    "executable_status": "partially_executable",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "identity_spoofing",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "ISO / IEC 42001",
+        "reference": "A.8",
+        "control_area": "AI Governance"
+      },
+      {
+        "framework": "EU AI Act",
+        "reference": "Art. 9",
+        "control_area": "Risk Management"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 298000,
+      "likelihood": 0.42,
+      "estimated_ale_range": "$104,300-$223,500/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-032",
+    "name": "AI IAM Abuse 032: Token Scope Escape",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "token_scope_escape",
+    "severity": "medium",
+    "description": "Replay access tokens across unauthorized scopes.",
+    "adversarial_intent": "reuse token beyond scope",
+    "target_surface": "gateway",
+    "required_executor": "gateway_executor",
+    "executable_status": "partially_executable",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "token_scope_escape",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "step_up",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION",
+        "POLICY_ENFORCEMENT_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION",
+      "POLICY_ENFORCEMENT_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "EU AI Act",
+        "reference": "Art. 9",
+        "control_area": "Risk Management"
+      },
+      {
+        "framework": "MITRE ATLAS",
+        "reference": "AML.TA0001",
+        "control_area": "Adversarial Tactics"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 324000,
+      "likelihood": 0.48,
+      "estimated_ale_range": "$113,400-$243,000/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-033",
+    "name": "AI IAM Abuse 033: Privilege Drift Exploit",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "privilege_drift_exploit",
+    "severity": "high",
+    "description": "Use stale over-broad grants to perform restricted actions.",
+    "adversarial_intent": "abuse drifted permissions",
+    "target_surface": "gateway",
+    "required_executor": "gateway_executor",
+    "executable_status": "partially_executable",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "privilege_drift_exploit",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "MITRE ATLAS",
+        "reference": "AML.TA0001",
+        "control_area": "Adversarial Tactics"
+      },
+      {
+        "framework": "OWASP GenAI Top 10",
+        "reference": "GAI01",
+        "control_area": "Prompt Safety"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 350000,
+      "likelihood": 0.54,
+      "estimated_ale_range": "$122,499-$262,500/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-034",
+    "name": "AI IAM Abuse 034: Orphaned Identity Use",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "orphaned_identity_use",
+    "severity": "medium",
+    "description": "Trigger actions from orphaned/non-owned AI identities.",
+    "adversarial_intent": "operate under unowned identity",
+    "target_surface": "gateway",
+    "required_executor": "gateway_executor",
+    "executable_status": "partially_executable",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "orphaned_identity_use",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "OWASP GenAI Top 10",
+        "reference": "GAI01",
+        "control_area": "Prompt Safety"
+      },
+      {
+        "framework": "OWASP Top 10 for LLM Applications",
+        "reference": "LLM01",
+        "control_area": "Prompt Injection"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 376000,
+      "likelihood": 0.6,
+      "estimated_ale_range": "$131,600-$282,000/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-035",
+    "name": "AI IAM Abuse 035: Delegation Abuse",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "delegation_abuse",
+    "severity": "critical",
+    "description": "Exploit delegated rights after context changes.",
+    "adversarial_intent": "abuse delegated privileges",
+    "target_surface": "gateway",
+    "required_executor": "gateway_executor",
+    "executable_status": "partially_executable",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "delegation_abuse",
+      "entry_point": "auth_context"
+    },
+    "attack_steps": [
+      "Construct identity/token context with adversarial scope assumptions.",
+      "Attempt privileged action through runtime/gateway pathway.",
+      "Validate identity binding, scope enforcement, and policy response."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "PRIVILEGE_DRIFT_DETECTION",
+        "POLICY_ENFORCEMENT_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "PRIVILEGE_DRIFT_DETECTION",
+      "POLICY_ENFORCEMENT_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "OWASP Top 10 for LLM Applications",
+        "reference": "LLM01",
+        "control_area": "Prompt Injection"
+      },
+      {
+        "framework": "OWASP Top 10 for Agentic Applications",
+        "reference": "AGENT01",
+        "control_area": "Agent Abuse"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 220000,
+      "likelihood": 0.66,
+      "estimated_ale_range": "$77,000-$165,000/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-IAM-036",
+    "name": "AI IAM Abuse 036: Compromised Agent Over-Scoped Permissions",
+    "category": "ai_identity_access_abuse",
+    "subcategory": "over_scoped_static_permissions",
+    "severity": "critical",
+    "description": "Compromised agent attempts lateral movement using static over-scoped permissions and no valid user-bound session context.",
+    "adversarial_intent": "pivot through over-scoped agent identity",
+    "target_surface": "agent",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
+    "preconditions": [
+      "identity_registry_active",
+      "scope_policies_loaded",
+      "gateway_path_enforced"
+    ],
+    "attack_vector": {
+      "type": "token_abuse",
+      "technique": "over_scoped_static_permissions",
+      "entry_point": "agent_session"
+    },
+    "attack_steps": [
+      "Start an agent action without a valid session or with an expired session.",
+      "Attempt privileged tool call against a previously unseen internal system.",
+      "Replay with static wildcard permissions to force scope expansion.",
+      "Validate runtime anomaly detection, gateway block decision, and containment actions."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "AI_IDENTITY_BINDING",
+        "NON_HUMAN_IDENTITY_CONTROL",
+        "PRIVILEGE_DRIFT_DETECTION",
+        "AGENT_ACTION_AUTHORIZATION",
+        "TOKEN_SCOPE_ENFORCEMENT",
+        "CHAIN_OF_ACTION_VALIDATION"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "AI_IDENTITY_BINDING",
+      "NON_HUMAN_IDENTITY_CONTROL",
+      "PRIVILEGE_DRIFT_DETECTION",
+      "AGENT_ACTION_AUTHORIZATION",
+      "TOKEN_SCOPE_ENFORCEMENT",
+      "CHAIN_OF_ACTION_VALIDATION"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "OWASP Top 10 for Agentic Applications",
+        "reference": "AGENT01",
+        "control_area": "Agent Abuse"
+      },
+      {
+        "framework": "NIST AI RMF",
+        "reference": "MAP/MEASURE",
+        "control_area": "Risk Measurement"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version",
+      "finding_trace"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 402000,
+      "likelihood": 0.64,
+      "estimated_ale_range": "$140,700-$301,500/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_identity_rebind",
+      "tmpl_scope_rotation"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  }
+]

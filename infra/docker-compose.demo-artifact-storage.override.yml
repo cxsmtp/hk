@@ -1,0 +1,18 @@
+# Keep Hawk runtime artifacts on Docker-managed storage. This avoids the
+# external-drive bind-mount permission mismatch while preserving the existing
+# host artifact directory unchanged for later migration/inspection.
+services:
+  api:
+    volumes:
+      - hawk_production_artifacts:/artifacts
+  worker:
+    volumes:
+      - hawk_production_artifacts:/artifacts
+  celery-beat:
+    volumes:
+      - hawk_production_artifacts:/artifacts
+
+volumes:
+  hawk_production_artifacts:
+    name: hawk_production_artifacts
+    external: true

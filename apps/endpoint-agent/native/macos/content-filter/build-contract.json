@@ -1,0 +1,27 @@
+{
+  "schema": "hawk.macos-content-filter-build-contract",
+  "version": 2,
+  "verification_status": "unverified",
+  "source_ready_is_runtime_ready": false,
+  "activation_default": "off",
+  "network_floor_owns_blocking": true,
+  "semantic_proxy_is_authoritative_for_deny": false,
+  "direct_quic_bypass_allowed": false,
+  "local_signed_policy_required": true,
+  "bounded_snapshot_bridge_implemented": true,
+  "process_audit_token_required": true,
+  "application_audit_token_required": true,
+  "source_application_attribution_child_family_verified": false,
+  "runtime_evidence_required": [
+    "signed_artifact",
+    "network_extension_entitlement",
+    "mdm_content_filter_activation",
+    "signed_local_policy",
+    "authenticated_local_delivery",
+    "signed_component_health",
+    "tcp_udp_deny_acceptance",
+    "quic_direct_ip_bypass_acceptance",
+    "target_os_acceptance",
+    "edr_coexistence"
+  ]
+}

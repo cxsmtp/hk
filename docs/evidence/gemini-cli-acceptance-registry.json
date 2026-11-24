@@ -1,0 +1,85 @@
+{
+  "schema_version": "gemini-cli-acceptance-registry/1.0",
+  "entries": [
+    {
+      "provider": "google",
+      "product": "gemini_cli",
+      "provider_version": "0.54.4",
+      "adapter_version": "1.0.0",
+      "report_sha256": "bda1ce7e5ac0782d66d5307b26013f4d89bd9a745328be078f58af4277e71d69",
+      "evidence_artifact": "docs/evidence/gemini-cli-0.54.4-acceptance-result.json",
+      "evidence_timestamp": "2026-08-12T14:52:23+04:00",
+      "tested_events": [
+        "SessionStart",
+        "SessionEnd",
+        "BeforeAgent",
+        "AfterAgent",
+        "BeforeModel",
+        "AfterModel",
+        "BeforeToolSelection",
+        "BeforeTool",
+        "AfterTool",
+        "PreCompress",
+        "Notification"
+      ],
+      "accepted_capabilities": [
+        "tool_control",
+        "command_control",
+        "persistent_side_effect_control",
+        "post_execution_visibility",
+        "execution_correlation",
+        "config_integrity",
+        "bypass_detection",
+        "post_execution_absence_verified",
+        "file_read_control",
+        "file_write_control",
+        "mcp_control",
+        "destination_binding",
+        "prompt_control"
+      ],
+      "measured_callback_p95_ms": 8.503,
+      "reviewed": true,
+      "review_status": "reviewed_by_acceptance_gate"
+    },
+    {
+      "provider": "google",
+      "product": "gemini_cli",
+      "provider_version": "0.55.1",
+      "adapter_version": "1.0.0",
+      "report_sha256": "86b11acddf250b8fbe1e4fbdfa4b69e6513c22aa4fb0ed5fe737f18c90e0b8a8",
+      "evidence_artifact": "docs/evidence/gemini-cli-0.55.1-acceptance-result.json",
+      "evidence_timestamp": "2026-09-10T23:37:35Z",
+      "tested_events": [
+        "SessionStart",
+        "SessionEnd",
+        "BeforeAgent",
+        "AfterAgent",
+        "BeforeModel",
+        "AfterModel",
+        "BeforeToolSelection",
+        "BeforeTool",
+        "AfterTool",
+        "PreCompress",
+        "Notification"
+      ],
+      "accepted_capabilities": [
+        "tool_control",
+        "command_control",
+        "persistent_side_effect_control",
+        "post_execution_visibility",
+        "execution_correlation",
+        "config_integrity",
+        "bypass_detection",
+        "post_execution_absence_verified",
+        "file_read_control",
+        "file_write_control",
+        "mcp_control",
+        "destination_binding",
+        "prompt_control"
+      ],
+      "measured_callback_p95_ms": 28.937,
+      "reviewed": true,
+      "review_status": "reviewed_by_acceptance_gate"
+    }
+  ]
+}

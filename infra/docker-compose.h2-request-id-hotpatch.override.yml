@@ -1,0 +1,5 @@
+# API-only runtime selection for the tested bounded MCP request-ID hotpatch.
+# It preserves database, volumes, secrets, and all other service configuration.
+services:
+  api:
+    image: hawk-api-h2-request-id-hotpatch:local

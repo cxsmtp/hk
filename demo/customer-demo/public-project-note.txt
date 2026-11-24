@@ -1,0 +1,5 @@
+Hawk demonstration data only.
+
+The property operations team is evaluating approved AI tools for summarizing
+public project updates. This file contains no customer, tenant, financial, or
+credential data.

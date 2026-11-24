@@ -1,0 +1,135 @@
+{
+  "scenario_id": "h2-cursor-browser",
+  "tenant_id": "10000000-0000-4000-8000-000000000003",
+  "scan_id": "20000000-0000-4000-8000-000000000003",
+  "asset": {
+    "asset_type": "ide",
+    "canonical_name": "Cursor coding assistant candidate",
+    "provider": "Cursor",
+    "product": "Cursor",
+    "framework": null,
+    "version": "fixture-v1",
+    "deployment_family": "developer_endpoint",
+    "technical_surface": "endpoint_browser",
+    "environment": "test"
+  },
+  "signals": [
+    {
+      "surface": "endpoint",
+      "signal": {
+        "observation_id": "h2-cursor-endpoint",
+        "scan_id": "20000000-0000-4000-8000-000000000003",
+        "target_id": "h2-target-cursor-endpoint",
+        "subject_reference": "workload:cursor-fixture",
+        "raw_signal_type": "running_process",
+        "asset_candidate_type": "ide",
+        "observed_state": "actively_used",
+        "normalized_signal": {
+          "product_family": "cursor",
+          "process_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+        },
+        "identifiers": {
+          "product_id": "cursor",
+          "process_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+        },
+        "configuration_summary": {
+          "process_scope": "managed_endpoint"
+        },
+        "usage_summary": {
+          "event_count": 1,
+          "actor_class": "human"
+        },
+        "capability_hints": [
+          "source_code_access",
+          "tool_execution"
+        ],
+        "identity_hints": [
+          {
+            "identity_type": "user",
+            "reference_hash": "3333333333333333333333333333333333333333333333333333333333333333"
+          }
+        ],
+        "relationship_hints": [
+          {
+            "relationship": "runs_on",
+            "target": "managed_endpoint"
+          }
+        ],
+        "evidence_reference": "fixture://hmair/h2/cursor/endpoint",
+        "evidence_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "observed_at": "2026-09-11T08:00:00Z",
+        "confidence": 0.82,
+        "freshness": "fresh",
+        "verification_state": "partially_verified",
+        "source_trust": "strong",
+        "collection_scope": {
+          "scope_type": "managed_endpoint",
+          "unit_count": 1,
+          "coverage_claim": "fixture_only"
+        },
+        "evidence_mode": "direct",
+        "evidence_mutability": "immutable",
+        "contradiction_state": "none",
+        "contradiction_references": []
+      }
+    },
+    {
+      "surface": "browser",
+      "signal": {
+        "observation_id": "h2-cursor-browser",
+        "scan_id": "20000000-0000-4000-8000-000000000003",
+        "target_id": "h2-target-cursor-browser",
+        "subject_reference": "workload:cursor-fixture",
+        "raw_signal_type": "web_ai_usage",
+        "asset_candidate_type": "ai_saas",
+        "observed_state": "actively_used",
+        "normalized_signal": {
+          "product_family": "cursor",
+          "account_boundary": "unknown"
+        },
+        "identifiers": {
+          "product_id": "cursor",
+          "browser_unit": "managed-browser-fixture"
+        },
+        "configuration_summary": {
+          "management_state": "managed_extension"
+        },
+        "usage_summary": {
+          "event_count": 1,
+          "actor_class": "human"
+        },
+        "capability_hints": [
+          "model_inference"
+        ],
+        "identity_hints": [
+          {
+            "identity_type": "user",
+            "reference_hash": "3333333333333333333333333333333333333333333333333333333333333333"
+          }
+        ],
+        "relationship_hints": [
+          {
+            "relationship": "uses",
+            "target": "ai_saas"
+          }
+        ],
+        "evidence_reference": "fixture://hmair/h2/cursor/browser",
+        "evidence_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "observed_at": "2026-09-11T08:00:00Z",
+        "confidence": 0.74,
+        "freshness": "fresh",
+        "verification_state": "partially_verified",
+        "source_trust": "medium",
+        "collection_scope": {
+          "scope_type": "managed_browser",
+          "unit_count": 1,
+          "coverage_claim": "fixture_only"
+        },
+        "evidence_mode": "direct",
+        "evidence_mutability": "immutable",
+        "contradiction_state": "none",
+        "contradiction_references": []
+      }
+    }
+  ]
+}

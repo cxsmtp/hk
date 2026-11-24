@@ -1,0 +1,57 @@
+[Version]
+Signature="$WINDOWS NT$"
+Class="ActivityMonitor"
+ClassGuid={b86dff51-a31e-4bac-b3cf-e8cfe75c9fc2}
+Provider=%Hawk%
+DriverVer=08/12/2026,0.3.0.0
+CatalogFile=HawkEndpointFloor.cat
+PnpLockdown=1
+
+[DestinationDirs]
+HawkEndpointFloor.DriverFiles=13
+
+[DefaultInstall.NTamd64]
+CopyFiles=HawkEndpointFloor.DriverFiles
+
+[DefaultInstall.NTamd64.Services]
+AddService=HawkEndpointFloor,,HawkEndpointFloor.Service
+
+[DefaultInstall.NTarm64]
+CopyFiles=HawkEndpointFloor.DriverFiles
+
+[DefaultInstall.NTarm64.Services]
+AddService=HawkEndpointFloor,,HawkEndpointFloor.Service
+
+[HawkEndpointFloor.Service]
+DisplayName=%ServiceDisplayName%
+Description=%ServiceDescription%
+ServiceBinary=%13%\HawkEndpointFloor.sys
+Dependencies=FltMgr
+ServiceType=2
+StartType=3
+ErrorControl=1
+LoadOrderGroup="FSFilter Activity Monitor"
+AddReg=HawkEndpointFloor.AddRegistry
+
+[HawkEndpointFloor.AddRegistry]
+HKR,"Parameters","SupportedFeatures",0x00010001,0x3
+HKR,"Parameters\Instances","DefaultInstance",0x00000000,%DefaultInstance%
+HKR,"Parameters\Instances\%DefaultInstance%","Altitude",0x00000000,%InstanceAltitude%
+HKR,"Parameters\Instances\%DefaultInstance%","Flags",0x00010001,0x0
+
+[HawkEndpointFloor.DriverFiles]
+HawkEndpointFloor.sys
+
+[SourceDisksFiles]
+HawkEndpointFloor.sys=1
+
+[SourceDisksNames]
+1=%DiskName%,,
+
+[Strings]
+Hawk="Hawk AI Security"
+ServiceDisplayName="Hawk Endpoint Enforcement Floor"
+ServiceDescription="Local signed-policy file, process, and network authorization floor"
+DefaultInstance="Hawk Endpoint Floor Instance"
+InstanceAltitude="__HAWK_MINIFILTER_ALTITUDE__"
+DiskName="Hawk Endpoint Enforcement Floor"

@@ -1,0 +1,24 @@
+{
+  "mcpServerId": "manual-terminal-lab",
+  "tool": {
+    "name": "write_demo_marker",
+    "version": "1.0.0",
+    "description": "Write one harmless fixed marker proving whether the MCP child received the call.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "note": {
+          "type": "string",
+          "maxLength": 64
+        }
+      },
+      "required": ["note"],
+      "additionalProperties": false
+    },
+    "examples": [
+      {
+        "note": "CISO manual proof"
+      }
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+name: Import integrity
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check-import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Verify import hashes and Python syntax
+        run: python3 tools/collaboration/check_import.py
+      - name: Verify native bootstrap data and version guards
+        run: python3 -m unittest tools/collaboration/test_native_local.py

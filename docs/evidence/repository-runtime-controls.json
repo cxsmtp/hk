@@ -1,0 +1,60 @@
+{
+  "exception_class": "RuntimeError",
+  "failure_code": "causal_hook_decision_failed",
+  "failure_stage": "causal_hook_0",
+  "migration_0092": true,
+  "phases": [
+    {
+      "authenticated": true,
+      "decision": "block",
+      "enforced": true,
+      "exact_adapter": true,
+      "hook_decision": "deny",
+      "latency": {
+        "health_p95_ms": 395,
+        "latency_samples_ms": [
+          67,
+          395
+        ],
+        "maximum_ms": 395,
+        "minimum_ms": 67,
+        "p95_exceeds_budget": true,
+        "requirement_budget_ms": 250,
+        "sample_count": 2
+      },
+      "lifecycle_before_tool": true,
+      "provider_event_hash": "2b37068c640e78fa88d34f545500c2b8216a62d30a0e72221c1d1a3bf6e677cd",
+      "reason_codes": [],
+      "selector": {
+        "assurance_level": 0,
+        "rejected_candidate_count": 1,
+        "rejected_reason_codes": [
+          "latency_requirement_unsatisfied"
+        ],
+        "required_assurance": null,
+        "required_capabilities": [
+          "file_read_control",
+          "identity"
+        ],
+        "satisfied_capabilities": [],
+        "selected_reason_codes": [
+          "CONTROL_REQUIREMENT_UNSATISFIED"
+        ],
+        "status": "found",
+        "unsatisfied_capabilities": [
+          "file_read_control",
+          "identity"
+        ]
+      }
+    }
+  ],
+  "release_ready": false,
+  "signer": "software_test_only",
+  "source": {
+    "line": 142,
+    "source_token": "harness"
+  },
+  "sqlstate": null,
+  "status": "blocked",
+  "strict_health": true
+}

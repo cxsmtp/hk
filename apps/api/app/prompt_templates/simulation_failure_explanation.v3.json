@@ -1,0 +1,13 @@
+{
+  "template_id": "hawk.simulation_failure_explanation",
+  "version": "v3",
+  "task_type": "simulation_failure_explanation",
+  "description": "Explain simulation failures with control lineage.",
+  "allowed_data_types": ["public", "internal", "sensitive"],
+  "risk_level": "high",
+  "approved_for_providers": ["gpt", "claude", "gemini", "llama"],
+  "template_text": "Explain simulation failure by control_id, expected controls, triggered controls, and missing controls.",
+  "expected_output_schema": "RemediationGuidance",
+  "status": "active",
+  "last_updated": "2026-04-03"
+}

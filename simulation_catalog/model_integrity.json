@@ -1,0 +1,1342 @@
+[
+  {
+    "simulation_id": "SIM-MODEL-001",
+    "name": "Model Integrity 001: Unapproved Model Endpoint",
+    "category": "model_supply_chain_integrity",
+    "subcategory": "unapproved_model_endpoint",
+    "severity": "high",
+    "description": "Invoke model endpoint outside approved registry.",
+    "adversarial_intent": "route to unauthorized model",
+    "target_surface": "connector",
+    "required_executor": "model_registry_executor",
+    "executable_status": "partially_executable",
+    "preconditions": [
+      "model_registry_enabled",
+      "provider_catalog_synced"
+    ],
+    "attack_vector": {
+      "type": "api",
+      "technique": "unapproved_model_endpoint",
+      "entry_point": "model_routing_layer"
+    },
+    "attack_steps": [
+      "Attempt model invocation with altered endpoint/version metadata.",
+      "Trigger model governance and integrity validation checks.",
+      "Capture allow/deny outcome and integrity evidence links."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "MODEL_ACCESS_CONTROL",
+        "MODEL_VERSION_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "MODEL_ACCESS_CONTROL",
+      "MODEL_VERSION_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "ISO / IEC 42001",
+        "reference": "A.8",
+        "control_area": "AI Governance"
+      },
+      {
+        "framework": "EU AI Act",
+        "reference": "Art. 9",
+        "control_area": "Risk Management"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 225000,
+      "likelihood": 0.24,
+      "estimated_ale_range": "$78,750-$168,750/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_model_pin_update",
+      "tmpl_provider_allowlist_review"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-MODEL-002",
+    "name": "Model Integrity 002: Model Version Drift",
+    "category": "model_supply_chain_integrity",
+    "subcategory": "model_version_drift",
+    "severity": "medium",
+    "description": "Call model version not aligned with approved baseline.",
+    "adversarial_intent": "use unpinned version",
+    "target_surface": "connector",
+    "required_executor": "model_registry_executor",
+    "executable_status": "partially_executable",
+    "preconditions": [
+      "model_registry_enabled",
+      "provider_catalog_synced"
+    ],
+    "attack_vector": {
+      "type": "api",
+      "technique": "model_version_drift",
+      "entry_point": "model_routing_layer"
+    },
+    "attack_steps": [
+      "Attempt model invocation with altered endpoint/version metadata.",
+      "Trigger model governance and integrity validation checks.",
+      "Capture allow/deny outcome and integrity evidence links."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "MODEL_ACCESS_CONTROL",
+        "MODEL_VERSION_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "MODEL_ACCESS_CONTROL",
+      "MODEL_VERSION_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "EU AI Act",
+        "reference": "Art. 9",
+        "control_area": "Risk Management"
+      },
+      {
+        "framework": "MITRE ATLAS",
+        "reference": "AML.TA0001",
+        "control_area": "Adversarial Tactics"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 250000,
+      "likelihood": 0.3,
+      "estimated_ale_range": "$87,500-$187,500/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_model_pin_update",
+      "tmpl_provider_allowlist_review"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-MODEL-003",
+    "name": "Model Integrity 003: Artifact Tampering",
+    "category": "model_supply_chain_integrity",
+    "subcategory": "artifact_tampering",
+    "severity": "high",
+    "description": "Break integrity chain for model artifact metadata.",
+    "adversarial_intent": "tamper model artifact lineage",
+    "target_surface": "connector",
+    "required_executor": "model_registry_executor",
+    "executable_status": "partially_executable",
+    "preconditions": [
+      "model_registry_enabled",
+      "provider_catalog_synced"
+    ],
+    "attack_vector": {
+      "type": "api",
+      "technique": "artifact_tampering",
+      "entry_point": "model_routing_layer"
+    },
+    "attack_steps": [
+      "Attempt model invocation with altered endpoint/version metadata.",
+      "Trigger model governance and integrity validation checks.",
+      "Capture allow/deny outcome and integrity evidence links."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "step_up",
+      "expected_controls": [
+        "MODEL_ACCESS_CONTROL",
+        "MODEL_VERSION_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "MODEL_ACCESS_CONTROL",
+      "MODEL_VERSION_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "MITRE ATLAS",
+        "reference": "AML.TA0001",
+        "control_area": "Adversarial Tactics"
+      },
+      {
+        "framework": "OWASP GenAI Top 10",
+        "reference": "GAI01",
+        "control_area": "Prompt Safety"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 275000,
+      "likelihood": 0.36,
+      "estimated_ale_range": "$96,250-$206,250/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_model_pin_update",
+      "tmpl_provider_allowlist_review"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-MODEL-004",
+    "name": "Model Integrity 004: Provider Impersonation",
+    "category": "model_supply_chain_integrity",
+    "subcategory": "provider_impersonation",
+    "severity": "medium",
+    "description": "Masquerade untrusted provider as approved endpoint.",
+    "adversarial_intent": "spoof provider metadata",
+    "target_surface": "connector",
+    "required_executor": "model_registry_executor",
+    "executable_status": "partially_executable",
+    "preconditions": [
+      "model_registry_enabled",
+      "provider_catalog_synced"
+    ],
+    "attack_vector": {
+      "type": "api",
+      "technique": "provider_impersonation",
+      "entry_point": "model_routing_layer"
+    },
+    "attack_steps": [
+      "Attempt model invocation with altered endpoint/version metadata.",
+      "Trigger model governance and integrity validation checks.",
+      "Capture allow/deny outcome and integrity evidence links."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "MODEL_ACCESS_CONTROL",
+        "MODEL_VERSION_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "MODEL_ACCESS_CONTROL",
+      "MODEL_VERSION_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "OWASP GenAI Top 10",
+        "reference": "GAI01",
+        "control_area": "Prompt Safety"
+      },
+      {
+        "framework": "OWASP Top 10 for LLM Applications",
+        "reference": "LLM01",
+        "control_area": "Prompt Injection"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 300000,
+      "likelihood": 0.42,
+      "estimated_ale_range": "$105,000-$225,000/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_model_pin_update",
+      "tmpl_provider_allowlist_review"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-MODEL-005",
+    "name": "Model Integrity 005: Safety Profile Downgrade",
+    "category": "model_supply_chain_integrity",
+    "subcategory": "safety_profile_downgrade",
+    "severity": "critical",
+    "description": "Select model profile with weaker safety controls.",
+    "adversarial_intent": "downgrade model guard profile",
+    "target_surface": "connector",
+    "required_executor": "model_registry_executor",
+    "executable_status": "partially_executable",
+    "preconditions": [
+      "model_registry_enabled",
+      "provider_catalog_synced"
+    ],
+    "attack_vector": {
+      "type": "api",
+      "technique": "safety_profile_downgrade",
+      "entry_point": "model_routing_layer"
+    },
+    "attack_steps": [
+      "Attempt model invocation with altered endpoint/version metadata.",
+      "Trigger model governance and integrity validation checks.",
+      "Capture allow/deny outcome and integrity evidence links."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "MODEL_ACCESS_CONTROL",
+        "MODEL_VERSION_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "MODEL_ACCESS_CONTROL",
+      "MODEL_VERSION_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "OWASP Top 10 for LLM Applications",
+        "reference": "LLM01",
+        "control_area": "Prompt Injection"
+      },
+      {
+        "framework": "OWASP Top 10 for Agentic Applications",
+        "reference": "AGENT01",
+        "control_area": "Agent Abuse"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 325000,
+      "likelihood": 0.48,
+      "estimated_ale_range": "$113,750-$243,750/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_model_pin_update",
+      "tmpl_provider_allowlist_review"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-MODEL-006",
+    "name": "Model Integrity 006: Unapproved Model Endpoint",
+    "category": "model_supply_chain_integrity",
+    "subcategory": "unapproved_model_endpoint",
+    "severity": "high",
+    "description": "Invoke model endpoint outside approved registry.",
+    "adversarial_intent": "route to unauthorized model",
+    "target_surface": "connector",
+    "required_executor": "model_registry_executor",
+    "executable_status": "partially_executable",
+    "preconditions": [
+      "model_registry_enabled",
+      "provider_catalog_synced"
+    ],
+    "attack_vector": {
+      "type": "api",
+      "technique": "unapproved_model_endpoint",
+      "entry_point": "model_routing_layer"
+    },
+    "attack_steps": [
+      "Attempt model invocation with altered endpoint/version metadata.",
+      "Trigger model governance and integrity validation checks.",
+      "Capture allow/deny outcome and integrity evidence links."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "step_up",
+      "expected_controls": [
+        "MODEL_ACCESS_CONTROL",
+        "MODEL_VERSION_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "MODEL_ACCESS_CONTROL",
+      "MODEL_VERSION_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "OWASP Top 10 for Agentic Applications",
+        "reference": "AGENT01",
+        "control_area": "Agent Abuse"
+      },
+      {
+        "framework": "Microsoft Responsible AI Standard",
+        "reference": "RS6",
+        "control_area": "Reliability & Safety"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 350000,
+      "likelihood": 0.54,
+      "estimated_ale_range": "$122,499-$262,500/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_model_pin_update",
+      "tmpl_provider_allowlist_review"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-MODEL-007",
+    "name": "Model Integrity 007: Model Version Drift",
+    "category": "model_supply_chain_integrity",
+    "subcategory": "model_version_drift",
+    "severity": "high",
+    "description": "Call model version not aligned with approved baseline.",
+    "adversarial_intent": "use unpinned version",
+    "target_surface": "connector",
+    "required_executor": "model_registry_executor",
+    "executable_status": "not_yet_executable",
+    "preconditions": [
+      "model_registry_enabled",
+      "provider_catalog_synced"
+    ],
+    "attack_vector": {
+      "type": "api",
+      "technique": "model_version_drift",
+      "entry_point": "model_routing_layer"
+    },
+    "attack_steps": [
+      "Attempt model invocation with altered endpoint/version metadata.",
+      "Trigger model governance and integrity validation checks.",
+      "Capture allow/deny outcome and integrity evidence links."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "MODEL_ACCESS_CONTROL",
+        "MODEL_VERSION_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "MODEL_ACCESS_CONTROL",
+      "MODEL_VERSION_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "Microsoft Responsible AI Standard",
+        "reference": "RS6",
+        "control_area": "Reliability & Safety"
+      },
+      {
+        "framework": "Google SAIF",
+        "reference": "SAIF-P2",
+        "control_area": "Secure Lifecycle"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 200000,
+      "likelihood": 0.6,
+      "estimated_ale_range": "$70,000-$150,000/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_model_pin_update",
+      "tmpl_provider_allowlist_review"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-MODEL-008",
+    "name": "Model Integrity 008: Artifact Tampering",
+    "category": "model_supply_chain_integrity",
+    "subcategory": "artifact_tampering",
+    "severity": "medium",
+    "description": "Break integrity chain for model artifact metadata.",
+    "adversarial_intent": "tamper model artifact lineage",
+    "target_surface": "connector",
+    "required_executor": "model_registry_executor",
+    "executable_status": "not_yet_executable",
+    "preconditions": [
+      "model_registry_enabled",
+      "provider_catalog_synced"
+    ],
+    "attack_vector": {
+      "type": "api",
+      "technique": "artifact_tampering",
+      "entry_point": "model_routing_layer"
+    },
+    "attack_steps": [
+      "Attempt model invocation with altered endpoint/version metadata.",
+      "Trigger model governance and integrity validation checks.",
+      "Capture allow/deny outcome and integrity evidence links."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "MODEL_ACCESS_CONTROL",
+        "MODEL_VERSION_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "MODEL_ACCESS_CONTROL",
+      "MODEL_VERSION_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "Google SAIF",
+        "reference": "SAIF-P2",
+        "control_area": "Secure Lifecycle"
+      },
+      {
+        "framework": "CSA AI Controls",
+        "reference": "AIC-04",
+        "control_area": "Control Validation"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 225000,
+      "likelihood": 0.66,
+      "estimated_ale_range": "$78,750-$168,750/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_model_pin_update",
+      "tmpl_provider_allowlist_review"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-MODEL-009",
+    "name": "Model Integrity 009: Provider Impersonation",
+    "category": "model_supply_chain_integrity",
+    "subcategory": "provider_impersonation",
+    "severity": "high",
+    "description": "Masquerade untrusted provider as approved endpoint.",
+    "adversarial_intent": "spoof provider metadata",
+    "target_surface": "connector",
+    "required_executor": "model_registry_executor",
+    "executable_status": "not_yet_executable",
+    "preconditions": [
+      "model_registry_enabled",
+      "provider_catalog_synced"
+    ],
+    "attack_vector": {
+      "type": "api",
+      "technique": "provider_impersonation",
+      "entry_point": "model_routing_layer"
+    },
+    "attack_steps": [
+      "Attempt model invocation with altered endpoint/version metadata.",
+      "Trigger model governance and integrity validation checks.",
+      "Capture allow/deny outcome and integrity evidence links."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "step_up",
+      "expected_controls": [
+        "MODEL_ACCESS_CONTROL",
+        "MODEL_VERSION_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "MODEL_ACCESS_CONTROL",
+      "MODEL_VERSION_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "CSA AI Controls",
+        "reference": "AIC-04",
+        "control_area": "Control Validation"
+      },
+      {
+        "framework": "NIST AI RMF",
+        "reference": "MAP/MEASURE",
+        "control_area": "Risk Measurement"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 250000,
+      "likelihood": 0.18,
+      "estimated_ale_range": "$87,500-$187,500/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_model_pin_update",
+      "tmpl_provider_allowlist_review"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-MODEL-010",
+    "name": "Model Integrity 010: Safety Profile Downgrade",
+    "category": "model_supply_chain_integrity",
+    "subcategory": "safety_profile_downgrade",
+    "severity": "critical",
+    "description": "Select model profile with weaker safety controls.",
+    "adversarial_intent": "downgrade model guard profile",
+    "target_surface": "connector",
+    "required_executor": "model_registry_executor",
+    "executable_status": "not_yet_executable",
+    "preconditions": [
+      "model_registry_enabled",
+      "provider_catalog_synced"
+    ],
+    "attack_vector": {
+      "type": "api",
+      "technique": "safety_profile_downgrade",
+      "entry_point": "model_routing_layer"
+    },
+    "attack_steps": [
+      "Attempt model invocation with altered endpoint/version metadata.",
+      "Trigger model governance and integrity validation checks.",
+      "Capture allow/deny outcome and integrity evidence links."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "MODEL_ACCESS_CONTROL",
+        "MODEL_VERSION_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "MODEL_ACCESS_CONTROL",
+      "MODEL_VERSION_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "NIST AI RMF",
+        "reference": "MAP/MEASURE",
+        "control_area": "Risk Measurement"
+      },
+      {
+        "framework": "ISO / IEC 42001",
+        "reference": "A.8",
+        "control_area": "AI Governance"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 275000,
+      "likelihood": 0.24,
+      "estimated_ale_range": "$96,250-$206,250/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_model_pin_update",
+      "tmpl_provider_allowlist_review"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-MODEL-011",
+    "name": "Model Integrity 011: Unapproved Model Endpoint",
+    "category": "model_supply_chain_integrity",
+    "subcategory": "unapproved_model_endpoint",
+    "severity": "high",
+    "description": "Invoke model endpoint outside approved registry.",
+    "adversarial_intent": "route to unauthorized model",
+    "target_surface": "connector",
+    "required_executor": "model_registry_executor",
+    "executable_status": "not_yet_executable",
+    "preconditions": [
+      "model_registry_enabled",
+      "provider_catalog_synced"
+    ],
+    "attack_vector": {
+      "type": "api",
+      "technique": "unapproved_model_endpoint",
+      "entry_point": "model_routing_layer"
+    },
+    "attack_steps": [
+      "Attempt model invocation with altered endpoint/version metadata.",
+      "Trigger model governance and integrity validation checks.",
+      "Capture allow/deny outcome and integrity evidence links."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "MODEL_ACCESS_CONTROL",
+        "MODEL_VERSION_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "MODEL_ACCESS_CONTROL",
+      "MODEL_VERSION_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "ISO / IEC 42001",
+        "reference": "A.8",
+        "control_area": "AI Governance"
+      },
+      {
+        "framework": "EU AI Act",
+        "reference": "Art. 9",
+        "control_area": "Risk Management"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 300000,
+      "likelihood": 0.3,
+      "estimated_ale_range": "$105,000-$225,000/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_model_pin_update",
+      "tmpl_provider_allowlist_review"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-MODEL-012",
+    "name": "Model Integrity 012: Model Version Drift",
+    "category": "model_supply_chain_integrity",
+    "subcategory": "model_version_drift",
+    "severity": "high",
+    "description": "Call model version not aligned with approved baseline.",
+    "adversarial_intent": "use unpinned version",
+    "target_surface": "connector",
+    "required_executor": "model_registry_executor",
+    "executable_status": "not_yet_executable",
+    "preconditions": [
+      "model_registry_enabled",
+      "provider_catalog_synced"
+    ],
+    "attack_vector": {
+      "type": "api",
+      "technique": "model_version_drift",
+      "entry_point": "model_routing_layer"
+    },
+    "attack_steps": [
+      "Attempt model invocation with altered endpoint/version metadata.",
+      "Trigger model governance and integrity validation checks.",
+      "Capture allow/deny outcome and integrity evidence links."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "step_up",
+      "expected_controls": [
+        "MODEL_ACCESS_CONTROL",
+        "MODEL_VERSION_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "MODEL_ACCESS_CONTROL",
+      "MODEL_VERSION_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "EU AI Act",
+        "reference": "Art. 9",
+        "control_area": "Risk Management"
+      },
+      {
+        "framework": "MITRE ATLAS",
+        "reference": "AML.TA0001",
+        "control_area": "Adversarial Tactics"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 325000,
+      "likelihood": 0.36,
+      "estimated_ale_range": "$113,750-$243,750/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_model_pin_update",
+      "tmpl_provider_allowlist_review"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-MODEL-013",
+    "name": "Model Integrity 013: Artifact Tampering",
+    "category": "model_supply_chain_integrity",
+    "subcategory": "artifact_tampering",
+    "severity": "high",
+    "description": "Break integrity chain for model artifact metadata.",
+    "adversarial_intent": "tamper model artifact lineage",
+    "target_surface": "gateway",
+    "required_executor": "model_registry_executor",
+    "executable_status": "not_yet_executable",
+    "preconditions": [
+      "model_registry_enabled",
+      "provider_catalog_synced"
+    ],
+    "attack_vector": {
+      "type": "api",
+      "technique": "artifact_tampering",
+      "entry_point": "model_routing_layer"
+    },
+    "attack_steps": [
+      "Attempt model invocation with altered endpoint/version metadata.",
+      "Trigger model governance and integrity validation checks.",
+      "Capture allow/deny outcome and integrity evidence links."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "MODEL_ACCESS_CONTROL",
+        "MODEL_VERSION_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "MODEL_ACCESS_CONTROL",
+      "MODEL_VERSION_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "MITRE ATLAS",
+        "reference": "AML.TA0001",
+        "control_area": "Adversarial Tactics"
+      },
+      {
+        "framework": "OWASP GenAI Top 10",
+        "reference": "GAI01",
+        "control_area": "Prompt Safety"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 350000,
+      "likelihood": 0.42,
+      "estimated_ale_range": "$122,499-$262,500/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_model_pin_update",
+      "tmpl_provider_allowlist_review"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-MODEL-014",
+    "name": "Model Integrity 014: Provider Impersonation",
+    "category": "model_supply_chain_integrity",
+    "subcategory": "provider_impersonation",
+    "severity": "medium",
+    "description": "Masquerade untrusted provider as approved endpoint.",
+    "adversarial_intent": "spoof provider metadata",
+    "target_surface": "gateway",
+    "required_executor": "model_registry_executor",
+    "executable_status": "not_yet_executable",
+    "preconditions": [
+      "model_registry_enabled",
+      "provider_catalog_synced"
+    ],
+    "attack_vector": {
+      "type": "api",
+      "technique": "provider_impersonation",
+      "entry_point": "model_routing_layer"
+    },
+    "attack_steps": [
+      "Attempt model invocation with altered endpoint/version metadata.",
+      "Trigger model governance and integrity validation checks.",
+      "Capture allow/deny outcome and integrity evidence links."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "MODEL_ACCESS_CONTROL",
+        "MODEL_VERSION_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "MODEL_ACCESS_CONTROL",
+      "MODEL_VERSION_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "OWASP GenAI Top 10",
+        "reference": "GAI01",
+        "control_area": "Prompt Safety"
+      },
+      {
+        "framework": "OWASP Top 10 for LLM Applications",
+        "reference": "LLM01",
+        "control_area": "Prompt Injection"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 200000,
+      "likelihood": 0.48,
+      "estimated_ale_range": "$70,000-$150,000/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_model_pin_update",
+      "tmpl_provider_allowlist_review"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-MODEL-015",
+    "name": "Model Integrity 015: Safety Profile Downgrade",
+    "category": "model_supply_chain_integrity",
+    "subcategory": "safety_profile_downgrade",
+    "severity": "critical",
+    "description": "Select model profile with weaker safety controls.",
+    "adversarial_intent": "downgrade model guard profile",
+    "target_surface": "gateway",
+    "required_executor": "model_registry_executor",
+    "executable_status": "not_yet_executable",
+    "preconditions": [
+      "model_registry_enabled",
+      "provider_catalog_synced"
+    ],
+    "attack_vector": {
+      "type": "api",
+      "technique": "safety_profile_downgrade",
+      "entry_point": "model_routing_layer"
+    },
+    "attack_steps": [
+      "Attempt model invocation with altered endpoint/version metadata.",
+      "Trigger model governance and integrity validation checks.",
+      "Capture allow/deny outcome and integrity evidence links."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "step_up",
+      "expected_controls": [
+        "MODEL_ACCESS_CONTROL",
+        "MODEL_VERSION_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "MODEL_ACCESS_CONTROL",
+      "MODEL_VERSION_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "OWASP Top 10 for LLM Applications",
+        "reference": "LLM01",
+        "control_area": "Prompt Injection"
+      },
+      {
+        "framework": "OWASP Top 10 for Agentic Applications",
+        "reference": "AGENT01",
+        "control_area": "Agent Abuse"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 225000,
+      "likelihood": 0.54,
+      "estimated_ale_range": "$78,750-$168,750/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_model_pin_update",
+      "tmpl_provider_allowlist_review"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-MODEL-016",
+    "name": "Model Integrity 016: Unapproved Model Endpoint",
+    "category": "model_supply_chain_integrity",
+    "subcategory": "unapproved_model_endpoint",
+    "severity": "medium",
+    "description": "Invoke model endpoint outside approved registry.",
+    "adversarial_intent": "route to unauthorized model",
+    "target_surface": "gateway",
+    "required_executor": "model_registry_executor",
+    "executable_status": "not_yet_executable",
+    "preconditions": [
+      "model_registry_enabled",
+      "provider_catalog_synced"
+    ],
+    "attack_vector": {
+      "type": "api",
+      "technique": "unapproved_model_endpoint",
+      "entry_point": "model_routing_layer"
+    },
+    "attack_steps": [
+      "Attempt model invocation with altered endpoint/version metadata.",
+      "Trigger model governance and integrity validation checks.",
+      "Capture allow/deny outcome and integrity evidence links."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "MODEL_ACCESS_CONTROL",
+        "MODEL_VERSION_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "MODEL_ACCESS_CONTROL",
+      "MODEL_VERSION_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "OWASP Top 10 for Agentic Applications",
+        "reference": "AGENT01",
+        "control_area": "Agent Abuse"
+      },
+      {
+        "framework": "Microsoft Responsible AI Standard",
+        "reference": "RS6",
+        "control_area": "Reliability & Safety"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 250000,
+      "likelihood": 0.6,
+      "estimated_ale_range": "$87,500-$187,500/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_model_pin_update",
+      "tmpl_provider_allowlist_review"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-MODEL-017",
+    "name": "Model Integrity 017: Model Version Drift",
+    "category": "model_supply_chain_integrity",
+    "subcategory": "model_version_drift",
+    "severity": "high",
+    "description": "Call model version not aligned with approved baseline.",
+    "adversarial_intent": "use unpinned version",
+    "target_surface": "gateway",
+    "required_executor": "model_registry_executor",
+    "executable_status": "not_yet_executable",
+    "preconditions": [
+      "model_registry_enabled",
+      "provider_catalog_synced"
+    ],
+    "attack_vector": {
+      "type": "api",
+      "technique": "model_version_drift",
+      "entry_point": "model_routing_layer"
+    },
+    "attack_steps": [
+      "Attempt model invocation with altered endpoint/version metadata.",
+      "Trigger model governance and integrity validation checks.",
+      "Capture allow/deny outcome and integrity evidence links."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "MODEL_ACCESS_CONTROL",
+        "MODEL_VERSION_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "MODEL_ACCESS_CONTROL",
+      "MODEL_VERSION_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "Microsoft Responsible AI Standard",
+        "reference": "RS6",
+        "control_area": "Reliability & Safety"
+      },
+      {
+        "framework": "Google SAIF",
+        "reference": "SAIF-P2",
+        "control_area": "Secure Lifecycle"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 275000,
+      "likelihood": 0.66,
+      "estimated_ale_range": "$96,250-$206,250/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_model_pin_update",
+      "tmpl_provider_allowlist_review"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-MODEL-018",
+    "name": "Model Integrity 018: Artifact Tampering",
+    "category": "model_supply_chain_integrity",
+    "subcategory": "artifact_tampering",
+    "severity": "high",
+    "description": "Break integrity chain for model artifact metadata.",
+    "adversarial_intent": "tamper model artifact lineage",
+    "target_surface": "gateway",
+    "required_executor": "model_registry_executor",
+    "executable_status": "not_yet_executable",
+    "preconditions": [
+      "model_registry_enabled",
+      "provider_catalog_synced"
+    ],
+    "attack_vector": {
+      "type": "api",
+      "technique": "artifact_tampering",
+      "entry_point": "model_routing_layer"
+    },
+    "attack_steps": [
+      "Attempt model invocation with altered endpoint/version metadata.",
+      "Trigger model governance and integrity validation checks.",
+      "Capture allow/deny outcome and integrity evidence links."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "step_up",
+      "expected_controls": [
+        "MODEL_ACCESS_CONTROL",
+        "MODEL_VERSION_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "MODEL_ACCESS_CONTROL",
+      "MODEL_VERSION_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "Google SAIF",
+        "reference": "SAIF-P2",
+        "control_area": "Secure Lifecycle"
+      },
+      {
+        "framework": "CSA AI Controls",
+        "reference": "AIC-04",
+        "control_area": "Control Validation"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 300000,
+      "likelihood": 0.18,
+      "estimated_ale_range": "$105,000-$225,000/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_model_pin_update",
+      "tmpl_provider_allowlist_review"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-MODEL-019",
+    "name": "Model Integrity 019: Provider Impersonation",
+    "category": "model_supply_chain_integrity",
+    "subcategory": "provider_impersonation",
+    "severity": "high",
+    "description": "Masquerade untrusted provider as approved endpoint.",
+    "adversarial_intent": "spoof provider metadata",
+    "target_surface": "gateway",
+    "required_executor": "model_registry_executor",
+    "executable_status": "not_yet_executable",
+    "preconditions": [
+      "model_registry_enabled",
+      "provider_catalog_synced"
+    ],
+    "attack_vector": {
+      "type": "api",
+      "technique": "provider_impersonation",
+      "entry_point": "model_routing_layer"
+    },
+    "attack_steps": [
+      "Attempt model invocation with altered endpoint/version metadata.",
+      "Trigger model governance and integrity validation checks.",
+      "Capture allow/deny outcome and integrity evidence links."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "MODEL_ACCESS_CONTROL",
+        "MODEL_VERSION_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "MODEL_ACCESS_CONTROL",
+      "MODEL_VERSION_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "CSA AI Controls",
+        "reference": "AIC-04",
+        "control_area": "Control Validation"
+      },
+      {
+        "framework": "NIST AI RMF",
+        "reference": "MAP/MEASURE",
+        "control_area": "Risk Measurement"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 325000,
+      "likelihood": 0.24,
+      "estimated_ale_range": "$113,750-$243,750/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_model_pin_update",
+      "tmpl_provider_allowlist_review"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  },
+  {
+    "simulation_id": "SIM-MODEL-020",
+    "name": "Model Integrity 020: Safety Profile Downgrade",
+    "category": "model_supply_chain_integrity",
+    "subcategory": "safety_profile_downgrade",
+    "severity": "critical",
+    "description": "Select model profile with weaker safety controls.",
+    "adversarial_intent": "downgrade model guard profile",
+    "target_surface": "gateway",
+    "required_executor": "model_registry_executor",
+    "executable_status": "not_yet_executable",
+    "preconditions": [
+      "model_registry_enabled",
+      "provider_catalog_synced"
+    ],
+    "attack_vector": {
+      "type": "api",
+      "technique": "safety_profile_downgrade",
+      "entry_point": "model_routing_layer"
+    },
+    "attack_steps": [
+      "Attempt model invocation with altered endpoint/version metadata.",
+      "Trigger model governance and integrity validation checks.",
+      "Capture allow/deny outcome and integrity evidence links."
+    ],
+    "expected_control_behavior": {
+      "expected_decision": "deny",
+      "expected_controls": [
+        "MODEL_ACCESS_CONTROL",
+        "MODEL_VERSION_CONTROL"
+      ],
+      "expected_risk_level": "high"
+    },
+    "control_ids": [
+      "MODEL_ACCESS_CONTROL",
+      "MODEL_VERSION_CONTROL"
+    ],
+    "framework_mappings": [
+      {
+        "framework": "NIST AI RMF",
+        "reference": "MAP/MEASURE",
+        "control_area": "Risk Measurement"
+      },
+      {
+        "framework": "ISO / IEC 42001",
+        "reference": "A.8",
+        "control_area": "AI Governance"
+      }
+    ],
+    "evidence_requirements": [
+      "control_decision",
+      "runtime_event",
+      "policy_version"
+    ],
+    "crq_profile": {
+      "risk_if_exploited": 350000,
+      "likelihood": 0.3,
+      "estimated_ale_range": "$122,499-$262,500/year"
+    },
+    "remediation_template_refs": [
+      "tmpl_model_pin_update",
+      "tmpl_provider_allowlist_review"
+    ],
+    "defined": true,
+    "implemented": false,
+    "version": "v1"
+  }
+]

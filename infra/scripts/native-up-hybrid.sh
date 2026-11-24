@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export NATIVE_DEMO_USE_DOCKER_DATA_SERVICES=true
+export NATIVE_POSTGRES_HOST="${NATIVE_POSTGRES_HOST:-127.0.0.1}"
+export NATIVE_POSTGRES_PORT="${NATIVE_POSTGRES_PORT:-15432}"
+export NATIVE_REDIS_HOST="${NATIVE_REDIS_HOST:-127.0.0.1}"
+export NATIVE_REDIS_PORT="${NATIVE_REDIS_PORT:-6379}"
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+"$SCRIPT_DIR/native-up.sh"

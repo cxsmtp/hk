@@ -1,0 +1,207 @@
+{
+  "acceptance_evidence": false,
+  "cold_profile": {
+    "functions": [
+      {
+        "call_count": 1,
+        "cumulative_ms": 416.34,
+        "self_ms": 0.25,
+        "token": "native_callback"
+      },
+      {
+        "call_count": 87,
+        "cumulative_ms": 268.45,
+        "self_ms": 0.21,
+        "token": "db_scalar"
+      },
+      {
+        "call_count": 1,
+        "cumulative_ms": 104.73,
+        "self_ms": 0.01,
+        "token": "pre_execution_persistence"
+      },
+      {
+        "call_count": 1,
+        "cumulative_ms": 60.7,
+        "self_ms": 0.02,
+        "token": "decision_receipt"
+      },
+      {
+        "call_count": 1,
+        "cumulative_ms": 44.02,
+        "self_ms": 0.01,
+        "token": "execution_incomplete"
+      },
+      {
+        "call_count": 55,
+        "cumulative_ms": 39.33,
+        "self_ms": 0.06,
+        "token": "db_scalars"
+      },
+      {
+        "call_count": 1,
+        "cumulative_ms": 21.84,
+        "self_ms": 0.02,
+        "token": "discovery_enrichment"
+      },
+      {
+        "call_count": 64,
+        "cumulative_ms": 21.09,
+        "self_ms": 0.08,
+        "token": "db_flush"
+      },
+      {
+        "call_count": 102,
+        "cumulative_ms": 18.04,
+        "self_ms": 0.07,
+        "token": "db_get"
+      },
+      {
+        "call_count": 1,
+        "cumulative_ms": 12.22,
+        "self_ms": 0.11,
+        "token": "selection_persistence"
+      },
+      {
+        "call_count": 2,
+        "cumulative_ms": 7.07,
+        "self_ms": 0.05,
+        "token": "integration_facts"
+      },
+      {
+        "call_count": 1,
+        "cumulative_ms": 7.05,
+        "self_ms": 0.02,
+        "token": "envelope_validation"
+      },
+      {
+        "call_count": 1,
+        "cumulative_ms": 6.46,
+        "self_ms": 0.03,
+        "token": "callback_receipt_binding"
+      },
+      {
+        "call_count": 1,
+        "cumulative_ms": 4.58,
+        "self_ms": 0.02,
+        "token": "database_replay_claim"
+      },
+      {
+        "call_count": 1,
+        "cumulative_ms": 4.53,
+        "self_ms": 0.03,
+        "token": "canonical_receipt_action"
+      },
+      {
+        "call_count": 3,
+        "cumulative_ms": 3.82,
+        "self_ms": 0.01,
+        "token": "real_validation_binding"
+      },
+      {
+        "call_count": 7,
+        "cumulative_ms": 3.61,
+        "self_ms": 0.04,
+        "token": "latest_validation"
+      },
+      {
+        "call_count": 2,
+        "cumulative_ms": 3.09,
+        "self_ms": 0.04,
+        "token": "health_measurement"
+      },
+      {
+        "call_count": 5,
+        "cumulative_ms": 2.58,
+        "self_ms": 0.02,
+        "token": "db_refresh"
+      },
+      {
+        "call_count": 1,
+        "cumulative_ms": 2.35,
+        "self_ms": 0.02,
+        "token": "repository_observation"
+      },
+      {
+        "call_count": 6,
+        "cumulative_ms": 2.23,
+        "self_ms": 0.04,
+        "token": "active_credential"
+      },
+      {
+        "call_count": 1,
+        "cumulative_ms": 2.07,
+        "self_ms": 0.01,
+        "token": "logical_action_claim"
+      },
+      {
+        "call_count": 1,
+        "cumulative_ms": 1.53,
+        "self_ms": 0.01,
+        "token": "repository_control_floor"
+      },
+      {
+        "call_count": 1,
+        "cumulative_ms": 1.49,
+        "self_ms": 0.0,
+        "token": "db_commit"
+      },
+      {
+        "call_count": 1,
+        "cumulative_ms": 0.89,
+        "self_ms": 0.01,
+        "token": "health_persistence"
+      },
+      {
+        "call_count": 1,
+        "cumulative_ms": 0.59,
+        "self_ms": 0.03,
+        "token": "authorization"
+      },
+      {
+        "call_count": 1,
+        "cumulative_ms": 0.56,
+        "self_ms": 0.04,
+        "token": "exact_dispatch"
+      },
+      {
+        "call_count": 21,
+        "cumulative_ms": 0.22,
+        "self_ms": 0.01,
+        "token": "db_begin_nested"
+      },
+      {
+        "call_count": 2,
+        "cumulative_ms": 0.15,
+        "self_ms": 0.01,
+        "token": "route_surfaces"
+      },
+      {
+        "call_count": 2,
+        "cumulative_ms": 0.08,
+        "self_ms": 0.02,
+        "token": "semantic_selection"
+      },
+      {
+        "call_count": 1,
+        "cumulative_ms": 0.07,
+        "self_ms": 0.02,
+        "token": "control_plan"
+      },
+      {
+        "call_count": 1,
+        "cumulative_ms": 0.05,
+        "self_ms": 0.02,
+        "token": "hash_normalization"
+      }
+    ],
+    "route_total_ms": 414.55
+  },
+  "migration_0092": true,
+  "phases": [],
+  "profiling_overhead": true,
+  "release_ready": false,
+  "signer": "software_test_only",
+  "status": "profiled",
+  "strict_health": true
+}

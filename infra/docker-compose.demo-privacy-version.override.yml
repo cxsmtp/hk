@@ -1,0 +1,6 @@
+# API-only image selection for the verified metadata-redaction and
+# source-backed Unknown AI hypothesis corrections.
+# Database, volumes, network, worker, and web configuration remain unchanged.
+services:
+  api:
+    image: hawk-api-demo-unknown-ai:v9

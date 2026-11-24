@@ -1,0 +1,32 @@
+FROM node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS build
+
+WORKDIR /workspace/apps/web
+
+COPY apps/web/package.json apps/web/package-lock.json ./
+RUN npm ci
+
+COPY apps/web ./
+COPY packages /workspace/packages
+
+ARG NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
+ARG NEXT_PUBLIC_CONTROL_COVERAGE_UI_ENABLED=false
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV NEXT_PUBLIC_CONTROL_COVERAGE_UI_ENABLED=${NEXT_PUBLIC_CONTROL_COVERAGE_UI_ENABLED}
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN npm run build
+
+FROM node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS runtime
+
+WORKDIR /workspace/apps/web
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_PUBLIC_CONTROL_COVERAGE_UI_ENABLED=true
+
+COPY --from=build --chown=node:node /workspace/apps/web ./
+COPY --from=build --chown=node:node /workspace/packages /workspace/packages
+
+USER node
+EXPOSE 3000
+
+CMD ["npm", "run", "start", "--", "--hostname", "0.0.0.0", "--port", "3000"]

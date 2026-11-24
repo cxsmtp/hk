@@ -1,0 +1,19 @@
+{
+  "profiles": [
+    {"profile_id": "repository_ai_metadata", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "cicd_ai_metadata", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "dns_ai_metadata", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "swg_ai_metadata", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "proxy_ai_metadata", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "firewall_ai_metadata", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "flow_ai_metadata", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "api_gateway_ai_metadata", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "service_mesh_ai_metadata", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "api_catalog_ai_metadata", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "database_ai_metadata", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "vector_store_ai_metadata", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "search_rag_knowledge_metadata", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "prompt_registry_metadata", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "memory_store_metadata", "evidence_mode": "metadata_only", "expected_state": "configured"}
+  ]
+}

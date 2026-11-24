@@ -1,0 +1,63 @@
+{
+  "binary_hash": "6218efccd06194ea0bc381121bf03040a027a04d991eaed886da02a00449ad0f",
+  "client": "claude-code",
+  "client_version": "2.1.183",
+  "release_ready": false,
+  "runs": [
+    {
+      "child_call_count": 1,
+      "client_result_subtype": "success",
+      "correlated_event": true,
+      "decision": "allow",
+      "event_id_hash": "17c4a3f4e6e2572f0f83e63f733a0c0c48fa439d8906e58b3c36cc8fbe8b9b86",
+      "evidence_id_hash": "0fd79067f3bb2746c1eb922d50a9eb6b32d6e29e9709ac553dccc997b537787e",
+      "exact_tool_advertised": true,
+      "exact_tool_use_count": 1,
+      "is_error": false,
+      "mcp_status": "connected",
+      "num_turns": 2,
+      "permission_denial_count": 0,
+      "prose_code": "prose_without_tool_call",
+      "run_id_hash": "db0b1e5d21d7157db6f8fa2c2764b6b48709f3be4b19b8e222dcccd4cd0cdd93",
+      "stop_reason": "end_turn",
+      "total_cost_usd": 0.030828599999999998
+    },
+    {
+      "child_call_count": 2,
+      "client_result_subtype": "success",
+      "correlated_event": true,
+      "decision": "allow",
+      "event_id_hash": "2478db916c491e92925435dc0535377c623f3e6c77e5814e60c0ceadff659cf5",
+      "evidence_id_hash": "0ec56a0f4c7f584795205a784f725b4736a50cd84d872ee5ecf99f03db96ba1b",
+      "exact_tool_advertised": true,
+      "exact_tool_use_count": 1,
+      "is_error": false,
+      "mcp_status": "connected",
+      "num_turns": 3,
+      "permission_denial_count": 0,
+      "prose_code": "prose_without_tool_call",
+      "run_id_hash": "2fe1b24ab42c70673c7cbce3506f315f435795a0011c98f86dfa03807b79a620",
+      "stop_reason": "end_turn",
+      "total_cost_usd": 0.0118713
+    },
+    {
+      "child_call_count": 2,
+      "client_result_subtype": "success",
+      "correlated_event": true,
+      "decision": "block",
+      "event_id_hash": "469954dac6c415bd489de12af53f4dcce7f3b3b5eca8c6d2b835fd76978b4a35",
+      "evidence_id_hash": "9a6cca034dae3872043ba770e80ed799ea0f993f8a6c904b3834ee4934717a90",
+      "exact_tool_advertised": true,
+      "exact_tool_use_count": 1,
+      "is_error": false,
+      "mcp_status": "connected",
+      "num_turns": 2,
+      "permission_denial_count": 0,
+      "prose_code": "prose_without_tool_call",
+      "reason": "agent_session_revoked",
+      "run_id_hash": "ac8ee2d626e2b145b1495b8989086516a5250aa02eaf5a207e9dedd2f2744b2a",
+      "stop_reason": "end_turn",
+      "total_cost_usd": 0.0093834
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+FROM hawk-api-h2-presidio-no-download:local
+
+USER root
+COPY apps/api/app/services/gateway_service.py /workspace/apps/api/app/services/gateway_service.py
+RUN chown appuser:appuser /workspace/apps/api/app/services/gateway_service.py
+USER 1000

@@ -1,0 +1,113 @@
+@import "../styles/theme.css";
+@import "reactflow/dist/style.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background:
+    radial-gradient(circle at 20% 0%, rgba(249, 115, 22, 0.14) 0, transparent 45%),
+    radial-gradient(circle at 90% 5%, rgba(59, 130, 246, 0.12) 0, transparent 45%),
+    hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: "Syne", "Manrope", system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+/* Global visual alignment for existing pages that still use slate + white utility classes. */
+.text-slate-900 {
+  color: #f1f5f9 !important;
+}
+
+.text-slate-800 {
+  color: #e2e8f0 !important;
+}
+
+.text-slate-700,
+.text-slate-600,
+.text-slate-500,
+.text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+.bg-white {
+  background-color: #13161f !important;
+}
+
+.bg-white\/80,
+.bg-white\/90 {
+  background-color: rgba(19, 22, 31, 0.9) !important;
+}
+
+.bg-slate-100 {
+  background-color: #0e1018 !important;
+}
+
+.bg-slate-50 {
+  background-color: #101524 !important;
+}
+
+.border-slate-200 {
+  border-color: #2a3348 !important;
+}
+
+/* Boost contrast on custom dark-border utilities used across cards/tables. */
+.border-\[\#1e2433\],
+.border-\[\#20283a\] {
+  border-color: #2a3348 !important;
+}
+
+.hover\:bg-brand-50:hover,
+.hover\:bg-brand-50\/60:hover,
+.hover\:bg-brand-100:hover {
+  background-color: rgba(249, 115, 22, 0.12) !important;
+}
+
+@keyframes hawk-evidence-river-arrival {
+  0% {
+    opacity: 0;
+    transform: translateX(28px) scale(0.92);
+  }
+  65% {
+    opacity: 1;
+    transform: translateX(-3px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.hawk-evidence-river-new {
+  animation: hawk-evidence-river-arrival 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.hawk-evidence-river .react-flow__node {
+  cursor: pointer;
+}
+
+.hawk-evidence-river .react-flow__node.selected .hawk-evidence-river-node {
+  border-color: rgba(251, 191, 36, 0.85);
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.12), 0 22px 60px rgba(0, 0, 0, 0.48);
+}
+
+.hawk-evidence-river .react-flow__handle {
+  opacity: 0;
+}
+
+.hawk-evidence-river-paused .react-flow__edge.animated path,
+.hawk-evidence-river-paused .hawk-evidence-river-new {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hawk-evidence-river-new,
+  .hawk-evidence-river .react-flow__edge.animated path {
+    animation: none !important;
+  }
+}

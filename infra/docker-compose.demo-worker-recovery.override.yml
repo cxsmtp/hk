@@ -1,0 +1,27 @@
+# Narrow recovery profile for the local demonstration tenant.
+#
+# The daily auditor export exceeded the worker memory envelope and was OOM-killed.
+# Direct policy decisions remain synchronous; this worker restores only the
+# bounded discovery background path without consuming the suspended auditor or
+# monitoring queues. The daily monitoring cycle currently holds broad
+# finding/evidence updates in one transaction, so it remains deliberately
+# paused until that transaction is split and revalidated. `--max-tasks-per-child=1`
+# releases process memory after every task.
+# No tenant data, volume, feature flag, or policy is modified by this override.
+services:
+  worker:
+    restart: "no"
+    command:
+      - celery
+      - -A
+      - app.jobs.celery_app.celery_app
+      - worker
+      - --loglevel=info
+      - --concurrency
+      - "1"
+      - --prefetch-multiplier
+      - "1"
+      - --max-tasks-per-child
+      - "1"
+      - -Q
+      - default,discovery

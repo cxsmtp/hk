@@ -1,0 +1,10 @@
+{
+  "allowlisted_reason_codes": [
+    "settings_failed"
+  ],
+  "exception_class": "ValidationError",
+  "revision": null,
+  "sqlstate": null,
+  "stage": "settings",
+  "status": "blocked"
+}

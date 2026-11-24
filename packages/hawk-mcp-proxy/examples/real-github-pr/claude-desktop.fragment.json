@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "hawk-github-pr-claude": {
+      "command": "/usr/local/bin/node",
+      "args": [
+        "/Volumes/X10 Pro/New project/repo/packages/hawk-mcp-proxy/bin/hawk-github-pr-endpoint.mjs",
+        "claude",
+        "--repository-scope",
+        "github.com/dang070298/New-project-Hawki-ai-",
+        "--keychain-service",
+        "com.hawk.mcp-proxy.capability",
+        "--keychain-account",
+        "claude-desktop",
+        "--session-id",
+        "mcp_sess_REPLACE_WITH_PERSISTED_CLAUDE_SESSION_ID"
+      ]
+    }
+  }
+}

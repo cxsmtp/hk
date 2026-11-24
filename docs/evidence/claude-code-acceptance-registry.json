@@ -1,0 +1,37 @@
+{
+  "entries": [
+    {
+      "accepted_capabilities": [
+        "tool_control",
+        "mcp_control",
+        "prompt_control",
+        "delegation_control",
+        "permission_context",
+        "post_execution_visibility",
+        "configuration_integrity"
+      ],
+      "adapter_version": "1.2.0",
+      "evidence_artifact": "docs/evidence/claude-code-2.1.183-acceptance-result.json",
+      "evidence_timestamp": "2026-08-11T20:47:35Z",
+      "measured_callback_p95_ms": 21.36,
+      "product": "claude_code",
+      "provider": "anthropic",
+      "provider_version": "2.1.183",
+      "report_sha256": "ec10a989a17bcb5ab52697429bf7cf3c4c0e711f6597fecf389d71167bd52232",
+      "review_status": "reviewed_by_acceptance_gate",
+      "reviewed": true,
+      "tested_events": [
+        "PreToolUse",
+        "PermissionRequest",
+        "PostToolUse",
+        "PostToolUseFailure",
+        "UserPromptSubmit",
+        "SubagentStart",
+        "SubagentStop",
+        "SessionStart",
+        "SessionEnd"
+      ]
+    }
+  ],
+  "schema_version": "hawk.claude-code.acceptance-registry/1.0"
+}

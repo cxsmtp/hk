@@ -1,0 +1,29 @@
+{
+  "entries": [
+    {
+      "accepted_capabilities": [
+        "discovery",
+        "identity",
+        "prompt_control"
+      ],
+      "adapter_version": "1.0.0",
+      "binary_sha256": "4f85982624b3898c8991cb80c0981b2aa71070e3537046c9a95950318a95afcc",
+      "evidence_artifact": "docs/evidence/codex-0.154.0-acceptance-result.json",
+      "evidence_timestamp": "2026-10-05T19:35:25.362913+00:00",
+      "measured_callback_p95_ms": 54.401,
+      "platform": "macos-arm64",
+      "product": "codex",
+      "production_eligible": true,
+      "provider": "openai",
+      "provider_version": "0.154.0",
+      "report_sha256": "1e4b0e228d698e2289819efad58bb66501a187006a39b727aaac0cead75852e2",
+      "review_status": "reviewed_by_acceptance_gate",
+      "reviewed": true,
+      "tested_events": [
+        "session_start",
+        "before_model"
+      ]
+    }
+  ],
+  "schema_version": "hawk.codex.acceptance-registry/1.0"
+}

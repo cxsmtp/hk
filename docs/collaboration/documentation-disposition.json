@@ -1,0 +1,3088 @@
+{
+  "scope": "Selected original-worktree documentation only. Dated historical plans and private/generated publication material remain preserved outside the active development baseline. Historical assertions are not current acceptance.",
+  "counts": {
+    "RESTORED_REFERENCE_SOURCE": 59,
+    "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED": 69,
+    "PRESERVED_CONTEXT_NOT_BASELINE": 174,
+    "PUBLISHED_REFERENCE_SOURCE": 12,
+    "EXCLUDED_GENERATED_VISUAL_OR_EXPORT": 148
+  },
+  "files": [
+    {
+      "path": "ARCHITECTURE.md",
+      "bytes": 51312,
+      "sha256": "8b9639cf24af2ab033cd789f06ba496b55e36f2c01d775398db8892391cb677f",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "9897ed5a3070fbb84ce82f1e1f854c507a6a681ea086bfeee9c3ea7b37f79e56"
+    },
+    {
+      "path": "CORE_FILES_DUMP.md",
+      "bytes": 254432,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "AUDIT_REPORT_2026-07-02.md",
+      "bytes": 18214,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "HAWK_AI_AUDIT_2026-07-02.md",
+      "bytes": 51773,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "AGENTS.md",
+      "bytes": 1854,
+      "sha256": "fcf8646567ad5a904d3a540688ac89b66cff90075b55dc42f5424e93a5d44535",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Original agent-session policy/context, preserved as historical source; current collaboration instructions and explicit owner direction govern this checkout. Not platform runtime source."
+    },
+    {
+      "path": "WORKLOG.md",
+      "bytes": 13264,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "THREAT_MODEL.md",
+      "bytes": 7764,
+      "sha256": "420855615c8b5077c5ff7f661f5360a3758663cc0a194308671192091f44f3c1",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "c669b378eecfe90694b75a06ec692851b00cc496dc43647de5c2207439655e0e"
+    },
+    {
+      "path": "HAWK_AI_CODEX_HANDOFF_2026-07-04.md",
+      "bytes": 17506,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "HAWK_AI_COMPETITIVE_CHECKLIST_2026-07-04.md",
+      "bytes": 17920,
+      "sha256": "1f0cd14df1ba55253e498ba9421e905d0117908dc15eeccb35e300dcaf9c5e5f",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Historical execution/review assertions, preserved with exact source hash; not independently re-certified or published as current platform acceptance."
+    },
+    {
+      "path": "HAWK_AI_FULL_PLATFORM_AUDIT_2026-07-16.md",
+      "bytes": 36893,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/ai-surface-coverage-execution-plan.md",
+      "bytes": 6909,
+      "sha256": "e2d8415828cdd62e3442dc1cd160ac2285de9f8f3ac7f208bafd8dea08ba2399",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/BUSINESS_PURPOSE_BOUNDARY.md",
+      "bytes": 4325,
+      "sha256": "39ee92ee031bb3074ecb8d5bf84472f6151afe5e73761bf17a2d6b89c00c41fc",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "503be3655c098a7f9a05a773af44e56945a6cda03775f5a77bcddaabf05a984b"
+    },
+    {
+      "path": "docs/LOCAL_NATIVE_DEMO.md",
+      "bytes": 4591,
+      "sha256": "1e68aa5e1ea990d4f71c11e26cb54468d26811c6b1a90b523328b9852880333f",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "d2abeb6731a745b09d6192d5d02ec06ef386281464623974b8a137c9e1575211"
+    },
+    {
+      "path": "docs/ui-unification-execution-plan.md",
+      "bytes": 3485,
+      "sha256": "ed80349be63508f22a9ccf91f505fbfaaf3c40f9100c502f9a5653acf2f18475",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/PILOT_ROLE_MAPPING_GUIDE.md",
+      "bytes": 3550,
+      "sha256": "5c9ef9ff77832c2578f57305a7c325caaf343da86cedc81afc72aebcd08e6ba3",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "277fac277a794a52fb8e1b8ab9222b6882114a1e4a76279868994009aa8c9135"
+    },
+    {
+      "path": "docs/enterprise-surface-coverage-mvp.md",
+      "bytes": 4821,
+      "sha256": "d6cd8a777371a190224c3feb693c0f169600220931e8df027828d4d0f2a94880",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "ed6c5fb26ad79905a3ae0b008ab3a7df36dea67a44fbae8572f4922cf6621c58"
+    },
+    {
+      "path": "docs/brain_phase1.md",
+      "bytes": 2485,
+      "sha256": "b5c4001eee067eb5739fa2ea9786f3cac3aaa73f2aa4b88ebc241be6a9b3870f",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "4fcd05a55e88a5f27e795a6fb3ca870ae1b2003790ce4638b7a180e74ceaaa72"
+    },
+    {
+      "path": "docs/microsoft-graph-enterprise-coverage.md",
+      "bytes": 4192,
+      "sha256": "e85e5046db74fbbafdd199fd72e340183f09113b5fcfe9b0b58053b406cea7d3",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "d5560683b9f5caa7559707d7ac1e1b2b0768feb49cd7a7ce288cce074c5040d4"
+    },
+    {
+      "path": "docs/AGENTIC_ACTION_INTEGRITY_PLAN.md",
+      "bytes": 4393,
+      "sha256": "9e60d79c2ec587bc383d16b1fb53f8e7ae43dc3f49741584e541b056f3676521",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/AGENTIC_ACTION_INTEGRITY.md",
+      "bytes": 4436,
+      "sha256": "580c3f063624ff1e24ca789e2d13c7da635202476d6e9f0df58bb85d062a5df6",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "1d2c97c0d42fc2f4b23645f38f981ae12b8b9dfa821f43bcae2b0febf60b3467"
+    },
+    {
+      "path": "docs/auditor-export-artifact-lifecycle.md",
+      "bytes": 1013,
+      "sha256": "a552a9a715d310d0b6bd18db7b2bfc23057c7af3e61dc6ee2b06e8cc477265af",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "aee32f8adf46f55922e79d258e008ea7d08d9610d7c33b8b8b3c8e9ab98c3caa"
+    },
+    {
+      "path": "docs/SHADOW_AI_ASSESSMENT.md",
+      "bytes": 3104,
+      "sha256": "1f3f781bad2154e9bee7bc8bd2ee369bdafd5712ee4e021014b2c736bda1d88e",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "d4449a62433ce266feb7088da498689c47dab3526a722ead3b1d68b89fd52375"
+    },
+    {
+      "path": "docs/AGENT_TOUCHPOINT_GRAPH.md",
+      "bytes": 1416,
+      "sha256": "d08cccac7b3f809ee617811b9a86f1b26cfd0157f7ecba98d96bf438ff5d95cd",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "088adf4acf9a014f1844b11253140b4cc28b5e709b738773cf9ba3a2fc911dcb"
+    },
+    {
+      "path": "docs/NATIVE_CONTROL_ADAPTER_ARCHITECTURE.md",
+      "bytes": 2601,
+      "sha256": "b991a9241e80eca18e5e4fe0816550fa765b48796a1962412a04708eb5b67180",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "7085fa0c52657dd06a31e60270162e86d58e5f5e627653a9d1ade20fe65c1d4f"
+    },
+    {
+      "path": "docs/DEPLOYMENT_HARDENING_50_USER_PILOT.md",
+      "bytes": 7810,
+      "sha256": "7b1a9277bfeca0888e0cbc78120d86d95d8f7ab338fead11f3a4ea43faca606a",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "c00be13c2f8fef164cdc76b2c6594f4331646a66b8ae480175efe9933436f832"
+    },
+    {
+      "path": "docs/CISO_LOCAL_PILOT_DATA_RESIDENCY_AND_EXTENSION_SECURITY.md",
+      "bytes": 16756,
+      "sha256": "f84d0dc6cd433a4e02ee0e1e84a36fd03f802f968f86d392917a3f1ab0684171",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "165b636c3be0bfafdab2f2020fc923c6513fcc911e5da929bfa2e161e314a562"
+    },
+    {
+      "path": "docs/NATIVE_CONTROL_ADAPTER_CONTRACT.md",
+      "bytes": 2312,
+      "sha256": "88bb099bfe6263fa09b919d36e7b7be5060062fbf3367d1543c3dd76fcb6f50a",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "ac15c6df3556e99aca74a18371b3f5c7e207f16b13d1881e0d4a0d402ec26593"
+    },
+    {
+      "path": "docs/MICROSOFT_FOUNDRY_COPILOT_SURFACES.md",
+      "bytes": 12203,
+      "sha256": "3473518e146ce634a00cc2ea6cd041be9fc3594fc012d97cde72a6a7d6cdd49a",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "4cb35afd1b90f8b4edb436329d21df0a6e2807add698dce2df88442371333f20"
+    },
+    {
+      "path": "docs/BANK_AZURE_FOUNDRY_POC_UPGRADE_PLAN.md",
+      "bytes": 3920,
+      "sha256": "ebe2f34a87b1df1a9ad384c781f2fd1e86ed0d8277bdf10c77aa884fe0c51c75",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/NATIVE_CONTROL_ADAPTER_SECURITY.md",
+      "bytes": 1974,
+      "sha256": "6b1c9c45bd1fc78cd94abcdb739217c82c406067dd0faca217ab021b105bf3be",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "83ff2f34142f8e755b583e6c28bc09b9a546bf1058a735efdf845947d2f9f1d3"
+    },
+    {
+      "path": "docs/BANK_AZURE_FOUNDRY_REFERENCE_ARCHITECTURE.md",
+      "bytes": 3037,
+      "sha256": "7bcdd756596a3e13264ca2e5ea6665e4de097daf49feff9135bb2d335fa51b43",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "6d0e916ded7410efd0dc4e9ab93f1d81bb1d44ba871a42601f968ddc90099273"
+    },
+    {
+      "path": "docs/HAWK_DEPTH_UPGRADE_PLAN.md",
+      "bytes": 96621,
+      "sha256": "4ec458976172b16e2dc7dc0aea17ed56106d3c6279540e13b07675826c6f6d25",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/HAWK_MASTER_IMPLEMENTATION_BACKLOG.md",
+      "bytes": 216765,
+      "sha256": "ec963deb00b670d1dab26a363d8078bfa29d5ed57f10886b2b91a94f462a54ff",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/NATIVE_CONTROL_ADAPTER_CONFORMANCE.md",
+      "bytes": 1533,
+      "sha256": "b5285a28a4fb984d5fcad6d4f169fef297d7ff5d62139c0df7d3da5e434277fa",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "f4cb937c4fc5abd09cf02f6d53d22b4717fe2f9bc351ca56ec9a04e3f5d86156"
+    },
+    {
+      "path": "docs/DEPLOYMENT_EXPERIENCE_AND_CONTROL_COVERAGE_PLAN.md",
+      "bytes": 22006,
+      "sha256": "0848fe4649a2f6b4932495cd6fb1a2313e3e7c9108acb1e4866b5eb2862b4714",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/ENDPOINT_ENFORCEMENT_FLOOR_IMPLEMENTATION_REPORT.md",
+      "bytes": 19451,
+      "sha256": "9df7a5311de8cf4bc836763867f3803c650e2950f3883142eca5a6140bd80c70",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Historical execution/review assertions, preserved with exact source hash; not independently re-certified or published as current platform acceptance."
+    },
+    {
+      "path": "docs/DEPLOYMENT_FAMILIES.md",
+      "bytes": 10775,
+      "sha256": "b59d8fde7e055ebce407187e53c0d83e92c4f66a791eb348e7558fc26bfceb1c",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "98aeeb29d38eb8740998d4d25f5700bc2311028dc0e217adb0f6acaf985c96e2"
+    },
+    {
+      "path": "docs/CONTROL_COVERAGE.md",
+      "bytes": 13000,
+      "sha256": "6f18a035cc6acfcafc9f115cac3d73711c5fc94a8cf7b4baed46437701919abc",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "a9263e374d01d46db12b3baf670f26a5c1a3e4630da4e597a51ac2268df34642"
+    },
+    {
+      "path": "docs/DEPLOYMENT_QUICK_STARTS.md",
+      "bytes": 10798,
+      "sha256": "e05490f10a6578beeb19d8595526d1bec5a9473445ca02a5771a8825f6f1be9c",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "a701a0208c52bb548a829c5bc0581a3d4208b62ef9c2a2bc48669620604de4aa"
+    },
+    {
+      "path": "docs/HMAIR_DISCOVERY_IMPLEMENTATION_PLAN.md",
+      "bytes": 34085,
+      "sha256": "0ae66d04a604e9e0dec19ddf542482b171fe327c9eda3856b3beee01d8b7b7e7",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/NATIVE_CONTROL_ADAPTER_DEVELOPER_GUIDE.md",
+      "bytes": 2574,
+      "sha256": "1f4254e9e01ac65f2caf32c191f0d782d75c58fe02990dd5bf9b592e272a246c",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "eb639249863e7fee954a9c61813cc5253721b32321bbd6021bd8c89cacd022f4"
+    },
+    {
+      "path": "docs/CODEX_EXECUTION_CONTRACT.md",
+      "bytes": 27045,
+      "sha256": "81ec939c2b85229ab2b4c217dd7f208a8c4abe27dd0222fee9d03a66edf10701",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Original agent-session policy/context, preserved as historical source; current collaboration instructions and explicit owner direction govern this checkout. Not platform runtime source."
+    },
+    {
+      "path": "docs/PHASE5_P0_EXECUTION_LEDGER.md",
+      "bytes": 48446,
+      "sha256": "6f94255e8e3e757f29655d1d52884364e66d9608b21abbe9609e1915e542d636",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Historical execution/review assertions, preserved with exact source hash; not independently re-certified or published as current platform acceptance."
+    },
+    {
+      "path": "docs/NATIVE_CONTROL_IMPLEMENTATION_PLAN.md",
+      "bytes": 15535,
+      "sha256": "8c26f5e0e8ad96da6ce52b5b9651688917e298c198d2286fa4fc0fbfa4bbfe34",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/PHASE5_SOL_ARCHITECTURE_REVIEW.md",
+      "bytes": 12454,
+      "sha256": "38be0c9e943507805428c8920be792cf38ba6d7343ab165e33d80a666a8b1fb8",
+      "disposition": "PUBLISHED_REFERENCE_SOURCE",
+      "published_sha256": "38be0c9e943507805428c8920be792cf38ba6d7343ab165e33d80a666a8b1fb8"
+    },
+    {
+      "path": "docs/NATIVE_CONTROL_ARCHITECTURE.md",
+      "bytes": 3070,
+      "sha256": "7a9f69392d75d8e2eb051dcd307f6029cda297b69c4d864e7d58644aac26269d",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "615ee300890d1c25602b87100f16bed313eac3f31fa5356a4747f1da9a6a897e"
+    },
+    {
+      "path": "docs/HMAIR_H5_GOVERNANCE_CONTRACT.md",
+      "bytes": 6736,
+      "sha256": "a55233dbf93b9afa4e0290f18e936c405a5586439d7d22fb2d82be74c467bd5d",
+      "disposition": "PUBLISHED_REFERENCE_SOURCE",
+      "published_sha256": "a55233dbf93b9afa4e0290f18e936c405a5586439d7d22fb2d82be74c467bd5d"
+    },
+    {
+      "path": "docs/CONTROL_CAPABILITY_MATRIX.md",
+      "bytes": 1933,
+      "sha256": "a2dae9c365751f9a740f0981e6cae2831f9e42230a24d1cf1a646097b552e597",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "56e77a3c6694ef0950fece8b710286ac1574366ee9909793159255e2a53e32a4"
+    },
+    {
+      "path": "docs/CODEX_USER_INTENT_CONTRACT.md",
+      "bytes": 1413,
+      "sha256": "0b109fcf18e482c0c80cb68fa248612855dca35c4ecec9cd8326f8661c2126c9",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Original agent-session policy/context, preserved as historical source; current collaboration instructions and explicit owner direction govern this checkout. Not platform runtime source."
+    },
+    {
+      "path": "docs/TRUSTED_CONTROL_POINT_SELECTOR.md",
+      "bytes": 1855,
+      "sha256": "11a417120be804f064e1cd9f4b0b464de2a9815d23f9d9a80cd5ab82930f47fc",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "b54cb12647d7276cac65139951d48c300548fd02414597559484c21cc644f9ea"
+    },
+    {
+      "path": "docs/PHASE5_SOL_SECURITY_INVARIANTS.md",
+      "bytes": 9951,
+      "sha256": "927791913421933520f3c9c72d2df98453595c23b9643e4bb5272dcf10335147",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "7b77b6cd7623206921f6abc68bfea98402b2c06acf5adb0e8738be23ee56ce71"
+    },
+    {
+      "path": "docs/NATIVE_CONTROL_SECURITY.md",
+      "bytes": 2215,
+      "sha256": "0c8a9209fb7be9c9d3caccd99f806ce048ff730400c7cbbb0e6bc78bfab6b92c",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "f9cb704b28ea6713dd497d3636d4dbbe8a4ef1e1d9c808582768c7257256c022"
+    },
+    {
+      "path": "docs/CODEX_ARCHITECTURE_CONTEXT.md",
+      "bytes": 1807,
+      "sha256": "e70d05bc7ac414bedbdbefea40f9016aafe17c44bf633bc2e9d108e54adada50",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Original agent-session policy/context, preserved as historical source; current collaboration instructions and explicit owner direction govern this checkout. Not platform runtime source."
+    },
+    {
+      "path": "docs/NATIVE_CONTROL_FAILURE_MODES.md",
+      "bytes": 1605,
+      "sha256": "ce877bdae36822aaa9c4b0575c3e1904d8f3ad0439f1bbdf9d91dc74c1670ac8",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "29ac36293bad35b7906834fc3f763216cecd7f87510c1f0dffcd990084546592"
+    },
+    {
+      "path": "docs/FOUR_CONTROL_METHOD_PRODUCTS.md",
+      "bytes": 6292,
+      "sha256": "a9be08de2f4242d21700c033d2f6f17b1326b963392c67827497d30d0266f45c",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "ad2acf5b8286c2afce908bd72d8fd41551dc981af1a5c74b3179013d40d328df"
+    },
+    {
+      "path": "docs/NATIVE_CONTROL_DEPLOYMENT.md",
+      "bytes": 8907,
+      "sha256": "5a832b7503df68e016e1b8511b937b200617d336d0c7ff5b089926a659317a06",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "5631639da26ddce5a4ce90d312e015b9146293cf9a20dd666d93e7990636eadc"
+    },
+    {
+      "path": "docs/CODEX_APPROVED_BUILD_PLAN.md",
+      "bytes": 1714,
+      "sha256": "4a68dd9962be1b1b685ebb4375557bc4c09be2f2a4881073183139116aaa9481",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Original agent-session policy/context, preserved as historical source; current collaboration instructions and explicit owner direction govern this checkout. Not platform runtime source."
+    },
+    {
+      "path": "docs/NATIVE_CONTROL_PRIVACY.md",
+      "bytes": 1057,
+      "sha256": "579e20185c8ef88f60bc3cc21e0749fbf14c40619cc98b339bfdea77d038b451",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "2580ea3542b84dfadac7bcf7427427ac19b594d2e793bb3ed293695306c0ca1c"
+    },
+    {
+      "path": "docs/NATIVE_CONTROL_PROVIDER_MATRIX.md",
+      "bytes": 14348,
+      "sha256": "77f75deab62c00be26ce9db384adade7f7dcdf72804930ade1928947d34cd3bc",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "5e5a6b99c98329363283e9b25f258053081c511780a9f36c332cd8d279ac6cad"
+    },
+    {
+      "path": "docs/PHASE5_P0_REQUIREMENTS_TRACEABILITY.md",
+      "bytes": 28650,
+      "sha256": "5ed14919a75dddbc76326cebb0ed4517de1c6fe104d5fbd0273dad93487e46b3",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Historical execution/review assertions, preserved with exact source hash; not independently re-certified or published as current platform acceptance."
+    },
+    {
+      "path": "docs/CODEX_EXECUTION_LEDGER.md",
+      "bytes": 196,
+      "sha256": "45a966f356aab26cfcae7f821899c5c1d8cd8dc1a8cb4a71c4af6749fec80113",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Historical execution/review assertions, preserved with exact source hash; not independently re-certified or published as current platform acceptance."
+    },
+    {
+      "path": "docs/NATIVE_CONTROL_FRAMEWORK.md",
+      "bytes": 727,
+      "sha256": "648b2639fd4c3344ec2ecbb4e917bab7c01fda885fb9e1a0c952f3ca1a84bce8",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "e7f7dc11065f4586db4115c90156ace3a17cf91b3bec4021f9231ba87f939f21"
+    },
+    {
+      "path": "docs/NATIVE_CONTROL_IMPLEMENTATION_REPORT.md",
+      "bytes": 18097,
+      "sha256": "b381195b42da7f5aea6353b832c8ade4c089763f815d1ac076ef9092e7db5725",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Historical execution/review assertions, preserved with exact source hash; not independently re-certified or published as current platform acceptance."
+    },
+    {
+      "path": "docs/NATIVE_CONTROL_ADAPTER_IMPLEMENTATION_REPORT.md",
+      "bytes": 7620,
+      "sha256": "b4cef3c94bd734fb388655cfb0030aa887b0bdacc931f5ad720020aaf1743ad3",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Historical execution/review assertions, preserved with exact source hash; not independently re-certified or published as current platform acceptance."
+    },
+    {
+      "path": "docs/CHATGPT_DESKTOP_COMPOSITE_IMPLEMENTATION_REPORT.md",
+      "bytes": 8525,
+      "sha256": "ae16c770bbd0d317ed3d92601e5a85ce6cbf9838a48f4d2e0f1641e91ff9307c",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Historical execution/review assertions, preserved with exact source hash; not independently re-certified or published as current platform acceptance."
+    },
+    {
+      "path": "docs/CODEX_SECURITY_INVARIANTS.md",
+      "bytes": 289,
+      "sha256": "a0c60575847ce097891c42c5972151fcdb50bdb47cf7f33626368f76ef0b3b6e",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Original agent-session policy/context, preserved as historical source; current collaboration instructions and explicit owner direction govern this checkout. Not platform runtime source."
+    },
+    {
+      "path": "docs/CODEX_INTERFACE_REGISTRY.md",
+      "bytes": 90923,
+      "sha256": "95e1979a531ce08360f54699be9e778c9db54f34d41194292908ce1f18f222b5",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Original agent-session policy/context, preserved as historical source; current collaboration instructions and explicit owner direction govern this checkout. Not platform runtime source."
+    },
+    {
+      "path": "docs/PHASE5_VERTICAL_AGNOSTIC_AUDIT.md",
+      "bytes": 2100,
+      "sha256": "971a08b98766d4a88aacd42bbf4700634c7d8af7186316eb5440cf640a643f45",
+      "disposition": "PUBLISHED_REFERENCE_SOURCE",
+      "published_sha256": "971a08b98766d4a88aacd42bbf4700634c7d8af7186316eb5440cf640a643f45"
+    },
+    {
+      "path": "docs/repo-controls-implementation-plan.md",
+      "bytes": 895,
+      "sha256": "aa80842c563dafee023f406f5281ae55bc3f82c62e5564f91020a3830bfc3a6d",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Historical implementation task plan; original preserved, current runtime source and tests are included."
+    },
+    {
+      "path": "docs/HMAIR_CONTROLLED_LAB_RUNBOOK.md",
+      "bytes": 7306,
+      "sha256": "3fef2e565c9864008127acc641430a1f96e31defa15549fdebda9595eccf040a",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "26dfbfa6e93e2723e9abe384a2a0a4b9a35a734d6dc85ceef1cc6192da77dd09"
+    },
+    {
+      "path": "docs/repo-controls-implementation-evidence.md",
+      "bytes": 6700,
+      "sha256": "fdfd8954de87fa1cca11d5b2ce9eb2c6c173d17d27329348e3e0e323ff1a4cad",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Historical execution/review assertions, preserved with exact source hash; not independently re-certified or published as current platform acceptance."
+    },
+    {
+      "path": "docs/deployment/endpoint-agent-poc.md",
+      "bytes": 2863,
+      "sha256": "1595b6ff24687e6091296259e56df99c697c64eda146adbfc53475f07c80c908",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "b7c1430c6270aa79e9a7d04638439a09d2f345453e1ad5da60d2b15632842caf"
+    },
+    {
+      "path": "docs/deployment/gemini-cli-managed-mdm.md",
+      "bytes": 4993,
+      "sha256": "a1523bf9f59f43bcff035dfa44cca431cef096e2418e919ee856bbb649f9eda1",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "b5481649878102b06218178cedec96cd273277e7c1a4625c71e6b07815271232"
+    },
+    {
+      "path": "docs/deployment/podman_setup.md",
+      "bytes": 1625,
+      "sha256": "d250ba12751ca1af4778eafea0bc517a927f3097b2c9199dd0a660dcd9621ae2",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Optional Podman historical guide preserved; owner selected native local and Docker workflows for this baseline."
+    },
+    {
+      "path": "docs/deployment/endpoint-agent-manual-test-matrix.md",
+      "bytes": 12454,
+      "sha256": "0bb4a883ea349d43196bd99b1171c3796594ac3687cd7c352d6e7e40f6b118ed",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "d8db4cd3c1bf0acf4e86a3722096bb3abebd5a4f549f51ca63114160264a0408"
+    },
+    {
+      "path": "docs/deployment/claude-enterprise-boundary.md",
+      "bytes": 8359,
+      "sha256": "50a22bb2b3f412d07c737d6a6509931c02b84fa1e8d2a078acf5cce7e74e95ec",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "ecc2f650afbd72767d0ffa64b51072bfc726638e09ddf4745d0fd302d5872346"
+    },
+    {
+      "path": "docs/deployment/production-single-node-compose.md",
+      "bytes": 5867,
+      "sha256": "94aaeb063b183969af4de7b84acaf0bfe5c30cf9d1f02201932b4edc1a890d19",
+      "disposition": "PUBLISHED_REFERENCE_SOURCE",
+      "published_sha256": "94aaeb063b183969af4de7b84acaf0bfe5c30cf9d1f02201932b4edc1a890d19"
+    },
+    {
+      "path": "docs/deployment/local-llm-gateway-manual-test.md",
+      "bytes": 7077,
+      "sha256": "e5055554368e3b1a198bd239d353977fdcc3085e0fba043743ebcf029f105fda",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "677b4ff17b9c1f7303142e8758328828953919ecbcb8b7a3f4611f6ad68e136f"
+    },
+    {
+      "path": "docs/deployment/endpoint-native-desktop-hooks.md",
+      "bytes": 6534,
+      "sha256": "25ad816db0991f3f88693a4603da98c22734eb79751e39053adbcc03534d04e7",
+      "disposition": "PUBLISHED_REFERENCE_SOURCE",
+      "published_sha256": "25ad816db0991f3f88693a4603da98c22734eb79751e39053adbcc03534d04e7"
+    },
+    {
+      "path": "docs/deployment/oidc-sso-v1.md",
+      "bytes": 2492,
+      "sha256": "cea5a70032d710963c9370742b2769ac427e0eacd65f32cdc52291cf5d12015f",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "99bbd8dbd50751caee8c1912142ebb454c457f9e1ce05d421620d613cd2b4ceb"
+    },
+    {
+      "path": "docs/research/agentic_chain_integrity/research_plan.md",
+      "bytes": 1779,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/research/agentic_chain_integrity/testbed_spec.md",
+      "bytes": 2830,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/research/agentic_chain_integrity/scenario_library.md",
+      "bytes": 1624,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/research/agentic_chain_integrity/metrics.md",
+      "bytes": 962,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/research/agentic_chain_integrity/literature_matrix.md",
+      "bytes": 932,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/research/agentic_chain_integrity/whitepaper_outline.md",
+      "bytes": 552,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/README.md",
+      "bytes": 16859,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/hawk-progressive-disclosure-ai-iam.png",
+      "bytes": 68401,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/hawk-progressive-disclosure-ai-iam-drawer.png",
+      "bytes": 44069,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/hawk-progressive-disclosure-connectors.png",
+      "bytes": 151331,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/hawk-progressive-disclosure-connectors-filtered.png",
+      "bytes": 86691,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/hawk-progressive-disclosure-connectors-mobile.png",
+      "bytes": 42103,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/hawk-progressive-disclosure-ai-iam-mobile.png",
+      "bytes": 32395,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/comparison-identity-akto-hawk.png",
+      "bytes": 693299,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/comparison-connectors-akto-hawk.png",
+      "bytes": 597574,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/comparison-identity-drawer-akto-hawk.png",
+      "bytes": 592299,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/01-home-top.png",
+      "bytes": 8231,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/01-home-full.png",
+      "bytes": 1239126,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/02-agentic-security-top.png",
+      "bytes": 95066,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/02-agentic-security-full.png",
+      "bytes": 708716,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/03-shadow-ai-discovery-top.png",
+      "bytes": 83328,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/03-shadow-ai-discovery-full.png",
+      "bytes": 649979,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/04-ai-agent-identity-top.png",
+      "bytes": 131183,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/04-ai-agent-identity-full.png",
+      "bytes": 744673,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/05-ai-governance-top.png",
+      "bytes": 107946,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/05-ai-governance-full.png",
+      "bytes": 587692,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/06-agentic-guardrails-top.png",
+      "bytes": 62122,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/06-agentic-guardrails-full.png",
+      "bytes": 519294,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/07-agentic-red-teaming-top.png",
+      "bytes": 87212,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/07-agentic-red-teaming-full.png",
+      "bytes": 764329,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/08-mcp-security-top.png",
+      "bytes": 75841,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/08-mcp-security-full.png",
+      "bytes": 545372,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/09-agent-skills-top.png",
+      "bytes": 60187,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/09-agent-skills-full.png",
+      "bytes": 479794,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/10-mcp-gateway-top.png",
+      "bytes": 76522,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/10-mcp-gateway-full.png",
+      "bytes": 594532,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/11-employees-top.png",
+      "bytes": 71943,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/11-employees-full.png",
+      "bytes": 633589,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/12-homegrown-apps-top.png",
+      "bytes": 74682,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/12-homegrown-apps-full.png",
+      "bytes": 605986,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/13-connectors-top.png",
+      "bytes": 67958,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/13-connectors-full.png",
+      "bytes": 586284,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/04-ai-agent-identity-demo-01-agent-detail.png",
+      "bytes": 92917,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/04-ai-agent-identity-demo-02-identity-violations.png",
+      "bytes": 93577,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/04-ai-agent-identity-demo-03-all-violations.png",
+      "bytes": 101244,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/04-ai-agent-identity-demo-04-violation-details.png",
+      "bytes": 119430,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/04-ai-agent-identity-demo-05-policies.png",
+      "bytes": 110729,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/04-ai-agent-identity-demo-06-policy-details.png",
+      "bytes": 100020,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/04-ai-agent-identity-demo-07-create-policy.png",
+      "bytes": 65235,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/research/akto-ux-audit-2026-08-10/screenshots/06-agentic-guardrails-demo-secret-block.png",
+      "bytes": 79413,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-05-31-ai-action-governance-upgrade.md",
+      "bytes": 6723,
+      "sha256": "d08ba599ca3e8969110f05a841b0b1e968ac526b53f353f99119da6db5ba0a72",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-19-business-purpose-boundary.md",
+      "bytes": 4191,
+      "sha256": "65529b34421d84159b47fc2c82d5827bc4822c157efd0d67d17ce5e7da63e9a5",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-05-31-intent-aware-ai-action-control.md",
+      "bytes": 4953,
+      "sha256": "c83a2677c00ba7cd65a07dc008fe2fd1f5c93faea1f91d382f245bd709fca692",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-11-claude-universal-control.md",
+      "bytes": 4983,
+      "sha256": "45716a5c4ff5afd448677bc26166d9b6f75cc44c291a02df0945240a8d7dece8",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-02-desktop-guard-app.md",
+      "bytes": 3240,
+      "sha256": "60827981630b0e8807e92e75d4ebc7557f22847555eeed79ef3efdd375459243",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-07-14-windows-endpoint-enforcement.md",
+      "bytes": 18451,
+      "sha256": "b10689a54f35f0ed4fa02fb979a413f26e7809471a58e01e0b8001994c0aa62b",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-12-openai-provider-family-control.md",
+      "bytes": 5897,
+      "sha256": "c621d8fc439fef95c863c71f473c5f814e0985a2ed56a8b3ef6281098d3cf6a9",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-07-22-control-coverage.md",
+      "bytes": 75378,
+      "sha256": "7ab7175cdfd4779cfb62266e5600cee78c989eefa3710cd0cbe37bbc5a40ffd1",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-07-30-hmair-h0-h1-canonical-substrate.md",
+      "bytes": 89773,
+      "sha256": "acc00ff0dbcf4c2f9904c7c5a3849bb01ae4dccbb1b077a3208a53ccf35bf842",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-12-claude-native-and-fallback-closure.md",
+      "bytes": 18143,
+      "sha256": "9e6a05ba1150befb7dfd5d965ea73b8cc53ef43a879d18f3af8cb3fcb4812f84",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-02-hmair-h1b-assets-resolution.md",
+      "bytes": 144913,
+      "sha256": "8864e9c9698a4b481a819779699b4e2602ab48ab064b5874adb5df8902ce7404",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-13-docker-postgres-demo-runtime.md",
+      "bytes": 25663,
+      "sha256": "f6fde1207d9e2889eed989ef19897015e6914b26b479c175f4d9468d9cc96516",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-03-manual-terminal-mcp-lab.md",
+      "bytes": 28197,
+      "sha256": "771820ffd2abeb883d8f9a52635ebc238455d0b2560677a682b26dc815e85c86",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-14-bank-foundry-first-proof-path.md",
+      "bytes": 45577,
+      "sha256": "4f901a6e441eb896225624b6aed04ace39e4cc0f1526ba9d01dc14de7140a6a6",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-04-codex-mcp-stdio-transport.md",
+      "bytes": 7457,
+      "sha256": "96b327397cb2eddea0d55085ef995d2a1b718f485b9c57f5c87c35915d4af9da",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-11-hmair-h1-closure.md",
+      "bytes": 3589,
+      "sha256": "6e394fb34108eb3c20899ed73e70ae1c63228628cc21afa6ce08758cb3a974c3",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-04-connector-control-room.md",
+      "bytes": 13054,
+      "sha256": "fe9c6124268b1ce37bfbc989b613512f5b7b60d832a6d7055fae9d34d4f591ab",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-15-phase2-p0-deep-discovery.md",
+      "bytes": 15930,
+      "sha256": "f6d9f0a0c0b043e4eeaf10c1b21e70cd8e5d23372ed76b7fa11f004f525e9342",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-05-macos-endpoint-inline-control.md",
+      "bytes": 14491,
+      "sha256": "67123d1d56175465160859722399a19c1fc619a761da6b4224176dfb870ec276",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-21-discovery-command-center.md",
+      "bytes": 2479,
+      "sha256": "0d36e759d89117f05c130bfa0e9b07d1e77827228ff71b89ae4931f7b044c2e2",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-07-endpoint-client-bindings-and-production-gates.md",
+      "bytes": 7673,
+      "sha256": "b14b949182e749d1ff0ebe7f6fb38e8dfcc10b08467c00d48bdb1062d04dc3c2",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-11-claude-hook-chatgpt-surface-repair.md",
+      "bytes": 5044,
+      "sha256": "47e1124d101172c19f6e38900c9ed5c28baa8b086ded3bcf0923bc28d06c89a4",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-09-platform-mode-control.md",
+      "bytes": 9211,
+      "sha256": "ab8962f478a15b7c46b08f1d84a59193331f2d67673414a5275472a48292c1a1",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-16-capability-inference-engine.md",
+      "bytes": 36993,
+      "sha256": "f2e28d1949d3c454db60b27330de75c95bfcc5b46bdfe759df810656393845b1",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-09-real-client-endpoint-mcp-acceptance.md",
+      "bytes": 8509,
+      "sha256": "e01e7a3f4419ddc3336c910140af6a1b5034927df69cc326bc722dd1cf74f26e",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-12-gemini-cli-production-native-adapter.md",
+      "bytes": 9816,
+      "sha256": "4e942ad1f5e567dfceb12ece039e8363f792e9bf423e75df70fc339dd8b3328e",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-10-lifecycle-platform-governed-sessions.md",
+      "bytes": 10221,
+      "sha256": "90a98c145f535b37b34944b12064b79217d891377cf025e6b512a9f254a2d17f",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-11-claude-desktop-repository-scoped-mcp-demo.md",
+      "bytes": 4034,
+      "sha256": "9950c9e9b33d95f1fac87bf831845d2ed808483504256fad30e0276538a8bef7",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-10-hawk-governed-session-companion.md",
+      "bytes": 6289,
+      "sha256": "23db268353170a73f169c0707f51298665579e76d93abc8a9d156ce8421f8546",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-10-hawk-progressive-disclosure-ui.md",
+      "bytes": 13605,
+      "sha256": "187dc2651c2e9823d972418fea7ec1097b6b1fe574e080d60d18905f6897c7c4",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-12-universal-endpoint-enforcement-floor.md",
+      "bytes": 8605,
+      "sha256": "ae92c073e83d947e5f980f88610e7190f1a93746ad5424953e6eaa3da3cbf955",
+      "disposition": "PUBLISHED_REFERENCE_SOURCE",
+      "published_sha256": "ae92c073e83d947e5f980f88610e7190f1a93746ad5424953e6eaa3da3cbf955"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-10-governance-storyline-evidence-river.md",
+      "bytes": 5217,
+      "sha256": "b9e226f4707ffff3471b0947d06a441df6352854bba927e295e05d72c0440aca",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-23-shadow-ai-assessment.md",
+      "bytes": 3027,
+      "sha256": "3dec85677dad66bd5e930281bf08b4302395f989d84f5d5b42ccf8edd1af0557",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-10-akto-platform-clarity-extension.md",
+      "bytes": 6442,
+      "sha256": "45c33c45b7c1e53eb81897ef6c1705c76001dd70ef804b20a445cbd99357c25c",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-12-chatgpt-desktop-composite-adapter.md",
+      "bytes": 7898,
+      "sha256": "7f94b5194867847d85c3a52c2d7e34b934566939fc817fd3cb9485c75077afad",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-10-agent-os-evidence-binding.md",
+      "bytes": 8460,
+      "sha256": "6342b3f7dc310c39483775b9902c8bd7769b2417dfa8137abba52c2062ffd88c",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-13-provider-signals-mcp-spend-p0.md",
+      "bytes": 3344,
+      "sha256": "2fddc7093684b13293a8a61348e80709314713f6bc7619b90be6d6aaff1a6f5b",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-11-endpoint-versioned-key-recovery.md",
+      "bytes": 6380,
+      "sha256": "9147e9bba912e7b64a8895b7868a16f0d9367b28251f30fc7aabbf56d7d47a44",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-11-hmair-h3-fingerprinting-resolution.md",
+      "bytes": 3815,
+      "sha256": "beb785d434d80a0d8414f19240fc01a476e6b70e23b309c1c50674eca8feff4d",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-11-native-control-closure.md",
+      "bytes": 1163,
+      "sha256": "1a60b174120f8d7e06d4199fb5846a17201c52e06722c05d3f54eecb11d2910d",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-14-phase1-p0-production-banking-runtime-control.md",
+      "bytes": 13061,
+      "sha256": "406c583cbeeec02c128942f1c4077c6cbafb62aecc9f56595a5d09ccd299173d",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-15-phase-x-part1-multi-surface-discovery-engine.md",
+      "bytes": 5481,
+      "sha256": "ee3f92a94e6c02336b391713d979ed7ba16095a203b13a4d2de15d5cfac13838",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-15-phase3-universal-endpoint-enforcement-floor.md",
+      "bytes": 21342,
+      "sha256": "67a2bc0549e449ee4a60c5b44b355bc408c3ae12ab1f9305f08a485abb209969",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-11-hmair-h4-controlled-multisurface-expansion.md",
+      "bytes": 11608,
+      "sha256": "77ef01b86efc2268ae4fdd289f9aba68f96c0e1d2fdefa1f76071121dd5285bb",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-16-evidence-resolution-graph.md",
+      "bytes": 11284,
+      "sha256": "3651ca4da58303d3814bd289961ab0ea020ea9cc62c596bf6ee8144428a8e95d",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-23-personal-claude-desktop-dlp.md",
+      "bytes": 7343,
+      "sha256": "430035a49b709c628055b31c5fc80775705584b9eddc54f8326b56ddcc497e26",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-20-autonomous-discovery-verification.md",
+      "bytes": 29515,
+      "sha256": "49c59d6d9ffdac8acc7fcd8bf30348a20e071a90a8b75af7aa63f1131a26253c",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-20-ai-exposure-reasoning.md",
+      "bytes": 30875,
+      "sha256": "5e1b48ba3c1a51da073f357eb786d3e1129506418b065f1b9fb3ae704c63fcc1",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-23-endpoint-native-hooks.md",
+      "bytes": 3898,
+      "sha256": "a4af8b3f059fdcf52be97ac7f7e90f857bdcb7f9d1395459b76c156c9a1f56e4",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-20-discovery-context-provider.md",
+      "bytes": 4991,
+      "sha256": "7e059e5f9fd157b1d4ad6732f92c6ef1cf1c29a35f2b1a968527a4e6f9bb4097",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-20-phase4-multi-provider-control-fabric.md",
+      "bytes": 12379,
+      "sha256": "59e9f6189432734bc68901aab8ec8e2b5e35c0d129ffd3da307db174a6d9f825",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-11-hmair-h5-governance-continuous-discovery.md",
+      "bytes": 8801,
+      "sha256": "83f2f200a54e9315b4f0d6ef75bbd546b3efe97fecff24589c9f26d8dfc08c74",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-24-sol-governed-execution-contract.md",
+      "bytes": 2530,
+      "sha256": "83e53cbb7f12e2bb6774d26fa3ec746fdad323140d55e74b2734a95651182ede",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-23-claude-enterprise-boundary.md",
+      "bytes": 3251,
+      "sha256": "322f5135273a6e0ee4cfda8f90a2bafce5aa3048b4ad1a14be01acdc875e4a7a",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-08-29-account-boundary-production-core.md",
+      "bytes": 9890,
+      "sha256": "7ddde42faf099608776eaf35edacf5498da392a6e0e589798a92c3e952b774d4",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-11-hmair-h6-enterprise-experience-acceptance.md",
+      "bytes": 6855,
+      "sha256": "0b54b3bbdcb2601f2659eee02eedff5bff8db7280db229ffc1f3c135fd44f82d",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-01-maturity-curve-policy-intelligence.md",
+      "bytes": 11617,
+      "sha256": "8fa52b3f5537f089da4e4e2625e83ae250c5d7f62925e3c9ab49c4a28a1c01b7",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-01-policy-pack-platform.md",
+      "bytes": 6751,
+      "sha256": "fbfce27e19d2d3a2c1dc3abf82f15ceddc9499e876f9b6ee51d418d16223f91b",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-24-audit-gap-closure-batch-1.md",
+      "bytes": 2548,
+      "sha256": "7d8bf1c5a867e9f650d4166d30b5449dfc89ed6988da25067eca962adfed4bc4",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-01-policy-pack-runtime-composition-correction.md",
+      "bytes": 4697,
+      "sha256": "b7ff19b2c055f6f2c17f9889b38f845fe55e82a5136b457bd316b7f5e9040a40",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-13-user-ai-account-tenant-visibility.md",
+      "bytes": 29218,
+      "sha256": "3a558fb52c184e1385c41a0e743b6d3dd07c84c6c7b8c6a14a2f2d298a2ba1e6",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-02-vertical-department-policy-library.md",
+      "bytes": 3544,
+      "sha256": "0a9fbdcf6cb5a6cba4bc292a84bd3b006f94f204b3a49e055f1b0636affad28f",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-02-user-visibility-prompt-action-explorer.md",
+      "bytes": 32071,
+      "sha256": "d637695022be7efedde814a28079ef877db53c955d3c87ca22dd30e75e6c0802",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-14-titan-capital-preseed-pitch-deck.md",
+      "bytes": 4655,
+      "sha256": "638c732b775a4531a9b055880d83a1e700860d641252ffe27427b1b387d83cac",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-02-policy-pack-apply-wizard.md",
+      "bytes": 3339,
+      "sha256": "b2608275a1d8b98e833f16c8e0685929d1784d3184af73ec68eb91d5cd73761e",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-24-audit-gap-closure-batch-2.md",
+      "bytes": 5100,
+      "sha256": "c9f2484e4d8b33027237b4ea9e8606731134d388076f38e9fa1f33618665ac01",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-02-ai-ecosystem-p0.md",
+      "bytes": 2514,
+      "sha256": "753d1a55c6e78b07bb2284a7bf195be849c91d456ee7f88b06e1ec8ff40b6c8b",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-02-users-policies-ui-rework-p0.md",
+      "bytes": 23475,
+      "sha256": "3ce6c741b15401a844ccc0a4fa92324bcf7541a12488640d5027c517ce939c37",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-24-oidc-sso-v1.md",
+      "bytes": 2442,
+      "sha256": "82528aeb1e68c94c524b6e494a622f50e5a42d6c3c248f5a0a13aee6052d66c8",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-03-hmair-controlled-lab-proof-path.md",
+      "bytes": 6349,
+      "sha256": "9ecea4bd6df61c694b3433c4f5a9e78be8981bea99d51cf1159c1a8155551b44",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-03-hmair-mixed-endpoint-fleet-foundation.md",
+      "bytes": 25466,
+      "sha256": "49d0b4da968186eacaa82be5845e3d85a21063440fd16c1a4ddb16d7621e582d",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-25-four-control-method-product-packaging.md",
+      "bytes": 1501,
+      "sha256": "036e4a30f8e51e8aadc99f8b3885a018d0e6ff2497c3f8f110f4c3f704980232",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-03-hmair-production-deep-scan-control.md",
+      "bytes": 39637,
+      "sha256": "e61bb3f41ff5098c7ccf1b4ea2de600032626390e970399725ed0208241ea887",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-04-hmair-m365-github-source-connectors.md",
+      "bytes": 23410,
+      "sha256": "9de878d0be2822d28aa42e67d07553b57754d0c3b3f2a8db4677a4b8b8884366",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-25-isolated-real-control-acceptance.md",
+      "bytes": 4491,
+      "sha256": "0f78e22eb3611141da997d09bad378f50326a128ce1badcf113b8492100d4e4c",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-04-codex-lifecycle-control-repair.md",
+      "bytes": 8241,
+      "sha256": "6a8dd05e6f691089628038bd45bff36175f88c782211ada9cb6ecd742a31a100",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-04-hmair-h2-path-native-proof.md",
+      "bytes": 4590,
+      "sha256": "6dfe7dd7e7b457fe770cc4a9eba50c453124a5db371b45df8c81246d59a74991",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-25-real-mcp-llm-acceptance-fixes.md",
+      "bytes": 4793,
+      "sha256": "30d70ff2fb07fa8f795c5f36c54dd3e7440422e9aec610cf359e36a1c39c22bf",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-04-hmair-h2-production-h3-drift.md",
+      "bytes": 3858,
+      "sha256": "43b451090f2d37be7b2d7641ac537fb49321bd8b752d4face73d5f3e128a21df",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-04-hmair-h2-surface-source-registration.md",
+      "bytes": 7127,
+      "sha256": "bbc4bc8ee5b07f0e536f0ce55edd967284b3549cf476a3893404e10a8e4d961c",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-26-official-mcp-sdk-acceptance.md",
+      "bytes": 5321,
+      "sha256": "073078e65cbe3aa359ce3c3df9e0e0a2dddba5c9bbd3c02d7ada96599a1d5d1e",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-07-hawk-github-mcp-scope-binding.md",
+      "bytes": 2907,
+      "sha256": "4b5e6999fe2b8d0a05500c999b1251605803e5d006139ed239071dc6db6b0705",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-07-ai-iam-token-mint-projection-isolation.md",
+      "bytes": 6752,
+      "sha256": "9add9e10ebe6d5526e643cfb43721e3cc82203e1cfa94087fe04479b86dc9e62",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-27-llm-reversible-masking.md",
+      "bytes": 22034,
+      "sha256": "898c33c8c3c9da485451f9f9fd9f7b07a5aec6611802c2869d40ca48565c7d84",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-07-monitoring-remediation-lifecycle-loop-break.md",
+      "bytes": 6279,
+      "sha256": "58ffb22c8ab8a7220eab3b0c62e90457e76f7336402132ea2dd018b40eec01db",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-08-hmair-live-evidence-demo-slice.md",
+      "bytes": 10856,
+      "sha256": "492692cabb34cd947a2f1495f04258431f9e359b6f6c5f71e474b218abe9c0fd",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-27-endpoint-os-controls.md",
+      "bytes": 31439,
+      "sha256": "5a9972cde61f62e19cb5bfb90a2ed42de7470e3a15e08189622a4260c715e4a8",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-09-h2-receipts-provider-device-meeting-acceptance.md",
+      "bytes": 4299,
+      "sha256": "fff3cfd2378ef005c40cc96e5d951cff55c9f7b1bb88678d632093263761825f",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-13-github-developer-ai-repository-control-implementation.md",
+      "bytes": 17876,
+      "sha256": "cde26e59fbb84e915cf44574a8e033dc984d086c1296c7904651d6b95c491485",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-14-personal-github-repository-deny-demo-implementation.md",
+      "bytes": 4495,
+      "sha256": "519f3e5c18bd4557042e4772f65ad49c363955183964380ede78423b3beb4e58",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-27-endpoint-os-controls-software-closure.md",
+      "bytes": 19852,
+      "sha256": "323446821eddfe9741f6279bba56b1fbf59726c3ae97939f1a40f900c8ef53f0",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-27-endpoint-os-controls-routing-release-closure.md",
+      "bytes": 22034,
+      "sha256": "dd0b1748462668da3dc474831f3e486ced1c57937bb35f19e0ec9b37c32f8252",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-27-customer-controls-ux.md",
+      "bytes": 29608,
+      "sha256": "8fce47871d65d530e58849ed38fc8e92152e80d30e2552d02c01c09626193d70",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-28-github-customer-ux.md",
+      "bytes": 1704,
+      "sha256": "8d9166d30b7bbbd73ebceb186297775d14ac641d9969800792d2077287f4491a",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-28-activity-visibility.md",
+      "bytes": 1239,
+      "sha256": "517fd4348f66a8c1660af28baf22e287f040a338a78912595d49f3af2c8dcf3e",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-28-platform-ux-completion.md",
+      "bytes": 5601,
+      "sha256": "61028d24eb94bc50e33e166ec0bbd30b5ef3df0e7b04152b83c3aa64eca1bca8",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-07-14-windows-endpoint-enforcement-design.md",
+      "bytes": 12546,
+      "sha256": "4cebe340e0c35d0e3ff6b23e9ec32c17b88e7e81e993a0f87aaca11c5a2f5124",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-11-claude-universal-control-design.md",
+      "bytes": 3010,
+      "sha256": "b9711cb2c7ec1caa54be7d45fb97a35b13ae7da1d365e664694a1150c7209feb",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-07-22-control-coverage-design.md",
+      "bytes": 20227,
+      "sha256": "a9012803f9a13cef6a7bae701c43764b4c169253205129f8a658b19e98d65522",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-07-30-hmair-program-design.md",
+      "bytes": 26898,
+      "sha256": "58102cb048244ec480e34427f50587c1f709532ccb0bb04b39a82ef6e56bf587",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-15-phase2-deep-discovery-design.md",
+      "bytes": 9193,
+      "sha256": "da65bc7d24b4ff8ca8f82bd4a370eaac03ad732eea168d2a1299108813a37e25",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-03-manual-terminal-mcp-lab-design.md",
+      "bytes": 10044,
+      "sha256": "d1e7c278a84d40dcebf8607c2f6c96671458e27dd8cd90de263479330b4b775d",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-11-claude-native-and-fallback-closure-design.md",
+      "bytes": 7637,
+      "sha256": "61097478ae35d00e1a91309ae934f07034383f23098f9abc1ba04b866b4e41f0",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-04-codex-mcp-stdio-transport-design.md",
+      "bytes": 4314,
+      "sha256": "12851d258a7ef4b6a6781fbd81404fbba17a012cf4c2a99fa02910339d38f92a",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-09-13-user-ai-account-tenant-visibility-design.md",
+      "bytes": 14229,
+      "sha256": "62c1ae4ff31487057bb632c170afbe3b14283b1a44fd917cd0ca57c95fcdc604",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-04-connector-control-room-design.md",
+      "bytes": 10398,
+      "sha256": "f4b56367150e116716fb45d52c177e25ff9637322bea6e350bc646a7b09800f4",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-09-23-personal-claude-desktop-dlp.md",
+      "bytes": 5646,
+      "sha256": "2d7af251f873e73192c64ffc2dd0fc62e6d55cc5894c0c5ba8fd5d3fe6d4e085",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-05-endpoint-inline-control-design.md",
+      "bytes": 39941,
+      "sha256": "ee0eacf4b2d64ab9520e450dd40575ca67013cdeabe5ed3fcd1274b3873f9a79",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-12-gemini-cli-production-native-adapter-design.md",
+      "bytes": 8283,
+      "sha256": "e8a61260ffdfe7b9d405bddf8626eb145a6b0539a4b56a28e1c3c807584cf676",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-09-platform-mode-control-design.md",
+      "bytes": 4337,
+      "sha256": "da2a126c143963d32bc014f9c1d81f0da1bd8652e4dc8c5584afde05603232dd",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-20-ai-exposure-reasoning-design.md",
+      "bytes": 21759,
+      "sha256": "b78b29b76d9c0c8b506b166f46c96eaefba3c52ed55239230d5f6cdaf88b70fa",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-09-real-client-endpoint-mcp-acceptance-design.md",
+      "bytes": 6887,
+      "sha256": "fec03c67b2ffd1fe9f044cb473f5248d27c21b7190e1c41d605487c04909390c",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-10-hawk-governed-session-companion-design.md",
+      "bytes": 11781,
+      "sha256": "f0a728d792ee994b18bf442d26ea83d9b78266474c4e2b3a99e1f4ff34d9c6ec",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-13-docker-postgres-demo-runtime-design.md",
+      "bytes": 9515,
+      "sha256": "9425db03b0006e279985f6f6318c7d2f233a9815206e7b42d6fe084453eab020",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-10-hawk-progressive-disclosure-ui-design.md",
+      "bytes": 10253,
+      "sha256": "e34bf9ea565df899d07b082ab8834c60ffc882a084f47773a0819bdaeab2b1a4",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-16-capability-inference-engine-design.md",
+      "bytes": 9745,
+      "sha256": "cc37f5d9d214f22174e99634b66e19fb7def4ee346bbf42e5f50aa6120345fd3",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-10-control-orbit-evidence-river-design.md",
+      "bytes": 14420,
+      "sha256": "93ad32ba722787252f3b5aa34ffdd6b34bd635aeb7941ef5b1ca0c9baf8a58a0",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-09-13-github-developer-ai-repository-control-design.md",
+      "bytes": 32604,
+      "sha256": "71eaeece5921930ff53fdc8e05a7af2b1847e9b54cfca9fda11eb90da00fced8",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-10-governance-storyline-evidence-river-design.md",
+      "bytes": 5989,
+      "sha256": "6a7e23a9b84e6f784993194e0d435dac2e288862723f51f6128988010f966df1",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-16-evidence-resolution-graph-design.md",
+      "bytes": 15979,
+      "sha256": "79a0e646733c2a6929257e8f1bad5e08121e99a885887188ac9ef25ad807351e",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-11-endpoint-versioned-key-recovery-design.md",
+      "bytes": 4308,
+      "sha256": "4e2f42252f010850ff349d06a72d07850ec1f4fba8f8d731ac78e2263c3597d0",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-09-14-personal-github-repository-deny-demo-design.md",
+      "bytes": 6097,
+      "sha256": "df72fee329e0807d8b401d9ac6df80fce8937c1a990792eedeb8618c22ad9e3f",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-11-native-control-closure-design.md",
+      "bytes": 4573,
+      "sha256": "6f37ddac5ba3885f67683eba3efd5a2e3adee54dd42f4a3a2716ae6dfcf4cb4d",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-14-bank-foundry-transaction-integrity-dotnet-design.md",
+      "bytes": 23915,
+      "sha256": "dc67593b09996bf85d017619740edd73173f422291538d2fadef278e39f14909",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-15-phase3-universal-endpoint-enforcement-floor-design.md",
+      "bytes": 29633,
+      "sha256": "eebd310be3e3c168a6883fbda81ace086013caa21ff2a0980d9b20f42a72be86",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-20-autonomous-discovery-verification-design.md",
+      "bytes": 26698,
+      "sha256": "b314c74198edf6c6a8ec6786f48a90d76142ade2c2bd1e8c97972410dc10cb27",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-09-14-titan-capital-preseed-pitch-deck-design.md",
+      "bytes": 9757,
+      "sha256": "a8f495a86407e63e599ffc776a09ae6ab47f02978fc161a16b9b1c6929a4b967",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-20-discovery-context-provider-design.md",
+      "bytes": 6008,
+      "sha256": "1f30165bd33bbf2eda40be7c602dc335c7e564dde5fb2dee67f7c1c770cf8a74",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-20-phase4-multi-provider-control-fabric-design.md",
+      "bytes": 12422,
+      "sha256": "0017b73c5d0ea50b59412ed970875c9524263f8bd62353e47594b081332cf675",
+      "disposition": "PUBLISHED_REFERENCE_SOURCE",
+      "published_sha256": "0017b73c5d0ea50b59412ed970875c9524263f8bd62353e47594b081332cf675"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-24-sol-governed-execution-contract-design.md",
+      "bytes": 2956,
+      "sha256": "242110fbb3ede30e07d4665d8690793d5e102cfb3e63eafd6c394c0d34d354f3",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-08-24-phase5-vertical-agnostic-action-execution-integrity-design.md",
+      "bytes": 35306,
+      "sha256": "5b8dddf3b516de2d4b89c0408aa0649d8b9066173ca4d05b9a2a5a6e8d4f8210",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-09-02-user-visibility-prompt-action-explorer-design.md",
+      "bytes": 10417,
+      "sha256": "a2f0c7f535bce3000b786027ba18fb876d1523d116a8e5a571d3f0705f2ef515",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-09-02-policy-pack-apply-wizard-design.md",
+      "bytes": 2767,
+      "sha256": "685826deda7c775c57ab9268a1cafe8112fd12d65155a4b7a5b731222c6616a9",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-09-02-users-policies-ui-rework-p0-design.md",
+      "bytes": 7717,
+      "sha256": "923a79cae95d2888545423223d3048f1c6b9d75ca619e2ab0ff28de355738187",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-09-03-hmair-controlled-lab-proof-path-design.md",
+      "bytes": 4560,
+      "sha256": "917234bc9d5dc5de9bd686a50a7d9a79e15c54ad43a01f14b0bffc7047397d22",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-09-03-hmair-mixed-endpoint-fleet-foundation-design.md",
+      "bytes": 9611,
+      "sha256": "77fa3d757e43263c8a13111f568eb5110cd0f6385ac339367476c3b460d88a54",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-09-03-hmair-production-deep-scan-control-design.md",
+      "bytes": 20699,
+      "sha256": "c8dc3640a7bbaf0eace69fa19960139f021b337eab85792ad5ca27fd055ddda8",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-09-04-hmair-m365-github-source-connectors-design.md",
+      "bytes": 10667,
+      "sha256": "de98213d9e3a706d349d626b0a311dfc3f331bb152e975de4253452fff2491e4",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-09-04-codex-lifecycle-control-repair-design.md",
+      "bytes": 2560,
+      "sha256": "10566b259648d33763f2c601b530255258692a09485393becbb03fd3fbc67902",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/2026-09-08-hmair-live-evidence-demo-slice-design.md",
+      "bytes": 6139,
+      "sha256": "76a0c4d7251fd37588749435fa5e90032db3e9e3f04e5b332e047754bfce209a",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/superpowers/specs/assets/2026-08-10-control-orbit-evidence-river.png",
+      "bytes": 1769937,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/superpowers/specs/assets/2026-08-10-governance-storyline-evidence-river.png",
+      "bytes": 1547172,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/testing/CLAUDE_UNIVERSAL_CONTROL_TESTS.md",
+      "bytes": 8267,
+      "sha256": "b30262117c2b98c63fd1caf7c827c92dbcf4dc564b81fc3fc143c57bb0e0cdde",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "218c986f5b421a1971022f0ace27b1662c2786a04357ebfb8591faec577149de"
+    },
+    {
+      "path": "docs/plans/2026-07-17-buyer-trust-ui.md",
+      "bytes": 1499,
+      "sha256": "c170357852fabf345cb268e9bbede48f4d7e9576ba0033cd7582601710ff3313",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/plans/2026-07-17-command-center-hybrid.md",
+      "bytes": 1517,
+      "sha256": "97e14bb702b82c92516fc43ddc8251466ddd5a14dafde4724e4c6242c745d9fc",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/plans/2026-08-03-windows-api-mac-ciso-demo-design.md",
+      "bytes": 3447,
+      "sha256": "775f6b7ddd9703ac972f9e732dd61a3929c1b8fabce2d33a0581547232f49805",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/plans/2026-08-03-windows-api-mac-ciso-demo-implementation.md",
+      "bytes": 1593,
+      "sha256": "9539f74ed566038eb85205a4cd1fc73089d8ba0c28ea7f5a63fcfcf642945835",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Dated design, implementation task plan or backlog; preserved in the selected original worktree with exact hash. Not an executable dependency or current acceptance evidence. Do not imply proposed capabilities are implemented."
+    },
+    {
+      "path": "docs/validation/bank-foundry-first-proof-path.md",
+      "bytes": 10993,
+      "disposition": "PUBLISHED_REFERENCE_SOURCE",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published.",
+      "published_sha256": "77e2388e09c21b9a48e9d92c3abb0c5d0eec8d861de1879081e2cbd59257880f"
+    },
+    {
+      "path": "docs/validation/phase2-deep-discovery-report.md",
+      "bytes": 24107,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/validation/microsoft-banking-phase1-p0-report.md",
+      "bytes": 27204,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/validation/evidence-resolution-graph-report.md",
+      "bytes": 5643,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/validation/autonomous-discovery-verification-report.md",
+      "bytes": 8742,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/validation/ai-exposure-reasoning-simulation.md",
+      "bytes": 5406,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/validation/ai-exposure-reasoning-implementation-report.md",
+      "bytes": 6978,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/validation/discovery-context-provider-implementation-report.md",
+      "bytes": 4521,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/validation/phase4-multi-provider-control-fabric-report.md",
+      "bytes": 20551,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/validation/phase5-baseline-tree-manifest.md",
+      "bytes": 2490,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/validation/phase5-wu00m-build-input-manifest.md",
+      "bytes": 166197,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/security/SECURITY_REMEDIATION_STATUS_2026-07-17.md",
+      "bytes": 6063,
+      "sha256": "65a107f5924b3f4263a9837e1a19744869d3b14bbbf43a8e1d1a95e0af1ec4a8",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Historical execution/review assertions, preserved with exact source hash; not independently re-certified or published as current platform acceptance."
+    },
+    {
+      "path": "docs/demo/build_trinya_demo_feature_list.mjs",
+      "bytes": 38522,
+      "sha256": "bcf5e3f03c500009c8e44f56adbe6b0d95ec4e8803ab1c5b99242070d738a475",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Commercial/demo document generator or investor evidence, not an application runtime dependency. Original source preserved; private narrative and publication material excluded from development baseline."
+    },
+    {
+      "path": "docs/demo/trinya-current-demo-feature-list-preview.png",
+      "bytes": 1624667,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/trinya-current-demo-feature-list.xlsx",
+      "bytes": 23500,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/trinya-current-demo-feature-list.xlsx.inspect.ndjson",
+      "bytes": 425165,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/build_trinya_current_available_features.mjs",
+      "bytes": 45449,
+      "sha256": "19b227ce55e79edcac8ac6b0a9ef7513fd06bc84415961724565bec4fd41b00b",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Commercial/demo document generator or investor evidence, not an application runtime dependency. Original source preserved; private narrative and publication material excluded from development baseline."
+    },
+    {
+      "path": "docs/demo/trinya-current-available-features-preview.png",
+      "bytes": 1217965,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/trinya-current-available-features-and-real-estate-use-cases.xlsx",
+      "bytes": 29320,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/trinya-current-available-features-and-real-estate-use-cases.xlsx.inspect.ndjson",
+      "bytes": 455355,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/trinya-current-available-features.inspect.ndjson",
+      "bytes": 5076,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/trinya-ai-threats-and-simulations-preview.png",
+      "bytes": 344631,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/trinya-current-features-security-and-real-estate-v2.xlsx",
+      "bytes": 29320,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/trinya-current-features-security-and-real-estate-v2.xlsx.inspect.ndjson",
+      "bytes": 455355,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/titan-capital-pitch/sources.md",
+      "bytes": 4659,
+      "sha256": "a2dbe5104077c10d01b1a4719639aff6cb979d903f5e09cee6ac238a484b69a3",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Commercial/demo document generator or investor evidence, not an application runtime dependency. Original source preserved; private narrative and publication material excluded from development baseline."
+    },
+    {
+      "path": "docs/demo/titan-capital-pitch/build_titan_capital_pitch.mjs",
+      "bytes": 35022,
+      "sha256": "b5bbbfe1694030012cacb3ff2c3235868232f28194bdf6bb594a272c4c946579",
+      "disposition": "PRESERVED_CONTEXT_NOT_BASELINE",
+      "reason": "Commercial/demo document generator or investor evidence, not an application runtime dependency. Original source preserved; private narrative and publication material excluded from development baseline."
+    },
+    {
+      "path": "docs/demo/titan-capital-pitch/trinya-titan-capital-preseed-pitch.pptx",
+      "bytes": 89530,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/titan-capital-pitch/trinya-titan-capital-preseed-pitch-preview.png",
+      "bytes": 1325759,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/titan-capital-pitch/.codex-finalizer/candidate-v1.pptx",
+      "bytes": 87789,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/titan-capital-pitch/.codex-finalizer/candidate-v1.pptx.inspect.ndjson",
+      "bytes": 80162,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/titan-capital-pitch/rendered/slide-1.png",
+      "bytes": 70868,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/titan-capital-pitch/rendered/slide-2.png",
+      "bytes": 80482,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/titan-capital-pitch/rendered/slide-3.png",
+      "bytes": 93174,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/titan-capital-pitch/rendered/slide-4.png",
+      "bytes": 79230,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/titan-capital-pitch/rendered/slide-5.png",
+      "bytes": 107154,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/titan-capital-pitch/rendered/slide-6.png",
+      "bytes": 75666,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/titan-capital-pitch/rendered/slide-7.png",
+      "bytes": 103973,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/titan-capital-pitch/rendered/slide-8.png",
+      "bytes": 81410,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/titan-capital-pitch/rendered/slide-9.png",
+      "bytes": 72459,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/titan-capital-pitch/rendered/slide-10.png",
+      "bytes": 95926,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/titan-capital-pitch/rendered/slide-11.png",
+      "bytes": 83405,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/titan-capital-pitch/rendered/slide-12.png",
+      "bytes": 102148,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/titan-capital-pitch/rendered/slide-13.png",
+      "bytes": 75415,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/titan-capital-pitch/rendered/slide-14.png",
+      "bytes": 82752,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/titan-capital-pitch/rendered/slide-15.png",
+      "bytes": 83346,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/titan-capital-pitch/rendered/slide-16.png",
+      "bytes": 80618,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/demo/titan-capital-pitch/rendered/slide-17.png",
+      "bytes": 102275,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/api/control-coverage.md",
+      "bytes": 10011,
+      "sha256": "b60796aad93ef92d5aa9c306483aebc267e84afb168bad288af65a674f2302ef",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "e720f7cfe2131bdaa04bc941bcddb7fb69ec6667c0db09a4a6075997ad1d99ee"
+    },
+    {
+      "path": "docs/api/deployments.md",
+      "bytes": 7847,
+      "sha256": "3f150ecae0303d036618b4cf72246beff19ec0d218acfa5a040cfb1a901e2df4",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "114cc8c209cf9f14d0587a90b95290a669c437f63dd2c934a616079b08afa362"
+    },
+    {
+      "path": "docs/exposure/AI_EXPOSURE_REASONING_METHODOLOGY.md",
+      "bytes": 10383,
+      "sha256": "695b9216d7206eb76aa37d3dcc56d1b154012393282a26feeac1cce0442d1056",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "e91925b4c4643f7aec283122f728e19d9bf4ab3b03b169160fca6b9a9ab08723"
+    },
+    {
+      "path": "docs/exposure/AI_EXPOSURE_CATEGORY_CATALOG.md",
+      "bytes": 4990,
+      "sha256": "20992475a1d1bcc7898d0e46f944765938895700e1780468ec3b33d0bc0b6c5c",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "e3a559293d3282264bbcf75847038a4da031f45036f72307783098a5b0fcd095"
+    },
+    {
+      "path": "docs/audits/2026-09-27-reversible-masking-acceptance.md",
+      "bytes": 6079,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-27-endpoint-os-controls-acceptance.md",
+      "bytes": 9153,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-27-customer-controls-ux.md",
+      "bytes": 6330,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-28-extension-noise-closure.md",
+      "bytes": 3572,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/w2-activity-reports.md",
+      "bytes": 8082,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/w2-task-only.diff",
+      "bytes": 2194,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/w3-continuation-report.md",
+      "bytes": 2410,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/w3-task-only.diff",
+      "bytes": 1941,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/W1-report.md",
+      "bytes": 2735,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/w1-task-only.diff",
+      "bytes": 87590,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/w1-correction-only.diff",
+      "bytes": 22737,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/w3-gate2-correction-report.md",
+      "bytes": 1926,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/w3-gate2-correction-only.diff",
+      "bytes": 1867,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/W1-correction-report.md",
+      "bytes": 1733,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/w2-gate2-correction.diff",
+      "bytes": 2546,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/completion-status.md",
+      "bytes": 3939,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/w2-second-correction.diff",
+      "bytes": 1832,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/final-continuation-report.md",
+      "bytes": 12709,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/final-continuation.diff",
+      "bytes": 273757,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/resume-evidence/resume-scope.md",
+      "bytes": 2597,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/resume-evidence/capabilities-before.json",
+      "bytes": 57599,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/resume-evidence/capabilities-after.json",
+      "bytes": 61136,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/resume-evidence/capability-parity.json",
+      "bytes": 219,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/resume-evidence/handler-differences.json",
+      "bytes": 3814,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/resume-evidence/automated-results.md",
+      "bytes": 1747,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/resume-evidence/service-recovery.md",
+      "bytes": 605,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/resume-evidence/browser-progress.json",
+      "bytes": 2002,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/resume-evidence/public-browser-results.json",
+      "bytes": 493,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/final-browser/overview-mobile.jpg",
+      "bytes": 36997,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/final-browser/assets-mobile.jpg",
+      "bytes": 30336,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/final-browser/observations.json",
+      "bytes": 70195,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/final-browser/observe-mobile.jpg",
+      "bytes": 39077,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/final-browser/protect-mobile.jpg",
+      "bytes": 32298,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/final-browser/integrations-mobile.jpg",
+      "bytes": 42982,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/final-browser/policies-desktop.jpg",
+      "bytes": 88064,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/final-browser/policies-mobile.jpg",
+      "bytes": 32651,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-28-platform-ux/final-browser/runtime-stream-smoke.json",
+      "bytes": 171,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/browser-observations.json",
+      "bytes": 245679,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/source-inventory.md",
+      "bytes": 24238,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/audit.md",
+      "bytes": 31696,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/01-ui-unavailable.png",
+      "bytes": 151477,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/02-home.png",
+      "bytes": 557585,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/03-observe.png",
+      "bytes": 489659,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/04-assets.png",
+      "bytes": 431627,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/05-protect.png",
+      "bytes": 440295,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/06-validate.png",
+      "bytes": 640336,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/07-deploy.png",
+      "bytes": 546915,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/08-evidence.png",
+      "bytes": 449587,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/09-ai-tools-usage.png",
+      "bytes": 579649,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/10-usage-tabs.png",
+      "bytes": 604118,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/11-usage-connector-health.png",
+      "bytes": 604606,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/12-users.png",
+      "bytes": 527268,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/13-users-groups.png",
+      "bytes": 493815,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/14-ai-ecosystem.png",
+      "bytes": 665580,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/15-ecosystem-table.png",
+      "bytes": 494358,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/16-integrations.png",
+      "bytes": 444833,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/17-surface-coverage.png",
+      "bytes": 653076,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/18-github.png",
+      "bytes": 622059,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/19-github-lower.png",
+      "bytes": 565423,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/20-github-tabs.png",
+      "bytes": 444807,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/21-runtime-overview.png",
+      "bytes": 466547,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/22-activity-map.png",
+      "bytes": 464307,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/23-agent-flows.png",
+      "bytes": 429474,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/24-context-graph.png",
+      "bytes": 437449,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/25-patterns.png",
+      "bytes": 447480,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/26-recommendations.png",
+      "bytes": 458175,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/27-interaction-security.png",
+      "bytes": 449199,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/28-monitoring.png",
+      "bytes": 408070,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/29-estate.png",
+      "bytes": 523171,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/30-asset-inventory.png",
+      "bytes": 429521,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/31-ecosystems.png",
+      "bytes": 421246,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/32-unknown-ai.png",
+      "bytes": 435373,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/33-scans.png",
+      "bytes": 535864,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/34-ai-iam.png",
+      "bytes": 463986,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/35-findings.png",
+      "bytes": 315075,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/36-maturity.png",
+      "bytes": 341435,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/37-governance.png",
+      "bytes": 425269,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/38-policies.png",
+      "bytes": 455855,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/39-simulations.png",
+      "bytes": 453058,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/40-validation-coverage.png",
+      "bytes": 426432,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/41-auditor.png",
+      "bytes": 448501,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/42-conflicts.png",
+      "bytes": 379103,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/43-jobs.png",
+      "bytes": 295331,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/44-guided-demo.png",
+      "bytes": 556052,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/45-findings-list.png",
+      "bytes": 363095,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/46-discovery-overview.png",
+      "bytes": 471991,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/47-executive-summary.png",
+      "bytes": 465818,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/48-applications.png",
+      "bytes": 407432,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/49-trends.png",
+      "bytes": 411863,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/50-footprint.png",
+      "bytes": 462543,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/51-analytics.png",
+      "bytes": 434178,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/52-legacy-dashboard.png",
+      "bytes": 484470,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/53-shadow-ai.png",
+      "bytes": 424290,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/54-agent-approvals.png",
+      "bytes": 387621,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/55-auditor-challenges.png",
+      "bytes": 406204,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/56-findings-review.png",
+      "bytes": 394799,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/57-governance-approvals.png",
+      "bytes": 398981,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/58-policy-overrides.png",
+      "bytes": 395469,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/59-test-approvals.png",
+      "bytes": 404001,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/60-landing.png",
+      "bytes": 466046,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/61-login.png",
+      "bytes": 205543,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/62-identity-violations.png",
+      "bytes": 463155,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/63-policy-create.png",
+      "bytes": 337702,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-26-hawk-ui-ux/screenshots/64-policy-publish.png",
+      "bytes": 294526,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-30-github-agent-controls/before.jpg",
+      "bytes": 82629,
+      "disposition": "EXCLUDED_GENERATED_VISUAL_OR_EXPORT",
+      "reason": "Historical screenshot, slide/spreadsheet export, or inspection artifact. Retained in original; no code. No content read."
+    },
+    {
+      "path": "docs/audits/2026-09-30-github-agent-controls/acceptance-checklist.md",
+      "bytes": 2975,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/audits/2026-09-30-github-agent-controls/status.md",
+      "bytes": 11500,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "docs/native-controls/anthropic.md",
+      "bytes": 4265,
+      "sha256": "6545325d771c025f7150fa51dfd9bf9515a6bef7e27a1dbf284f9bd4c81dda2b",
+      "disposition": "PUBLISHED_REFERENCE_SOURCE",
+      "published_sha256": "6545325d771c025f7150fa51dfd9bf9515a6bef7e27a1dbf284f9bd4c81dda2b"
+    },
+    {
+      "path": "docs/native-controls/cursor.md",
+      "bytes": 5022,
+      "sha256": "8dd247120467adc126fb808808b7b8aa6635f9711591e87d5648bde958e6758c",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "4a0c573c4c14d67f3d1476175d6d66ec1d39cf392b8d65237222fc6490fe9df0"
+    },
+    {
+      "path": "docs/native-controls/openai.md",
+      "bytes": 1350,
+      "sha256": "abd120b1dcc3632c3eeb500c443741f9f050223174381d5d68a5ff34975784eb",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "4af8e856a718c0367560821d08c6183ca5b055d3a13b6baf5db54c068cada60f"
+    },
+    {
+      "path": "docs/native-controls/google.md",
+      "bytes": 2596,
+      "sha256": "4fb002635719339488f76cc5a4fe36b1bcb3a74286040ff5e8f7ae80a9dbda3f",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "27c45947a3dd9bf1429954de87422e80e2c2e420e689eba0b83d18ec6b7377c5"
+    },
+    {
+      "path": "docs/native-controls/aws.md",
+      "bytes": 3943,
+      "sha256": "6e92ff3d9ba905db1a38d08cc30e8c37a65e3181fbff9348619dca89c15b5e16",
+      "disposition": "PUBLISHED_REFERENCE_SOURCE",
+      "published_sha256": "6e92ff3d9ba905db1a38d08cc30e8c37a65e3181fbff9348619dca89c15b5e16"
+    },
+    {
+      "path": "docs/native-controls/microsoft.md",
+      "bytes": 1702,
+      "sha256": "a112a0daccaa6995cebde076c87d7df74026bf1760e6ad72c9e771d1dba1ab1d",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "a84a5b61589bf7651a8fd905222029b57753c14f7d1fd1033876981798e74497"
+    },
+    {
+      "path": "docs/native-controls/azure.md",
+      "bytes": 1533,
+      "sha256": "604a4178563ca950e2399d50a539e8a36f646e4d34971eb1857bef812d7ac69b",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "5cf7666377b0e6a69b2e2cc4ac5d5bbe6a898e8cd7b7628a9d5ed37236a466d8"
+    },
+    {
+      "path": "docs/native-controls/self-hosted-runtimes.md",
+      "bytes": 3239,
+      "sha256": "4edfffc689d17809f07324582f8434dd9447b14e8e2476572124f4f76af0dd54",
+      "disposition": "PUBLISHED_REFERENCE_SOURCE",
+      "published_sha256": "4edfffc689d17809f07324582f8434dd9447b14e8e2476572124f4f76af0dd54"
+    },
+    {
+      "path": "docs/native-controls/meta.md",
+      "bytes": 1044,
+      "sha256": "5ac2df99a11b77a7ecdb61997cffd282274c2dada29d4b5bf5fbf1da984e6cc8",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "c076e6a0b759a6ac1737a12e264f8b579164a897dae64901e36b4ccfc10a5ba8"
+    },
+    {
+      "path": "docs/native-controls/kimi.md",
+      "bytes": 951,
+      "sha256": "ca318c801c3abb44845a1138f4705b61715329687d934d84dbe295b960251503",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "82442569ae0a2e8a51465ce7999cced45c5f9bc796ee4b333be8adf1812d9db4"
+    },
+    {
+      "path": "docs/native-controls/qwen.md",
+      "bytes": 956,
+      "sha256": "91331649c675aa07f997adfde0f3f74022659c6ac257be3b68b269968287ab82",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "258738bbf6777215502dd6ff41ff0a6c3ab001cd7abd541a37a9f8ae4d09638a"
+    },
+    {
+      "path": "docs/native-controls/deepseek.md",
+      "bytes": 970,
+      "sha256": "44f66854ef3487e00b754ecd3ed1c0c91e863a51a68ce626ac5b9dd4f10c30f6",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "e44a27bf6358e42bf584c07cda13bd8b4ba1f073c0910620fb2db1cb4eb0e106"
+    },
+    {
+      "path": "docs/native-controls/anthropic-claude-code.md",
+      "bytes": 10740,
+      "sha256": "ea1acb61ad795995e1b91259f3b5a902d9b2c3f62681cffc3c4e271b4041a053",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "323ffd35a506173a6b449b7f2800e499df860f0f0e4f8d69a9174ecb6e4e7cee"
+    },
+    {
+      "path": "docs/native-controls/google-gemini-cli.md",
+      "bytes": 6956,
+      "sha256": "4ee4b1f5bf9d9dbdc8d893e3c1f7d2404107326c89b797fd39b88793e626651d",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "93d46792fac10f026ac949f4a48b608899ed0ec0b4ec437d54246335a1aea203"
+    },
+    {
+      "path": "docs/native-controls/openai-chatgpt-desktop.md",
+      "bytes": 12379,
+      "sha256": "6613d07cd1494c3d6ae787f0f28209cdaf41364f31c351118b9dde847ed14c0b",
+      "disposition": "RESTORED_REFERENCE_SOURCE",
+      "reason": "Operational/reference documentation. Screening flags reviewed as public configuration identifiers, official URL paths, published artifact hashes, placeholder credentials or explicitly synthetic canaries. No live credentials included; historical claims are not certified.",
+      "published_sha256": "1a7a1cca505d2cea6c12733b6b4121afe2e43275d77a6aa01ff92687dab4c800"
+    },
+    {
+      "path": "docs/native-controls/direct-cloud-provider-contracts.md",
+      "bytes": 2533,
+      "sha256": "54f066643b5e36bf071a37556e55a4b2c41a66e9fac138450a496cf2cd7b9e50",
+      "disposition": "PUBLISHED_REFERENCE_SOURCE",
+      "published_sha256": "54f066643b5e36bf071a37556e55a4b2c41a66e9fac138450a496cf2cd7b9e50"
+    },
+    {
+      "path": "security-audit-2026-07-16/report.md",
+      "bytes": 491112,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "security-audit-2026-07-16/scan-manifest.json",
+      "bytes": 63423,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "security-audit-2026-07-16/findings.json",
+      "bytes": 667159,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "security-audit-2026-07-16/coverage.json",
+      "bytes": 64437,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "security-audit-2026-07-16/exports/results.sarif",
+      "bytes": 432302,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "security-audit-2026-08-26-trinya/coverage.json",
+      "bytes": 5069,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "security-audit-2026-08-26-trinya/findings.json",
+      "bytes": 9567,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "security-audit-2026-08-26-trinya/threat-model.md",
+      "bytes": 4353,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "security-audit-2026-08-26-trinya/remediation-report.md",
+      "bytes": 2601,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "security-audit-2026-08-26-trinya/report.md",
+      "bytes": 3338,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    },
+    {
+      "path": "security-audit-2026-08-26-trinya/production-readiness-report.md",
+      "bytes": 14376,
+      "disposition": "PRESERVED_HISTORICAL_REPORT_NOT_PUBLISHED",
+      "reason": "Historical findings, working report, code dump or review evidence. Preserve locally; unreviewed operational/private context is not published."
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "client": "claude-code",
+  "client_version": "2.1.183",
+  "status": "blocked",
+  "release_ready": false,
+  "native_hook": {
+    "current_tenant_binding_verified": true,
+    "existing_secure_enclave_key_verified": true,
+    "signed_before_model_probe_accepted": true,
+    "private_configuration_and_settings_verified": true,
+    "mode": "DISCOVER",
+    "protected_claim": false
+  },
+  "diagnosis": {
+    "stale_enrollment_repaired": true,
+    "isolated_claude_authentication_cause": "missing_USER_environment_variable",
+    "controlled_read_only_authentication_contrast": {
+      "scrubbed_environment_logged_in": false,
+      "restoring_only_USER_logged_in": true,
+      "restoring_only_LOGNAME_logged_in": false,
+      "restoring_only_TMPDIR_logged_in": false
+    },
+    "authentication_secrets_copied": false
+  },
+  "final_live_attempt": {
+    "runner_exit_code": 2,
+    "reason": "claude_run_1_hawk_lab_unknown_child_1",
+    "first_allow": {
+      "passed_runner_checks": true,
+      "correlated_hawk_evidence_checked": true,
+      "child_call_count": 1
+    },
+    "after_api_restart": {
+      "client_connection_status": "unknown",
+      "accepted": false,
+      "child_call_count": 1
+    },
+    "revocation": {
+      "attempted": false,
+      "accepted": false
+    },
+    "complete_three_phase_report": false,
+    "disposable_lab_cleaned_up": true,
+    "first_phase_evidence_ids_exported": false
+  },
+  "targeted_tests": {
+    "command": "python3 -m pytest infra/tests/test_isolated_control_acceptance.py -k 'claude_' -q",
+    "passed": 9,
+    "deselected": 51
+  },
+  "isolated_dependency": {
+    "redis_version": "7.4.6",
+    "source_archive_sha256": "73b94484e00fb4c2440b490dc4021142fb0b6efc8b64c6329c10d24f0b531c99",
+    "system_install_performed": false
+  },
+  "demo_readiness_after_checks": true,
+  "final_review": "scoped_changes_approved_acceptance_blocked"
+}

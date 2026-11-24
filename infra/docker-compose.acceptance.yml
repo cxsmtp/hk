@@ -1,0 +1,43 @@
+# Run with a fresh explicit project name; no native ports, bind mounts or data.
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: hawk_collaboration_test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d hawk_collaboration_test"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - test-db:/var/lib/postgresql/data
+  redis:
+    image: redis:7
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+  api:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.api
+      target: test
+    environment:
+      HAWK_DISPOSABLE_TEST_ENV: "1"
+      DATABASE_URL: "postgresql+psycopg2://postgres:postgres@db:5432/hawk_collaboration_test"
+      REDIS_URL: "redis://redis:6379/0"
+      RUNNER_TEMP: /test-results
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["python", "/workspace/tools/collaboration/run_api_integration.py"]
+    volumes:
+      - test-results:/test-results
+volumes:
+  test-db:
+  test-results:

@@ -1,0 +1,126 @@
+{
+  "schema_version": "hmair-h6-enterprise-scenarios/1",
+  "description": "Synthetic metadata-only acceptance scenarios. They are not customer observations or deployment evidence.",
+  "scenarios": [
+    {
+      "id": "cursor-endpoint",
+      "source": "endpoint",
+      "asset_type": "ide",
+      "expected_truth": "observed",
+      "confidence": "high",
+      "evidence_mode": "metadata_only",
+      "limitations": ["No source file or prompt content is collected.", "Installed software alone does not prove active use."],
+      "forbidden_content": ["raw_prompt", "credential", "source_file", "database_record"]
+    },
+    {
+      "id": "claude-code-mcp",
+      "source": "endpoint+mcp_gateway",
+      "asset_type": "cli",
+      "expected_truth": "confirmed",
+      "confidence": "high",
+      "evidence_mode": "metadata_only",
+      "limitations": ["Tool identity and action class are visible; tool arguments remain excluded.", "Configured tools are distinct from observed calls."],
+      "forbidden_content": ["raw_prompt", "credential", "source_file", "database_record"]
+    },
+    {
+      "id": "azure-foundry-agent",
+      "source": "azure_control_plane",
+      "asset_type": "agent",
+      "expected_truth": "observed",
+      "confidence": "high",
+      "evidence_mode": "metadata_only",
+      "limitations": ["Requires a customer-owned read-only Azure connection.", "Control-plane inventory does not prove runtime action coverage."],
+      "forbidden_content": ["raw_prompt", "credential", "source_file", "database_record"]
+    },
+    {
+      "id": "internal-langgraph-app",
+      "source": "runtime",
+      "asset_type": "agent_framework",
+      "expected_truth": "correlated",
+      "confidence": "medium",
+      "evidence_mode": "metadata_only",
+      "limitations": ["Framework metadata requires runtime evidence for observed-use promotion.", "Unobserved reachability remains configured or unknown."],
+      "forbidden_content": ["raw_prompt", "credential", "source_file", "database_record"]
+    },
+    {
+      "id": "direct-openai-api-script",
+      "source": "api_gateway",
+      "asset_type": "api",
+      "expected_truth": "observed",
+      "confidence": "medium",
+      "evidence_mode": "metadata_only",
+      "limitations": ["Provider destination and calling identity are hashed.", "Direct traffic outside connected gateways remains a blind spot."],
+      "forbidden_content": ["raw_prompt", "credential", "source_file", "database_record"]
+    },
+    {
+      "id": "microsoft-365-copilot",
+      "source": "microsoft_graph",
+      "asset_type": "ai_saas",
+      "expected_truth": "observed",
+      "confidence": "high",
+      "evidence_mode": "metadata_only",
+      "limitations": ["Requires tenant-admin consent and supported audit licensing.", "Audit availability and delay vary by customer tenant."],
+      "forbidden_content": ["raw_prompt", "credential", "source_file", "database_record"]
+    },
+    {
+      "id": "github-copilot",
+      "source": "github_organization",
+      "asset_type": "ide",
+      "expected_truth": "observed",
+      "confidence": "high",
+      "evidence_mode": "metadata_only",
+      "limitations": ["Requires a customer-owned GitHub organization installation.", "License assignment and code-action evidence remain distinct."],
+      "forbidden_content": ["raw_prompt", "credential", "source_file", "database_record"]
+    },
+    {
+      "id": "pgvector-rag",
+      "source": "database_catalog+runtime",
+      "asset_type": "vector_database",
+      "expected_truth": "correlated",
+      "confidence": "medium",
+      "evidence_mode": "metadata_only",
+      "limitations": ["Only schema and extension metadata are collected.", "Raw rows, embeddings, prompts, and retrieved content remain excluded."],
+      "forbidden_content": ["raw_prompt", "credential", "source_file", "database_record"]
+    },
+    {
+      "id": "personal-chatgpt",
+      "source": "managed_browser",
+      "asset_type": "ai_saas",
+      "expected_truth": "observed",
+      "confidence": "medium",
+      "evidence_mode": "metadata_only",
+      "limitations": ["Account class requires corroborated managed-browser evidence.", "Cookies, history, page content, and raw prompts remain excluded."],
+      "forbidden_content": ["raw_prompt", "credential", "source_file", "database_record"]
+    },
+    {
+      "id": "unprotected-mcp",
+      "source": "mcp_gateway",
+      "asset_type": "mcp_server",
+      "expected_truth": "observed",
+      "confidence": "high",
+      "evidence_mode": "metadata_only",
+      "limitations": ["Unknown or unprotected is not equivalent to malicious.", "Completeness is limited to connected runtime and gateway paths."],
+      "forbidden_content": ["raw_prompt", "credential", "source_file", "database_record"]
+    },
+    {
+      "id": "dormant-ai-service",
+      "source": "cloud_control_plane",
+      "asset_type": "model_endpoint",
+      "expected_truth": "confirmed",
+      "confidence": "high",
+      "evidence_mode": "metadata_only",
+      "limitations": ["Configured service is not active usage.", "No-usage evidence depends on a complete current telemetry window."],
+      "forbidden_content": ["raw_prompt", "credential", "source_file", "database_record"]
+    },
+    {
+      "id": "active-ai-owner-unknown",
+      "source": "runtime+identity",
+      "asset_type": "runtime",
+      "expected_truth": "observed",
+      "confidence": "medium",
+      "evidence_mode": "metadata_only",
+      "limitations": ["Observed activity does not establish accountable ownership.", "Owner remains unknown until an authorized assertion is recorded."],
+      "forbidden_content": ["raw_prompt", "credential", "source_file", "database_record"]
+    }
+  ]
+}

@@ -1,0 +1,176 @@
+{
+  "catalog_id": "hawk-ai-exposure-categories",
+  "version": "1.1.0",
+  "categories": [
+    {
+      "category_id": "coding_exposure",
+      "label": "Coding Exposure",
+      "version": "1.0.0",
+      "description": "Code, repository and filesystem capabilities available to an AI ecosystem.",
+      "qualifying_capabilities": ["code_execution", "filesystem_read", "filesystem_write"],
+      "required_dimensions": ["capability", "reachability", "permission", "identity", "governance", "control_coverage"],
+      "optional_dimensions": ["usage", "data", "runtime", "provider", "model", "ai_action"],
+      "recommendation_capabilities": ["runtime_governance", "approval", "filesystem_restriction"]
+    },
+    {
+      "category_id": "research_exposure",
+      "label": "Research Exposure",
+      "version": "1.0.0",
+      "description": "External research, browsing and information-retrieval capability.",
+      "qualifying_capabilities": ["browser_automation", "external_data_retrieval", "internet_access", "knowledge_retrieval", "web_search"],
+      "required_dimensions": ["capability", "reachability", "identity", "governance", "control_coverage"],
+      "optional_dimensions": ["permission", "usage", "data", "provider", "model", "ai_action"],
+      "recommendation_capabilities": ["browser_governance", "control_coverage"]
+    },
+    {
+      "category_id": "customer_data_exposure",
+      "label": "Customer Data Exposure",
+      "version": "1.0.0",
+      "description": "AI capability that can access customer or personal data.",
+      "qualifying_capabilities": ["crm_access", "customer_data_access", "pii_access"],
+      "required_dimensions": ["capability", "data", "reachability", "permission", "identity", "governance", "control_coverage"],
+      "optional_dimensions": ["usage", "runtime", "provider", "model", "ai_action"],
+      "recommendation_capabilities": ["approval", "identity_review", "control_coverage"]
+    },
+    {
+      "category_id": "financial_exposure",
+      "label": "Financial Exposure",
+      "version": "1.0.0",
+      "description": "AI capability that can access financial data or cause financial actions.",
+      "qualifying_capabilities": ["financial_data_access", "payment_access", "trade_execution"],
+      "required_dimensions": ["capability", "reachability", "permission", "identity", "governance", "control_coverage"],
+      "optional_dimensions": ["data", "usage", "runtime", "provider", "model", "ai_action"],
+      "recommendation_capabilities": ["approval", "identity_review", "runtime_governance"]
+    },
+    {
+      "category_id": "cloud_exposure",
+      "label": "Cloud Exposure",
+      "version": "1.0.0",
+      "description": "AI capability that can inspect or mutate cloud resources.",
+      "qualifying_capabilities": ["cloud_admin", "cloud_api", "resource_mutation"],
+      "required_dimensions": ["capability", "reachability", "permission", "identity", "governance", "control_coverage"],
+      "optional_dimensions": ["usage", "runtime", "provider", "ai_action"],
+      "recommendation_capabilities": ["approval", "identity_review", "runtime_governance"]
+    },
+    {
+      "category_id": "identity_exposure",
+      "label": "Identity Exposure",
+      "version": "1.0.0",
+      "description": "AI capability that can use, delegate or administer identities.",
+      "qualifying_capabilities": ["credential_access", "delegation", "identity_change"],
+      "required_dimensions": ["capability", "identity", "permission", "reachability", "governance", "control_coverage"],
+      "optional_dimensions": ["usage", "runtime", "ai_action"],
+      "recommendation_capabilities": ["identity_review", "personal_account_removal", "approval"]
+    },
+    {
+      "category_id": "database_exposure",
+      "label": "Database Exposure",
+      "version": "1.0.0",
+      "description": "AI capability that can query, read or change database resources.",
+      "qualifying_capabilities": ["database_read", "database_write", "query_execution"],
+      "required_dimensions": ["capability", "reachability", "permission", "identity", "governance", "control_coverage"],
+      "optional_dimensions": ["data", "usage", "runtime", "ai_action"],
+      "recommendation_capabilities": ["approval", "identity_review", "runtime_governance"]
+    },
+    {
+      "category_id": "secrets_exposure",
+      "label": "Secrets Exposure",
+      "version": "1.0.0",
+      "description": "AI capability that can access credentials, secrets or tokens.",
+      "qualifying_capabilities": ["credential_access", "secret_access", "token_access"],
+      "required_dimensions": ["capability", "data", "reachability", "permission", "identity", "governance", "control_coverage"],
+      "optional_dimensions": ["usage", "runtime", "ai_action"],
+      "recommendation_capabilities": ["filesystem_restriction", "identity_review", "approval"]
+    },
+    {
+      "category_id": "mcp_exposure",
+      "label": "MCP Exposure",
+      "version": "1.0.0",
+      "description": "MCP clients, servers and tool invocations reachable by AI.",
+      "qualifying_capabilities": ["mcp_client", "mcp_server", "mcp_tool_invocation"],
+      "required_dimensions": ["capability", "reachability", "permission", "identity", "governance", "control_coverage"],
+      "optional_dimensions": ["usage", "runtime", "provider", "ai_action"],
+      "recommendation_capabilities": ["mcp_restriction", "approval", "control_coverage"]
+    },
+    {
+      "category_id": "model_exposure",
+      "label": "Model Exposure",
+      "version": "1.0.0",
+      "description": "Model invocation, hosting or configuration exposed to an AI ecosystem.",
+      "qualifying_capabilities": ["inference", "model_configuration", "model_hosting", "model_inference"],
+      "required_dimensions": ["capability", "model", "reachability", "identity", "governance", "control_coverage"],
+      "optional_dimensions": ["permission", "usage", "runtime", "provider", "data", "ai_action"],
+      "recommendation_capabilities": ["runtime_governance", "identity_review", "control_coverage"]
+    },
+    {
+      "category_id": "runtime_exposure",
+      "label": "Runtime Exposure",
+      "version": "1.0.0",
+      "description": "AI agent, code or local-model execution capability.",
+      "qualifying_capabilities": ["agent_execution", "local_model_connection", "process_execution"],
+      "required_dimensions": ["capability", "runtime", "reachability", "permission", "identity", "governance", "control_coverage"],
+      "optional_dimensions": ["usage", "provider", "model", "ai_action"],
+      "recommendation_capabilities": ["runtime_governance", "sandbox", "approval"]
+    },
+    {
+      "category_id": "external_ai_exposure",
+      "label": "External AI Exposure",
+      "version": "1.0.0",
+      "description": "Reachable external AI services or provider APIs.",
+      "qualifying_capabilities": ["external_ai_access", "provider_api_access"],
+      "required_dimensions": ["capability", "provider", "reachability", "identity", "governance", "control_coverage"],
+      "optional_dimensions": ["permission", "usage", "data", "model", "ai_action"],
+      "recommendation_capabilities": ["browser_governance", "runtime_governance", "control_coverage"]
+    },
+    {
+      "category_id": "shadow_ai_exposure",
+      "label": "Shadow AI Exposure",
+      "version": "1.0.0",
+      "description": "Observed AI usage without verified enterprise governance.",
+      "qualifying_capabilities": ["unmanaged_ai_access", "unknown_ai_usage"],
+      "required_dimensions": ["capability", "reachability", "identity", "governance", "control_coverage"],
+      "optional_dimensions": ["permission", "usage", "data", "runtime", "provider", "model", "ai_action"],
+      "recommendation_capabilities": ["owner_assignment", "personal_account_removal", "control_coverage"]
+    },
+    {
+      "category_id": "developer_exposure",
+      "label": "Developer Exposure",
+      "version": "1.0.0",
+      "description": "Repository, code execution and developer-tooling access.",
+      "qualifying_capabilities": ["code_execution", "developer_tooling", "repository_access"],
+      "required_dimensions": ["capability", "reachability", "permission", "identity", "governance", "control_coverage"],
+      "optional_dimensions": ["usage", "data", "runtime", "provider", "ai_action"],
+      "recommendation_capabilities": ["runtime_governance", "sandbox", "approval"]
+    },
+    {
+      "category_id": "workflow_exposure",
+      "label": "Workflow Exposure",
+      "version": "1.0.0",
+      "description": "Automated workflows capable of invoking systems or creating side effects.",
+      "qualifying_capabilities": ["external_side_effect", "persistent_automation"],
+      "required_dimensions": ["capability", "reachability", "permission", "identity", "governance", "control_coverage"],
+      "optional_dimensions": ["usage", "data", "runtime", "provider", "ai_action"],
+      "recommendation_capabilities": ["approval", "runtime_governance", "control_coverage"]
+    },
+    {
+      "category_id": "persistent_side_effect_exposure",
+      "label": "Persistent Side-Effect Exposure",
+      "version": "1.0.0",
+      "description": "AI capability that can create a persistent file, process or external consequence.",
+      "qualifying_capabilities": ["external_side_effect", "filesystem_write", "persistent_side_effect", "process_execution"],
+      "required_dimensions": ["capability", "reachability", "permission", "identity", "governance", "control_coverage"],
+      "optional_dimensions": ["usage", "data", "runtime", "provider", "ai_action"],
+      "recommendation_capabilities": ["approval", "filesystem_restriction", "sandbox"]
+    },
+    {
+      "category_id": "unknown_exposure",
+      "label": "Unknown Exposure",
+      "version": "1.0.0",
+      "description": "Signals exist but current evidence cannot resolve an exposure category.",
+      "qualifying_capabilities": [],
+      "required_dimensions": ["capability", "reachability", "identity", "governance", "control_coverage"],
+      "optional_dimensions": ["permission", "usage", "data", "runtime", "provider", "model", "ai_action"],
+      "recommendation_capabilities": ["owner_assignment", "control_coverage"]
+    }
+  ]
+}

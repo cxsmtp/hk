@@ -1,0 +1,255 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+API_BASE_URL="${API_BASE_URL:-http://127.0.0.1:8000}"
+ADMIN_EMAIL="${ADMIN_EMAIL:-owner@acme.ai}"
+ADMIN_PASSWORD="${ADMIN_PASSWORD:-Password123!}"
+ALLOW_REGISTER="${ALLOW_REGISTER:-true}"
+
+PASS_COUNT=0
+FAIL_COUNT=0
+
+log_pass() {
+  PASS_COUNT=$((PASS_COUNT + 1))
+  printf "PASS  %s\n" "$1"
+}
+
+log_fail() {
+  FAIL_COUNT=$((FAIL_COUNT + 1))
+  printf "FAIL  %s\n" "$1"
+}
+
+request() {
+  local method="$1"
+  local path="$2"
+  local body="${3:-}"
+  local token="${4:-}"
+  local tenant="${5:-}"
+  local tmp
+  tmp="$(mktemp)"
+  local code
+  if [[ -n "$body" ]]; then
+    if [[ -n "$token" ]]; then
+      code="$(curl -sS -o "$tmp" -w "%{http_code}" -X "$method" \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer $token" \
+        -H "X-Tenant-ID: $tenant" \
+        "$API_BASE_URL$path" \
+        -d "$body")"
+    else
+      code="$(curl -sS -o "$tmp" -w "%{http_code}" -X "$method" \
+        -H "Content-Type: application/json" \
+        "$API_BASE_URL$path" \
+        -d "$body")"
+    fi
+  else
+    if [[ -n "$token" ]]; then
+      code="$(curl -sS -o "$tmp" -w "%{http_code}" -X "$method" \
+        -H "Authorization: Bearer $token" \
+        -H "X-Tenant-ID: $tenant" \
+        "$API_BASE_URL$path")"
+    else
+      code="$(curl -sS -o "$tmp" -w "%{http_code}" -X "$method" "$API_BASE_URL$path")"
+    fi
+  fi
+  printf "%s %s\n" "$code" "$tmp"
+}
+
+read_json_field() {
+  local file="$1"
+  local expr="$2"
+  python3 - "$file" "$expr" <<'PY'
+import json
+import sys
+path = sys.argv[1]
+expr = sys.argv[2]
+with open(path, "r", encoding="utf-8") as fh:
+    payload = json.load(fh)
+
+value = payload
+for token in expr.split("."):
+    if not token:
+        continue
+    if isinstance(value, dict):
+        value = value.get(token)
+    else:
+        value = None
+        break
+
+if value is None:
+    print("")
+elif isinstance(value, (dict, list)):
+    print(json.dumps(value))
+else:
+    print(str(value))
+PY
+}
+
+cleanup_tmp() {
+  local file="$1"
+  [[ -f "$file" ]] && rm -f "$file"
+}
+
+printf "Running Hawk pilot smoke test against %s\n" "$API_BASE_URL"
+
+read -r code file < <(request "GET" "/health")
+if [[ "$code" == "200" ]]; then
+  schema_healthy="$(read_json_field "$file" "schema_healthy")"
+  if [[ "$schema_healthy" == "True" || "$schema_healthy" == "true" ]]; then
+    log_pass "API health and schema_healthy=true"
+  else
+    log_fail "API health returned 200 but schema_healthy was not true"
+  fi
+else
+  log_fail "GET /health returned HTTP $code"
+fi
+cleanup_tmp "$file"
+
+read -r code file < <(request "GET" "/health/schema")
+if [[ "$code" == "200" ]]; then
+  log_pass "Schema health endpoint reachable"
+else
+  log_fail "GET /health/schema returned HTTP $code"
+fi
+cleanup_tmp "$file"
+
+login_payload="$(printf '{"email":"%s","password":"%s"}' "$ADMIN_EMAIL" "$ADMIN_PASSWORD")"
+read -r code file < <(request "POST" "/auth/login" "$login_payload")
+if [[ "$code" != "200" && "$ALLOW_REGISTER" == "true" ]]; then
+  register_payload="$(printf '{"email":"%s","password":"%s","full_name":"Pilot Admin"}' "$ADMIN_EMAIL" "$ADMIN_PASSWORD")"
+  read -r reg_code reg_file < <(request "POST" "/auth/register" "$register_payload")
+  if [[ "$reg_code" == "200" ]]; then
+    cleanup_tmp "$file"
+    read -r code file < <(request "POST" "/auth/login" "$login_payload")
+  else
+    log_fail "Auth register failed with HTTP $reg_code"
+  fi
+  cleanup_tmp "$reg_file"
+fi
+
+if [[ "$code" == "200" ]]; then
+  ACCESS_TOKEN="$(read_json_field "$file" "access_token")"
+  TENANT_ID="$(python3 - "$file" <<'PY'
+import json, sys
+with open(sys.argv[1], "r", encoding="utf-8") as fh:
+    payload = json.load(fh)
+tenants = payload.get("tenants") or []
+print((tenants[0].get("id") if tenants else ""))
+PY
+)"
+  if [[ -n "${ACCESS_TOKEN:-}" && -n "${TENANT_ID:-}" ]]; then
+    log_pass "Admin login successful"
+  else
+    log_fail "Admin login response missing token or tenant"
+  fi
+else
+  log_fail "Admin login failed with HTTP $code"
+fi
+cleanup_tmp "$file"
+
+if [[ -z "${ACCESS_TOKEN:-}" || -z "${TENANT_ID:-}" ]]; then
+  printf "\nSmoke test halted: missing auth context.\n"
+  exit 1
+fi
+
+read -r code file < <(request "GET" "/extension/policy-sync" "" "$ACCESS_TOKEN" "$TENANT_ID")
+if [[ "$code" == "200" ]]; then
+  log_pass "Extension policy sync API reachable"
+else
+  log_fail "GET /extension/policy-sync failed with HTTP $code"
+fi
+cleanup_tmp "$file"
+
+read -r code file < <(request "GET" "/dashboard/pilot-health" "" "$ACCESS_TOKEN" "$TENANT_ID")
+if [[ "$code" == "200" ]]; then
+  pilot_overall="$(read_json_field "$file" "overall_status")"
+  schema_healthy="$(read_json_field "$file" "schema_health.healthy")"
+  policy_sync_status="$(read_json_field "$file" "policy_sync_health.status")"
+  telemetry_status="$(read_json_field "$file" "telemetry_health.status")"
+  if [[ "$schema_healthy" == "True" || "$schema_healthy" == "true" ]]; then
+    log_pass "Pilot health schema status is healthy"
+  else
+    log_fail "Pilot health schema status is not healthy (got healthy=$schema_healthy)"
+  fi
+  if [[ "$policy_sync_status" == "ok" || "$policy_sync_status" == "stale" ]]; then
+    log_pass "Pilot health policy sync status is acceptable ($policy_sync_status)"
+  else
+    log_fail "Pilot health policy sync status is degraded (got: $policy_sync_status)"
+  fi
+  if [[ "$telemetry_status" == "ok" || "$telemetry_status" == "stale" ]]; then
+    log_pass "Pilot health telemetry status is acceptable ($telemetry_status)"
+  else
+    log_fail "Pilot health telemetry status is degraded (got: $telemetry_status)"
+  fi
+  if [[ "$pilot_overall" == "ok" || "$pilot_overall" == "degraded" ]]; then
+    log_pass "Pilot health endpoint returned overall status ($pilot_overall)"
+  else
+    log_fail "Pilot health endpoint returned unexpected overall status ($pilot_overall)"
+  fi
+else
+  log_fail "GET /dashboard/pilot-health failed with HTTP $code"
+fi
+cleanup_tmp "$file"
+
+telemetry_open='{"browser":"chrome","event_type":"ai_app_opened","domain":"chat.openai.com","url":"https://chat.openai.com","page_title":"ChatGPT","action_taken":"opened","input_signal_types":["app_open"]}'
+read -r code file < <(request "POST" "/telemetry/browser" "$telemetry_open" "$ACCESS_TOKEN" "$TENANT_ID")
+if [[ "$code" == "200" ]]; then
+  log_pass "Telemetry ingest (ai_app_opened) succeeded"
+else
+  log_fail "Telemetry ingest (ai_app_opened) failed with HTTP $code"
+fi
+cleanup_tmp "$file"
+
+telemetry_block='{"browser":"chrome","event_type":"prompt_blocked","domain":"chat.openai.com","url":"https://chat.openai.com","page_title":"ChatGPT","action_taken":"block","prompt_preview_redacted":"OPENAI_API_KEY=sk-test-example","input_signal_types":["secret_pattern_detected","api_key_pattern"],"severity":"critical"}'
+read -r code file < <(request "POST" "/telemetry/browser" "$telemetry_block" "$ACCESS_TOKEN" "$TENANT_ID")
+BLOCK_FINDING_ID=""
+if [[ "$code" == "200" ]]; then
+  BLOCK_FINDING_ID="$(read_json_field "$file" "finding_id")"
+  log_pass "Telemetry ingest (fake secret block) succeeded"
+else
+  log_fail "Telemetry ingest (fake secret block) failed with HTTP $code"
+fi
+cleanup_tmp "$file"
+
+read -r code file < <(request "GET" "/findings?page=1&page_size=30" "" "$ACCESS_TOKEN" "$TENANT_ID")
+if [[ "$code" == "200" ]]; then
+  has_browser_finding="$(python3 - "$file" "$BLOCK_FINDING_ID" <<'PY'
+import json, sys
+with open(sys.argv[1], "r", encoding="utf-8") as fh:
+    payload = json.load(fh)
+target = (sys.argv[2] or "").strip()
+items = payload.get("items") or []
+ok = False
+for item in items:
+    row_id = str(item.get("id") or item.get("finding_id") or "").strip()
+    if target and row_id == target:
+        ok = True
+        break
+    if str(item.get("source_surface", "")).lower() == "browser":
+        ok = True
+        break
+print("true" if ok else "false")
+PY
+)"
+  if [[ "$has_browser_finding" == "true" ]]; then
+    log_pass "Findings list includes browser-linked finding"
+  else
+    log_fail "Findings list missing browser-linked finding"
+  fi
+else
+  log_fail "GET /findings failed with HTTP $code"
+fi
+cleanup_tmp "$file"
+
+read -r code file < <(request "GET" "/dashboard/command-center?time_window_hours=24" "" "$ACCESS_TOKEN" "$TENANT_ID")
+if [[ "$code" == "200" ]]; then
+  log_pass "Command Center API rendered"
+else
+  log_fail "Command Center API failed with HTTP $code"
+fi
+cleanup_tmp "$file"
+
+printf "\nPilot smoke test complete: %d passed, %d failed\n" "$PASS_COUNT" "$FAIL_COUNT"
+if [[ "$FAIL_COUNT" -gt 0 ]]; then
+  exit 1
+fi

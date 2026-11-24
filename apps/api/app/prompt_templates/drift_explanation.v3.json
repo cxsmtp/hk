@@ -1,0 +1,13 @@
+{
+  "template_id": "hawk.drift_explanation",
+  "version": "v3",
+  "task_type": "drift_explanation",
+  "description": "Summarize control drift and corrective path.",
+  "allowed_data_types": ["public", "internal", "sensitive"],
+  "risk_level": "medium",
+  "approved_for_providers": ["claude", "gpt", "gemini", "llama"],
+  "template_text": "Summarize drift source and suggest deterministic corrective path linked to control_id and evidence.",
+  "expected_output_schema": "RemediationGuidance",
+  "status": "active",
+  "last_updated": "2026-04-03"
+}

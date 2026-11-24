@@ -1,0 +1,8 @@
+# Bounded live-recovery image.  The base image already carries the H2 browser
+# and privacy corrections; this layer supplies the tested monitoring loop guard
+# to every process that imports the API package (API, worker, and scheduler).
+FROM hawk-api-demo-unknown-ai:v9
+
+USER root
+COPY --chown=1000:1000 apps/api/app/services/monitoring_service.py /workspace/apps/api/app/services/monitoring_service.py
+USER 1000

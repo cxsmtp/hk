@@ -1,0 +1,57 @@
+{
+  "verification": {
+    "classification": "synthetic_installed_hook_connection_check",
+    "real_client_acceptance": false,
+    "actual_tool_executed": false,
+    "model_called": false,
+    "activation_not_performed": true,
+    "production_eligible": false,
+    "release_manifest_sha256": "40280c410892c8941c64fa48e182e0bc1c19a8c6274b34470f93222768a0f067",
+    "positive": {
+      "status": "passed",
+      "signed_callback_authenticated": true,
+      "evidence_id": "15110835-9010-444b-9c89-b328ac256dbe",
+      "event_hash_matched": true,
+      "hook_decision": "allow",
+      "enforced": false,
+      "control_mode": "telemetry_only"
+    },
+    "negative": [
+      {
+        "case": "missing_key",
+        "status": "passed",
+        "hook_decision": "deny",
+        "diagnostic": "Hawk native control failed closed:DeviceKeyError:device_key_operation_failed"
+      },
+      {
+        "case": "unavailable_api",
+        "status": "passed",
+        "hook_decision": "deny",
+        "diagnostic": "Hawk native control failed closed:RuntimeError"
+      }
+    ],
+    "installed_files_unchanged": true,
+    "status": "passed"
+  },
+  "installation": {
+    "bank_config_unchanged": true,
+    "codex_settings_unchanged": true,
+    "managed_hook_definitions": 12,
+    "unrelated_hooks_preserved": true,
+    "activation_not_performed": true,
+    "expires_at": "2026-10-02T07:29:15.260856+00:00"
+  },
+  "package": {
+    "files": 122,
+    "manifest_sha256": "40280c410892c8941c64fa48e182e0bc1c19a8c6274b34470f93222768a0f067",
+    "operator_sha256": "e5051a375fbc43ab546b98af31df30b6eb1408afdb9e812feb85a649a1b66991",
+    "staging_script_sha256": "a7e8546af47c0aa1551ef4a69539131081fc981b59028e1de2c5e6bb8c8e6af1",
+    "installed": true
+  },
+  "focused_tests": {
+    "signing_source": 76,
+    "local_operator": 49,
+    "operator_correction_subset": 9,
+    "correction_subset_included_in_operator_total": true
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "simulation_catalog_summary": {
+    "total_simulations": 240,
+    "executable_now_count": 123,
+    "partially_executable_count": 85,
+    "not_yet_executable_count": 32,
+    "coverage_by_category": {
+      "ai_identity_access_abuse": 35,
+      "data_leakage_inference": 40,
+      "model_supply_chain_integrity": 20,
+      "overreliance_unsafe_decisioning": 20,
+      "prompt_instruction_attacks": 40,
+      "resource_abuse_cost_exploitation": 20,
+      "tool_agent_abuse": 35,
+      "training_rag_poisoning": 30
+    },
+    "coverage_by_framework": {
+      "CSA AI Controls": 56,
+      "EU AI Act": 60,
+      "Google SAIF": 56,
+      "ISO / IEC 42001": 58,
+      "MITRE ATLAS": 61,
+      "Microsoft Responsible AI Standard": 57,
+      "NIST AI RMF": 56,
+      "OWASP GenAI Top 10": 61,
+      "OWASP Top 10 for Agentic Applications": 59,
+      "OWASP Top 10 for LLM Applications": 61
+    },
+    "coverage_by_control": {
+      "AGENT_ACTION_AUTHORIZATION": 35,
+      "AI_IDENTITY_BINDING": 35,
+      "CONTEXT_BOUNDARY_PROTECTION": 74,
+      "COST_GUARDRAIL": 20,
+      "DATA_EXFILTRATION_PREVENTION": 40,
+      "HUMAN_IN_THE_LOOP_ENFORCEMENT": 36,
+      "MODEL_ACCESS_CONTROL": 20,
+      "MODEL_VERSION_CONTROL": 20,
+      "POLICY_ENFORCEMENT_CONTROL": 92,
+      "PRIVILEGE_DRIFT_DETECTION": 35,
+      "PROMPT_INJECTION_DETECTION": 40,
+      "RAG_POISONING_DETECTION": 30,
+      "RESOURCE_THROTTLING": 20,
+      "TOOL_CALL_VALIDATION": 35
+    }
+  }
+}

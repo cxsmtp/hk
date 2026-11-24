@@ -1,0 +1,13 @@
+HAWK SYNTHETIC DEMO DATA — NOT A REAL PERSON OR ACCOUNT
+
+Classification: CONFIDENTIAL_DEMO
+Customer: DEMO_CUSTOMER_001
+Email: demo.customer@example.invalid
+US SSN test value: 000-00-0000
+UAE Emirates ID test value: 784-1999-0000000-0
+Invoice: DEMO-INV-0001
+Amount: AED 999.00
+API key marker: sk-demo-FAKE-NOT-A-SECRET-1234567890
+
+These values are deliberately synthetic and invalid. They exist only to trigger
+Hawk classification and policy paths without exposing real information.

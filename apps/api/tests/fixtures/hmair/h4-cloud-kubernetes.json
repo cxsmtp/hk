@@ -1,0 +1,8 @@
+{
+  "profiles": [
+    {"profile_id": "azure_managed_ai", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "aws_managed_ai", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "gcp_managed_ai", "evidence_mode": "metadata_only", "expected_state": "configured"},
+    {"profile_id": "kubernetes_ai_workloads", "evidence_mode": "metadata_only", "expected_state": "configured"}
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "adapter_version": "1.0.0",
+  "binary_sha256": "4f85982624b3898c8991cb80c0981b2aa71070e3537046c9a95950318a95afcc",
+  "classification": "real_binary_isolated_hardware_signed_callback_acceptance",
+  "evidence_timestamp": "2026-10-05T19:35:25.362913+00:00",
+  "platform": "macos-arm64",
+  "product": "codex",
+  "provider": "openai",
+  "provider_version": "0.154.0",
+  "result": {
+    "actual_binary_executed": true,
+    "allow_callback_observed": true,
+    "allow_signature_verified": true,
+    "binary_hash_verified": true,
+    "block_signature_verified": true,
+    "diagnostic": "passed",
+    "exact_version_verified": true,
+    "hardware_backed_key": true,
+    "hardware_key_provider": "macos_secure_enclave",
+    "hook_installation_observed": true,
+    "isolated_hook_trust_bypass": true,
+    "key_thumbprint": "993b5a51e8d7309f7dac9f74d321e30a3b9a68dea742c27ad7de3e68656b6da6",
+    "measured_callback_p95_ms": 54.401,
+    "model_request_observed": false,
+    "model_transport_isolated": true,
+    "passed": true,
+    "prompt_blocked_before_model": true,
+    "prompt_hook_observed": true,
+    "raw_prompt_exported": false,
+    "return_code": 0,
+    "signature_algorithm": "ES256",
+    "tested_events": [
+      "session_start",
+      "before_model"
+    ],
+    "total_acceptance_runtime_ms": 2264.035,
+    "version_command_succeeded": true
+  },
+  "schema_version": "hawk.codex.acceptance-result/1.0",
+  "scope": {
+    "limitations": [
+      "The callback verifier is isolated and is not the tenant Hawk API.",
+      "Only SessionStart allow progression and UserPromptSubmit block-before-model are verified.",
+      "Tool, approval, post-execution, hosted, cloud, and remote runtime paths remain unverified.",
+      "The isolated run bypasses Codex workspace hook trust; tenant configuration integrity remains mandatory."
+    ],
+    "live_backend_signature_verified": false,
+    "provider_adapter_contract_verified": true,
+    "synthetic_fixture": false,
+    "tenant_deployment_accepted": false
+  }
+}

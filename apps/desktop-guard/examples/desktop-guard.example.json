@@ -1,0 +1,11 @@
+{
+  "api_url": "http://127.0.0.1:8000",
+  "email": "owner@acme.ai",
+  "password": "Password123!",
+  "tenant_id": "",
+  "application": "Claude Desktop",
+  "desktop_app": "Claude",
+  "machine_id": "",
+  "poll_seconds": 0.5,
+  "dialog": true
+}

@@ -1,0 +1,28 @@
+{
+  "schema": "hawk.macos-endpoint-security-build-contract",
+  "version": 2,
+  "verification_status": "unverified",
+  "source_ready_is_runtime_ready": false,
+  "activation_default": "off",
+  "cloud_call_in_auth_callback": false,
+  "local_signed_policy_required": true,
+  "bounded_snapshot_bridge_implemented": true,
+  "code_identity_material": ["team_id", "signing_id", "cdhash", "platform_binary"],
+  "bounded_inherited_process_family_implemented": true,
+  "stable_process_instance_material": ["audit_token", "pidversion", "start_time", "responsible_audit_token"],
+  "stable_file_material": ["st_dev", "st_ino", "st_gen", "st_birthtimespec"],
+  "authorization_cache_enabled": false,
+  "supported_auth_events": ["open", "create", "rename", "unlink", "truncate", "exec"],
+  "runtime_evidence_required": [
+    "signed_artifact",
+    "endpoint_security_entitlement",
+    "full_disk_access",
+    "mdm_system_extension_activation",
+    "signed_local_policy",
+    "authenticated_local_delivery",
+    "signed_component_health",
+    "callback_deadline_acceptance",
+    "target_os_acceptance",
+    "edr_coexistence"
+  ]
+}

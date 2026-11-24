@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64"><Configuration>Debug</Configuration><Platform>x64</Platform></ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64"><Configuration>Release</Configuration><Platform>x64</Platform></ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM64"><Configuration>Debug</Configuration><Platform>ARM64</Platform></ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64"><Configuration>Release</Configuration><Platform>ARM64</Platform></ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{B4DC7E42-1DFE-4D57-BCE4-9D9D0490A30A}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>HawkEndpointFloor</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+    <TargetVersion>Windows10</TargetVersion><UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset><ConfigurationType>Driver</ConfigurationType><DriverType>WDM</DriverType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
+    <TargetVersion>Windows10</TargetVersion><UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset><ConfigurationType>Driver</ConfigurationType><DriverType>WDM</DriverType>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup>
+    <TargetName>HawkEndpointFloor</TargetName>
+    <EnableInf2Cat>false</EnableInf2Cat>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel><TreatWarningAsError>true</TreatWarningAsError>
+      <SpectreMitigation>Spectre</SpectreMitigation><SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_WIN64;NTDDI_VERSION=NTDDI_WIN10_VB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\include;..\common;..\..\shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>FltMgr.lib;Fwpkclnt.lib;Wdmsec.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>/INTEGRITYCHECK %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\minifilter\HawkMinifilter.c" />
+    <ClCompile Include="..\process-control\HawkProcessControl.c" />
+    <ClCompile Include="..\wfp\HawkWfpCallout.c" />
+    <ClCompile Include="..\common\HawkKernelPolicy.c" />
+    <ClCompile Include="..\common\HawkKernelControl.c" />
+    <ClCompile Include="..\common\HawkSha256.c" />
+    <ClCompile Include="..\..\shared\HawkFloorDecisionEngine.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\HawkKernelPolicy.h" />
+    <ClInclude Include="..\include\HawkKernelPolicyIoctl.h" />
+    <ClInclude Include="..\include\HawkWindowsNetworkIdentity.h" />
+    <ClInclude Include="..\include\HawkKernelControl.h" />
+    <ClInclude Include="..\common\HawkSha256.h" />
+    <ClInclude Include="..\..\shared\HawkFloorDecisionEngine.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

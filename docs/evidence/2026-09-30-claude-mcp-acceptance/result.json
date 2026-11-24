@@ -1,0 +1,41 @@
+{
+  "status": "passed",
+  "client": "claude-code",
+  "client_version": "2.1.183",
+  "release_ready": false,
+  "accepted_report": "accepted-three-phase.json",
+  "prior_pending_report": "pending-before-connection-wait.json",
+  "child_execution_counts": [
+    1,
+    2,
+    2
+  ],
+  "decisions": [
+    "allow",
+    "allow",
+    "block"
+  ],
+  "revocation_reason": "agent_session_revoked",
+  "targeted_tests": {
+    "claude": 15,
+    "migration_runner": 5
+  },
+  "migration_preflight": {
+    "status": "passed",
+    "head": "0092_github_repository_runtime_controls",
+    "model_calls": 0,
+    "cleanup": "complete"
+  },
+  "demo_readiness": {
+    "before_final_run": 503,
+    "after_final_run": 503,
+    "status": "database_schema_out_of_date",
+    "applied_revision": "0091_exec_mcp_device_auth",
+    "source_revision": "0092_github_repository_runtime_controls",
+    "runtime_bindings_exists": false,
+    "operation_controls_exists": false,
+    "main_database_migrated": false,
+    "main_api_restarted": false
+  },
+  "final_review": "approved"
+}

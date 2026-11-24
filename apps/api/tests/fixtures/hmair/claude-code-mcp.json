@@ -1,0 +1,192 @@
+{
+  "scenario_id": "h2-claude-code-mcp",
+  "tenant_id": "10000000-0000-4000-8000-000000000002",
+  "scan_id": "20000000-0000-4000-8000-000000000002",
+  "asset": {
+    "asset_type": "agent",
+    "canonical_name": "Claude Code MCP workload",
+    "provider": "Anthropic",
+    "product": "Claude Code",
+    "framework": "MCP",
+    "version": "fixture-v1",
+    "deployment_family": "developer_endpoint",
+    "technical_surface": "endpoint_mcp_llm",
+    "environment": "test"
+  },
+  "signals": [
+    {
+      "surface": "endpoint",
+      "signal": {
+        "observation_id": "h2-claude-endpoint",
+        "scan_id": "20000000-0000-4000-8000-000000000002",
+        "target_id": "h2-target-claude-endpoint",
+        "subject_reference": "workload:claude-code-fixture",
+        "raw_signal_type": "installed_application",
+        "asset_candidate_type": "agent",
+        "observed_state": "installed",
+        "normalized_signal": {
+          "product_family": "claude_code",
+          "execution_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "identifiers": {
+          "product_id": "claude-code",
+          "execution_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "configuration_summary": {
+          "installation_scope": "managed_endpoint"
+        },
+        "usage_summary": {},
+        "capability_hints": [
+          "model_inference",
+          "tool_execution"
+        ],
+        "identity_hints": [
+          {
+            "identity_type": "workload_identity",
+            "reference_hash": "1111111111111111111111111111111111111111111111111111111111111111"
+          }
+        ],
+        "relationship_hints": [
+          {
+            "relationship": "runs_on",
+            "target": "managed_endpoint"
+          }
+        ],
+        "evidence_reference": "fixture://hmair/h2/claude/endpoint",
+        "evidence_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "observed_at": "2026-09-11T08:00:00Z",
+        "confidence": 0.9,
+        "freshness": "fresh",
+        "verification_state": "verified",
+        "source_trust": "strong",
+        "collection_scope": {
+          "scope_type": "managed_endpoint",
+          "unit_count": 1,
+          "coverage_claim": "fixture_only"
+        },
+        "evidence_mode": "direct",
+        "evidence_mutability": "immutable",
+        "contradiction_state": "none",
+        "contradiction_references": []
+      }
+    },
+    {
+      "surface": "mcp",
+      "signal": {
+        "observation_id": "h2-claude-mcp",
+        "scan_id": "20000000-0000-4000-8000-000000000002",
+        "target_id": "h2-target-claude-mcp",
+        "subject_reference": "workload:claude-code-fixture",
+        "raw_signal_type": "mcp_tool",
+        "asset_candidate_type": "mcp_tool",
+        "observed_state": "actively_used",
+        "normalized_signal": {
+          "server_family": "github_readonly",
+          "tool_schema_fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "identifiers": {
+          "mcp_server_id": "github-readonly",
+          "tool_schema_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "configuration_summary": {
+          "transport": "stdio",
+          "trust_state": "review_required"
+        },
+        "usage_summary": {
+          "event_count": 1,
+          "actor_class": "workload"
+        },
+        "capability_hints": [
+          "tool_execution"
+        ],
+        "identity_hints": [
+          {
+            "identity_type": "workload_identity",
+            "reference_hash": "1111111111111111111111111111111111111111111111111111111111111111"
+          }
+        ],
+        "relationship_hints": [
+          {
+            "relationship": "invokes",
+            "target": "mcp_server"
+          }
+        ],
+        "evidence_reference": "fixture://hmair/h2/claude/mcp",
+        "evidence_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "observed_at": "2026-09-11T08:00:00Z",
+        "confidence": 0.92,
+        "freshness": "fresh",
+        "verification_state": "verified",
+        "source_trust": "strong",
+        "collection_scope": {
+          "scope_type": "mcp_environment",
+          "unit_count": 1,
+          "coverage_claim": "fixture_only"
+        },
+        "evidence_mode": "direct",
+        "evidence_mutability": "immutable",
+        "contradiction_state": "none",
+        "contradiction_references": []
+      }
+    },
+    {
+      "surface": "llm_gateway",
+      "signal": {
+        "observation_id": "h2-claude-llm",
+        "scan_id": "20000000-0000-4000-8000-000000000002",
+        "target_id": "h2-target-claude-llm",
+        "subject_reference": "workload:claude-code-fixture",
+        "raw_signal_type": "token_usage",
+        "asset_candidate_type": "model_endpoint",
+        "observed_state": "actively_used",
+        "normalized_signal": {
+          "provider_family": "anthropic",
+          "route_class": "governed_gateway"
+        },
+        "identifiers": {
+          "provider": "anthropic",
+          "model_family": "claude"
+        },
+        "configuration_summary": {
+          "route_scope": "approved_gateway"
+        },
+        "usage_summary": {
+          "request_count": 1,
+          "metered_units": 64,
+          "actor_class": "workload"
+        },
+        "capability_hints": [
+          "model_inference"
+        ],
+        "identity_hints": [
+          {
+            "identity_type": "workload_identity",
+            "reference_hash": "1111111111111111111111111111111111111111111111111111111111111111"
+          }
+        ],
+        "relationship_hints": [
+          {
+            "relationship": "connects_to",
+            "target": "model_endpoint"
+          }
+        ],
+        "evidence_reference": "fixture://hmair/h2/claude/llm",
+        "evidence_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "observed_at": "2026-09-11T08:00:00Z",
+        "confidence": 0.91,
+        "freshness": "fresh",
+        "verification_state": "verified",
+        "source_trust": "strong",
+        "collection_scope": {
+          "scope_type": "llm_gateway",
+          "unit_count": 1,
+          "coverage_claim": "fixture_only"
+        },
+        "evidence_mode": "direct",
+        "evidence_mutability": "immutable",
+        "contradiction_state": "none",
+        "contradiction_references": []
+      }
+    }
+  ]
+}

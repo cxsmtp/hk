@@ -1,0 +1,44 @@
+{
+  "schema_version": "hawk.cursor.acceptance-registry/1.0",
+  "entries": [
+    {
+      "provider": "cursor",
+      "product": "cursor",
+      "provider_version": "2026.08.11-e8db854",
+      "desktop_version": "3.15.6",
+      "desktop_commit": "a1f686545fd0ce8917bbd2449f733551a9bce420",
+      "adapter_version": "0.2.0",
+      "report_sha256": "388b31df1038e7865d319f6cd160b56459830fee88ba997dd2753db2e2b6745e",
+      "evidence_artifact": "docs/evidence/cursor-2026.08.11-e8db854-acceptance-result.json",
+      "evidence_timestamp": "2026-08-12T10:19:55+04:00",
+      "tested_events": [
+        "beforeSubmitPrompt",
+        "beforeShellExecution",
+        "afterShellExecution",
+        "beforeReadFile",
+        "beforeMCPExecution",
+        "afterMCPExecution",
+        "preToolUse"
+      ],
+      "accepted_capabilities": [
+        "prompt_control",
+        "mcp_control",
+        "command_control",
+        "file_read_control",
+        "parameter_binding",
+        "target_binding",
+        "destination_binding",
+        "post_execution_visibility",
+        "execution_correlation",
+        "persistent_side_effect_control",
+        "persistent_side_effect_visibility",
+        "bypass_detection",
+        "config_integrity"
+      ],
+      "measured_callback_p95_ms": 23.187,
+      "reviewed": true,
+      "review_status": "reviewed_by_acceptance_gate",
+      "production_eligible": false
+    }
+  ]
+}
