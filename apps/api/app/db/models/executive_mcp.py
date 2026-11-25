@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Index, String
+from sqlalchemy import DateTime, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.models.base import TimestampMixin, UUIDPrimaryKeyMixin
@@ -29,3 +29,15 @@ class ExecutiveMCPDeviceAuthorization(Base, UUIDPrimaryKeyMixin, TimestampMixin)
     approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     denied_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class ExecutiveMCPOAuthClient(Base, UUIDPrimaryKeyMixin, TimestampMixin):
+    """A client registered at /mcp/executive/register (RFC 7591): its redirect addresses are kept, and an
+    authorization code is only ever sent to one of them, exactly."""
+
+    __tablename__ = "executive_mcp_oauth_clients"
+
+    client_id: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
+    client_name: Mapped[str] = mapped_column(String(80), nullable=False, default="")
+    # A JSON list of the exact redirect URIs given at registration.
+    redirect_uris: Mapped[str] = mapped_column(Text, nullable=False, default="[]")

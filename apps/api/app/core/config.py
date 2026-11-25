@@ -210,6 +210,21 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     refresh_token_expire_minutes: int = 60 * 24 * 7
+    # Sign-in (docs/sign-in.md, ported from CxMissionZero): a sign-in that is not used for this long ends. Hawk's
+    # console keeps a 30-minute access token and a rotating refresh token; a refresh token that was not used (rotated)
+    # for SESSION_IDLE_MINUTES is refused, so the person signs in again.
+    session_idle_minutes: int = 480
+    # Where sign-in tickets, password reset links, pending two-step setups and the sign-in limits are kept: "redis"
+    # (REDIS_URL; every API process sees the same) or "memory" (one process only: tests and local runs).
+    sign_in_store: str = "redis"
+    # The email server, for password reset links (CxMissionZero's SMTP_* variables, same names and defaults).
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_secure: bool = False
+    smtp_user: str = ""
+    smtp_pass: str = ""
+    smtp_from: str = ""
+    smtp_from_name: str = "Hawk AI"
 
     web_origin: str = "http://localhost:3000"
     cors_origins: str = ""
@@ -234,7 +249,8 @@ class Settings(BaseSettings):
     oidc_bindings_json: str = "[]"
     oidc_callback_url: str = ""
     oidc_frontend_url: str = ""
-    oidc_state_ttl_seconds: int = 300
+    # CxMissionZero keeps a single sign-on round trip ten minutes (SSO_FLOW_TTL_MS).
+    oidc_state_ttl_seconds: int = 600
     oidc_ticket_ttl_seconds: int = 60
     oidc_cache_ttl_seconds: int = 300
     oidc_cache_max_bytes: int = 262144
@@ -477,7 +493,7 @@ class Settings(BaseSettings):
             except (TypeError, json.JSONDecodeError) as exc:
                 raise ValueError("OIDC configuration must be valid JSON when COMPANY_SSO_ENABLED is true.") from exc
             if not isinstance(providers, list) or not providers or not self.oidc_provider_secrets_json.strip():
-                raise ValueError("OIDC providers, encrypted secrets, and bindings are required when COMPANY_SSO_ENABLED is true.")
+                raise ValueError("OIDC providers and encrypted secrets are required when COMPANY_SSO_ENABLED is true.")
             keys = set()
             for row in providers:
                 if not isinstance(row, dict) or not all(isinstance(row.get(field), str) and row[field].strip() for field in ("key", "kind", "display_name", "workspace_slug", "issuer", "client_id", "tenant_id")):
@@ -490,11 +506,10 @@ class Settings(BaseSettings):
                     raise ValueError("OIDC issuers must be exact HTTPS origins.")
                 if row["kind"].lower() == "entra" and any(part.lower() in {"common", "organizations", "consumers"} for part in issuer.path.split("/")):
                     raise ValueError("Entra OIDC authority must be tenant-specific.")
+            # Bindings are optional since accounts link by (issuer, subject) at the first sign-in (docs/sign-in.md);
+            # those listed must still be well formed.
             if not isinstance(bindings, list) or any(not isinstance(row, dict) for row in bindings):
-                raise ValueError("OIDC exact bindings are required when COMPANY_SSO_ENABLED is true.")
-            bound = {row.get("provider_key") for row in bindings}
-            if not keys.issubset(bound):
-                raise ValueError("Every enabled OIDC provider must have an exact binding.")
+                raise ValueError("OIDC bindings must be a list of objects.")
             if any(row.get("provider_key") not in keys for row in bindings):
                 raise ValueError("OIDC bindings must reference enabled providers.")
             derived = hashlib.pbkdf2_hmac("sha256", self.connector_secrets_key.encode(), self.connector_secrets_kdf_salt.encode(), self.connector_secrets_kdf_iterations, dklen=32)

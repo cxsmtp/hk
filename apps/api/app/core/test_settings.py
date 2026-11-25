@@ -25,6 +25,8 @@ def apply_test_settings() -> None:
         database_url = default_sqlite
 
     os.environ.setdefault("ENV", "test")
+    # Sign-in tickets, reset links and limits in this process (app/services/sign_in_store.py): no Redis in unit tests.
+    os.environ.setdefault("SIGN_IN_STORE", "memory")
     os.environ.setdefault("DATABASE_URL", database_url)
     os.environ.setdefault("TEST_DATABASE_URL", database_url)
     os.environ.setdefault("REDIS_URL", os.getenv("TEST_REDIS_URL", "redis://redis:6379/0"))

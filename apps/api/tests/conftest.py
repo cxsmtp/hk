@@ -42,3 +42,15 @@ def _terms_out_of_the_way(request, monkeypatch):
 
     monkeypatch.setattr(terms_service, "gate_open_for", lambda db, user: True)
     monkeypatch.setattr(terms_service, "organisation_accepted", lambda db=None: True)
+
+
+@pytest.fixture(autouse=True)
+def _sign_in_store_fresh():
+    """Every test starts with no sign-in tickets, reset links or counted attempts (app/services/sign_in_store.py): the
+    limit of 30 sign-ins per 10 minutes from one address would otherwise carry over from test to test."""
+
+    from app.services import sign_in_store
+
+    sign_in_store.store().clear()
+    yield
+    sign_in_store.store().clear()

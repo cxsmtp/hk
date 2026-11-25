@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String, UniqueConstraint, false
+from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint, false, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.models.base import TimestampMixin, UUIDPrimaryKeyMixin
@@ -12,6 +12,7 @@ from app.db.session import Base
 
 class User(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     __tablename__ = "users"
+    __table_args__ = (UniqueConstraint("sso_issuer", "sso_subject", name="uq_users_sso_identity"),)
 
     email: Mapped[str] = mapped_column(String(320), nullable=False, unique=True, index=True)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -20,6 +21,23 @@ class User(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     # Set for the generated first administrator and by reset_admin (app/services/first_run_service.py): until they
     # choose their own password, every signed-in route but /auth/me and /auth/me/password answers 403.
     must_change_password: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false(), nullable=False)
+
+    # Sign-in (docs/sign-in.md, ported from CxMissionZero's src/iam.js and src/mfa.js).
+    # Wrong passwords (and wrong two-step codes) in a row: 5 lock the account for 15 minutes.
+    failed_logins: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"), nullable=False)
+    locked_until: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_login_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Signed out everywhere at this moment (a password reset): access tokens issued before it are refused.
+    signed_out_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Two-step sign-in: the TOTP secret (encrypted, app/services/connector_secret_service.py), when it was turned on,
+    # the step of the last code used (a code works once) and the recovery codes' SHA-256 hashes (a JSON list).
+    mfa_secret: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    mfa_enabled_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    mfa_last_step: Mapped[int] = mapped_column(BigInteger, default=0, server_default=text("0"), nullable=False)
+    mfa_recovery: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    # Single sign-on: the identity provider's account this person is linked to, by (issuer, subject).
+    sso_issuer: Mapped[Optional[str]] = mapped_column(String(300), nullable=True)
+    sso_subject: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
     tenant_roles = relationship("UserTenantRole", back_populates="user", cascade="all,delete-orphan")
 

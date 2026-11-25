@@ -59,7 +59,7 @@ from app.db.models.execution_effect import (
     EffectReservationV2,
     ExecutionPermitEffectBindingV2,
 )
-from app.db.models.access import FirstRunState, TermsAcceptance
+from app.db.models.access import FirstRunState, SignInPolicy, TermsAcceptance
 from app.db.models.activation import ActivationState
 from app.db.models.audit import AuditLog
 from app.db.models.control_coverage import (
@@ -133,7 +133,7 @@ from app.db.models.evidence_resolution import (
     DiscoveryHypothesisEvaluationEdge,
     DiscoveryObservationQualitySnapshot,
 )
-from app.db.models.executive_mcp import ExecutiveMCPDeviceAuthorization
+from app.db.models.executive_mcp import ExecutiveMCPDeviceAuthorization, ExecutiveMCPOAuthClient
 from app.db.models.discovery_verification import (
     DiscoveryVerificationAssertion,
     DiscoveryVerificationAttempt,
@@ -305,6 +305,7 @@ __all__ = [
     "RefreshToken",
     "ActivationState",
     "FirstRunState",
+    "SignInPolicy",
     "TermsAcceptance",
     "AuditLog",
     "DeploymentSurface",

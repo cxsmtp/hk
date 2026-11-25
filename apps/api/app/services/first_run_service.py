@@ -339,6 +339,8 @@ class ResetResult:
     email: str
     password: str
     created: bool
+    # Two-step sign-in was on and was taken off with the password (CxMissionZero's reset-admin does both).
+    two_step_reset: bool = False
 
 
 def reset_admin(db: Session, wanted: str | None = None, *, env: Mapping[str, str] | None = None) -> ResetResult:
@@ -367,6 +369,13 @@ def reset_admin(db: Session, wanted: str | None = None, *, env: Mapping[str, str
             return ResetResult(email=admin.email, password=password, created=True)
         user.hashed_password = get_password_hash(password)
         user.must_change_password = True
+        # A locked administrator could not use it otherwise; two-step sign-in goes with the password: whoever needs
+        # this command may have lost the phone as well (docs/sign-in.md).
+        user.failed_logins = 0
+        user.locked_until = None
+        from app.services import account_security
+
+        two_step_reset = account_security.reset_two_step(user)
         if not user.is_active and an_admin_role(db, user):
             # A disabled administrator could not use it otherwise.
             user.is_active = True
@@ -375,10 +384,10 @@ def reset_admin(db: Session, wanted: str | None = None, *, env: Mapping[str, str
             db,
             tenant_id=membership.tenant_id if membership else None,
             user=user,
-            reason=f"Temporary password set for {user.email} from the command line (reset_admin).",
+            reason=f"Temporary password set for {user.email} from the command line (reset_admin){'; their two-step sign-in was taken off' if two_step_reset else ''}.",
         )
         db.flush()
-        return ResetResult(email=user.email, password=password, created=False)
+        return ResetResult(email=user.email, password=password, created=False, two_step_reset=two_step_reset)
 
 
 def an_admin_role(db: Session, user: User) -> bool:

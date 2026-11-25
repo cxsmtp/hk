@@ -9,7 +9,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.core.observability import get_correlation_id
-from app.core.rbac import ROLE_ORDER
+from app.core.rbac import ROLE_ORDER, roles_meeting
 from app.db.models.ai_system import AISystem
 from app.db.models.ai_iam import AgentIdentity, CapabilityToken
 from app.db.models.enforcement import EnforcementEvent
@@ -93,6 +93,12 @@ class ToolContext:
 def _roles_at_or_above(min_role: str) -> list[str]:
     threshold = ROLE_ORDER.get(min_role, 999)
     return [role for role, order in ROLE_ORDER.items() if order >= threshold]
+
+
+def _roles_for_changes(min_role: str) -> list[str]:
+    """Roles that may run a tool that writes or enforces: never a read-only role such as the auditor (app/core/rbac.py)."""
+
+    return roles_meeting(min_role, write=True)
 
 
 def _normalize_ai_system_row(row: AISystem) -> dict[str, Any]:
@@ -1549,7 +1555,7 @@ def _register_brain_tools() -> None:
                     "required": ["simulation_run_id", "result", "evidence_node_ids"],
                     "additionalProperties": False,
                 },
-                required_role=_roles_at_or_above("operator"),
+                required_role=_roles_for_changes("operator"),
                 requires_approval=False,
                 writes_evidence=True,
                 side_effect_level="enforce",
@@ -2053,7 +2059,7 @@ def _register_brain_tools() -> None:
                     "required": ["ai_system_id", "total_runs", "passed_runs", "result", "runs", "evidence_node_ids"],
                     "additionalProperties": False,
                 },
-                required_role=_roles_at_or_above("operator"),
+                required_role=_roles_for_changes("operator"),
                 requires_approval=False,
                 writes_evidence=True,
                 side_effect_level="enforce",
@@ -2467,7 +2473,7 @@ def _register_brain_tools() -> None:
                     "required": ["ticket_id", "system", "summary", "description", "severity", "finding_id", "status"],
                     "additionalProperties": False,
                 },
-                required_role=_roles_at_or_above("operator"),
+                required_role=_roles_for_changes("operator"),
                 requires_approval=False,
                 writes_evidence=True,
                 side_effect_level="write",
@@ -2511,7 +2517,7 @@ def _register_brain_tools() -> None:
                     "required": ["approval_request_id", "status", "ai_system_id", "required_roles", "sla_minutes", "default_if_timeout"],
                     "additionalProperties": False,
                 },
-                required_role=_roles_at_or_above("operator"),
+                required_role=_roles_for_changes("operator"),
                 requires_approval=False,
                 writes_evidence=True,
                 side_effect_level="write",
