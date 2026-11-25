@@ -14,7 +14,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.routers import account_boundary, action_integrity, activity_audit, agui, agents, ai_discovery, ai_iam, ai_orchestration, ai_systems, ai_tools_usage, audit, auditor, auth, banking_transaction_integrity, brain, checkmarx, continuous_assurance, control_coverage, coverage, dashboard, deployments, discovery, discovery_adv, discovery_assets, discovery_capabilities, discovery_collectors, discovery_ecosystems, discovery_erg, discovery_exposure, discovery_scans, discovery_source_connections, discovery_surface_sources, discovery_targets, endpoint_agent, enforcement, executive_mcp, executive_remote_mcp, extension, external_risk, findings, gateway, guardian_contracts_v2, investigations, kb, llm_gateway, maturity_curve, monitoring, native_controls, onprem, ops, policies, policy_pack_platform, runtime, runtime_control, runtime_intelligence, scans, shadow_ai, simulation_policies, simulations, surface_coverage, system, trust_center, user_visibility
-from app.api.routers import access, backups, claude_enterprise, https, licence, network, records, sign_in, support, updates
+from app.api.routers import access, backups, claude_enterprise, hands_off, https, licence, network, records, sign_in, support, updates
 from app.core.access_gate import AccessRequired, access_required_response
 from app.core.config import configured_secret_sources, settings
 from app.core.licence_gate import licence_gate
@@ -37,7 +37,7 @@ from app.services.production_hardening import (
     validate_production_configuration,
 )
 from app.services.snapshot_service import ensure_artifact_storage_writable
-from app.services import backup_service, first_run_service, https_runtime, network_proxy, terms_service, user_activity
+from app.services import backup_service, error_counter, first_run_service, https_runtime, network_proxy, terms_service, user_activity
 from app.services.pg_tools import InstanceLock, is_postgres
 from app.services.integrity import service as integrity_service
 from app.services.updates.companion import acknowledge_start
@@ -414,6 +414,8 @@ async def correlation_and_request_logging_middleware(request, call_next):
         try:
             response = await call_next(request)
         except SQLAlchemyError as exc:
+            # Counted for the self-check (more than 30 errors in 15 minutes, app/services/error_counter.py).
+            await run_in_threadpool(error_counter.note)
             if not request.url.path.startswith("/gateway/"):
                 status_code = 500
                 log_structured(
@@ -476,6 +478,7 @@ async def correlation_and_request_logging_middleware(request, call_next):
             )
         except Exception as exc:  # noqa: BLE001
             status_code = 500
+            await run_in_threadpool(error_counter.note)
             event_name = "http_unhandled_error"
             error_message = None
             response_code = "internal_error"
@@ -650,6 +653,7 @@ app.include_router(updates.router)
 app.include_router(records.router)
 app.include_router(support.router)
 app.include_router(network.router)
+app.include_router(hands_off.router)
 app.include_router(access.router)
 app.include_router(account_boundary.router)
 app.include_router(action_integrity.router)

@@ -129,6 +129,40 @@ def system_email(*, subject: str, lines: list[str], facts: list[tuple[str, str]]
     return message
 
 
+def test_connection(smtp: Smtp | None = None) -> None:
+    """Connect and sign in, but send nothing (CxMissionZero's testConnection, used by the self-check). Raises MailError,
+    with what went wrong underneath as its cause (so the self-check can tell an outage from a refusal)."""
+
+    smtp = smtp or current()
+    if not smtp.host:
+        raise MailError("No email server is set (SMTP_HOST).")
+    from app.services.trust_store import outbound_ssl_context
+
+    context = outbound_ssl_context()
+    try:
+        if smtp.secure:
+            client: smtplib.SMTP = smtplib.SMTP_SSL(smtp.host, smtp.port, timeout=TIMEOUT_SECONDS, context=context)
+        else:
+            client = smtplib.SMTP(smtp.host, smtp.port, timeout=TIMEOUT_SECONDS)
+        with client:
+            client.ehlo()
+            if not smtp.secure:
+                if client.has_extn("starttls"):
+                    client.starttls(context=context)
+                    client.ehlo()
+                elif smtp.user:
+                    raise MailError("The mail server does not offer STARTTLS, so the login is not sent. Use SMTP_SECURE=true with port 465, or a server that offers STARTTLS.")
+            if smtp.user:
+                client.login(smtp.user, smtp.password)
+            client.noop()
+    except MailError:
+        raise
+    except smtplib.SMTPAuthenticationError as exc:
+        raise MailError("The server rejected that username and password.") from exc
+    except (OSError, smtplib.SMTPException) as exc:
+        raise MailError(_redact(f"The mail server could not be reached: {exc}", smtp)) from exc
+
+
 def send(message: EmailMessage, to: str, *, smtp: Smtp | None = None) -> None:
     """Send one message to one address. Raises MailError."""
 

@@ -9,8 +9,10 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { api } from "@/lib/api";
 import { BACKUP_NOTICE_CHANGED_EVENT } from "@/components/backup-notice";
+import { SelfCheckBox } from "@/components/self-check-box";
 import { backupKeyFile, backupsHeading, beforeUpdateLine, kb, READINESS, restoreQuestion, sealedLine } from "@/lib/backups-settings";
 import type { BackupEncryption, BackupKeyShown, BackupsStatus, Readiness } from "@/lib/backups-settings";
+import type { SelfCheckHealth } from "@/lib/hands-off-settings";
 import { errorMessageFrom } from "@/lib/licence";
 
 const message = (error: unknown) => errorMessageFrom(error instanceof Error ? error.message : String(error ?? ""), "Something went wrong.");
@@ -52,12 +54,15 @@ export default function BackupsSettingsPage() {
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const [pass, setPass] = useState("");
+  const [health, setHealth] = useState<SelfCheckHealth | null>(null);
+  const [checking, setChecking] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const [status, ready] = await Promise.all([api.getBackups(), api.getReadiness().catch(() => null)]);
+      const [status, ready, selfCheck] = await Promise.all([api.getBackups(), api.getReadiness().catch(() => null), api.getSelfCheck().catch(() => null)]);
       setB(status);
       setRd(ready);
+      setHealth(selfCheck?.health ?? null);
       setLoadError("");
       if (status.encryption.source !== "key") setShown(null);
     } catch (error) {
@@ -154,6 +159,17 @@ export default function BackupsSettingsPage() {
       await load();
     } catch (error) {
       toast.error(message(error));
+    }
+  }
+
+  async function checkNow() {
+    setChecking(true);
+    try {
+      setHealth((await api.checkNow()).health);
+    } catch (error) {
+      toast.error(message(error));
+    } finally {
+      setChecking(false);
     }
   }
 
@@ -367,6 +383,12 @@ export default function BackupsSettingsPage() {
 
                 <div className="panel">
                   <h2>Health</h2>
+                  <div id="self-check">
+                    <SelfCheckBox health={health} onCheck={checkNow} busy={checking} />
+                    <p className="muted small">
+                      Who hears about problems, the weekly status and replies by email: <a href="/settings/hands-off">Settings → Hands-off</a>.
+                    </p>
+                  </div>
                   {b.recovered.length ? (
                     <>
                       <h3>Repaired at start</h3>

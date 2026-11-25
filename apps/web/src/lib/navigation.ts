@@ -110,6 +110,7 @@ export const SPECIALIST_WORKSPACES = [
       { href: "/settings/sso", label: "Single sign-on" },
       { href: "/settings/two-step", label: "Two-step sign-in" },
       { href: "/settings/backups", label: "Backups & health" },
+      { href: "/settings/hands-off", label: "Hands-off" },
       { href: "/settings/updates", label: "Updates" },
       { href: "/settings/audit", label: "Audit log" },
       { href: "/settings/connector-activity", label: "Connector API activity" },

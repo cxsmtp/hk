@@ -1,5 +1,9 @@
-"""The backup mailbox, read over IMAP: how a new, empty Hawk AI finds its newest backup by itself. Ported from
-CxMissionZero's src/mail-inbox.js (findBackupInMailbox, with imaplib in place of imapflow).
+"""The backup mailbox, read over IMAP: how a new, empty Hawk AI finds its newest backup by itself; and the replies to
+Hawk AI's own emails (hands-off, app/services/self_check.py). Ported from CxMissionZero's src/mail-inbox.js
+(findBackupInMailbox and readReplies, with imaplib in place of imapflow).
+
+Replies: only unread mail is read, at most 25 messages a time, and each is marked read. Only the sender, the subject and
+the plain text (or the HTML part as text) are kept, cut to 64 KB; attachments are never opened.
 
 It reads only: the mailbox is opened read-only (EXAMINE) and messages are fetched with BODY.PEEK, so nothing is marked
 read, moved or deleted. Only the newest 20 messages whose subject starts with "Hawk AI backup" are looked at, and only
@@ -165,4 +169,72 @@ def find_backup_in_mailbox(
                 pass
 
 
-__all__ = ["BACKUP_SUBJECT", "MAX_BACKUP_BYTES", "MailboxAccount", "MailboxError", "NO_STARTTLS", "find_backup_in_mailbox"]
+#: Replies: at most this many unread messages a time, and this much of each one's text.
+MAX_MESSAGES = 25
+MAX_TEXT = 64 * 1024
+
+
+def _html_to_text(markup: str) -> str:
+    text = re.sub(r"<(br|/p|/div)[^>]*>", "\n", markup, flags=re.IGNORECASE)
+    text = re.sub(r"<blockquote[\s\S]*$", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"<[^>]+>", "", text)
+    return text.replace("&nbsp;", " ").replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">")
+
+
+def _reply_text(raw: bytes) -> tuple[str, str, str]:
+    """(sender, subject, text) of a message: its plain-text part, else its HTML part as text. Attachments are never
+    read."""
+
+    message = email.message_from_bytes(raw, policy=email.policy.default)
+    sender = email.utils.parseaddr(str(message.get("From") or ""))[1].lower()
+    subject = str(message.get("Subject") or "")
+    plain = html_part = None
+    for part in message.walk():
+        if part.is_multipart() or part.get_content_disposition() == "attachment":
+            continue
+        kind = part.get_content_type()
+        if kind == "text/plain" and plain is None:
+            plain = part
+        elif kind == "text/html" and html_part is None:
+            html_part = part
+    chosen = plain or html_part
+    text = ""
+    if chosen is not None:
+        try:
+            text = str(chosen.get_content())
+        except (LookupError, ValueError):
+            text = (chosen.get_payload(decode=True) or b"").decode("utf-8", "replace")
+        if chosen is html_part and plain is None:
+            text = _html_to_text(text)
+    return sender, subject, text.replace("\r\n", "\n")[:MAX_TEXT]
+
+
+def read_replies(account: MailboxAccount, *, connect: Callable[[MailboxAccount], Any] = _connect) -> list[dict[str, str]]:
+    """The unread messages, marked read: [{from, subject, text}]. Raises MailboxError (never with the password)."""
+
+    client = None
+    try:
+        client = connect(account)
+        _ok(client.login(account.user, account.password), "sign in")
+        _ok(client.select("INBOX"), "open the inbox")
+        found = _ok(client.uid("SEARCH", None, "UNSEEN"), "search the inbox")
+        uids = [u for u in (found[0] or b"").split() if u][:MAX_MESSAGES] if found else []
+        out = []
+        for uid in uids:
+            raw, _ = _fetched(_ok(client.uid("FETCH", uid, f"(BODY.PEEK[]<0.{MAX_TEXT * 4}>)"), "read a message"))
+            sender, subject, text = _reply_text(raw)
+            out.append({"from": sender, "subject": subject, "text": text})
+        if uids:
+            _ok(client.uid("STORE", b",".join(uids), "+FLAGS", "(\\Seen)"), "mark the messages read")
+        return out
+    except Exception as error:  # noqa: BLE001 - never with the password in it
+        raise _safe(error, account) from None
+    finally:
+        if client is not None:
+            try:
+                client.logout()
+            except Exception:  # noqa: BLE001
+                pass
+
+
+__all__ = ["BACKUP_SUBJECT", "MAX_BACKUP_BYTES", "MailboxAccount", "MailboxError", "NO_STARTTLS", "find_backup_in_mailbox", "read_replies"]
