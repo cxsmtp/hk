@@ -1,0 +1,130 @@
+/*
+ * FTR Command Center's settings look (ftr-cc-dashboard CC-01.116.00: public/app.css and public/standard.css, the
+ * "Standard" look), for Hawk's Settings pages. Class names and tokens are FTR's own (panel, h2 small, form.form,
+ * label.f, label.check, callout, kv, chip, saved-banner, saved-foot, grid g2, row, muted, small, mt, btn, sep-line),
+ * scoped under .ftr so they never touch the rest of the console. The values are the Standard look's: 34 px controls,
+ * 8 px control corners, 10 px panel corners, one accent colour.
+ */
+
+.ftr {
+  --brand: #5cb8d0;
+  --on-brand: #06222b;
+  --bg: #0f1417;
+  --panel: #161e24;
+  --panel-solid: #161e24;
+  --panel-hi: #1e2932;
+  --line: #25313a;
+  --line-hi: #36454f;
+  --text: #e6ecef;
+  --muted: #94a3af;
+  --faint: #6c7b87;
+  --cyan: var(--brand);
+  --green: #4cc38a;
+  --amber: #e3b341;
+  --red: #f0716b;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --radius: 10px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.45;
+  color-scheme: dark;
+}
+.ftr[data-theme="light"] {
+  --brand: #0b6b86;
+  --on-brand: #ffffff;
+  --bg: #f4f6f7;
+  --panel: #ffffff;
+  --panel-solid: #ffffff;
+  --panel-hi: #f1f4f6;
+  --line: #e0e5e9;
+  --line-hi: #ccd4da;
+  --text: #17212a;
+  --muted: #566573;
+  --faint: #8794a0;
+  --green: #18794e;
+  --amber: #9a6700;
+  --red: #c4302b;
+  --shadow: 0 1px 2px rgba(16, 24, 32, 0.06);
+  color-scheme: light;
+}
+
+/* ---- Page head ----------------------------------------------------------------------------------------------------- */
+.ftr .head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px; margin-bottom: 22px; }
+.ftr .head.compact { margin-bottom: 14px; align-items: center; }
+.ftr .head.compact .ht { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.ftr .head h1 { font-size: clamp(22px, 2.2vw, 28px); font-weight: 500; letter-spacing: -0.02em; margin: 0; }
+.ftr .crumbs { color: var(--muted); font-size: 13px; margin: 0; }
+
+/* ---- Panels --------------------------------------------------------------------------------------------------------- */
+.ftr .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 20px; min-width: 0; }
+.ftr .panel h2 { font-size: 16px; font-weight: 600; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 14px; }
+.ftr .panel h2 small { color: var(--muted); font-weight: 400; font-size: 12.5px; }
+.ftr .panel h2 .chip, .ftr .panel h2 button { margin-left: auto; }
+.ftr .panel h3 { font-size: 14px; font-weight: 600; margin: 18px 0 8px; }
+.ftr .panel p { margin: 0 0 10px; }
+.ftr .grid { display: grid; gap: 16px; }
+.ftr .g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ftr .wide-panel { grid-column: 1 / -1; }
+@media (max-width: 900px) { .ftr .g2 { grid-template-columns: 1fr; } }
+.ftr .sep-line { height: 1px; background: var(--line); margin: 18px 0; }
+
+/* ---- Controls: 34 px high, 8 px corners; one filled button for the page's main action --------------------------------- */
+.ftr button, .ftr .btn { font: inherit; font-weight: 500; border-radius: 8px; min-height: 34px; padding: 6px 12px; border: 1px solid var(--line-hi); background: var(--panel); color: var(--text); cursor: pointer; display: inline-flex; align-items: center; gap: 7px; text-decoration: none; white-space: nowrap; transition: background 0.12s, border-color 0.12s; }
+.ftr button:hover, .ftr .btn:hover { border-color: var(--brand); background: var(--panel-hi); }
+.ftr button:disabled { opacity: 0.5; cursor: not-allowed; }
+.ftr button.primary, .ftr .btn.primary { background: var(--brand); color: var(--on-brand); border: 1px solid var(--brand); }
+.ftr button.primary:hover, .ftr .btn.primary:hover { background: color-mix(in srgb, var(--brand) 88%, #000); }
+.ftr button.ghost, .ftr .btn.ghost { background: transparent; }
+.ftr button.danger { background: transparent; border-color: color-mix(in srgb, var(--red) 40%, transparent); color: var(--red); }
+.ftr button.sm, .ftr .btn.sm { min-height: 28px; padding: 3px 9px; border-radius: 7px; font-size: 12.5px; }
+.ftr button.link { min-height: 0; border: 0; background: none; padding: 0; color: var(--brand); font-size: inherit; }
+.ftr input, .ftr select, .ftr textarea { font: inherit; color: var(--text); background: var(--panel); border: 1px solid var(--line-hi); border-radius: 8px; padding: 6px 10px; width: 100%; outline: none; transition: border-color 0.15s, box-shadow 0.15s; }
+.ftr input:not([type="checkbox"]):not([type="radio"]), .ftr select { min-height: 34px; }
+.ftr input:focus, .ftr select:focus, .ftr textarea:focus { border-color: var(--brand); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 18%, transparent); }
+.ftr input:disabled, .ftr select:disabled { opacity: 0.6; }
+.ftr select { appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 16px) 55%, calc(100% - 11px) 55%; background-size: 5px 5px; background-repeat: no-repeat; padding-right: 30px; }
+.ftr label.f, .ftr div.f { display: grid; gap: 6px; font-size: 12.5px; color: var(--muted); font-weight: 500; }
+.ftr .form { display: grid; gap: 14px; }
+.ftr .form .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.ftr .check { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; font-size: 13px; }
+.ftr .check input { width: auto; margin-top: 3px; }
+.ftr .check small { display: block; color: var(--muted); }
+
+/* ---- Words and states ----------------------------------------------------------------------------------------------- */
+.ftr .muted { color: var(--muted); }
+.ftr .small { font-size: 12.5px; }
+.ftr .mt { margin-top: 16px; }
+.ftr .mono, .ftr code { font-family: var(--mono); font-size: 0.92em; }
+.ftr .flex { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.ftr .err { color: var(--red); font-size: 13px; min-height: 18px; }
+.ftr .kv { display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; font-size: 13.5px; margin: 0; }
+.ftr .kv dt { color: var(--muted); }
+.ftr .kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.ftr .chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px; border-radius: 6px; font-size: 12px; font-weight: 500; border: 1px solid var(--line-hi); color: var(--muted); white-space: nowrap; }
+.ftr .chip i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.ftr .chip.ok { color: var(--green); border-color: rgba(52, 211, 153, 0.35); background: rgba(52, 211, 153, 0.08); }
+.ftr .chip.warn { color: var(--amber); border-color: rgba(251, 191, 36, 0.35); background: rgba(251, 191, 36, 0.08); }
+.ftr .chip.bad { color: var(--red); border-color: rgba(248, 113, 113, 0.35); background: rgba(248, 113, 113, 0.08); }
+.ftr .callout { padding: 14px 16px; border-radius: 14px; border: 1px solid rgba(34, 211, 238, 0.3); background: rgba(34, 211, 238, 0.06); font-size: 13.5px; }
+.ftr .callout.warn { border-color: rgba(251, 191, 36, 0.35); background: rgba(251, 191, 36, 0.07); }
+.ftr .callout.ok { border-color: color-mix(in srgb, var(--green) 40%, transparent); background: color-mix(in srgb, var(--green) 8%, transparent); }
+.ftr .callout.bad { border-color: color-mix(in srgb, var(--red) 40%, transparent); background: color-mix(in srgb, var(--red) 8%, transparent); }
+.ftr .callout + .callout { margin-top: 10px; }
+.ftr .saved-banner { margin-bottom: 14px; padding: 10px 16px; border-radius: 12px; font-weight: 600; font-size: 13.5px; color: var(--green); border: 1px solid color-mix(in srgb, var(--green) 30%, transparent); background: color-mix(in srgb, var(--green) 8%, transparent); }
+.ftr .saved-foot { position: sticky; bottom: 12px; margin-top: 14px; padding: 10px 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-solid); font-size: 13px; color: var(--muted); box-shadow: var(--shadow); }
+.ftr .saved-foot.bad { color: var(--red); border-color: color-mix(in srgb, var(--red) 40%, transparent); }
+
+/* ---- People table (FTR's table look, plain) -------------------------------------------------------------------------- */
+.ftr table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ftr table.tbl th { text-align: left; color: var(--muted); font-weight: 500; font-size: 12px; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.ftr table.tbl td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+
+/* ---- Two-step sign-in: the QR code and the recovery codes (CxMissionZero's public/styles.css) ------------------------- */
+.ftr .twostep-qr { display: inline-block; background: #fff; padding: 8px; border-radius: 8px; line-height: 0; }
+.ftr .twostep-qr svg { width: 184px; height: 184px; }
+.ftr .twostep-key { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin: 10px 0 14px; }
+.ftr .twostep-key-text { display: grid; gap: 6px; }
+.ftr .twostep-key-text code { font-size: 15px; letter-spacing: 0.06em; }
+.ftr .twostep-steps { margin: 0 0 10px 18px; padding: 0; display: grid; gap: 4px; font-size: 13px; }
+.ftr .recovery-codes { list-style: none; margin: 8px 0 12px; padding: 0; display: grid; grid-template-columns: repeat(2, max-content); gap: 6px 24px; font-family: var(--mono); font-size: 14px; }
