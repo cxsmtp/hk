@@ -159,6 +159,10 @@ export function buildLaunchConfig({
       "--session-id", resolvedSessionId,
       "--client-app", CLIENT_APP_BY_PROFILE[profile],
       "--allowed-tools", TOOL_SCOPE,
+      // The proxy passes the GitHub MCP server only a minimal environment: its token is named explicitly.
+      ...(env.GITHUB_PERSONAL_ACCESS_TOKEN
+        ? ["--pass-env", "GITHUB_PERSONAL_ACCESS_TOKEN"]
+        : []),
       "--",
       binaryPath,
       "stdio",

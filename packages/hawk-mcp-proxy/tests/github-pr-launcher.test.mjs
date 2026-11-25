@@ -353,6 +353,31 @@ test("repository-scoped launch binds the proxy to one exact GitHub repository", 
   );
 });
 
+test("GitHub CLI credential is named explicitly for the proxy to pass to the GitHub MCP server", async () => {
+  const configPath = await writeEndpointConfig({
+    ipc_trusted_device_thumbprint: VALID_PIN,
+  });
+
+  const launch = buildLaunchConfig({
+    profile: "cli",
+    repositoryScope: "github.com/jd2402247-sudo/hawk-governed-ai-demo-private",
+    githubAuthSource: "gh-session",
+    githubUser: "octo-user",
+    githubTokenReader: () => "gho_example-token\n",
+    ...paths(configPath),
+  });
+
+  assert.equal(launch.env.GITHUB_PERSONAL_ACCESS_TOKEN, "gho_example-token");
+  const separator = launch.args.indexOf("--");
+  const passEnv = launch.args.indexOf("--pass-env");
+  assert.ok(passEnv > 0 && passEnv < separator);
+  assert.equal(launch.args[passEnv + 1], "GITHUB_PERSONAL_ACCESS_TOKEN");
+  assert.equal(launch.args.includes("gho_example-token"), false);
+
+  const withoutToken = buildLaunchConfig({ profile: "cli", ...paths(configPath) });
+  assert.equal(withoutToken.args.includes("--pass-env"), false);
+});
+
 function paths(endpointConfigPath) {
   return {
     endpointConfigPath,

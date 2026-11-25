@@ -1,6 +1,7 @@
 #import <ApplicationServices/ApplicationServices.h>
 #import <Cocoa/Cocoa.h>
 #import <Foundation/Foundation.h>
+#include <signal.h>
 
 @interface HawkEnterGuard : NSObject
 @property(nonatomic, copy) NSString *configPath;
@@ -264,13 +265,28 @@ static void SendKey(CGKeyCode keyCode, CGEventFlags flags) {
         @"hawk_desktop_guard",
         @"--config",
         self.configPath,
-        @"--evaluate-text",
-        text,
+        @"--evaluate-stdin",
         @"--capture-method",
         @"macos_enter_intercept",
     ];
     task.environment = environment;
-    [task launchAndReturnError:nil];
+    // The prompt goes through a private pipe, never as a command-line argument: any local process can read another
+    // process's arguments.
+    NSPipe *input = [NSPipe pipe];
+    task.standardInput = input;
+    if (![task launchAndReturnError:nil]) {
+        return;
+    }
+    NSData *data = [text dataUsingEncoding:NSUTF8StringEncoding] ?: [NSData data];
+    NSFileHandle *writer = input.fileHandleForWriting;
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+        @try {
+            [writer writeData:data];
+        } @catch (NSException *exception) {
+            // The helper exited before reading: nothing to report.
+        }
+        [writer closeFile];
+    });
 }
 
 @end
@@ -289,6 +305,8 @@ static CGEventRef EventCallback(CGEventTapProxy proxy, CGEventType type, CGEvent
 int main(int argc, const char *argv[]) {
     @autoreleasepool {
         NSArray<NSString *> *arguments = NSProcessInfo.processInfo.arguments;
+        // A helper that exits before reading its prompt must not take this process down with SIGPIPE.
+        signal(SIGPIPE, SIG_IGN);
         HawkEnterGuard *guard = [[HawkEnterGuard alloc] initWithArguments:arguments];
         LogLine(@"starting native Return event tap");
         // Permission is an administrator/MDM decision. Never interrupt the user

@@ -329,6 +329,54 @@ def test_required_two_step_is_set_up_at_sign_in_and_cannot_be_turned_off(env):
     assert off.status_code == 403
 
 
+REGISTER_BODY = {"email": "newcomer@example.com", "password": PASSWORD, "full_name": "Newcomer"}
+
+
+def test_register_without_required_two_step_still_gives_tokens(env, monkeypatch):
+    monkeypatch.setattr(settings, "self_registration_enabled", True)
+    response = env["client"].post("/auth/register", json=REGISTER_BODY)
+    assert response.status_code == 200, response.text
+    assert response.json()["access_token"]
+
+
+def test_register_with_required_two_step_gives_no_tokens_until_it_is_set_up(env, monkeypatch):
+    monkeypatch.setattr(settings, "self_registration_enabled", True)
+    set_policy(env, two_step_required=True)
+    response = env["client"].post("/auth/register", json=REGISTER_BODY)
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["two_step"] is True
+    assert "access_token" not in body and "refresh_token" not in body
+    assert response.headers["cache-control"] == "no-store"
+    secret = body["setup"]["secret"]
+    with env["db"]() as db:
+        user = db.scalar(select(User).where(User.email == REGISTER_BODY["email"]))
+        assert user is not None and not user.mfa_secret
+        assert db.scalar(select(RefreshToken).where(RefreshToken.user_id == user.id)) is None
+
+    wrong = env["client"].post("/auth/two-step", json={"ticket": body["ticket"], "code": "000000"})
+    assert wrong.status_code == 401
+    done = env["client"].post("/auth/two-step", json={"ticket": body["ticket"], "code": mfa_service.totp(secret, env["clock"]())})
+    assert done.status_code == 200, done.text
+    assert len(done.json()["recovery_codes"]) == 10
+    assert env["client"].get("/auth/me", headers=bearer(done.json())).json()["two_step"]["on"] is True
+
+
+def test_register_with_required_two_step_keeps_nothing_when_no_ticket_can_be_made(env, monkeypatch):
+    monkeypatch.setattr(settings, "self_registration_enabled", True)
+    set_policy(env, two_step_required=True)
+
+    def unavailable(*_args, **_kwargs):
+        raise sign_in_store.StoreUnavailable("down")
+
+    monkeypatch.setattr(mfa_service, "issue_ticket", unavailable)
+    response = env["client"].post("/auth/register", json=REGISTER_BODY)
+    assert response.status_code == 503
+    assert "access_token" not in response.json()
+    with env["db"]() as db:
+        assert db.scalar(select(User).where(User.email == REGISTER_BODY["email"])) is None
+
+
 def test_turning_off_and_new_recovery_codes_need_a_current_app_code(env):
     make_user(env, "self@example.test")
     tokens = login(env, "self@example.test").json()

@@ -493,6 +493,8 @@ def list_agents(
         tenant_id=ctx.tenant.id,
         module="ai_iam",
         request_id="ai_iam.list_agents",
+        # Not an action of one AI system (fail_secure_service.NO_AI_SYSTEM_CONTEXT_REASONS).
+        no_ai_system_context_reason="tenant_registry",
     )
     rows = db.scalars(select(AgentIdentity).where(AgentIdentity.tenant_id == ctx.tenant.id)).all()
     dto_rows = [AgentIdentityResponse.model_validate(row) for row in rows]
@@ -518,6 +520,8 @@ def get_agent_activity(
         tenant_id=ctx.tenant.id,
         module="ai_iam",
         request_id=f"ai_iam.agent_activity:{agent_id}",
+        # Not an action of one AI system (fail_secure_service.NO_AI_SYSTEM_CONTEXT_REASONS).
+        no_ai_system_context_reason="tenant_registry",
     )
     agent = db.scalar(
         select(AgentIdentity).where(
@@ -623,6 +627,8 @@ def list_ai_iam_users_registry(
         tenant_id=ctx.tenant.id,
         module="ai_iam",
         request_id="ai_iam.list_users",
+        # Not an action of one AI system (fail_secure_service.NO_AI_SYSTEM_CONTEXT_REASONS).
+        no_ai_system_context_reason="tenant_registry",
     )
     payload = list_user_registry(
         db,
@@ -651,6 +657,8 @@ def get_ai_iam_user_registry(
         tenant_id=ctx.tenant.id,
         module="ai_iam",
         request_id=f"ai_iam.get_user:{user_id}",
+        # Not an action of one AI system (fail_secure_service.NO_AI_SYSTEM_CONTEXT_REASONS).
+        no_ai_system_context_reason="tenant_registry",
     )
     payload = get_user_registry_entry(
         db,
@@ -676,6 +684,8 @@ def create_purpose_session(
         tenant_id=ctx.tenant.id,
         module="ai_iam",
         request_id="ai_iam.create_purpose_session",
+        # Not an action of one AI system (fail_secure_service.NO_AI_SYSTEM_CONTEXT_REASONS).
+        no_ai_system_context_reason="tenant_registry",
     )
     approved_scope = dict(payload.approved_scope or {})
     identity_type = str(approved_scope.get("identity_type") or "").strip().lower()
@@ -742,6 +752,8 @@ def list_identities(
         tenant_id=ctx.tenant.id,
         module="ai_iam",
         request_id="ai_iam.list_identities",
+        # Not an action of one AI system (fail_secure_service.NO_AI_SYSTEM_CONTEXT_REASONS).
+        no_ai_system_context_reason="tenant_registry",
     )
     safe_fetch_limit = max(50, min(500, max(1, page) * max(1, page_size)))
     profiles = list_agent_identity_profiles(
@@ -774,6 +786,8 @@ def get_identity(
         tenant_id=ctx.tenant.id,
         module="ai_iam",
         request_id=f"ai_iam.get_identity:{identity_id}",
+        # Not an action of one AI system (fail_secure_service.NO_AI_SYSTEM_CONTEXT_REASONS).
+        no_ai_system_context_reason="tenant_registry",
     )
     try:
         profile = get_agent_identity_profile(
@@ -802,6 +816,8 @@ def create_agent(
         tenant_id=ctx.tenant.id,
         module="ai_iam",
         request_id="ai_iam.create_agent",
+        # Not an action of one AI system (fail_secure_service.NO_AI_SYSTEM_CONTEXT_REASONS).
+        no_ai_system_context_reason="tenant_registry",
     )
     row = AgentIdentity(
         tenant_id=ctx.tenant.id,
@@ -857,6 +873,8 @@ def update_agent(
         tenant_id=ctx.tenant.id,
         module="ai_iam",
         request_id=f"ai_iam.update_agent:{agent_id}",
+        # Not an action of one AI system (fail_secure_service.NO_AI_SYSTEM_CONTEXT_REASONS).
+        no_ai_system_context_reason="tenant_registry",
     )
     row = db.scalar(select(AgentIdentity).where(AgentIdentity.id == agent_id, AgentIdentity.tenant_id == ctx.tenant.id))
     if not row:
@@ -908,6 +926,8 @@ def refresh_owner_attestation(
         tenant_id=ctx.tenant.id,
         module="ai_iam",
         request_id=f"ai_iam.refresh_owner_attestation:{agent_id}",
+        # Not an action of one AI system (fail_secure_service.NO_AI_SYSTEM_CONTEXT_REASONS).
+        no_ai_system_context_reason="tenant_registry",
     )
     row = db.scalar(select(AgentIdentity).where(AgentIdentity.id == agent_id, AgentIdentity.tenant_id == ctx.tenant.id))
     if not row:
@@ -1235,6 +1255,8 @@ def revoke_token(
         tenant_id=ctx.tenant.id,
         module="ai_iam",
         request_id=f"ai_iam.revoke_token:{token_id}",
+        # Not an action of one AI system (fail_secure_service.NO_AI_SYSTEM_CONTEXT_REASONS).
+        no_ai_system_context_reason="containment",
     )
     row = revoke_capability_token(db, tenant_id=ctx.tenant.id, token_id=token_id)
     if not row:
@@ -1278,6 +1300,8 @@ def kill_switch_agent(
         tenant_id=ctx.tenant.id,
         module="ai_iam",
         request_id=f"ai_iam.kill_switch:{agent_id}",
+        # Not an action of one AI system (fail_secure_service.NO_AI_SYSTEM_CONTEXT_REASONS).
+        no_ai_system_context_reason="containment",
     )
     agent = db.scalar(select(AgentIdentity).where(AgentIdentity.id == agent_id, AgentIdentity.tenant_id == ctx.tenant.id))
     if not agent:

@@ -40,7 +40,6 @@ class MacClaudeCollector(ClipboardCollector):
                 application=self.application,
                 desktop_app=self.desktop_app,
                 prompt_text=focused_text,
-                prompt_preview_redacted=focused_text,
                 capture_method="macos_accessibility",
                 machine_id=self.machine_id,
                 os_type=self.os_type,

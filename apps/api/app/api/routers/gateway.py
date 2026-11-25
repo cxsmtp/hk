@@ -22,7 +22,7 @@ from app.services.instruction_tool_provenance import InstructionToolProvenanceSe
 from app.services.rate_limit_service import tenant_rate_limiter
 from app.services.audit_service import write_audit_log
 from app.services.evidence_service import create_evidence_node
-from app.services.fail_secure_service import enforce_fail_secure_or_raise
+from app.services.fail_secure_service import enforce_gateway_fail_secure_or_raise
 from app.services.governance_guard import GovernanceFailSecureError, GovernanceViolationError
 from app.services.mcp_session_service import (
     MCPSessionAuthorityError,
@@ -364,12 +364,14 @@ def gateway_llm_intercept(
     db: Session = Depends(get_db),
 ):
     req_id = payload.request_id or str(uuid4())
-    enforce_fail_secure_or_raise(
+    enforce_gateway_fail_secure_or_raise(
         db,
         tenant_id=ctx.tenant.id,
         module="gateway",
         ai_system_id=payload.ai_system_id,
         request_id=req_id,
+        governance_route="/gateway/llm/intercept",
+        governance_action="gateway.llm.intercept",
     )
     _enforce_rate_limit_or_raise(
         db=db,
@@ -569,12 +571,14 @@ def gateway_mcp_authorize(
     db: Session = Depends(get_db),
 ):
     req_id = payload.request_id or str(uuid4())
-    enforce_fail_secure_or_raise(
+    enforce_gateway_fail_secure_or_raise(
         db,
         tenant_id=ctx.tenant.id,
         module="gateway",
         ai_system_id=payload.ai_system_id,
         request_id=req_id,
+        governance_route="/gateway/mcp/authorize",
+        governance_action="gateway.mcp.authorize",
     )
     _enforce_rate_limit_or_raise(
         db=db,

@@ -1257,6 +1257,44 @@ def test_desktop_interaction_eval_blocks_sensitive_claude_prompt_and_preserves_l
         assert finding.evidence_status == "complete"
 
 
+def test_desktop_guard_redacted_preview_keeps_the_sensitive_data_decision(test_env) -> None:
+    """The desktop guard sends no raw prompt by default: a preview it redacted plus the types it redacted. The API's
+    decision must be the one it reaches on the unredacted text, never a weaker one."""
+
+    client: TestClient = test_env["client"]
+    owner = _register_owner(client, email="desktop-guard-redacted@example.com")
+    headers = _headers(owner["access_token"], owner["tenant_id"])
+    base = {
+        "application": "Claude Desktop",
+        "desktop_app": "Claude",
+        "capture_method": "macos_accessibility",
+        "platform_mode": "enforce",
+        "machine_id": "macbook-claude-02",
+    }
+
+    def decide(index: int, **fields) -> str:
+        response = client.post(
+            "/telemetry/desktop/interaction-eval",
+            headers=headers,
+            json={**base, "prompt_hash": f"desktop-redacted-{index}", **fields},
+        )
+        assert response.status_code == 200, response.text
+        return response.json()["decision"]
+
+    raw = decide(1, prompt_preview_redacted="Please email the payroll file to jane.doe@example.com and card 4111 1111 1111 1111")
+    redacted = decide(
+        2,
+        prompt_preview_redacted="Please email the payroll file to [REDACTED:EMAIL] and card [REDACTED:CARD]",
+        redacted_entity_types=["email", "credit_card"],
+        prompt_storage_mode="redacted_preview_only",
+    )
+    assert raw != "allow"
+    assert redacted == raw
+    # Unknown types a client might send change nothing.
+    ignored = decide(3, prompt_preview_redacted="Summarize these meeting notes", redacted_entity_types=["not_a_type"])
+    assert ignored == decide(4, prompt_preview_redacted="Summarize these meeting notes")
+
+
 def test_browser_interaction_eval_degrades_to_no_write_path_when_sqlite_is_busy(test_env, monkeypatch) -> None:
     client: TestClient = test_env["client"]
     owner = _register_owner(client, email="extension-eval-degraded@example.com")

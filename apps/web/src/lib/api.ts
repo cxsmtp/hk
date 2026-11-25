@@ -220,8 +220,12 @@ import type {
 } from "@/lib/types";
 
 const API_URL = API_BASE_URL;
-const DEMO_FORCE = (process.env.NEXT_PUBLIC_DEMO_FORCE || "false").toLowerCase() === "true";
-const DEMO_FILL_EMPTY = (process.env.NEXT_PUBLIC_DEMO_FILL_EMPTY || "true").toLowerCase() !== "false";
+// Invented demo data exists only in the demo build (DEMO_BUILD=1, demo-build.mjs). Inlined at compile time: in every
+// other build the demo branches below are dead code and @/lib/demo-fallback is a module without data, so an API error
+// is shown as an error and an empty result as empty.
+const DEMO_BUILD = process.env.NEXT_PUBLIC_HAWK_DEMO_BUILD === "1";
+const DEMO_FORCE = DEMO_BUILD && (process.env.NEXT_PUBLIC_DEMO_FORCE || "false").toLowerCase() === "true";
+const DEMO_FILL_EMPTY = DEMO_BUILD && (process.env.NEXT_PUBLIC_DEMO_FILL_EMPTY || "true").toLowerCase() !== "false";
 const RETRYABLE_MUTATION_PATH_PREFIXES = [
   "/scans/trigger",
   "/discovery/scans",
@@ -510,7 +514,7 @@ async function request<T>(
           const text = await res.clone().text();
           if (reportAccessNeeded(res.status, text)) throw new Error(text);
         }
-        if (isDemoFallbackEnabled()) {
+        if (DEMO_BUILD && isDemoFallbackEnabled()) {
           const fallback = demoFallbackRequest(path, init, session);
           if (fallback !== null) return fallback as T;
         }
@@ -519,7 +523,7 @@ async function request<T>(
       }
 
       const payload = (await res.json()) as T;
-      if (isDemoFallbackEnabled() && (DEMO_FORCE || (DEMO_FILL_EMPTY && shouldUseFallbackForPayload(payload)))) {
+      if (DEMO_BUILD && isDemoFallbackEnabled() && (DEMO_FORCE || (DEMO_FILL_EMPTY && shouldUseFallbackForPayload(payload)))) {
         const fallback = demoFallbackRequest(path, init, session);
         if (fallback !== null) return fallback as T;
       }
@@ -533,7 +537,7 @@ async function request<T>(
           attempt += 1;
           continue;
         }
-        if (isDemoFallbackEnabled()) {
+        if (DEMO_BUILD && isDemoFallbackEnabled()) {
           const fallback = demoFallbackRequest(path, init, session);
           if (fallback !== null) return fallback as T;
         }
@@ -546,7 +550,7 @@ async function request<T>(
         attempt += 1;
         continue;
       }
-      if (isDemoFallbackEnabled()) {
+      if (DEMO_BUILD && isDemoFallbackEnabled()) {
         const fallback = demoFallbackRequest(path, init, session);
         if (fallback !== null) return fallback as T;
       }
@@ -751,7 +755,7 @@ export const api = {
     request<{ terms: TermsState }>("/terms/accept", { method: "POST", body: JSON.stringify(payload) }),
   setupStatus: () => request<{ setup: boolean }>("/setup", undefined, false),
   setup: (payload: { code: string; email: string; name: string; password: string }) =>
-    request<LoginResponse>("/setup", { method: "POST", body: JSON.stringify(payload) }, false),
+    request<LoginResponse | TwoStepChallenge>("/setup", { method: "POST", body: JSON.stringify(payload) }, false),
   // The product licence and activation codes (docs/activation-codes.md).
   getLicence: () => request<LicenceStatus>("/licence", undefined, false),
   activateLicence: (code: string) =>

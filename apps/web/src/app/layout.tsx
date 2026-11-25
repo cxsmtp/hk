@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Toaster } from "sonner";
 
 import { AccessGate } from "@/components/access-gate";
+import { DemoDataBanner } from "@/components/demo-data-banner";
 import { LicenceGate } from "@/components/licence-gate";
 import { VersionTag } from "@/components/version-tag";
 
@@ -16,6 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
+        <DemoDataBanner />
         <LicenceGate>
           <AccessGate>{children}</AccessGate>
         </LicenceGate>

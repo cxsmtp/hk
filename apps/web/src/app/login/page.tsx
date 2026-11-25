@@ -117,6 +117,15 @@ export default function LoginPage() {
     try {
       const result = await api.setup({ code: cleanSetupCode(setupCode), email, name: setupName, password });
       toast.success("Administrator created");
+      if (isTwoStepChallenge(result)) {
+        // Two-step sign-in is required for everyone: it is set up before anyone is signed in.
+        setChallenge(result);
+        setUseRecovery(false);
+        setTwoStepCode("");
+        setTwoStepStatus("");
+        setBox("twostep");
+        return;
+      }
       signedIn(result);
     } catch (err) {
       toast.error(errorMessageFrom(err instanceof Error ? err.message : "", "The administrator could not be created."));

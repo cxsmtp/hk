@@ -14,7 +14,6 @@ def _snapshot() -> PromptSnapshot:
         application="Claude Desktop",
         desktop_app="Claude",
         prompt_text="secret",
-        prompt_preview_redacted="secret",
         capture_method="macos_accessibility",
     )
 

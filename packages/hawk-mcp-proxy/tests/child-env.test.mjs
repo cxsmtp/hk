@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { NdjsonMcpMessageFramer, encodeNdjsonMcpMessage } from "../src/framing.mjs";
-import { HawkMcpProxy } from "../src/proxy.mjs";
+import { CHILD_ENVIRONMENT_ALLOWLIST, HawkMcpProxy, childEnvironment, normalizePassEnv } from "../src/proxy.mjs";
 
 test("endpoint CLI requires an out-of-band managed device-key pin", () => {
   const result = spawnSync(process.execPath, [
@@ -51,14 +51,93 @@ const SENSITIVE_ENVIRONMENT = [
   "HAWK_API_URL",
 ];
 
-test("gateway and endpoint proxy children never inherit Hawk secrets or endpoint identity", async (t) => {
+// Secrets of other kinds a developer's shell or an MCP client config commonly holds.
+const UNRELATED_SECRETS = [
+  "AWS_SECRET_ACCESS_KEY",
+  "AWS_SESSION_TOKEN",
+  "OPENAI_API_KEY",
+  "ANTHROPIC_API_KEY",
+  "GITHUB_TOKEN",
+  "GITHUB_PERSONAL_ACCESS_TOKEN",
+  "NPM_TOKEN",
+  "DATABASE_URL",
+];
+
+test("child environment is an allowlist plus explicitly named variables", () => {
+  const parent = {
+    PATH: "/usr/bin",
+    HOME: "/home/someone",
+    LANG: "en_US.UTF-8",
+    HTTPS_PROXY: "http://proxy.example:3128",
+    OPENAI_API_KEY: "sk-secret",
+    GITHUB_PERSONAL_ACCESS_TOKEN: "ghp-secret",
+    HAWK_MCP_PASS_ENV: "GITHUB_PERSONAL_ACCESS_TOKEN",
+    HAWK_ACCESS_TOKEN: "hawk-secret",
+    HAWK_AGENT_ANYTHING: "agent-secret",
+  };
+  assert.deepEqual(childEnvironment(parent), {
+    PATH: "/usr/bin",
+    HOME: "/home/someone",
+    LANG: "en_US.UTF-8",
+    HTTPS_PROXY: "http://proxy.example:3128",
+  });
+  assert.deepEqual(childEnvironment(parent, normalizePassEnv("GITHUB_PERSONAL_ACCESS_TOKEN")), {
+    PATH: "/usr/bin",
+    HOME: "/home/someone",
+    LANG: "en_US.UTF-8",
+    HTTPS_PROXY: "http://proxy.example:3128",
+    GITHUB_PERSONAL_ACCESS_TOKEN: "ghp-secret",
+  });
+  // Windows names are case-insensitive.
+  assert.deepEqual(
+    childEnvironment({ Path: "C:\\Windows", SystemRoot: "C:\\Windows", hawk_access_token: "x", Secret: "y" }, [], { platform: "win32" }),
+    { Path: "C:\\Windows", SystemRoot: "C:\\Windows" },
+  );
+});
+
+test("Hawk credentials and malformed names cannot be passed explicitly", () => {
+  assert.deepEqual(normalizePassEnv(null), []);
+  assert.deepEqual(normalizePassEnv(" A_KEY, B_KEY ,A_KEY,"), ["A_KEY", "B_KEY"]);
+  assert.deepEqual(normalizePassEnv(["A_KEY"]), ["A_KEY"]);
+  for (const name of ["HAWK_ACCESS_TOKEN", "HAWK_CAPABILITY_TOKEN", "HAWK_AGENT_TOKEN", "HAWK_AGENT_X", "HAWK_ENDPOINT_SOCKET"]) {
+    assert.throws(() => normalizePassEnv(name), /never passed/, name);
+  }
+  for (const name of ["A-B", "1ABC", "A B", "A=B"]) {
+    assert.throws(() => normalizePassEnv(name), /Invalid environment variable name/, name);
+  }
+  assert.throws(
+    () => new HawkMcpProxy({ childCommand: "x", childArgs: [], hawkClient: {}, passEnv: "HAWK_ACCESS_TOKEN" }),
+    /never passed/,
+  );
+});
+
+test("proxy CLI refuses to pass a Hawk credential to the child", () => {
+  const result = spawnSync(process.execPath, [
+    "bin/hawk-mcp-proxy.mjs",
+    "--gateway", "http://127.0.0.1:9",
+    "--tenant", "tenant-1",
+    "--token", "not-a-real-token",
+    "--pass-env", "HAWK_ACCESS_TOKEN",
+    "--", process.execPath, "-e", "",
+  ], {
+    cwd: new URL("..", import.meta.url),
+    encoding: "utf8",
+    env: { PATH: process.env.PATH },
+  });
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /never passed to an MCP server/);
+});
+
+test("gateway and endpoint proxy children never inherit Hawk secrets, endpoint identity or other secrets", async (t) => {
   const saved = new Map();
-  for (const name of SENSITIVE_ENVIRONMENT) {
+  for (const name of [...SENSITIVE_ENVIRONMENT, ...UNRELATED_SECRETS]) {
     saved.set(name, process.env[name]);
     process.env[name] = `sensitive-${name}`;
   }
   saved.set("HAWK_MCP_LAB_DIR", process.env.HAWK_MCP_LAB_DIR);
   process.env.HAWK_MCP_LAB_DIR = "/private/tmp/hawk-child-env-safe";
+  saved.set("MCP_SERVER_API_KEY", process.env.MCP_SERVER_API_KEY);
+  process.env.MCP_SERVER_API_KEY = "named-for-the-child";
   t.after(() => {
     for (const [name, value] of saved) {
       if (value === undefined) delete process.env[name];
@@ -97,6 +176,7 @@ test("gateway and endpoint proxy children never inherit Hawk secrets or endpoint
         childArgs: [childPath],
         hawkClient: { transport },
         stdioFraming: "ndjson",
+        passEnv: "HAWK_MCP_LAB_DIR,MCP_SERVER_API_KEY",
         stderr: new PassThrough(),
       });
       proxy.start({ input, output });
@@ -108,11 +188,18 @@ test("gateway and endpoint proxy children never inherit Hawk secrets or endpoint
           params: {},
         }));
         const response = await waitFor(() => messages.find((message) => message.id === 1));
-        for (const name of SENSITIVE_ENVIRONMENT) {
+        for (const name of [...SENSITIVE_ENVIRONMENT, ...UNRELATED_SECRETS]) {
           assert.equal(response.result.env[name], undefined, `${transport}:${name}`);
         }
         assert.equal(response.result.env.HAWK_MCP_LAB_DIR, "/private/tmp/hawk-child-env-safe");
+        assert.equal(response.result.env.MCP_SERVER_API_KEY, "named-for-the-child");
         assert.equal(response.result.env.PATH, process.env.PATH);
+        const allowed = new Set([...CHILD_ENVIRONMENT_ALLOWLIST, "HAWK_MCP_LAB_DIR", "MCP_SERVER_API_KEY"]);
+        for (const name of Object.keys(response.result.env)) {
+          // The child runtime may add a few of its own (macOS adds __CF_USER_TEXT_ENCODING).
+          if (name.startsWith("__CF")) continue;
+          assert.ok(allowed.has(name), `${transport}: unexpected ${name}`);
+        }
       } finally {
         input.destroy();
         proxy.child.kill();
