@@ -88,6 +88,10 @@ It pulls `ghcr.io/cxsmtp/hk-api`, `-web`, `-proxy` and `-updater` and starts the
 docker compose -f deploy/compose.yaml exec api python -m app.cli.integrity check --origin
 ```
 
+## Hands-off and self-healing
+
+Every 5 minutes (`WATCHDOG_EVERY_SECONDS`) the worker checks the database, Redis, the worker and the scheduler, the email server, the Checkmarx One connectors, the automatic runs and the error rate; it puts right what it can (once per problem), emails the owners and admins after two checks in a row, goes back to the previous version through the updater when one that came in less than a day ago broke what worked (never for an outage on the far side), and with auto-update on raises a support case for an administrator to forward to `MAINTAINER_EMAIL`. Settings → Hands-off adds a weekly status by email, with buttons and one-word replies (`INBOX_EVERY_SECONDS`). Everything: [docs/hands-off.md](../docs/hands-off.md).
+
 ## Backups
 
 A backup is one `.hkbackup` file: the whole database (`pg_dump`, custom format) and the API's data folder (the HTTPS choices and certificates), gzipped, with a SHA-256 per file and over the whole set. A damaged backup is refused whole, never half-restored. The backup key itself, the backups, and the first administrator's one-time password file are never in a backup. The application keys the database depends on (connector secrets, signing keys) are.

@@ -3,6 +3,7 @@ import { API_BASE_URL } from "@/lib/api-url";
 import type { AcmeStatus, HttpsCertificateReport, HttpsMode, HttpsStatus, UploadFile } from "@/lib/https-settings";
 import type { BackupEncryption, BackupFile, BackupInfo, BackupKeyShown, BackupNotice, BackupsStatus, Readiness } from "@/lib/backups-settings";
 import type { Integrity, IntegrityState, UpdateSettings, UpdatesStatus } from "@/lib/updates-settings";
+import type { HandsOffSettings, HandsOffView, LinkAnswer, SelfCheckHealth } from "@/lib/hands-off-settings";
 import type { AuditPage, AuditVerify, ConnectorActivity, Emailed, NetworkCheck, NetworkInfo, SupportChannel, SupportKind, SupportList, SupportRequest, TrustDiagnosis, TrustedCertificate } from "@/lib/records";
 import { approvalStatusFilters, mergeApprovalStatusResults } from "@/lib/approval-workflow";
 import { demoFallbackRequest, isDemoFallbackEnabled } from "@/lib/demo-fallback";
@@ -829,6 +830,15 @@ export const api = {
   removeTrusted: (fingerprint: string) => request<{ certificates: TrustedCertificate[] }>(`/trust/${encodeURIComponent(fingerprint)}`, { method: "DELETE" }),
   setReadiness: (id: string, accept: boolean) =>
     request<{ ok: boolean }>(`/backups/readiness/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify({ accept }) }),
+  // Settings → Hands-off and the self-check (app/api/routers/hands_off.py); the emailed links need no sign-in.
+  getHandsOff: () => request<HandsOffView>("/hands-off"),
+  saveHandsOff: (body: { handsOff: Partial<Omit<HandsOffSettings, "statusTo">> & { statusTo?: string | string[] } }) =>
+    request<HandsOffView>("/hands-off", { method: "PUT", body: JSON.stringify(body) }),
+  sendHandsOffStatus: () => request<{ sent: number }>("/hands-off/status", { method: "POST", body: "{}" }),
+  checkNow: () => request<{ health: SelfCheckHealth }>("/hands-off/check", { method: "POST", body: "{}" }),
+  getSelfCheck: () => request<{ health: SelfCheckHealth }>("/hands-off/health"),
+  describeHandsOffLink: (token: string) => request<LinkAnswer>("/hands-off/link", { method: "POST", body: JSON.stringify({ token }) }, false),
+  confirmHandsOffLink: (token: string) => request<LinkAnswer>("/hands-off/link/confirm", { method: "POST", body: JSON.stringify({ token }) }, false),
   // Settings → Updates (app/api/routers/updates.py)
   getUpdates: () => request<UpdatesStatus>("/updates"),
   checkForUpdates: () => request<UpdatesStatus>("/updates/check", { method: "POST", body: "{}" }),

@@ -27,7 +27,7 @@ MCP gateway, LLM gateway, browser extension, hooks and GitHub control remain exp
 
 ## Install
 
-On one Linux machine with Docker: `sudo deploy/install.sh`. It generates the secrets, starts the stack and prints the first administrator's sign-in. See [deploy/README.md](deploy/README.md). With the published, signed images (`HAWK_RELEASE` in `deploy/.env`), owners and admins update and roll back from Settings → Updates ([docs/updating.md](docs/updating.md), [docs/integrity.md](docs/integrity.md)); every release is in [CHANGELOG.md](CHANGELOG.md).
+On one Linux machine with Docker: `sudo deploy/install.sh`. It generates the secrets, starts the stack and prints the first administrator's sign-in. See [deploy/README.md](deploy/README.md). With the published, signed images (`HAWK_RELEASE` in `deploy/.env`), owners and admins update and roll back from Settings → Updates ([docs/updating.md](docs/updating.md), [docs/integrity.md](docs/integrity.md)); Hawk AI checks and repairs itself every 5 minutes and can be left hands-off ([docs/hands-off.md](docs/hands-off.md)); every release is in [CHANGELOG.md](CHANGELOG.md).
 
 ## Local development
 
