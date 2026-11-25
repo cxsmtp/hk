@@ -40,11 +40,24 @@ def _tenant_context_for_user(*, tenant_id: str | None, db: Session, current_user
 
 
 def require_tenant(
+    request: Request,
     x_tenant_id: str | None = Header(default=None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> TenantContext:
-    return _tenant_context_for_user(tenant_id=x_tenant_id, db=db, current_user=current_user)
+    context = _tenant_context_for_user(tenant_id=x_tenant_id, db=db, current_user=current_user)
+    # Who made this request, for the user activity log (app/services/user_activity.py), read once it is answered.
+    try:
+        request.state.activity_actor = {
+            "tenant_id": context.tenant.id,
+            "user_id": current_user.id,
+            "user": current_user.email or "",
+            "name": current_user.full_name or "",
+            "role": context.role or "",
+        }
+    except Exception:  # noqa: BLE001 - never stands in the way of the request
+        pass
+    return context
 
 
 def require_stream_tenant(

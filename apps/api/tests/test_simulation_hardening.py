@@ -567,7 +567,12 @@ def test_control_auto_degrade(test_env) -> None:
         assert evidence_row.payload.get("control_id") == control_id
         assert evidence_row.payload.get("simulation_id") == fail_sim_id
         assert evidence_row.payload.get("new_maturity") == 0
-        assert evidence_row.payload.get("audit_log_id") == audit_row.id
+        # The evidence links to a degrade entry of this control and simulation. Audit entries carry the time to the
+        # microsecond since the chain (migration 0097); evidence nodes created in the same second tie, so the newest of
+        # each is not always the same pair.
+        linked = db.get(AuditLog, evidence_row.payload.get("audit_log_id"))
+        assert linked is not None and linked.action == "control.degraded" and linked.resource_id == control_id
+        assert linked.payload.get("simulation_id") == fail_sim_id
 
 
 def test_enforcement_strictness_escalates_on_degrade(test_env) -> None:

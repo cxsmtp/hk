@@ -523,8 +523,13 @@ def _audit(db: Session, *, provider: OIDCProvider, user: User | None, action: st
 
 
 def audit_refusal(db: Session, *, provider_key: str, error: OIDCError) -> None:
-    """A refused single sign-on, in the audit log: what was wrong, never a token or secret."""
+    """A refused single sign-on, in the audit log: what was wrong, never a token or secret. Listed only so many a
+    minute, as other refused sign-ins (app/services/refusal_audit.py)."""
 
+    from app.services import refusal_audit
+
+    if not refusal_audit.may_list(db, "sign_in", f"single sign-on {provider_key}"):
+        return
     write_audit_log(
         db,
         tenant_id=None,

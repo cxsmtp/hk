@@ -21,7 +21,7 @@ from app.db.session import get_db
 from app.services import activation_service, first_run_service, terms_service
 from app.services.audit_service import write_audit_log
 from app.services.auth_service import get_user_tenants, issue_tokens, refresh_tokens
-from app.services import account_security, mfa_service, oidc_auth_service, sign_in_store
+from app.services import account_security, mfa_service, oidc_auth_service, refusal_audit, sign_in_store
 from app.services.account_security import SignInRefused
 from app.services.passwords import password_problem
 from app.version import APP_VERSION
@@ -334,6 +334,10 @@ def signed_in_response(db: Session, user: User) -> LoginResponse:
 def audit_access(db: Session, user: User | None, *, action: str, reason: str, request: Request | None) -> None:
     """A sign-in event in the audit log (CxMissionZero's auditAccess): never a password, code, ticket or token."""
 
+    ip = account_security.client_ip(request)
+    # Refusals are listed only so many a minute (app/services/refusal_audit.py: 30 per address, 120 in all).
+    if "refused" in action and not refusal_audit.may_list(db, "sign_in", ip):
+        return
     membership = get_user_tenants(db, user.id)[:1] if user is not None else []
     write_audit_log(
         db,
@@ -343,7 +347,7 @@ def audit_access(db: Session, user: User | None, *, action: str, reason: str, re
         action=action,
         resource_type="user",
         resource_id=user.id if user is not None else "sign-in",
-        payload={"reason": reason, "ip": account_security.client_ip(request)},
+        payload={"reason": reason, "ip": ip},
     )
 
 

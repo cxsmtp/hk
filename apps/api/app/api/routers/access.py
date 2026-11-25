@@ -24,7 +24,7 @@ from app.core.security import decode_token
 from app.db.models.tenant import Tenant
 from app.db.models.user import User, UserTenantRole
 from app.db.session import get_db
-from app.services import first_run_service, terms_service
+from app.services import first_run_service, refusal_audit, terms_service
 from app.services.audit_service import write_audit_log
 from app.services.auth_service import issue_tokens
 
@@ -105,7 +105,8 @@ def setup(request: Request, body: dict[str, Any] | None = Body(default=None), db
         )
     except first_run_service.SetupRefused as refused:
         db.rollback()
-        if refused.status_code == 403:
+        # Listed only so many a minute (app/services/refusal_audit.py: 10 per address, 40 in all).
+        if refused.status_code == 403 and refusal_audit.may_list(db, "unauthenticated", _client_ip(request)):
             write_audit_log(
                 db,
                 tenant_id=None,
