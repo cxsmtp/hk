@@ -2,6 +2,7 @@ import { clearSession, getSession, updateSessionTokens } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/api-url";
 import type { AcmeStatus, HttpsCertificateReport, HttpsMode, HttpsStatus, UploadFile } from "@/lib/https-settings";
 import type { BackupEncryption, BackupFile, BackupInfo, BackupKeyShown, BackupNotice, BackupsStatus, Readiness } from "@/lib/backups-settings";
+import type { Integrity, IntegrityState, UpdateSettings, UpdatesStatus } from "@/lib/updates-settings";
 import { approvalStatusFilters, mergeApprovalStatusResults } from "@/lib/approval-workflow";
 import { demoFallbackRequest, isDemoFallbackEnabled } from "@/lib/demo-fallback";
 import { isDeactivatedAnswer, LICENCE_DEACTIVATED_EVENT } from "@/lib/licence";
@@ -796,6 +797,16 @@ export const api = {
   getReadiness: () => request<Readiness>("/backups/readiness"),
   setReadiness: (id: string, accept: boolean) =>
     request<{ ok: boolean }>(`/backups/readiness/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify({ accept }) }),
+  // Settings → Updates (app/api/routers/updates.py)
+  getUpdates: () => request<UpdatesStatus>("/updates"),
+  checkForUpdates: () => request<UpdatesStatus>("/updates/check", { method: "POST", body: "{}" }),
+  installVersion: (version: string) => request<UpdatesStatus & { to: string }>("/updates/install", { method: "POST", body: JSON.stringify({ version }) }),
+  saveUpdateSettings: (patch: Partial<Pick<UpdateSettings, "auto" | "windowHour" | "channel">>) =>
+    request<UpdatesStatus>("/updates/settings", { method: "PUT", body: JSON.stringify(patch) }),
+  restartHawk: () => request<{ restarting: boolean }>("/updates/restart", { method: "POST", body: "{}" }),
+  downloadUpdateReport: () => requestBlob("/updates/report"),
+  checkIntegrity: () => request<Integrity>("/integrity/check", { method: "POST", body: "{}" }),
+  getIntegrityNotice: () => request<{ notice: { state: IntegrityState; summary: string } | null }>("/integrity/notice"),
   getPlatformMode: () => request<PlatformModeResponse>("/system/platform-mode"),
   updatePlatformMode: (platformMode: PlatformMode) =>
     request<PlatformModeResponse>("/system/platform-mode", {

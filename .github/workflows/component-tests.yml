@@ -16,6 +16,8 @@ on:
       - "docs/**"
       - ".github/workflows/component-tests.yml"
   workflow_dispatch:
+  # Called by release.yml: nothing is published unless these pass.
+  workflow_call:
 
 permissions:
   contents: read

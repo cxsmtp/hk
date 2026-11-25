@@ -1844,5 +1844,24 @@
     "notes": "Settings → Two-step sign-in, for oneself (docs/sign-in.md). Covered by apps/web/tests/two-step-qr.test.mjs and apps/api/tests/test_sign_in_hardening.py; not yet observed in a browser.",
     "desktop": "not-observed",
     "mobile": "not-observed"
+  },
+  {
+    "route": "/settings/updates",
+    "file": "apps/web/src/app/settings/updates/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Settings → Updates (docs/updating.md, docs/integrity.md), laid out as FTR Command Center's Updates page with CxMissionZero's updates and software integrity behind it (registry tags, the updater, auto-update, latest/stable). Covered by apps/web/tests/updates-settings.test.mjs (pure view logic and source checks) and the API tests in apps/api/tests/test_updates.py, test_updater.py and test_integrity.py.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
   }
 ]

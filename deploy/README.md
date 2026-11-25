@@ -58,7 +58,7 @@ Add an email to reset that person instead. The server keeps running, the person 
 sudo HAWK_BUILD_CA_FILE=/path/to/company-ca.pem deploy/install.sh
 ```
 
-**Update without losing anything:** get the new version, then run the installer again. Secrets, settings and data are kept; the database is migrated before the API starts.
+**Update without losing anything:** from the console, under **Settings → Updates**, when Hawk AI runs the published images ([Updates](#updates) below). From a checkout: get the new version, then run the installer again. Secrets, settings and data are kept; the database is migrated before the API starts.
 
 ```
 git pull
@@ -72,11 +72,27 @@ sudo deploy/install.sh
 
 **Backups are automatic:** one a minute after start, then every 24 hours, and one each time the API stops, into `/var/lib/hawk-ai/backups`, encrypted. An owner or admin saves the backup key under **Settings → Backups & health**: [Backups](#backups) below.
 
+## Updates
+
+**Run the published images** (signed by this repository's release workflow) instead of building them: in `deploy/.env` set `HAWK_RELEASE=stable` (the release the maintainer promoted), `latest` (every merged release) or a version such as `0.2.0`, then:
+
+```
+sudo deploy/install.sh
+```
+
+It pulls `ghcr.io/cxsmtp/hk-api`, `-web`, `-proxy` and `-updater` and starts the **updater**. Owners and admins then update and roll back from **Settings → Updates**: every published version is listed, **Update now** or **Roll back to this** in one click, auto-update (off until turned on) at an hour of the day you choose. Before each update the updater checks the images' signatures and files, takes a backup, migrates the database and starts every service; if Hawk AI is not healthy within 150 s it puts the previous version back by itself, with its database. The whole story, the channels and the variables: [docs/updating.md](../docs/updating.md); what is checked: [docs/integrity.md](../docs/integrity.md).
+
+**Check what runs is what was released:**
+
+```
+docker compose -f deploy/compose.yaml exec api python -m app.cli.integrity check --origin
+```
+
 ## Backups
 
 A backup is one `.hkbackup` file: the whole database (`pg_dump`, custom format) and the API's data folder (the HTTPS choices and certificates), gzipped, with a SHA-256 per file and over the whole set. A damaged backup is refused whole, never half-restored. The backup key itself, the backups, and the first administrator's one-time password file are never in a backup. The application keys the database depends on (connector secrets, signing keys) are.
 
-**When.** One minute after the scheduler starts, then every `BACKUP_INTERVAL_HOURS` (24); the newest `BACKUP_KEEP` (14) are kept. By hand: **Back up now** on the Settings page, or:
+**When.** One minute after the scheduler starts, then every `BACKUP_INTERVAL_HOURS` (24), and before every version switch from Settings → Updates (the updater's, "Before the update to HK-…"); the newest `BACKUP_KEEP` (14) are kept. By hand: **Back up now** on the Settings page, or:
 
 ```
 docker compose -f deploy/compose.yaml exec api python -m app.cli.backup

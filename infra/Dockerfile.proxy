@@ -3,7 +3,7 @@
 # the proxy reads only: Caddy waits for it at the first start, then reloads it by itself whenever it changes (--watch).
 # TODO(owner): pin by digest, as infra/Dockerfile.api is; the tag is the one infra/Dockerfile.local-production-gateway
 # already uses, and no digest for it is recorded in this repository.
-FROM caddy:2.8.4-alpine
+FROM caddy:2.8.4-alpine AS base
 
 # Runs as uid 1000 with no capabilities: the binary's own file capability (to bind ports below 1024) is dropped by
 # copying it, as it would stop the binary from starting under cap_drop ALL; it listens on 8443, 8080 and 8081 only.
@@ -11,6 +11,20 @@ RUN cp /usr/bin/caddy /tmp/caddy && mv /tmp/caddy /usr/bin/caddy \
   && mkdir -p /data /config /hawk-proxy \
   && chown -R 1000:1000 /data /config /hawk-proxy \
   && chmod 0700 /data /hawk-proxy
+
+# ---- The file list: the Caddy binary this image ships, with its SHA-256 (docs/integrity.md) --------------------------
+# It is built for each platform, so each platform's list differs; the release workflow signs each one.
+FROM --platform=$BUILDPLATFORM python:3.11-slim@sha256:9c900dea9e8fb7e16277c179b555cc72d29a352dbc33cff48ad5a0412fd5bfc7 AS integrity
+ARG HAWK_COMMIT=""
+ARG HAWK_REPOSITORY=""
+COPY infra/scripts/integrity.py /tool/infra/scripts/integrity.py
+COPY apps/api/app/services/integrity/manifest.py /tool/apps/api/app/services/integrity/manifest.py
+COPY VERSION /image/VERSION
+COPY --from=base /usr/bin/caddy /image/usr/bin/caddy
+RUN python /tool/infra/scripts/integrity.py write /image --image proxy --version "$(cat /image/VERSION)" --commit "$HAWK_COMMIT" --repository "$HAWK_REPOSITORY" --file usr/bin/caddy
+
+FROM base AS runtime
+COPY --from=integrity /image/integrity.json /integrity.json
 
 ENV XDG_DATA_HOME=/data XDG_CONFIG_HOME=/config
 USER 1000

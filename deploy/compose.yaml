@@ -5,7 +5,8 @@
 #   docker compose logs api
 #
 # Services: proxy (one HTTPS address), web (console), api, worker and beat (Celery), migrate (once per start),
-# postgres and redis. Only the proxy is published: HTTPS on ${BIND_ADDRESS:-127.0.0.1}:${PORT:-3000}, and plain http
+# postgres and redis; and, when Hawk AI runs the published images (HAWK_RELEASE in .env), the updater that updates and
+# rolls back the whole stack from Settings → Updates (docs/updating.md). Only the proxy is published: HTTPS on ${BIND_ADDRESS:-127.0.0.1}:${PORT:-3000}, and plain http
 # on ${HTTP_REDIRECT_PORT:-80} (redirected to https while HTTPS only; Let's Encrypt's checks).
 #
 # HTTPS (docs/https-and-hosting.md): the API owns the certificate and the choices made under Settings → HTTPS and
@@ -121,6 +122,15 @@ x-hawk-environment: &hawk-environment
   SMTP_FROM_NAME: ${SMTP_FROM_NAME:-}
   SMTP_REQUIRE_AUTH: ${SMTP_REQUIRE_AUTH:-}
   SMTP_REJECT_UNAUTHORIZED: ${SMTP_REJECT_UNAUTHORIZED:-}
+  # Updates and software integrity (docs/updating.md, docs/integrity.md). Images come from <UPDATE_IMAGE>-api, -web and
+  # -proxy; a private copy needs UPDATE_REGISTRY_TOKEN (read-only). The updater shares UPDATER_DIR with api and worker.
+  UPDATE_IMAGE: ${UPDATE_IMAGE:-ghcr.io/cxsmtp/hk}
+  UPDATE_REGISTRY_TOKEN: ${UPDATE_REGISTRY_TOKEN:-}
+  UPDATER_DIR: /updater
+  AUTO_UPDATE_EVERY_SECONDS: ${AUTO_UPDATE_EVERY_SECONDS:-900}
+  INTEGRITY_CHECK_HOURS: ${INTEGRITY_CHECK_HOURS:-6}
+  INTEGRITY_OFFLINE: ${INTEGRITY_OFFLINE:-}
+  GITHUB_TOKEN: ${INTEGRITY_GITHUB_TOKEN:-}
 
 x-hawk-secrets: &hawk-secrets
   - database_url
@@ -247,6 +257,8 @@ services:
       # Certificates given to the deployment (TLS_CERT_FILE…): read-only, from the data folder.
       - ${HAWK_DATA_DIR}/certs:/certs:ro
       - ${BACKUP_DIR:-${HAWK_DATA_DIR}/backups}:/backups
+      # Shared with the updater (docs/updating.md): requests to it, its heartbeat and status, and this API's ack.
+      - ${HAWK_DATA_DIR}/updater:/updater
     healthcheck:
       <<: *hawk-healthcheck
       test: ["CMD", "python", "-m", "app.cli.healthcheck"]
@@ -271,6 +283,8 @@ services:
       # The scheduled backup runs here (app/jobs/backup_jobs.py): the API's data folder and the backup folder.
       - hawk-data:/data
       - ${BACKUP_DIR:-${HAWK_DATA_DIR}/backups}:/backups
+      # Auto-update runs here (app/jobs/update_jobs.py): it writes its request for the updater.
+      - ${HAWK_DATA_DIR}/updater:/updater
     healthcheck:
       <<: *hawk-healthcheck
       test: ["CMD", "python", "/workspace/infra/scripts/check_component_heartbeat.py", "worker"]
@@ -298,6 +312,51 @@ services:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+
+  # The updater (apps/updater, docs/updating.md): CxMissionZero's update companion for the whole stack. Exception: it is
+  # the only container with the Docker socket, and runs as root for it (with no capabilities and no privilege
+  # escalation). It opens no port and acts only on ${HAWK_DATA_DIR}/updater/request.json: it replaces migrate, api,
+  # worker, beat, web and proxy with the same services on the images asked for (only <UPDATE_IMAGE>-…, which they must
+  # already run), takes a backup first, waits UPDATE_START_TIMEOUT_SECONDS (150) for them to be healthy, and otherwise
+  # puts the previous ones back (and the database, when the migrations ran). Started by install.sh with the published
+  # images only (the "updates" profile).
+  updater:
+    image: ${HAWK_UPDATER_IMAGE:-hawk-updater:local}
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.updater
+      target: runtime
+    profiles: ["updates"]
+    restart: unless-stopped
+    user: "0:0"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 64
+    stop_grace_period: 15s
+    init: true
+    environment:
+      TZ: ${TZ:-UTC}
+      UPDATER_DIR: /updater
+      ENGINE_SOCKET: /var/run/docker.sock
+      UPDATE_IMAGE: ${UPDATE_IMAGE:-ghcr.io/cxsmtp/hk}
+      UPDATE_REGISTRY_TOKEN: ${UPDATE_REGISTRY_TOKEN:-}
+      UPDATE_START_TIMEOUT_SECONDS: ${UPDATE_START_TIMEOUT_SECONDS:-150}
+      INTEGRITY_OFFLINE: ${INTEGRITY_OFFLINE:-}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${HAWK_DATA_DIR}/updater:/updater
+    network_mode: none
+    healthcheck:
+      test: ["CMD", "python", "-c", "import json,time,datetime as d;b=json.load(open('/updater/updater.json'));raise SystemExit(0 if time.time()-d.datetime.fromisoformat(b['at'].replace('Z','+00:00')).timestamp()<90 else 1)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
 
   # Exception: PostgreSQL's entrypoint runs as root to prepare its data folder and then drops to the postgres user,
   # so it keeps the five capabilities that needs (CHOWN, SETUID, SETGID, FOWNER, DAC_OVERRIDE) and a writable root

@@ -20,12 +20,25 @@ from app.services import backup_service
 from app.services.backup_key import BackupKeyStore
 
 
-def main(argv: list[str] | None = None, *, cfg: backup_service.BackupConfig | None = None, dump=None) -> int:
-    args = sys.argv[1:] if argv is None else argv
+def main(argv: list[str] | None = None, *, cfg: backup_service.BackupConfig | None = None, dump=None, audit=None) -> int:
+    args = list(sys.argv[1:] if argv is None else argv)
     cfg = cfg or backup_service.config()
     if not cfg.data_dir.exists():
         print(f"No data folder at {cfg.data_dir}. Set HAWK_DATA_DIR to the API's data folder.", file=sys.stderr)
         return 1
+    if "--trigger" in args:
+        # A backup into BACKUP_DIR with the server's own bookkeeping (the newest BACKUP_KEEP kept, the last backup on
+        # Settings → Backups & health, the audit log): the updater's backup before every version switch
+        # (apps/updater), with its reason, e.g. --trigger "Before the update to HK-00.02.00".
+        at = args.index("--trigger")
+        trigger = (args[at + 1] if at + 1 < len(args) else "").strip() or "Manual"
+        result = backup_service.backup_to_folder(trigger[:120], cfg=cfg, dump=dump, **({"audit": audit} if audit else {}))
+        if not result.get("ok"):
+            print(f"Cannot back up: {result.get('error')}", file=sys.stderr)
+            return 1
+        print(f"{trigger[:120]}: backed up the database and the data folder ({result.get('files')} files)")
+        print(f"  → {result.get('file')} ({result.get('size')} bytes{', encrypted' if result.get('encrypted') else ''})")
+        return 0
     try:
         store = BackupKeyStore(data_dir=cfg.data_dir)
     except Exception as error:  # noqa: BLE001 - the key file is there and cannot be read: said, and nothing is written

@@ -8,7 +8,7 @@ from celery.schedules import crontab
 from celery.signals import beat_init, heartbeat_sent, task_failure, worker_ready
 
 from app.core.config import settings
-from app.jobs import backup_schedule
+from app.jobs import backup_schedule, update_schedule
 from app.jobs.licence_task import LicensedTask
 from app.services.control_plane_health_service import write_beat_heartbeat, write_worker_heartbeat
 from app.services.job_run_service import write_dead_letter_job_run
@@ -263,9 +263,13 @@ from app.jobs import (  # noqa: E402,F401
     monitoring_jobs,
     native_control_jobs,
     risk_jobs,
+    update_jobs,
 )
 
 # Backups (app/jobs/backup_jobs.py): one minute after beat starts, then every BACKUP_INTERVAL_HOURS (default 24).
 _backup_entry = backup_schedule.beat_entry()
 if _backup_entry:
     celery_app.conf.beat_schedule["scheduled-backup"] = _backup_entry
+
+# Auto-update (off until an owner or admin turns it on) and the software integrity check (app/jobs/update_jobs.py).
+celery_app.conf.beat_schedule.update(update_schedule.beat_entries())

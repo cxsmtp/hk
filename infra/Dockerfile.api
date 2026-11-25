@@ -32,8 +32,9 @@ COPY apps/api /workspace/apps/api
 COPY packages /workspace/packages
 COPY docs/evidence /workspace/docs/evidence
 COPY infra/scripts /workspace/infra/scripts
-# The version shown in the console and on /health, and the terms of use people accept (deploy/README.md).
-COPY VERSION TERMS.md /workspace/
+# The version shown in the console and on /health, the terms of use people accept (deploy/README.md), the licence and
+# the version log.
+COPY VERSION TERMS.md LICENSE CHANGELOG.md /workspace/
 
 # /data: the API's own data folder (0700), e.g. the first administrator's one-time password file until it is changed,
 # and the HTTPS choices and certificates (Settings → HTTPS). /hawk-proxy: the front proxy's configuration, written here.
@@ -52,7 +53,19 @@ USER root
 RUN mkdir -p /test-results && chown 1000:1000 /test-results
 USER 1000
 
+# ---- The file list: every file the image ships, with its SHA-256 (docs/integrity.md) ----------------------------------
+# The release workflow signs this exact file (a GitHub build attestation, logged by Sigstore), and the API checks its own
+# files and that signature (Settings → Updates → Software integrity), as CxMissionZero's Dockerfile integrity stage.
+FROM api-base AS integrity
+ARG HAWK_COMMIT=""
+ARG HAWK_REPOSITORY=""
+USER root
+RUN python /workspace/infra/scripts/integrity.py write /workspace --image api --commit "$HAWK_COMMIT" --repository "$HAWK_REPOSITORY" \
+      --tree apps/api --tree packages --tree docs/evidence --tree infra/scripts \
+      --file VERSION --file TERMS.md --file LICENSE --file CHANGELOG.md
+
 FROM api-base AS runtime
+COPY --from=integrity /workspace/integrity.json /workspace/integrity.json
 USER root
 # No test runner and no package manager at run time (CxMissionZero's runtime image carries no npm either).
 RUN pip uninstall -y pytest iniconfig pluggy \
