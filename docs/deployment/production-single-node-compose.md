@@ -1,5 +1,9 @@
 # Hawk production single-node Compose operations
 
+> **Legacy.** New installations use the one production deployment in [`deploy/`](../../deploy/README.md): one command
+> (`sudo deploy/install.sh`) on a single Linux machine. The layered stack described here now lives in `infra/legacy/`
+> and is kept only for installations that still run it.
+
 ## Supported topology
 
 Phase 9 supports one topology: a single Docker Engine host running the existing PostgreSQL, Redis, migration, bootstrap, API, Celery worker, Celery beat, and Next.js services. API and web ports remain bound to loopback. A customer-managed TLS reverse proxy must expose the configured HTTPS origins and must enforce request-size and connection-rate limits. This run does not claim Kubernetes, multi-node, multi-region, private-cloud, or zero-downtime support.
@@ -19,13 +23,13 @@ Copy `.env.production.example` to `.env.production`; do not commit it. Every `*_
 ## Deploy and start
 
 1. Review `.env.production` and the secret directory permissions.
-2. Run `./infra/scripts/hawk_production_stack.sh validate`.
-3. Run `./infra/scripts/hawk_production_stack.sh prepare` for the first deployment or approved migration.
-4. Run `./infra/scripts/hawk_production_stack.sh up`.
-5. Confirm `./infra/scripts/hawk_production_stack.sh status` reports every long-running service healthy.
+2. Run `./infra/legacy/hawk_production_stack.sh validate`.
+3. Run `./infra/legacy/hawk_production_stack.sh prepare` for the first deployment or approved migration.
+4. Run `./infra/legacy/hawk_production_stack.sh up`.
+5. Confirm `./infra/legacy/hawk_production_stack.sh status` reports every long-running service healthy.
 
 For a new empty database only, create the first owner with
-`./infra/scripts/hawk_production_stack.sh bootstrap-admin owner@example.com "Owner Name" "Tenant Name" tenant-slug`.
+`./infra/legacy/hawk_production_stack.sh bootstrap-admin owner@example.com "Owner Name" "Tenant Name" tenant-slug`.
 The password is accepted twice through hidden standard input, never through an argument or environment variable.
 The operation obtains a database lock, is audited, and permanently refuses to run once any tenant or user exists.
 Production self-registration remains disabled.
@@ -44,17 +48,17 @@ Use `/health/live` only for process liveness. Use `/health/ready` for API produc
 
 ## Backup
 
-Run `./infra/scripts/hawk_production_stack.sh backup`. The wrapper creates a mode-0600 PostgreSQL custom-format dump under `infra/artifacts/backups`. The operator is responsible for encrypting and copying that file to an approved backup system; a local dump alone is not disaster recovery.
+Run `./infra/legacy/hawk_production_stack.sh backup`. The wrapper creates a mode-0600 PostgreSQL custom-format dump under `infra/artifacts/backups`. The operator is responsible for encrypting and copying that file to an approved backup system; a local dump alone is not disaster recovery.
 
 ## Restore verification
 
-Run `./infra/scripts/hawk_production_stack.sh restore-verify /absolute/repo/path/infra/artifacts/backups/hawk-demo-<timestamp>.dump`. Hawk restores only into a generated disposable `hawk_restore_verify_*` database, checks Alembic revision plus tenant/evidence row access, and drops the disposable database. It never overwrites the active database.
+Run `./infra/legacy/hawk_production_stack.sh restore-verify /absolute/repo/path/infra/artifacts/backups/hawk-demo-<timestamp>.dump`. Hawk restores only into a generated disposable `hawk_restore_verify_*` database, checks Alembic revision plus tenant/evidence row access, and drops the disposable database. It never overwrites the active database.
 
 ## Upgrade
 
 1. Create a backup and run restore verification.
 2. Review configuration and component-version changes.
-3. Build images with `hawk_production_stack.sh build`.
+3. Build images with `infra/legacy/hawk_production_stack.sh build`.
 4. Run `prepare`, then `up`.
 5. Verify readiness, worker/beat freshness, schema head, and UI login.
 6. Confirm no terminal/dead-letter jobs or receipt-signing failures appeared.

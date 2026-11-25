@@ -40,7 +40,7 @@ import uuid
 
 ROOT = Path(__file__).resolve().parents[2]
 PRODUCTION_ENV = ROOT / ".env.production"
-PRODUCTION_STACK = ROOT / "infra" / "scripts" / "hawk_production_stack.sh"
+PRODUCTION_STACK = ROOT / "infra" / "legacy" / "hawk_production_stack.sh"
 ENDPOINT_ROOT = Path.home() / "Library/Application Support/Hawk/EndpointAgent"
 ENDPOINT_PYTHON = ENDPOINT_ROOT / "runtime/venv/bin/python"
 NATIVE_HELPER = ENDPOINT_ROOT / "runtime/bin/hawk-native-hook"

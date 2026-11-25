@@ -1,7 +1,12 @@
 FROM python:3.11-slim@sha256:9c900dea9e8fb7e16277c179b555cc72d29a352dbc33cff48ad5a0412fd5bfc7 AS builder
 
 COPY apps/api/requirements.lock /tmp/requirements.lock
-RUN pip wheel --require-hashes --no-cache-dir --wheel-dir /wheels -r /tmp/requirements.lock
+# Building behind a company proxy that inspects TLS? Pass its CA certificate (as CxMissionZero's Dockerfile does):
+#   docker build --secret id=ca,src=company-ca.pem ...   (deploy/install.sh: HAWK_BUILD_CA_FILE=company-ca.pem)
+# Without it, nothing changes.
+RUN --mount=type=secret,id=ca,required=false \
+    if [ -s /run/secrets/ca ]; then cat /etc/ssl/certs/ca-certificates.crt /run/secrets/ca > /tmp/ca.pem && export PIP_CERT=/tmp/ca.pem; fi && \
+    pip wheel --require-hashes --no-cache-dir --wheel-dir /wheels -r /tmp/requirements.lock && rm -f /tmp/ca.pem
 
 FROM python:3.11-slim@sha256:9c900dea9e8fb7e16277c179b555cc72d29a352dbc33cff48ad5a0412fd5bfc7 AS api-base
 
@@ -19,10 +24,14 @@ COPY apps/api /workspace/apps/api
 COPY packages /workspace/packages
 COPY docs/evidence /workspace/docs/evidence
 COPY infra/scripts /workspace/infra/scripts
+# The version shown in the console and on /health, and the terms of use people accept (deploy/README.md).
+COPY VERSION TERMS.md /workspace/
 
+# /data: the API's own data folder (0700), e.g. the first administrator's one-time password file until it is changed.
 RUN useradd --uid 1000 --create-home --shell /bin/bash appuser \
-  && mkdir -p /artifacts /run/hawk \
-  && chown -R 1000:1000 /workspace /artifacts /run/hawk
+  && mkdir -p /artifacts /run/hawk /data \
+  && chown -R 1000:1000 /workspace /artifacts /run/hawk /data \
+  && chmod 0700 /data
 
 EXPOSE 8000
 USER 1000
@@ -36,5 +45,11 @@ USER 1000
 
 FROM api-base AS runtime
 USER root
-RUN pip uninstall -y pytest iniconfig pluggy
+# No test runner and no package manager at run time (CxMissionZero's runtime image carries no npm either).
+RUN pip uninstall -y pytest iniconfig pluggy \
+  && python -m pip uninstall -y pip
+ENV HAWK_DATA_DIR=/data
 USER 1000
+# deploy/compose.yaml runs the API from this image; worker and beat override the check with their heartbeat.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD ["python", "-m", "app.cli.healthcheck"]

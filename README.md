@@ -25,6 +25,10 @@ The table identifies source evidence and intended responsibilities. **No surface
 
 MCP gateway, LLM gateway, browser extension, hooks and GitHub control remain explicit development priorities. Completing new MVP capabilities is separate from restoring and testing the currently implemented platform. Planned capabilities must stay labeled planned until implementation and tests support a stronger claim.
 
+## Install
+
+On one Linux machine with Docker: `sudo deploy/install.sh`. It generates the secrets, starts the stack and prints the first administrator's sign-in. See [deploy/README.md](deploy/README.md).
+
 ## Local development
 
 Prerequisites: Git, Node.js 20+/npm, Python 3.11+, PostgreSQL 16 and Redis 7 (or Docker). See [native local setup](docs/development/native-local.md) and [Docker/cloud setup](docs/development/cloud-development.md).

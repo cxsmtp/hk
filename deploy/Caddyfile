@@ -1,0 +1,38 @@
+# The front proxy of deploy/compose.yaml: one HTTPS address for the console and the API.
+#   https://<HAWK_HOST>:<PORT>/       the web console
+#   https://<HAWK_HOST>:<PORT>/api/   the API (the prefix is taken off)
+# Without a certificate of yours, Caddy makes its own (a local CA kept in the proxy's volume), so the browser warns
+# once, as CxMissionZero's self-signed default does.
+{
+	admin off
+	skip_install_trust
+	persist_config off
+}
+
+https://{$HAWK_HOST}:8443 {
+	tls internal
+
+	handle_path /api/* {
+		reverse_proxy api:8000 {
+			header_up X-Forwarded-Proto https
+		}
+	}
+
+	handle {
+		reverse_proxy web:3000 {
+			header_up X-Forwarded-Proto https
+		}
+	}
+
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy no-referrer
+		-Server
+	}
+}
+
+# The container's health check only (not published).
+http://:8081 {
+	respond "ok" 200
+}
