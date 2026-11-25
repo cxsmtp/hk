@@ -144,12 +144,20 @@ def _production() -> bool:
     return env in {"prod", "production"} or settings.deployment_topology == "single_node_compose"
 
 
+def _release() -> bool:
+    from app.services.integrity.service import is_release
+
+    return is_release()
+
+
 def trusted_keys() -> list[str]:
     """The issuer keys this process trusts: ISSUER_KEYS, and a test key only while pytest runs a test outside
     production (never in production, where it would let anyone sign their own codes)."""
     keys = list(ISSUER_KEYS)
     test_key = os.environ.get(TEST_KEY_ENV)
-    if test_key and os.environ.get("PYTEST_CURRENT_TEST") and not _production():
+    # A release image carries the list of its files (integrity.json, app/services/integrity/manifest.py); a development
+    # copy does not. A release never trusts the test key, whatever its settings (CxMissionZero's RELEASE).
+    if test_key and os.environ.get("PYTEST_CURRENT_TEST") and not _production() and not _release():
         keys.append(test_key)
     return keys
 

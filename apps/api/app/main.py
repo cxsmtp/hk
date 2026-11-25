@@ -13,7 +13,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.routers import account_boundary, action_integrity, activity_audit, agui, agents, ai_discovery, ai_iam, ai_orchestration, ai_systems, ai_tools_usage, audit, auditor, auth, banking_transaction_integrity, brain, checkmarx, continuous_assurance, control_coverage, coverage, dashboard, deployments, discovery, discovery_adv, discovery_assets, discovery_capabilities, discovery_collectors, discovery_ecosystems, discovery_erg, discovery_exposure, discovery_scans, discovery_source_connections, discovery_surface_sources, discovery_targets, endpoint_agent, enforcement, executive_mcp, executive_remote_mcp, extension, external_risk, findings, gateway, guardian_contracts_v2, investigations, kb, llm_gateway, maturity_curve, monitoring, native_controls, onprem, ops, policies, policy_pack_platform, runtime, runtime_control, runtime_intelligence, scans, shadow_ai, simulation_policies, simulations, surface_coverage, system, trust_center, user_visibility
-from app.api.routers import access, backups, claude_enterprise, https, licence, sign_in
+from app.api.routers import access, backups, claude_enterprise, https, licence, sign_in, updates
 from app.core.access_gate import AccessRequired, access_required_response
 from app.core.config import configured_secret_sources, settings
 from app.core.licence_gate import licence_gate
@@ -38,7 +38,9 @@ from app.services.production_hardening import (
 from app.services.snapshot_service import ensure_artifact_storage_writable
 from app.services import backup_service, first_run_service, https_runtime, terms_service
 from app.services.pg_tools import InstanceLock, is_postgres
-from app.version import APP_VERSION
+from app.services.integrity import service as integrity_service
+from app.services.updates.companion import acknowledge_start
+from app.version import APP_VERSION, PACKAGE_VERSION
 
 
 def _safe_internal_error_message(exc: Exception) -> str:
@@ -60,6 +62,11 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     # HTTPS (app/services/https_runtime.py): a certificate that cannot be used stops the start here, never falling
     # back to plain http; the front proxy is handed what Settings → HTTPS chose.
     https_runtime.start()
+    # Updates (app/services/updates/companion.py): the updater waits for this after starting a new version; software
+    # integrity (app/services/integrity/): the running files and their signature, checked a few seconds after start.
+    if is_postgres(settings.database_url):
+        acknowledge_start(PACKAGE_VERSION)
+        integrity_service.start_in_background()
     print(f"Hawk AI {APP_VERSION} running", flush=True)
     try:
         yield
@@ -586,6 +593,7 @@ app.include_router(sign_in.router)
 app.include_router(licence.router)
 app.include_router(https.router)
 app.include_router(backups.router)
+app.include_router(updates.router)
 app.include_router(access.router)
 app.include_router(account_boundary.router)
 app.include_router(action_integrity.router)
