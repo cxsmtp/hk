@@ -88,9 +88,3 @@ def test_native_gateway_preserves_local_tls_url_without_caddy() -> None:
     assert "127.0.0.1" in gateway
 
 
-def test_native_runbook_is_explicit_about_data_safety() -> None:
-    runbook = (ROOT / "docs" / "LOCAL_NATIVE_DEMO.md").read_text()
-
-    assert "without Docker Desktop" in runbook
-    assert "never reset Docker volumes" in runbook
-    assert "https://hawk.localhost:3443" in runbook

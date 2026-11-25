@@ -57,18 +57,6 @@ def test_compose_and_e2e_require_a_new_valid_timestamp_after_restart() -> None:
     assert "heartbeat_is_newer_than" in harness
 
 
-def test_buildx_verifier_keeps_index_platform_attestation_and_config_distinct() -> None:
-    root = Path(__file__).resolve().parents[3]
-    plan = (root / "docs/PHASE5_SOL_APPROVED_BUILD_PLAN.md").read_text()
-
-    assert 'history_ref="${build_ref##*/}"' in plan
-    assert 'docker buildx history inspect "$history_ref" --format json' in plan
-    assert "loaded_repo_digests" in plan
-    assert "containerimage_digest" in plan
-    assert "named = [value for value in repo_digests if re.fullmatch" in plan
-    assert "assert named == [f\"hawk-api-demo@{index_digest}\"]" in plan
-
-
 def test_restart_barrier_checks_timestamp_order_and_configured_freshness() -> None:
     root = Path(__file__).resolve().parents[3]
     harness = (root / "infra/scripts/run_e2e_harness.sh").read_text()

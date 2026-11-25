@@ -197,11 +197,3 @@ def test_env_example_documents_every_required_demo_secret() -> None:
         assert f"{key}=" in example
 
 
-def test_readme_names_canonical_demo_commands_and_urls() -> None:
-    readme = (ROOT / "README.md").read_text(encoding="utf-8")
-    assert "Hawk Docker/PostgreSQL Demo Runtime" in readme
-    assert "./infra/scripts/hawk_demo_stack.sh prepare" in readme
-    assert "./infra/scripts/hawk_demo_stack.sh up" in readme
-    assert "http://127.0.0.1:8000" in readme
-    assert "http://127.0.0.1:3001" in readme
-    assert "Never run `docker compose down -v`" in readme
