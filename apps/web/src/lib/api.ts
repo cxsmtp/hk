@@ -3,6 +3,8 @@ import { API_BASE_URL } from "@/lib/api-url";
 import { approvalStatusFilters, mergeApprovalStatusResults } from "@/lib/approval-workflow";
 import { demoFallbackRequest, isDemoFallbackEnabled } from "@/lib/demo-fallback";
 import { isDeactivatedAnswer, LICENCE_DEACTIVATED_EVENT } from "@/lib/licence";
+import { accessNeededFrom, PASSWORD_CHANGE_EVENT, TERMS_REQUIRED_EVENT } from "@/lib/access";
+import type { TermsState, TermsView } from "@/lib/access";
 import type { ActivationApplied, ActivationView, AdminLicence, LicenceStatus } from "@/lib/licence";
 import type {
   AIDiscoveryAnomalyEvent,
@@ -261,6 +263,14 @@ function reportDeactivated(status: number, text: string): boolean {
   return true;
 }
 
+/** A 403 asking for a new password or the terms of use first (apps/api/app/core/access_gate.py): tell the page. */
+function reportAccessNeeded(status: number, text: string): boolean {
+  const needed = accessNeededFrom(status, text);
+  if (!needed) return false;
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(needed === "password" ? PASSWORD_CHANGE_EVENT : TERMS_REQUIRED_EVENT));
+  return true;
+}
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -490,6 +500,10 @@ async function request<T>(
           attempt += 1;
           continue;
         }
+        if (res.status === 403) {
+          const text = await res.clone().text();
+          if (reportAccessNeeded(res.status, text)) throw new Error(text);
+        }
         if (isDemoFallbackEnabled()) {
           const fallback = demoFallbackRequest(path, init, session);
           if (fallback !== null) return fallback as T;
@@ -596,6 +610,7 @@ async function requestBlob(path: string, init?: RequestInit, allowRefresh = true
   if (!res.ok) {
     const text = await res.text();
     reportDeactivated(res.status, text);
+    reportAccessNeeded(res.status, text);
     throw new Error(text || `API ${res.status}`);
   }
 
@@ -665,6 +680,10 @@ export type CurrentUser = {
   full_name: string;
   tenants: { id: string; name: string; role: string }[];
   licence?: AdminLicence | null;
+  // A temporary password to change, and the terms of use, first (deploy/README.md).
+  must_change_password?: boolean;
+  terms?: TermsState | null;
+  version?: string;
 };
 
 export const api = {
@@ -684,6 +703,19 @@ export const api = {
   oidcComplete: (ticket: string) =>
     request<LoginResponse>("/auth/oidc/complete", { method: "POST", body: JSON.stringify({ ticket }) }, false),
   me: () => request<CurrentUser>("/auth/me"),
+  // First sign-in (deploy/README.md): a new password, the terms of use, and the first administrator's setup code.
+  changePassword: (current: string, next: string) =>
+    request<LoginResponse>("/auth/me/password", { method: "POST", body: JSON.stringify({ current, next }) }),
+  getTerms: () => {
+    const session = getSession();
+    const headers: Record<string, string> = session?.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {};
+    return request<TermsView>("/terms", { headers }, false);
+  },
+  acceptTerms: (payload: { version: string; forOrganisation?: boolean; organisationName?: string }) =>
+    request<{ terms: TermsState }>("/terms/accept", { method: "POST", body: JSON.stringify(payload) }),
+  setupStatus: () => request<{ setup: boolean }>("/setup", undefined, false),
+  setup: (payload: { code: string; email: string; name: string; password: string }) =>
+    request<LoginResponse>("/setup", { method: "POST", body: JSON.stringify(payload) }, false),
   // The product licence and activation codes (docs/activation-codes.md).
   getLicence: () => request<LicenceStatus>("/licence", undefined, false),
   activateLicence: (code: string) =>

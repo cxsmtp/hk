@@ -62,7 +62,7 @@ test("the Activation codes page says until when Hawk AI works and what the tenan
 
 test("the console shows the deactivation page, the banner and Settings → Activation codes", () => {
   const layout = source("app/layout.tsx");
-  assert.match(layout, /<LicenceGate>\{children\}<\/LicenceGate>/);
+  assert.match(layout, /<LicenceGate>\s*<AccessGate>\{children\}<\/AccessGate>\s*<\/LicenceGate>/);
   const gate = source("components/licence-gate.tsx");
   assert.match(gate, /The product has been deactivated\./);
   assert.match(gate, /Enter an activation code/);
