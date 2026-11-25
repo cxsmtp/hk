@@ -85,3 +85,14 @@ test("the page keeps FTR's panels, controls and wording, at /settings/backups", 
   for (const rule of [".ftr-settings .ready-table", ".ftr-settings td.actions", ".ftr-settings button.danger", ".ftr-settings .wide-panel"]) assert.ok(css.includes(rule), rule);
   for (const line of css.split("\n").filter((l) => /^[^\s/@:}].*\{/.test(l))) assert.match(line, /^\.ftr-settings/, line);
 });
+
+test("the backup before every version switch is the updater's, and the page says so", async () => {
+  const { beforeUpdateLine } = await loadBackups();
+  assert.equal(
+    beforeUpdateLine({ last: { at: "2026-11-25T10:00:00Z", ok: true, name: "hawk-ai-2026-11-25T10-00-00.hkbackup", trigger: "Before the update to HK-00.03.00" } }),
+    "The last backup was taken by the updater: Before the update to HK-00.03.00 (hawk-ai-2026-11-25T10-00-00.hkbackup).",
+  );
+  assert.equal(beforeUpdateLine({ last: { at: "", ok: true, trigger: "Scheduled" } }), "");
+  assert.equal(beforeUpdateLine({ last: { at: "", ok: false, trigger: "Before the update to HK-00.03.00" } }), "");
+  assert.equal(beforeUpdateLine({ last: null }), "");
+});

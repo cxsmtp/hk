@@ -73,6 +73,16 @@ export function backupsHeading(b: Pick<BackupsStatus, "intervalHours" | "keep">)
   return `${when}, before every version switch, and by hand · the newest ${b.keep} kept`;
 }
 
+/**
+ * "before every version switch" made true: the updater (Settings → Updates) takes a backup before each update or
+ * rollback, with the reason "Before the update to HK-…" (app/cli/backup.py --trigger). The last one, when it is that.
+ */
+export function beforeUpdateLine(b: Pick<BackupsStatus, "last">): string {
+  const last = b.last;
+  if (!last?.ok || !String(last.trigger ?? "").startsWith("Before the update")) return "";
+  return `The last backup was taken by the updater: ${last.trigger} (${last.name ?? ""}).`;
+}
+
 /** What seals a backup made now, in FTR's words (Hawk AI's: BACKUP_PASSPHRASE, or the server's own backup key). */
 export function sealedLine(b: Pick<BackupsStatus, "sealed" | "sealedBy" | "encryption">): { warn: boolean; text: string } {
   if (b.sealed) return { warn: false, text: b.sealedBy === "environment" ? "Sealed with BACKUP_PASSPHRASE." : "Sealed with this server's backup key (below)." };

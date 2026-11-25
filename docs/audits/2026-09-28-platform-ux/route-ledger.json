@@ -1844,5 +1844,119 @@
     "notes": "Settings → Two-step sign-in, for oneself (docs/sign-in.md). Covered by apps/web/tests/two-step-qr.test.mjs and apps/api/tests/test_sign_in_hardening.py; not yet observed in a browser.",
     "desktop": "not-observed",
     "mobile": "not-observed"
+  },
+  {
+    "route": "/settings/updates",
+    "file": "apps/web/src/app/settings/updates/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Settings → Updates (docs/updating.md, docs/integrity.md), laid out as FTR Command Center's Updates page with CxMissionZero's updates and software integrity behind it (registry tags, the updater, auto-update, latest/stable). Covered by apps/web/tests/updates-settings.test.mjs (pure view logic and source checks) and the API tests in apps/api/tests/test_updates.py, test_updater.py and test_integrity.py.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
+  },
+  {
+    "route": "/settings/audit",
+    "file": "apps/web/src/app/settings/audit/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Records → Audit log, laid out as FTR Command Center's Audit log (public/js/audit.js) with CxMissionZero's tamper-evident chain behind it (src/audit-log.js): filters, Check the log is intact (every broken entry named), CSV and JSON Lines exports. Covered by apps/web/tests/records-pages.test.mjs (pure view logic and source checks) and apps/api/tests/test_platform_records.py; not yet observed in a browser.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
+  },
+  {
+    "route": "/settings/connector-activity",
+    "file": "apps/web/src/app/settings/connector-activity/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Records → Connector API activity, laid out as FTR Command Center's CxOne API audit (public/js/activity.js), listing the calls Hawk AI's connectors make (app/services/connector_activity.py). Covered by apps/web/tests/records-pages.test.mjs and apps/api/tests/test_platform_records.py; not yet observed in a browser.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
+  },
+  {
+    "route": "/settings/help",
+    "file": "apps/web/src/app/settings/help/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "System → Get help settings, laid out as FTR Command Center's settings.js help() with CxMissionZero's portal or email choice (docs/support.md). Covered by apps/web/tests/records-pages.test.mjs and apps/api/tests/test_platform_records.py; not yet observed in a browser.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
+  },
+  {
+    "route": "/help",
+    "file": "apps/web/src/app/help/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Get help for everyone, laid out as FTR Command Center's public/js/help.js with CxMissionZero's support desk behind it (SUP/ENH numbers, statuses, conversation, emails, the support team's queue). Covered by apps/web/tests/records-pages.test.mjs and apps/api/tests/test_platform_records.py; not yet observed in a browser.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
+  },
+  {
+    "route": "/settings/network",
+    "file": "apps/web/src/app/settings/network/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Settings → Network & proxy: CxMissionZero's page (public/index.html #set-network, docs/network.md) in FTR Command Center's settings look, with the trusted certificates and Trust and connect. Covered by apps/web/tests/records-pages.test.mjs and apps/api/tests/test_platform_records.py; not yet observed in a browser.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
   }
 ]

@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.api.routers import discovery_scans
 from app.core.config import settings
 from app.core.security import create_access_token
-from app.db.models.audit import AuditLog
+from app.db.models.audit import AuditChainHead, AuditLog
 from app.db.models.discovery_canonical import (
     DiscoveryCollector,
     DiscoveryScan,
@@ -60,6 +60,7 @@ def deep_scan_api_env(
         User.__table__,
         UserTenantRole.__table__,
         AuditLog.__table__,
+        AuditChainHead.__table__,
         EvidenceNode.__table__,
         EndpointDeviceIdentity.__table__,
         DiscoveryTarget.__table__,

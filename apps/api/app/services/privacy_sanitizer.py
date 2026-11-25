@@ -93,9 +93,17 @@ def _is_chatgpt_desktop_version_path(path: tuple[str, ...]) -> bool:
 EMAIL_RE = re.compile(r"(?i)\b[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}\b")
 PHONE_RE = re.compile(r"(?<!\d)(?:\+?\d[\d\-\s().]{7,}\d)(?!\d)")
 CC_RE = re.compile(r"\b(?:\d[ -]*?){13,19}\b")
+# A date, or a date and time, as the system writes them (ISO 8601, also inside a file name such as
+# backup-2026-11-25T10-00-00Z): kept as they are, never taken for a phone number. Only real calendar dates (years
+# 1900-2099, months 01-12, days 01-31), so a phone number written with dashes is still redacted.
 ISO_DATETIME_RE = re.compile(
-    r"\b\d{4}-\d{2}-\d{2}"
-    r"(?:[T ][0-2]\d:[0-5]\d(?::[0-5]\d(?:\.\d{1,6})?)?(?:Z|[+-][0-2]\d:?[0-5]\d)?)?\b"
+    r"(?<![\d.+])(?<!\+\d )(?<!\+\d\d )(?<!\+\d\d\d )(?:19|20)\d{2}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])"
+    r"(?:[T ][0-2]\d([:-])[0-5]\d(?:\1[0-5]\d(?:\.\d{1,9})?)?(?:Z|[+-][0-2]\d:?[0-5]\d)?)?(?![\d])"
+)
+# An IPv4 address (four numbers of 0-255, no leading zeros), such as the address a sign-in came from: kept as it is,
+# never taken for a phone number. Not when part of a longer run of dotted numbers.
+IPV4_RE = re.compile(
+    r"(?<![\d.+])(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?!\d|\.\d)"
 )
 SECRET_ASSIGNMENT_RE = re.compile(
     r"(?i)\b(?:sk-[a-z0-9_-]{8,}|(?:api[_ -]?key|secret|token|password|private[_ -]?key)\b\s*[:=]\s*[a-z0-9_./+=:-]{6,})"
@@ -104,14 +112,29 @@ BEARER_RE = re.compile(r"(?i)\bbearer\s+[a-z0-9._~+/=-]{12,}")
 
 
 def _preserve_iso_datetimes(text: str) -> tuple[str, dict[str, str]]:
+    """Dates, times and IPv4 addresses put aside (as tokens with no numbers in them) while phone and card numbers are
+    looked for."""
+
     preserved: dict[str, str] = {}
 
     def replace(match: re.Match[str]) -> str:
-        token = f"__HAWK_ISO_DATETIME_{len(preserved)}__"
+        token = f"__HAWK_PRESERVED_{_letters(len(preserved))}__"
         preserved[token] = match.group(0)
         return token
 
-    return ISO_DATETIME_RE.sub(replace, text), preserved
+    text = ISO_DATETIME_RE.sub(replace, text)
+    return IPV4_RE.sub(replace, text), preserved
+
+
+def _letters(n: int) -> str:
+    """0 -> A, 25 -> Z, 26 -> BA: a token's number in letters, so it never looks like part of a phone number."""
+
+    out = ""
+    while True:
+        out = chr(ord("A") + n % 26) + out
+        n //= 26
+        if n == 0:
+            return out
 
 
 def _restore_preserved_text(text: str, preserved: dict[str, str]) -> str:

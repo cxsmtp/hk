@@ -6,6 +6,7 @@ import time
 from uuid import uuid4
 
 from fastapi import FastAPI
+from fastapi.concurrency import run_in_threadpool
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -13,7 +14,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.routers import account_boundary, action_integrity, activity_audit, agui, agents, ai_discovery, ai_iam, ai_orchestration, ai_systems, ai_tools_usage, audit, auditor, auth, banking_transaction_integrity, brain, checkmarx, continuous_assurance, control_coverage, coverage, dashboard, deployments, discovery, discovery_adv, discovery_assets, discovery_capabilities, discovery_collectors, discovery_ecosystems, discovery_erg, discovery_exposure, discovery_scans, discovery_source_connections, discovery_surface_sources, discovery_targets, endpoint_agent, enforcement, executive_mcp, executive_remote_mcp, extension, external_risk, findings, gateway, guardian_contracts_v2, investigations, kb, llm_gateway, maturity_curve, monitoring, native_controls, onprem, ops, policies, policy_pack_platform, runtime, runtime_control, runtime_intelligence, scans, shadow_ai, simulation_policies, simulations, surface_coverage, system, trust_center, user_visibility
-from app.api.routers import access, backups, claude_enterprise, https, licence, sign_in
+from app.api.routers import access, backups, claude_enterprise, https, licence, network, records, sign_in, support, updates
 from app.core.access_gate import AccessRequired, access_required_response
 from app.core.config import configured_secret_sources, settings
 from app.core.licence_gate import licence_gate
@@ -36,9 +37,11 @@ from app.services.production_hardening import (
     validate_production_configuration,
 )
 from app.services.snapshot_service import ensure_artifact_storage_writable
-from app.services import backup_service, first_run_service, https_runtime, terms_service
+from app.services import backup_service, first_run_service, https_runtime, network_proxy, terms_service, user_activity
 from app.services.pg_tools import InstanceLock, is_postgres
-from app.version import APP_VERSION
+from app.services.integrity import service as integrity_service
+from app.services.updates.companion import acknowledge_start
+from app.version import APP_VERSION, PACKAGE_VERSION
 
 
 def _safe_internal_error_message(exc: Exception) -> str:
@@ -57,9 +60,18 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         backup_service.decide_once()
     instance_lock = InstanceLock(settings.database_url, name="api").acquire()
     _prepare_access_at_start()
+    # Network & proxy (app/services/network_proxy.py): the proxy saved under Settings, or the container's HTTPS_PROXY,
+    # and the trusted certificates, for every outbound client of this process. Not in tests (their own environment).
+    if str(settings.env).lower() != "test":
+        network_proxy.apply_to_environment()
     # HTTPS (app/services/https_runtime.py): a certificate that cannot be used stops the start here, never falling
     # back to plain http; the front proxy is handed what Settings → HTTPS chose.
     https_runtime.start()
+    # Updates (app/services/updates/companion.py): the updater waits for this after starting a new version; software
+    # integrity (app/services/integrity/): the running files and their signature, checked a few seconds after start.
+    if is_postgres(settings.database_url):
+        acknowledge_start(PACKAGE_VERSION)
+        integrity_service.start_in_background()
     print(f"Hawk AI {APP_VERSION} running", flush=True)
     try:
         yield
@@ -211,6 +223,54 @@ def _build_cors_allowed_origins(
         )
     )
     return sorted(origin for origin in origins if origin and not _is_wildcard_origin(origin))
+
+async def user_activity_middleware(request, call_next):
+    """The user activity log (app/services/user_activity.py, CxMissionZero's src/activity-log.js): every signed-in
+    request that changes something, and the downloads and exports, once answered. Field names only, never values.
+    Registered first, so it runs innermost: the body it looks at is the one the size check let through."""
+
+    method = request.method.upper()
+    fields: list[str] = []
+    if method in {"POST", "PUT", "PATCH", "DELETE"}:
+        content_type = request.headers.get("content-type", "")
+        try:
+            length = int(request.headers.get("content-length") or 0)
+        except ValueError:
+            length = 0
+        if "json" in content_type.lower() and 0 < length <= 256 * 1024:
+            fields = user_activity.body_fields(await request.body(), content_type)
+    started = time.perf_counter()
+    response = await call_next(request)
+    actor = getattr(request.state, "activity_actor", None)
+    route = getattr(request.scope.get("route"), "path", "") or ""
+    if actor and route and user_activity.should_record(method, route):
+        entry = {
+            **actor,
+            "ip": request.client.host if request.client else "",
+            "kind": "action",
+            "action": user_activity.describe(method, route),
+            "target": user_activity.target_of(request.path_params),
+            "fields": fields,
+            "method": method,
+            "route": route,
+            "status": response.status_code,
+            "ms": (time.perf_counter() - started) * 1000,
+        }
+        await run_in_threadpool(_record_activity, entry)
+    return response
+
+
+def _record_activity(entry: dict) -> None:
+    # A session of its own, never the request's: what the request did is committed or not on its own terms.
+    try:
+        with user_activity.session_factory() as db:
+            user_activity.record(db, entry)
+            db.commit()
+    except Exception:  # noqa: BLE001 - the activity log never fails a request
+        pass
+
+
+app.middleware("http")(user_activity_middleware)
 
 # The licence gate (app/core/licence_gate.py): registered before CORS, so CORS wraps it and the console can read the
 # 503 that says Hawk AI has been deactivated.
@@ -586,6 +646,10 @@ app.include_router(sign_in.router)
 app.include_router(licence.router)
 app.include_router(https.router)
 app.include_router(backups.router)
+app.include_router(updates.router)
+app.include_router(records.router)
+app.include_router(support.router)
+app.include_router(network.router)
 app.include_router(access.router)
 app.include_router(account_boundary.router)
 app.include_router(action_integrity.router)

@@ -1,0 +1,27 @@
+# Hawk AI's updater: the `updater` service of deploy/compose.yaml (apps/updater; docs/updating.md). It is the only
+# container with the container engine's socket, so it carries nothing but Python's standard library and its own
+# package, and runs no package manager. It updates and rolls back the whole stack on request from Settings → Updates.
+
+FROM python:3.11-slim@sha256:9c900dea9e8fb7e16277c179b555cc72d29a352dbc33cff48ad5a0412fd5bfc7 AS base
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+# No package manager at run time.
+RUN python -m pip uninstall -y pip setuptools wheel 2>/dev/null || python -m pip uninstall -y pip
+WORKDIR /app
+COPY apps/updater/hawk_updater /app/hawk_updater
+COPY VERSION /app/VERSION
+
+# ---- The file list: every file the updater ships, with its SHA-256 (docs/integrity.md) -------------------------------
+FROM --platform=$BUILDPLATFORM python:3.11-slim@sha256:9c900dea9e8fb7e16277c179b555cc72d29a352dbc33cff48ad5a0412fd5bfc7 AS integrity
+ARG HAWK_COMMIT=""
+ARG HAWK_REPOSITORY=""
+COPY infra/scripts/integrity.py /tool/infra/scripts/integrity.py
+COPY apps/api/app/services/integrity/manifest.py /tool/apps/api/app/services/integrity/manifest.py
+COPY apps/updater/hawk_updater /app/hawk_updater
+COPY VERSION /app/VERSION
+RUN python /tool/infra/scripts/integrity.py write /app --image updater --commit "$HAWK_COMMIT" --repository "$HAWK_REPOSITORY" --tree hawk_updater --file VERSION
+
+FROM base AS runtime
+COPY --from=integrity /app/integrity.json /app/integrity.json
+# Root, for the engine's socket (deploy/compose.yaml mounts it); it opens no port.
+USER root
+CMD ["python", "-m", "hawk_updater"]

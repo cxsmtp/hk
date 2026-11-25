@@ -49,8 +49,10 @@ def _sign_in_store_fresh():
     """Every test starts with no sign-in tickets, reset links or counted attempts (app/services/sign_in_store.py): the
     limit of 30 sign-ins per 10 minutes from one address would otherwise carry over from test to test."""
 
-    from app.services import sign_in_store
+    from app.services import refusal_audit, sign_in_store
 
     sign_in_store.store().clear()
+    refusal_audit.reset_all()
     yield
     sign_in_store.store().clear()
+    refusal_audit.reset_all()

@@ -2,6 +2,8 @@ import { clearSession, getSession, updateSessionTokens } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/api-url";
 import type { AcmeStatus, HttpsCertificateReport, HttpsMode, HttpsStatus, UploadFile } from "@/lib/https-settings";
 import type { BackupEncryption, BackupFile, BackupInfo, BackupKeyShown, BackupNotice, BackupsStatus, Readiness } from "@/lib/backups-settings";
+import type { Integrity, IntegrityState, UpdateSettings, UpdatesStatus } from "@/lib/updates-settings";
+import type { AuditPage, AuditVerify, ConnectorActivity, Emailed, NetworkCheck, NetworkInfo, SupportChannel, SupportKind, SupportList, SupportRequest, TrustDiagnosis, TrustedCertificate } from "@/lib/records";
 import { approvalStatusFilters, mergeApprovalStatusResults } from "@/lib/approval-workflow";
 import { demoFallbackRequest, isDemoFallbackEnabled } from "@/lib/demo-fallback";
 import { isDeactivatedAnswer, LICENCE_DEACTIVATED_EVENT } from "@/lib/licence";
@@ -794,8 +796,49 @@ export const api = {
   },
   cancelRestore: () => request<{ pendingRestore: boolean }>("/backups/restore", { method: "DELETE" }),
   getReadiness: () => request<Readiness>("/backups/readiness"),
+  // Records → Audit log and Connector API activity (app/api/routers/records.py)
+  getAuditLog: (query: string) => request<AuditPage>(`/audit/log${query ? `?${query}` : ""}`),
+  verifyAuditLog: () => request<AuditVerify>("/audit/log/verify"),
+  exportAuditLog: (format: "csv" | "jsonl", query: string) => requestBlob(`/audit/log/export.${format}${query ? `?${query}` : ""}`),
+  getConnectorActivity: (query: string) => request<ConnectorActivity>(`/connector-activity${query ? `?${query}` : ""}`),
+  exportConnectorActivity: () => requestBlob("/connector-activity/export.csv"),
+  exportUserActivity: () => requestBlob("/activity/log/export.csv"),
+  // Get help (app/api/routers/support.py)
+  getSupport: () => request<SupportList>("/support"),
+  getSupportRequest: (id: string) => request<{ team: boolean; request: SupportRequest }>(`/support/${encodeURIComponent(id)}`),
+  raiseSupportRequest: (body: { kind: SupportKind; subject: string; text: string; priority: string; page?: string }) =>
+    request<{ request: SupportRequest; emailed: Emailed }>("/support", { method: "POST", body: JSON.stringify(body) }),
+  writeOnSupportRequest: (id: string, text: string) =>
+    request<{ request: SupportRequest; emailed: Emailed }>(`/support/${encodeURIComponent(id)}/messages`, { method: "POST", body: JSON.stringify({ text }) }),
+  setSupportStatus: (id: string, status: string) =>
+    request<{ request: SupportRequest; emailed: Emailed }>(`/support/${encodeURIComponent(id)}/status`, { method: "POST", body: JSON.stringify({ status }) }),
+  supportMailto: (kind: SupportKind) => request<{ href: string }>(`/support/mailto/${kind}`),
+  getSupportSettings: () => request<SupportChannel>("/support/settings"),
+  saveSupportSettings: (body: { mode?: string; email?: string }) => request<SupportChannel>("/support/settings", { method: "PUT", body: JSON.stringify(body) }),
+  // Network & proxy and trusted certificates (app/api/routers/network.py)
+  getNetwork: () => request<NetworkInfo>("/network"),
+  checkNetwork: (body: Record<string, string>) => request<NetworkCheck>("/network/check", { method: "POST", body: JSON.stringify(body) }),
+  saveNetwork: (body: Record<string, string>) => request<NetworkInfo & { results: NetworkCheck["results"] }>("/network", { method: "PUT", body: JSON.stringify(body) }),
+  removeNetwork: () => request<NetworkInfo>("/network", { method: "DELETE" }),
+  getTrusted: () => request<{ certificates: TrustedCertificate[] }>("/trust"),
+  diagnoseCertificate: (host: string, port: number) => request<TrustDiagnosis>("/trust/diagnose", { method: "POST", body: JSON.stringify({ host, port }) }),
+  trustPresented: (host: string, port: number, fingerprint256: string) =>
+    request<TrustDiagnosis & { certificates: TrustedCertificate[] }>("/trust/presented", { method: "POST", body: JSON.stringify({ host, port, fingerprint256 }) }),
+  uploadCertificate: (data: string, host?: string, port?: number) =>
+    request<{ added: TrustedCertificate[]; trusted: boolean | null; certificates: TrustedCertificate[] }>("/trust/upload", { method: "POST", body: JSON.stringify({ data, ...(host ? { host, port } : {}) }) }),
+  removeTrusted: (fingerprint: string) => request<{ certificates: TrustedCertificate[] }>(`/trust/${encodeURIComponent(fingerprint)}`, { method: "DELETE" }),
   setReadiness: (id: string, accept: boolean) =>
     request<{ ok: boolean }>(`/backups/readiness/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify({ accept }) }),
+  // Settings → Updates (app/api/routers/updates.py)
+  getUpdates: () => request<UpdatesStatus>("/updates"),
+  checkForUpdates: () => request<UpdatesStatus>("/updates/check", { method: "POST", body: "{}" }),
+  installVersion: (version: string) => request<UpdatesStatus & { to: string }>("/updates/install", { method: "POST", body: JSON.stringify({ version }) }),
+  saveUpdateSettings: (patch: Partial<Pick<UpdateSettings, "auto" | "windowHour" | "channel">>) =>
+    request<UpdatesStatus>("/updates/settings", { method: "PUT", body: JSON.stringify(patch) }),
+  restartHawk: () => request<{ restarting: boolean }>("/updates/restart", { method: "POST", body: "{}" }),
+  downloadUpdateReport: () => requestBlob("/updates/report"),
+  checkIntegrity: () => request<Integrity>("/integrity/check", { method: "POST", body: "{}" }),
+  getIntegrityNotice: () => request<{ notice: { state: IntegrityState; summary: string } | null }>("/integrity/notice"),
   getPlatformMode: () => request<PlatformModeResponse>("/system/platform-mode"),
   updatePlatformMode: (platformMode: PlatformMode) =>
     request<PlatformModeResponse>("/system/platform-mode", {

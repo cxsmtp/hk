@@ -5,10 +5,10 @@ import time
 
 from celery import Celery
 from celery.schedules import crontab
-from celery.signals import beat_init, heartbeat_sent, task_failure, worker_ready
+from celery.signals import beat_init, heartbeat_sent, task_failure, worker_init, worker_process_init, worker_ready
 
 from app.core.config import settings
-from app.jobs import backup_schedule
+from app.jobs import backup_schedule, update_schedule
 from app.jobs.licence_task import LicensedTask
 from app.services.control_plane_health_service import write_beat_heartbeat, write_worker_heartbeat
 from app.services.job_run_service import write_dead_letter_job_run
@@ -183,6 +183,18 @@ def _hold_instance_lock(name: str) -> None:
         print(f"! [backup] Could not take Hawk AI's instance lock: {error}", flush=True)
 
 
+@worker_init.connect
+@worker_process_init.connect
+def _apply_network(**kwargs) -> None:  # pragma: no cover - exercised in running worker and beat processes
+    """Network & proxy (app/services/network_proxy.py): the saved proxy and the trusted certificates, in the worker
+    and each of its pool processes, as in the API. A change made under Settings applies from their next start."""
+
+    del kwargs
+    from app.services import network_proxy
+
+    network_proxy.apply_to_environment()
+
+
 @worker_ready.connect
 def _on_worker_ready(**kwargs) -> None:  # pragma: no cover - exercised in running worker process
     del kwargs
@@ -206,6 +218,7 @@ def _on_worker_heartbeat(**kwargs) -> None:  # pragma: no cover - exercised in r
 @beat_init.connect
 def _on_beat_init(**kwargs) -> None:  # pragma: no cover - exercised in running beat process
     del kwargs
+    _apply_network()
     _hold_instance_lock("beat")
     write_beat_heartbeat()
     global _beat_heartbeat_thread_started
@@ -263,9 +276,13 @@ from app.jobs import (  # noqa: E402,F401
     monitoring_jobs,
     native_control_jobs,
     risk_jobs,
+    update_jobs,
 )
 
 # Backups (app/jobs/backup_jobs.py): one minute after beat starts, then every BACKUP_INTERVAL_HOURS (default 24).
 _backup_entry = backup_schedule.beat_entry()
 if _backup_entry:
     celery_app.conf.beat_schedule["scheduled-backup"] = _backup_entry
+
+# Auto-update (off until an owner or admin turns it on) and the software integrity check (app/jobs/update_jobs.py).
+celery_app.conf.beat_schedule.update(update_schedule.beat_entries())
