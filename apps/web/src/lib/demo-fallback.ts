@@ -1233,7 +1233,14 @@ function auditExportResponse(aiSystemId: string) {
   return { artifacts, snapshot_id: snapshotId };
 }
 
+// Only the demo build (DEMO_BUILD=1, infra/Dockerfile.web.demo) compiles this module in; every other build gets
+// demo-fallback-off.ts instead (next.config.mjs). The event name doubles as the marker the production Dockerfile looks
+// for in its output (demo-build.mjs DEMO_FALLBACK_MARKER).
+const DEMO_DATA_EVENT = "hawk-demo-fallback-data";
+let demoDataServed = false;
+
 export function isDemoFallbackEnabled(): boolean {
+  if (process.env.NEXT_PUBLIC_HAWK_DEMO_BUILD !== "1") return false;
   const pilotMode = (process.env.NEXT_PUBLIC_PILOT_MODE || "false").toLowerCase() === "true";
   if (pilotMode) return false;
   const demoMode = (process.env.NEXT_PUBLIC_DEMO_MODE || "false").toLowerCase() === "true";
@@ -1241,7 +1248,31 @@ export function isDemoFallbackEnabled(): boolean {
   return (process.env.NEXT_PUBLIC_DEMO_FALLBACK || "false").toLowerCase() !== "false";
 }
 
+/** Whether invented demo data has been shown in this browser tab: the console then says "Demo data" on every view. */
+export function demoDataShown(): boolean {
+  return demoDataServed;
+}
+
+export function subscribeDemoData(listener: () => void): () => void {
+  if (typeof window === "undefined") return () => {};
+  window.addEventListener(DEMO_DATA_EVENT, listener);
+  return () => window.removeEventListener(DEMO_DATA_EVENT, listener);
+}
+
 export function demoFallbackRequest(
+  path: string,
+  init?: RequestInit,
+  session?: Session | null
+): unknown | null {
+  const result = demoFallbackResponse(path, init, session);
+  if (result !== null && !demoDataServed) {
+    demoDataServed = true;
+    if (typeof window !== "undefined") window.dispatchEvent(new Event(DEMO_DATA_EVENT));
+  }
+  return result;
+}
+
+function demoFallbackResponse(
   path: string,
   init?: RequestInit,
   session?: Session | null
