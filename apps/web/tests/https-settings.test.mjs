@@ -79,7 +79,7 @@ test("the page keeps FTR's panels, controls and wording, at /settings/https", ()
     assert.ok(page.includes(cls), cls);
   }
   assert.match(source("lib/navigation.ts"), /href: "\/settings\/https", label: "HTTPS"/);
-  const css = source("app/settings/https/ftr-settings.css");
+  const css = source("app/settings/ftr-settings.css");
   // Every rule is scoped: the rest of the console keeps its own look.
   for (const line of css.split("\n").filter((l) => /^[^\s/@:}].*\{/.test(l))) assert.match(line, /^\.ftr-settings/, line);
 });

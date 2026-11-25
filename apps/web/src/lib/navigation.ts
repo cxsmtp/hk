@@ -109,6 +109,7 @@ export const SPECIALIST_WORKSPACES = [
       { href: "/settings/signin", label: "Sign-in" },
       { href: "/settings/sso", label: "Single sign-on" },
       { href: "/settings/two-step", label: "Two-step sign-in" },
+      { href: "/settings/backups", label: "Backups & health" },
     ],
   },
 ] as const;

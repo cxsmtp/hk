@@ -1,6 +1,6 @@
 "use client";
 
-import "./ftr-settings.css";
+import "../ftr-settings.css";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";

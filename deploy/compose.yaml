@@ -93,6 +93,34 @@ x-hawk-environment: &hawk-environment
   CONNECTOR_SECRETS_KDF_SALT_FILE: /run/secrets/connector_secrets_kdf_salt
   ENFORCEMENT_PAYLOADS_KEY_FILE: /run/secrets/enforcement_payloads_key
   ONPREM_BUNDLE_SIGNING_SECRET_FILE: /run/secrets/onprem_bundle_signing_secret
+  # Backups (deploy/README.md: Backups). Written to BACKUP_DIR on this machine (default ${HAWK_DATA_DIR}/backups),
+  # which the containers see as /backups; the newest BACKUP_KEEP kept, one a minute after start, then every
+  # BACKUP_INTERVAL_HOURS. Encrypted with BACKUP_PASSPHRASE, else the server's own backup key (Settings → Backups &
+  # health); BACKUP_ENCRYPTION=off keeps them plain.
+  BACKUP_DIR: /backups
+  BACKUP_KEEP: ${BACKUP_KEEP:-14}
+  BACKUP_INTERVAL_HOURS: ${BACKUP_INTERVAL_HOURS:-24}
+  BACKUP_PASSPHRASE: ${BACKUP_PASSPHRASE:-}
+  BACKUP_ENCRYPTION: ${BACKUP_ENCRYPTION:-}
+  # The backup mailbox: every encrypted backup emailed there (up to 15 MB), and a new, empty server restores itself
+  # from it (BACKUP_EMAIL_PASSWORD and BACKUP_PASSPHRASE needed).
+  BACKUP_EMAIL: ${BACKUP_EMAIL:-}
+  BACKUP_EMAIL_PASSWORD: ${BACKUP_EMAIL_PASSWORD:-}
+  BACKUP_EMAIL_IMAP_HOST: ${BACKUP_EMAIL_IMAP_HOST:-}
+  BACKUP_EMAIL_IMAP_PORT: ${BACKUP_EMAIL_IMAP_PORT:-993}
+  BACKUP_EMAIL_USER: ${BACKUP_EMAIL_USER:-}
+  # At most one "Hawk AI stopped" email to the administrators in this many hours.
+  LAST_WORDS_EVERY_HOURS: ${LAST_WORDS_EVERY_HOURS:-6}
+  # The mail server that sends them (app/services/mailer.py).
+  SMTP_HOST: ${SMTP_HOST:-}
+  SMTP_PORT: ${SMTP_PORT:-}
+  SMTP_SECURE: ${SMTP_SECURE:-}
+  SMTP_USER: ${SMTP_USER:-}
+  SMTP_PASS: ${SMTP_PASS:-}
+  SMTP_FROM: ${SMTP_FROM:-}
+  SMTP_FROM_NAME: ${SMTP_FROM_NAME:-}
+  SMTP_REQUIRE_AUTH: ${SMTP_REQUIRE_AUTH:-}
+  SMTP_REJECT_UNAUTHORIZED: ${SMTP_REJECT_UNAUTHORIZED:-}
 
 x-hawk-secrets: &hawk-secrets
   - database_url
@@ -157,17 +185,21 @@ services:
       <<: *hawk-healthcheck
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/login',{signal:AbortSignal.timeout(4000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
 
-  # Brings the database to this version's schema, then exits; api, worker and beat wait for it.
+  # Before api, worker and beat start (app/cli/prestart.py): applies a restore staged from Settings → Backups &
+  # health, lets a new, empty server restore itself from the backup mailbox, then brings the database to this
+  # version's schema, and exits; api, worker and beat wait for it.
   migrate:
     <<: [*hawk-hardening, *hawk-api-image]
     restart: "no"
     environment:
       <<: *hawk-environment
       COMPONENT_TYPE: api
-    command: ["python", "/workspace/infra/scripts/run_migrations.py"]
+    command: ["python", "-m", "app.cli.prestart"]
     secrets: *hawk-secrets
     volumes:
+      - hawk-data:/data
       - hawk-runtime:/run/hawk
+      - ${BACKUP_DIR:-${HAWK_DATA_DIR}/backups}:/backups
     healthcheck:
       disable: true
     depends_on:
@@ -214,6 +246,7 @@ services:
       - hawk-proxy-config:/hawk-proxy
       # Certificates given to the deployment (TLS_CERT_FILE…): read-only, from the data folder.
       - ${HAWK_DATA_DIR}/certs:/certs:ro
+      - ${BACKUP_DIR:-${HAWK_DATA_DIR}/backups}:/backups
     healthcheck:
       <<: *hawk-healthcheck
       test: ["CMD", "python", "-m", "app.cli.healthcheck"]
@@ -235,6 +268,9 @@ services:
     volumes:
       - hawk-artifacts:/artifacts
       - hawk-runtime:/run/hawk
+      # The scheduled backup runs here (app/jobs/backup_jobs.py): the API's data folder and the backup folder.
+      - hawk-data:/data
+      - ${BACKUP_DIR:-${HAWK_DATA_DIR}/backups}:/backups
     healthcheck:
       <<: *hawk-healthcheck
       test: ["CMD", "python", "/workspace/infra/scripts/check_component_heartbeat.py", "worker"]
@@ -346,7 +382,8 @@ networks:
 volumes:
   hawk-postgres:
   hawk-redis:
-  hawk-data:          # the API's /data: the first administrator's one-time password file, never in a backup
+  hawk-data:          # the API's /data: HTTPS choices and certificates, the backup key (never in a backup), the first
+                      # administrator's one-time password file (never in a backup)
   hawk-artifacts:
   hawk-runtime:
   hawk-proxy:         # the proxy's own data folder

@@ -1,6 +1,7 @@
 import { clearSession, getSession, updateSessionTokens } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/api-url";
 import type { AcmeStatus, HttpsCertificateReport, HttpsMode, HttpsStatus, UploadFile } from "@/lib/https-settings";
+import type { BackupEncryption, BackupFile, BackupInfo, BackupKeyShown, BackupNotice, BackupsStatus, Readiness } from "@/lib/backups-settings";
 import { approvalStatusFilters, mergeApprovalStatusResults } from "@/lib/approval-workflow";
 import { demoFallbackRequest, isDemoFallbackEnabled } from "@/lib/demo-fallback";
 import { isDeactivatedAnswer, LICENCE_DEACTIVATED_EVENT } from "@/lib/licence";
@@ -774,6 +775,27 @@ export const api = {
     request<AcmeStatus>("/https/acme", { method: "POST", body: JSON.stringify(body) }),
   renewLetsEncrypt: () => request<AcmeStatus>("/https/acme/renew", { method: "POST", body: "{}" }),
   stopLetsEncrypt: () => request<AcmeStatus>("/https/acme", { method: "DELETE" }),
+  // Settings → Backups & health (app/api/routers/backups.py)
+  getBackups: () => request<BackupsStatus>("/backups"),
+  getBackupNotice: () => request<{ notice: BackupNotice }>("/backups/notice"),
+  backUpNow: () => request<{ name: string; backups: BackupFile[] }>("/backups", { method: "POST", body: "{}" }),
+  downloadBackup: (name: string) => requestBlob(`/backups/${encodeURIComponent(name)}`),
+  showBackupKey: () => request<BackupKeyShown>("/backups/key/show", { method: "POST", body: "{}" }),
+  confirmBackupKey: () => request<{ encryption: BackupEncryption }>("/backups/key/confirm", { method: "POST", body: "{}" }),
+  turnOnBackupEncryption: () => request<{ encryption: BackupEncryption }>("/backups/encryption", { method: "POST", body: JSON.stringify({ on: true }) }),
+  /** A backup file to check (`check`) or to stage for the next start; the passphrase only when one was typed. */
+  restoreBackup: async (file: File, passphrase: string, check: boolean) => {
+    const blob = await requestBlob(`/backups/restore${check ? "?check=1" : ""}`, {
+      method: "POST",
+      body: file,
+      headers: { "Content-Type": "application/octet-stream", ...(passphrase ? { "X-Backup-Passphrase": passphrase } : {}) },
+    });
+    return JSON.parse(await blob.text()) as { backup: BackupInfo; staged?: boolean; restartRequired?: boolean };
+  },
+  cancelRestore: () => request<{ pendingRestore: boolean }>("/backups/restore", { method: "DELETE" }),
+  getReadiness: () => request<Readiness>("/backups/readiness"),
+  setReadiness: (id: string, accept: boolean) =>
+    request<{ ok: boolean }>(`/backups/readiness/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify({ accept }) }),
   getPlatformMode: () => request<PlatformModeResponse>("/system/platform-mode"),
   updatePlatformMode: (platformMode: PlatformMode) =>
     request<PlatformModeResponse>("/system/platform-mode", {
