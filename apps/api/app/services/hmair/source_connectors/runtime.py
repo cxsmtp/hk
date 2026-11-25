@@ -9,6 +9,8 @@ from typing import Any
 from urllib.parse import urlparse
 
 import httpx
+
+from app.services import connector_activity, trust_store
 from jose import jwt
 
 from app.services.hmair.source_connectors.contracts import (
@@ -74,9 +76,11 @@ class AuthenticatedSourceHTTP:
 
 def _client(client: httpx.Client | None) -> httpx.Client:
     return client or httpx.Client(
-        verify=True,
+        verify=trust_store.outbound_ssl_context(),
         follow_redirects=False,
         timeout=SOURCE_TIMEOUT,
+        # Connector API activity (app/services/connector_activity.py).
+        event_hooks=connector_activity.httpx_hooks("discovery source"),
     )
 
 

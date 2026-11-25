@@ -7,6 +7,8 @@ from urllib.parse import quote
 from urllib.request import Request
 from urllib.request import urlopen
 
+from app.services import connector_activity
+
 
 _GOOGLE_MEET_NOTETAKER_ACTIONS: dict[str, dict[str, Any]] = {
     "remove_calendar_notetaker_invitee": {
@@ -230,8 +232,10 @@ def execute_google_meet_notetaker_action(
             status_code = int(getattr(response, "status_code", 0))
         else:
             req = Request(url, data=body_bytes, headers=headers, method=operation["method"])
-            with urlopen(req, timeout=10) as response:  # nosec B310 - URL is server-configured Google API base.
-                status_code = int(getattr(response, "status", 0))
+            with connector_activity.timed(operation["method"], url, source="google_workspace") as recorded:
+                with urlopen(req, timeout=10) as response:  # nosec B310 - URL is server-configured Google API base.
+                    status_code = int(getattr(response, "status", 0))
+                recorded["status"] = status_code
     except Exception as exc:
         return {
             "provider_control_path": "google_workspace",

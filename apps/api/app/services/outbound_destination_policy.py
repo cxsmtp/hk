@@ -8,10 +8,12 @@ import socket
 from dataclasses import dataclass
 from typing import Any, Callable, Collection, Iterable, Mapping
 from urllib import request as urllib_request
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import unquote, urljoin, urlsplit
 
 import httpcore
 import httpx
+
+from app.services import connector_activity
 
 
 class OutboundDestinationPolicyError(ValueError):
@@ -28,6 +30,10 @@ class ValidatedDestination:
     hostname: str
     port: int
     addresses: tuple[str, ...]
+    #: The company proxy this destination is reached through (Settings → Network & proxy,
+    #: app/services/network_proxy.py), '' when direct. Through a proxy the proxy resolves the name, so there is no
+    #: address to pin; the host name still passes the SSRF guard (app/services/outbound_url.py).
+    proxy: str = ""
 
     @property
     def approved_address(self) -> str:
@@ -159,6 +165,20 @@ class OutboundDestinationPolicy:
             raise OutboundDestinationPolicyError(
                 f"destination_not_allowed:{source_key}:{origin}"
             )
+        from app.services.network_proxy import proxy_for
+        from app.services.outbound_url import blocked_host
+
+        if blocked_host(hostname):
+            raise OutboundDestinationPolicyError(f"non_public_address:{hostname}")
+        proxy = proxy_for(hostname)
+        if proxy:
+            try:
+                ipaddress.ip_address(hostname)
+            except ValueError:
+                return ValidatedDestination(url=str(url), origin=origin, hostname=hostname, port=port, addresses=(), proxy=proxy)
+            # An address written as such is checked here, as it would be without the proxy.
+            _validated_public_addresses(hostname, port, self._resolver)
+            return ValidatedDestination(url=str(url), origin=origin, hostname=hostname, port=port, addresses=(hostname,), proxy=proxy)
         addresses = _validated_public_addresses(hostname, port, self._resolver)
         return ValidatedDestination(
             url=str(url),
@@ -296,8 +316,31 @@ class PinnedHTTPTransport(httpx.HTTPTransport):
         verify: Any = True,
     ) -> None:
         self.hostname = destination.hostname
-        self.approved_address = destination.approved_address
+        # The public roots plus the certificates an administrator trusts (app/services/trust_store.py): read again
+        # when that list changes, so "Trust and connect" applies at once.
         ssl_context = httpx.create_ssl_context(verify=verify, trust_env=True)
+        if verify is True:
+            from app.services.trust_store import add_trusted
+
+            add_trusted(ssl_context)
+        if destination.proxy:
+            # Through the company proxy (an HTTP CONNECT tunnel, basic sign-in): the proxy resolves the name.
+            proxy_url = httpx.URL(destination.proxy)
+            auth = (unquote(proxy_url.username), unquote(proxy_url.password)) if proxy_url.username else None
+            self.approved_address = ""
+            self._pool = httpcore.HTTPProxy(
+                proxy_url=httpcore.URL(scheme=proxy_url.raw_scheme, host=proxy_url.raw_host, port=proxy_url.port, target=b"/"),
+                proxy_auth=auth,
+                ssl_context=ssl_context,
+                max_connections=1,
+                max_keepalive_connections=0,
+                keepalive_expiry=0,
+                http1=True,
+                http2=False,
+                retries=0,
+            )
+            return
+        self.approved_address = destination.approved_address
         self._pool = httpcore.ConnectionPool(
             ssl_context=ssl_context,
             max_connections=1,
@@ -400,13 +443,16 @@ def request_with_redirect_validation(
         if current.origin != credential_origin:
             raise OutboundDestinationPolicyError("credential_redirect_origin_changed")
         transport = transport_factory(current, verify=verify)
-        with resolved_client_factory(transport=transport, timeout=timeout) as client:
-            response = client.request(
-                current_method,
-                current_url,
-                follow_redirects=False,
-                **current_kwargs,
-            )
+        # Connector API activity (app/services/connector_activity.py): method, host, path, status and time.
+        with connector_activity.timed(current_method, current_url, source=source) as recorded:
+            with resolved_client_factory(transport=transport, timeout=timeout) as client:
+                response = client.request(
+                    current_method,
+                    current_url,
+                    follow_redirects=False,
+                    **current_kwargs,
+                )
+            recorded["status"] = int(getattr(response, "status_code", 0) or 0) or None
         status_code = int(getattr(response, "status_code", 0))
         if status_code not in _REDIRECT_STATUSES:
             return response

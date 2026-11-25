@@ -193,3 +193,78 @@
 @media (max-width: 860px) {
   .ftr-settings .ur-cards { grid-template-columns: 1fr; }
 }
+/* Records → Audit log and Connector API activity (app.css .search, .filters, table.audit, tr.refused, td .sub, .kvp,
+   .nowrap, .kpis, .kpi, .switch, .mpick, .mp-*, tr.click, .spacer; standard.css sizes) */
+.ftr-settings .search { position: relative; min-width: 220px; }
+.ftr-settings .search input { padding-left: 34px; }
+.ftr-settings .search svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; stroke: var(--muted); fill: none; stroke-width: 2; }
+.ftr-settings .filters { display: flex; flex-wrap: wrap; gap: 10px 12px; align-items: flex-end; }
+.ftr-settings .filters .search { flex: 1 1 260px; }
+.ftr-settings .filters .f { display: grid; gap: 4px; font-size: 12px; color: var(--muted); min-width: 150px; }
+.ftr-settings .filters .f select, .ftr-settings .filters .f input { min-width: 150px; }
+.ftr-settings table.audit td { vertical-align: top; }
+.ftr-settings table.audit tr.refused td { background: color-mix(in srgb, var(--red) 6%, transparent); }
+.ftr-settings table.audit td.mono { overflow-wrap: anywhere; }
+.ftr-settings td .sub { display: block; color: var(--muted); font-size: 12px; }
+.ftr-settings .kvp { display: inline-block; margin: 0 8px 2px 0; }
+.ftr-settings .kvp i { font-style: normal; color: var(--muted); }
+.ftr-settings .nowrap { white-space: nowrap; }
+.ftr-settings .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.ftr-settings .kpi { position: relative; overflow: hidden; padding: 12px 14px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--panel); box-shadow: var(--shadow); }
+.ftr-settings .kpi .k { color: var(--muted); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
+.ftr-settings .kpi .v { font-size: 30px; font-weight: 600; letter-spacing: -.02em; margin-top: 6px; font-variant-numeric: tabular-nums; }
+.ftr-settings .kpi .s { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+.ftr-settings .kpi.warn .v { color: var(--amber); }
+.ftr-settings .switch { display: inline-flex; gap: 8px; align-items: center; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--line-hi); background: var(--panel-hi); cursor: pointer; font-size: 13px; }
+.ftr-settings .switch input { width: auto; }
+.ftr-settings .mpick { position: relative; }
+.ftr-settings .mpick > summary { list-style: none; cursor: pointer; display: grid; gap: 4px; font-size: 12px; color: var(--muted); min-width: 150px; }
+.ftr-settings .mpick > summary::-webkit-details-marker { display: none; }
+.ftr-settings .mpick .mp-v { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 34px; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line-hi); background: var(--panel); color: var(--text); font-weight: 500; font-size: 14px; max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ftr-settings .mpick .mp-v::after { content: "\25BE"; color: var(--muted); }
+.ftr-settings .mpick.active .mp-v { border-color: var(--brand); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 15%, transparent); }
+.ftr-settings .mp-menu { position: absolute; z-index: 40; top: calc(100% + 6px); left: 0; min-width: 240px; max-width: 340px; padding: 8px; border-radius: 14px; border: 1px solid var(--line-hi); background: var(--panel-solid); box-shadow: 0 20px 40px -20px rgba(0, 0, 0, .5); }
+.ftr-settings .mp-acts { display: flex; gap: 12px; padding: 2px 4px 6px; font-size: 12px; }
+.ftr-settings .mp-list { max-height: 260px; overflow: auto; display: grid; gap: 2px; }
+.ftr-settings .mp-list label { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--text); }
+.ftr-settings .mp-list label:hover { background: var(--panel-hi); }
+.ftr-settings .mp-list input { width: auto; }
+.ftr-settings tr.click { cursor: pointer; transition: background .12s; }
+.ftr-settings tr.click:hover td { background: var(--panel-hi); }
+.ftr-settings .spacer { flex: 1; }
+.ftr-settings button.link { min-height: 0; border: 0; background: none; padding: 0; color: var(--brand); font-size: inherit; }
+.ftr-settings .callout.ok { border-color: color-mix(in srgb, var(--green) 40%, transparent); background: color-mix(in srgb, var(--green) 8%, transparent); }
+
+/* Get help (app.css .help-form, .help-detail, .help-text and, from FTR's Get help with a conversation, .help-head,
+   .help-subject, .help-thread, .help-msg, .help-msg-head, .help-msg-text, .help-set, .help-history) */
+.ftr-settings .help-form { max-width: 760px; }
+.ftr-settings .help-form .seg { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.ftr-settings .help-form textarea { width: 100%; resize: vertical; }
+.ftr-settings .help-detail td { background: color-mix(in srgb, var(--brand) 5%, transparent); white-space: normal !important; }
+.ftr-settings .help-text { white-space: pre-wrap; margin-bottom: 6px; max-width: 80ch; }
+.ftr-settings .help-head { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.ftr-settings .help-subject { margin: 8px 0 4px; font-size: 19px; }
+.ftr-settings .help-thread { list-style: none; margin: 12px 0; padding: 0; display: grid; gap: 10px; }
+.ftr-settings .help-msg { padding: 10px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); }
+.ftr-settings .help-msg.team { border-color: color-mix(in srgb, var(--green) 40%, transparent); background: color-mix(in srgb, var(--green) 6%, var(--panel)); }
+.ftr-settings .help-msg-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+.ftr-settings .help-msg-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.ftr-settings .help-set { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.ftr-settings .help-history { margin-top: 10px; font-size: 13px; }
+.ftr-settings .help-history ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+
+/* Network & proxy (CxMissionZero's public/styles.css .net-steps, .net-mark, .net-name, .trust-list, .cert-card,
+   .cert-fp, .guard-line, in FTR's tokens) */
+.ftr-settings .guard-line { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; margin: 10px 0; padding: 10px 12px; border-radius: 10px; font-size: 13px; border: 1px solid var(--line); background: var(--panel-hi); }
+.ftr-settings .net-steps { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; }
+.ftr-settings .net-steps ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; }
+.ftr-settings .net-steps li li { font-size: 13px; }
+.ftr-settings .net-steps .net-mark { display: inline-block; width: 1.2em; font-weight: 700; }
+.ftr-settings .net-steps li.ok .net-mark { color: var(--green); }
+.ftr-settings .net-steps li.bad .net-mark { color: var(--red); }
+.ftr-settings .net-steps .net-name { font-weight: 600; }
+.ftr-settings .trust-list { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 8px; }
+.ftr-settings .trust-list li { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; display: grid; gap: 2px; justify-items: start; }
+.ftr-settings .cert-card { margin-top: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+.ftr-settings .cert-fp { font-size: 11px; word-break: break-all; }
+.ftr-settings pre.code { white-space: pre-wrap; word-break: break-all; font-family: var(--mono); font-size: 12px; padding: 8px 10px; border-radius: 8px; background: var(--panel-hi); }

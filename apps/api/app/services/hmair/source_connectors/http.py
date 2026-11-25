@@ -9,6 +9,8 @@ from urllib.parse import urlparse
 
 import httpx
 
+from app.services import connector_activity, trust_store
+
 
 MAX_SOURCE_BODY_BYTES = 10 * 1024 * 1024
 MAX_SOURCE_PAGE_RECORDS = 10_000
@@ -27,9 +29,11 @@ class SafeSourceHTTPClient:
     def __init__(self, *, allowed_origins: Iterable[str], client: httpx.Client | None = None) -> None:
         self._allowed_origins = frozenset(self._origin(value) for value in allowed_origins)
         self._client = client or httpx.Client(
-            verify=True,
+            verify=trust_store.outbound_ssl_context(),
             follow_redirects=False,
             timeout=SOURCE_TIMEOUT,
+            # Connector API activity (app/services/connector_activity.py).
+            event_hooks=connector_activity.httpx_hooks("discovery source"),
         )
         self._owns_client = client is None
 

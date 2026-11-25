@@ -969,12 +969,15 @@ def run_connector_once(
     )
     secrets = decrypt_connector_secrets(connector.encrypted_secrets)
 
-    pull_result = run_provider_pull(
-        provider_key=provider_key,
-        connector_config=connector_config,
-        secrets=secrets,
-        destination_policy=policy,
-    )
+    from app.services.connector_activity import connector_scope
+
+    with connector_scope(tenant_id=tenant_id, connector=connector.name or provider_key, connector_id=connector.id):
+        pull_result = run_provider_pull(
+            provider_key=provider_key,
+            connector_config=connector_config,
+            secrets=secrets,
+            destination_policy=policy,
+        )
 
     pull_root = create_evidence_node(
         db,

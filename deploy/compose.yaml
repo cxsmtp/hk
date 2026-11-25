@@ -82,6 +82,12 @@ x-hawk-environment: &hawk-environment
   GATEWAY_INTERCEPT_MINIMAL_MODE: "false"
   ARTIFACT_DIR: /artifacts
   HAWK_DATA_DIR: /data
+  # Get help (docs/support.md): SUPPORT_MODE=email with SUPPORT_EMAIL opens an email instead of the portal.
+  SUPPORT_MODE: ${SUPPORT_MODE:-}
+  SUPPORT_EMAIL: ${SUPPORT_EMAIL:-}
+  # A company web proxy (docs/network.md). Settings → Network & proxy is the usual place; these are the alternative.
+  HTTPS_PROXY: ${HTTPS_PROXY:-}
+  NO_PROXY: ${NO_PROXY:-}
   SECRET_KEY_LOCK_ENABLED: "true"
   SECRET_KEY_LOCK_FILE: /run/hawk/secret_key.lock
   DATABASE_URL_FILE: /run/secrets/database_url
@@ -304,6 +310,8 @@ services:
     volumes:
       - hawk-artifacts:/artifacts
       - hawk-runtime:/run/hawk
+      # The proxy and trusted certificates set under Settings → Network & proxy (docs/network.md) live here.
+      - hawk-data:/data
     healthcheck:
       <<: *hawk-healthcheck
       test: ["CMD", "python", "/workspace/infra/scripts/check_component_heartbeat.py", "celery_beat"]

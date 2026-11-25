@@ -8,6 +8,8 @@ from urllib.parse import urlencode
 from urllib.request import Request
 from urllib.request import urlopen
 
+from app.services import connector_activity
+
 
 MICROSOFT_GRAPH_PROVIDER_KEYS = {
     "entra_id",
@@ -503,8 +505,10 @@ def execute_microsoft_teams_notetaker_graph_action(
             status_code = int(getattr(response, "status_code", 0))
         else:
             req = Request(url, data=body_bytes, headers=headers, method=operation["method"])
-            with urlopen(req, timeout=10) as response:  # nosec B310 - URL is server-configured Microsoft Graph base.
-                status_code = int(getattr(response, "status", 0))
+            with connector_activity.timed(operation["method"], url, source="microsoft_graph") as recorded:
+                with urlopen(req, timeout=10) as response:  # nosec B310 - URL is server-configured Microsoft Graph base.
+                    status_code = int(getattr(response, "status", 0))
+                recorded["status"] = status_code
     except Exception as exc:
         return {
             "provider_control_path": "microsoft_graph",

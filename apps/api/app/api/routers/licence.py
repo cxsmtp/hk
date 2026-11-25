@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session
 from app.core.rbac import require_role
 from app.core.tenant import TenantContext
 from app.db.session import get_db
-from app.services import activation_service
+from app.services import activation_service, refusal_audit
 from app.services.activation_service import ISSUER_KEYS, parse_ms
 from app.services.audit_service import write_audit_log
 
@@ -31,9 +31,6 @@ MAX_CODE_LENGTH = 4000
 #: Tries a minute from one address on the open route.
 TRIES_PER_MINUTE = 10
 TOO_MANY_TRIES = "Too many tries. Wait a minute, then enter the code again."
-#: Refused codes from the open route listed one by one in the audit log, a minute: per address, and in all.
-REFUSED_AUDIT_PER_MINUTE = 10
-REFUSED_AUDIT_TOTAL = REFUSED_AUDIT_PER_MINUTE * 4
 
 
 def _code_from(body: dict[str, Any] | None) -> str:
@@ -67,39 +64,9 @@ class _Tries:
             self._by_ip.clear()
 
 
-class _RefusalsListed:
-    """May one more refusal from ``key`` (an address) be listed in the audit log this minute? Those left out are
-    counted, and listed as one entry when the next minute starts."""
-
-    def __init__(self) -> None:
-        self._lock = threading.Lock()
-        self.reset()
-
-    def reset(self) -> None:
-        self.since = 0.0
-        self.total = 0
-        self.by_key: dict[str, int] = {}
-        self.left_out = 0
-
-    def listed(self, key: str, now: float) -> tuple[bool, int]:
-        """(listed, how many were left out in the minute before, to record now)."""
-        with self._lock:
-            left_before = 0
-            if now - self.since >= 60_000:
-                left_before = self.left_out
-                self.since, self.total, self.left_out = now, 0, 0
-                self.by_key.clear()
-            seen = self.by_key.get(key, 0)
-            if seen >= REFUSED_AUDIT_PER_MINUTE or self.total >= REFUSED_AUDIT_TOTAL:
-                self.left_out += 1
-                return False, left_before
-            self.by_key[key] = seen + 1
-            self.total += 1
-            return True, left_before
-
-
 licence_tries = _Tries()
-licence_refusals = _RefusalsListed()
+#: The shared limit of app/services/refusal_audit.py (10 a minute per address, 40 in all).
+licence_refusals = refusal_audit.lister("licence")
 
 
 def _activation_details(result: dict[str, Any]) -> dict[str, Any]:

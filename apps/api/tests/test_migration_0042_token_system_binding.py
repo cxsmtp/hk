@@ -118,5 +118,5 @@ def test_migration_graph_has_one_short_alembic_head() -> None:
     assert len(migration.revision) <= 32
     config = Config(str(Path(__file__).resolve().parents[1] / "app/db/migrations/alembic.ini"))
     heads = ScriptDirectory.from_config(config).get_heads()
-    assert heads == ["0096_signin_hardening"]
+    assert heads == ["0097_audit_chain"]
     assert all(len(head) <= 128 for head in heads)

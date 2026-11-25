@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import settings
 from app.core.security import create_access_token
-from app.db.models.audit import AuditLog
+from app.db.models.audit import AuditChainHead, AuditLog
 from app.db.models.discovery_canonical import DiscoveryCollector, DiscoveryTarget
 from app.db.models.monitoring import Connector
 from app.db.models.tenant import Tenant
@@ -166,6 +166,7 @@ def source_connection_env(tmp_path, monkeypatch: pytest.MonkeyPatch) -> Iterator
         User.__table__,
         UserTenantRole.__table__,
         AuditLog.__table__,
+        AuditChainHead.__table__,
         Connector.__table__,
         DiscoveryTarget.__table__,
         DiscoveryCollector.__table__,

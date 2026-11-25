@@ -2580,6 +2580,11 @@ def _pull_aws_signals(secrets: dict[str, Any], connector_config: dict[str, Any])
     pulled: list[PullSignal] = []
     now = datetime.now(timezone.utc)
 
+    from app.services import connector_activity
+
+    # Connector API activity (app/services/connector_activity.py): one record per AWS API call.
+    session.events.register("before-call", connector_activity.boto3_before_hook())
+    session.events.register("after-call", connector_activity.boto3_hook("aws"))
     cloudtrail = session.client("cloudtrail")
     iam = session.client("iam")
     s3 = session.client("s3")

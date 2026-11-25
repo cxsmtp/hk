@@ -140,7 +140,10 @@ def send(message: EmailMessage, to: str, *, smtp: Smtp | None = None) -> None:
     message["From"] = from_header(smtp)
     message["To"] = to
     message["Message-ID"] = make_msgid(domain=smtp.from_address.rpartition("@")[2] or None)
-    context = ssl.create_default_context()
+    # The public roots and the certificates an administrator trusts (Settings → Network & proxy, app/services/trust_store.py).
+    from app.services.trust_store import outbound_ssl_context
+
+    context = outbound_ssl_context()
     try:
         if smtp.secure:
             client: smtplib.SMTP = smtplib.SMTP_SSL(smtp.host, smtp.port, timeout=TIMEOUT_SECONDS, context=context)

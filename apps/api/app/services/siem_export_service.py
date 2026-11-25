@@ -922,22 +922,25 @@ def deliver_siem_webhook(
     transport_failure: dict[str, str] | None = None
     destination_policy_failure = None
     status_code = 0
+    from app.services.connector_activity import connector_scope
+
     try:
-        response = request_with_redirect_validation(
-            "POST",
-            destination_url,
-            source="siem_export",
-            policy=destination_policy,
-            client_factory=client_factory,
-            transport_factory=transport_factory,
-            allowed_redirect_statuses=frozenset({307, 308}),
-            content=batch.ndjson.encode("utf-8"),
-            headers={
-                "Content-Type": "application/x-ndjson",
-                "X-Hawk-Schema": str(batch.metadata["schema"]),
-                "X-Hawk-Tenant": tenant_key,
-            },
-        )
+        with connector_scope(tenant_id=tenant_id, connector="SIEM export"):
+            response = request_with_redirect_validation(
+                "POST",
+                destination_url,
+                source="siem_export",
+                policy=destination_policy,
+                client_factory=client_factory,
+                transport_factory=transport_factory,
+                allowed_redirect_statuses=frozenset({307, 308}),
+                content=batch.ndjson.encode("utf-8"),
+                headers={
+                    "Content-Type": "application/x-ndjson",
+                    "X-Hawk-Schema": str(batch.metadata["schema"]),
+                    "X-Hawk-Tenant": tenant_key,
+                },
+            )
         raw_status_code = getattr(response, "status_code", None)
         status_code = raw_status_code if type(raw_status_code) is int else 0
     except OutboundDestinationPolicyError:
