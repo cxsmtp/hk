@@ -63,6 +63,16 @@ mkdir -p "$SECRETS" "$HAWK_DATA_DIR/certs"
 chmod 0700 "$HAWK_DATA_DIR" "$SECRETS" "$HAWK_DATA_DIR/certs"
 # Certificates given to the deployment (TLS_CERT_FILE…, docs/https-and-hosting.md): readable by the API (uid 1000) only.
 chown -R 1000:1000 "$HAWK_DATA_DIR/certs"
+# Backups (deploy/README.md: Backups): BACKUP_DIR, else the data folder's backups/; written by the API and the worker.
+BACKUP_DIR_HOST="$(sed -n 's/^BACKUP_DIR=//p' "$ENV_FILE" | tail -n 1)"
+BACKUP_DIR_HOST="${BACKUP_DIR_HOST:-$HAWK_DATA_DIR/backups}"
+case "$BACKUP_DIR_HOST" in
+  /*) ;;
+  *) fail "BACKUP_DIR in $ENV_FILE must be an absolute path." ;;
+esac
+mkdir -p "$BACKUP_DIR_HOST"
+chown 1000:1000 "$BACKUP_DIR_HOST"
+chmod 0700 "$BACKUP_DIR_HOST"
 
 random() { LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c "$1"; }
 
