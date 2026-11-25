@@ -58,7 +58,6 @@ def test_unavailable_api_client_raises_clear_error() -> None:
                 application="Claude Desktop",
                 desktop_app="Claude",
                 prompt_text="hello",
-                prompt_preview_redacted="hello",
                 capture_method="test",
             )
         )

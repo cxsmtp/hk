@@ -115,7 +115,8 @@ def _looks_like_source_code_submission(text: str) -> bool:
 
 
 def evaluate_local_precheck(snapshot: PromptSnapshot) -> GuardDecision | None:
-    text = snapshot.prompt_preview_redacted or snapshot.prompt_text
+    # The whole prompt, on this machine: never the shortened, redacted preview sent to the API.
+    text = snapshot.prompt_text
     if API_KEY_VALUE_RE.search(text):
         return _decision(["local_api_key_pattern"])
     if any(pattern.search(text) for pattern in HIGH_CONFIDENCE_SECRET_PATTERNS):

@@ -33,7 +33,6 @@ class ClipboardCollector:
             application=self.application,
             desktop_app=self.desktop_app,
             prompt_text=prompt,
-            prompt_preview_redacted=prompt,
             capture_method="clipboard",
             machine_id=self.machine_id,
             os_type=self.os_type,
