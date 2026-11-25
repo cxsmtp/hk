@@ -392,20 +392,93 @@ def test_enforce_fail_secure_denies_missing_context(monkeypatch, test_env) -> No
         )
 
 
-def test_gateway_unknown_ai_system_is_blocked_fail_secure(monkeypatch, test_env) -> None:
+def test_enforce_fail_secure_denies_unknown_ai_system(monkeypatch, test_env) -> None:
+    from fastapi import HTTPException
+
+    monkeypatch.setattr(settings, "fail_secure_mode", True)
+    monkeypatch.setattr(
+        fail_secure_service,
+        "queue_auditor_fail_secure_job",
+        lambda **_kwargs: {"queued": False, "error": None},
+    )
+    with test_env["SessionLocal"]() as db:
+        with pytest.raises(HTTPException) as raised:
+            fail_secure_service.enforce_fail_secure_or_raise(
+                db, tenant_id="t-1", module="gateway", ai_system_id="missing-system", request_id="r-1"
+            )
+        assert raised.value.status_code == 503
+        assert raised.value.detail["reason"] == "governance_context_failed:ai_system_not_found"
+        # Asked for as a governance block, it is still a denial, never an allow.
+        with pytest.raises(fail_secure_service.UnregisteredAISystemBlock):
+            fail_secure_service.enforce_fail_secure_or_raise(
+                db,
+                tenant_id="t-1",
+                module="gateway",
+                ai_system_id="missing-system",
+                request_id="r-2",
+                unknown_ai_system_is_governance_block=True,
+            )
+        # Only the unknown AI system becomes a governance block: missing context stays a 503.
+        with pytest.raises(HTTPException) as raised:
+            fail_secure_service.enforce_fail_secure_or_raise(
+                db, tenant_id="t-1", module="gateway", request_id="r-3", unknown_ai_system_is_governance_block=True
+            )
+        assert raised.value.status_code == 503
+        assert raised.value.detail["reason"] == "governance_context_failed:no_ai_system_context"
+
+
+def test_gateway_unknown_ai_system_is_a_governance_block(monkeypatch, test_env) -> None:
     monkeypatch.setattr(settings, "fail_secure_mode", True)
     client: TestClient = test_env["client"]
     owner = _register_owner(client, email="fail-secure-unknown@example.com")
     headers = _headers(owner["access_token"], owner["tenant_id"])
 
     response = client.post("/gateway/llm/intercept", headers=headers, json=_intercept_body("no-such-ai-system"))
-    assert response.status_code == 503, response.text
+    assert response.status_code == 403, response.text
     detail = response.json()["detail"]
-    assert detail["code"] == "fail_secure_block"
-    assert detail["reason"] == "governance_context_failed:ai_system_not_found"
+    assert detail["code"] == "governance_context_blocked"
+    assert detail["reason_code"] == "ai_system_not_registered"
 
 
-def test_gateway_another_tenants_ai_system_is_blocked_fail_secure(monkeypatch, test_env) -> None:
+def test_gateway_unknown_ai_system_denied_even_if_guard_does_not_block(monkeypatch, test_env) -> None:
+    from app.services import governance_guard
+
+    monkeypatch.setattr(settings, "fail_secure_mode", True)
+    monkeypatch.setattr(governance_guard, "enforce", lambda *args, **kwargs: None)
+    client: TestClient = test_env["client"]
+    owner = _register_owner(client, email="fail-secure-unknown-noguard@example.com")
+    headers = _headers(owner["access_token"], owner["tenant_id"])
+
+    response = client.post("/gateway/llm/intercept", headers=headers, json=_intercept_body("no-such-ai-system"))
+    assert response.status_code == 403, response.text
+    assert response.json()["detail"]["reason_code"] == "ai_system_not_registered"
+
+
+def test_gateway_missing_ai_system_context_stays_fail_secure(monkeypatch, test_env) -> None:
+    monkeypatch.setattr(settings, "fail_secure_mode", True)
+    monkeypatch.setattr(
+        fail_secure_service,
+        "queue_auditor_fail_secure_job",
+        lambda **_kwargs: {"queued": False, "error": None},
+    )
+    with test_env["SessionLocal"]() as db:
+        from fastapi import HTTPException
+
+        with pytest.raises(HTTPException) as raised:
+            fail_secure_service.enforce_gateway_fail_secure_or_raise(
+                db,
+                tenant_id="t-1",
+                ai_system_id=None,
+                request_id="r-1",
+                governance_route="/gateway/llm/intercept",
+                governance_action="gateway.llm.intercept",
+            )
+        assert raised.value.status_code == 503
+        assert raised.value.detail["code"] == "fail_secure_block"
+        assert raised.value.detail["reason"] == "governance_context_failed:no_ai_system_context"
+
+
+def test_gateway_another_tenants_ai_system_is_blocked(monkeypatch, test_env) -> None:
     monkeypatch.setattr(settings, "fail_secure_mode", True)
     client: TestClient = test_env["client"]
     other = _register_owner(client, email="fail-secure-other@example.com")
@@ -414,8 +487,10 @@ def test_gateway_another_tenants_ai_system_is_blocked_fail_secure(monkeypatch, t
     headers = _headers(owner["access_token"], owner["tenant_id"])
 
     response = client.post("/gateway/llm/intercept", headers=headers, json=_intercept_body(other_system))
-    assert response.status_code == 503, response.text
-    assert response.json()["detail"]["reason"] == "governance_context_failed:ai_system_not_found"
+    assert response.status_code == 403, response.text
+    detail = response.json()["detail"]
+    assert detail["code"] == "governance_context_blocked"
+    assert detail["reason_code"] == "ai_system_not_registered"
 
 
 def test_ai_iam_registry_and_containment_routes_state_their_missing_context(monkeypatch, test_env) -> None:

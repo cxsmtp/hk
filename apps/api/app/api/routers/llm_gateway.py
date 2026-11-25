@@ -25,7 +25,7 @@ from app.core.response_control import (
 from app.core.tenant import TenantContext
 from app.db.models.enforcement import EnforcementEvent
 from app.db.session import get_db
-from app.services.fail_secure_service import enforce_fail_secure_or_raise
+from app.services.fail_secure_service import enforce_gateway_fail_secure_or_raise
 from app.services.governance_guard import GovernanceFailSecureError, GovernanceViolationError
 from app.services.llm_gateway_service import (
     gateway_chat_complete,
@@ -441,12 +441,14 @@ def _handle_openai_compatible_chat(
     hawk_payload = _openai_to_hawk_payload(payload, ctx)
     _assert_payload_tenant(hawk_payload.tenant_id, ctx)
     request_id = hawk_payload.request_id or ""
-    enforce_fail_secure_or_raise(
+    enforce_gateway_fail_secure_or_raise(
         db,
         tenant_id=ctx.tenant.id,
         module="gateway",
         ai_system_id=hawk_payload.ai_system_id,
         request_id=request_id,
+        governance_route="/llm-gateway/chat/complete",
+        governance_action="llm_gateway.chat.complete",
     )
     try:
         result = gateway_chat_complete(
@@ -707,12 +709,14 @@ def llm_gateway_request_route(
 ):
     _assert_payload_tenant(payload.tenant_id, ctx)
     request_id = payload.request_id or ""
-    enforce_fail_secure_or_raise(
+    enforce_gateway_fail_secure_or_raise(
         db,
         tenant_id=ctx.tenant.id,
         module="gateway",
         ai_system_id=payload.ai_system_id,
         request_id=request_id,
+        governance_route="/llm-gateway/request",
+        governance_action="llm_gateway.request",
     )
     try:
         result = gateway_request_only(
@@ -782,12 +786,14 @@ def llm_gateway_response_route(
 ):
     _assert_payload_tenant(payload.tenant_id, ctx)
     request_id = payload.request_id or ""
-    enforce_fail_secure_or_raise(
+    enforce_gateway_fail_secure_or_raise(
         db,
         tenant_id=ctx.tenant.id,
         module="gateway",
         ai_system_id=payload.ai_system_id,
         request_id=request_id,
+        governance_route="/llm-gateway/response",
+        governance_action="llm_gateway.response",
     )
     try:
         result = gateway_response_only(
@@ -865,12 +871,14 @@ def llm_gateway_chat_complete_route(
             },
         )
     request_id = payload.request_id or ""
-    enforce_fail_secure_or_raise(
+    enforce_gateway_fail_secure_or_raise(
         db,
         tenant_id=ctx.tenant.id,
         module="gateway",
         ai_system_id=payload.ai_system_id,
         request_id=request_id,
+        governance_route="/llm-gateway/chat/complete",
+        governance_action="llm_gateway.chat.complete",
     )
     try:
         result = gateway_chat_complete(
@@ -985,9 +993,11 @@ def llm_gateway_document_complete_route(
     db: Session = Depends(get_db),
 ):
     _assert_payload_tenant(tenant_id, ctx)
-    enforce_fail_secure_or_raise(
+    enforce_gateway_fail_secure_or_raise(
         db, tenant_id=ctx.tenant.id, module="gateway",
         ai_system_id=ai_system_id, request_id=request_id or "",
+        governance_route="/llm-gateway/documents/complete",
+        governance_action="llm_gateway.document.complete",
     )
     content: bytes | None = None
     if file is not None:

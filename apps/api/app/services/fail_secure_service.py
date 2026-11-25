@@ -32,6 +32,18 @@ def check_db_connectivity(db: Session) -> None:
 NO_AI_SYSTEM_CONTEXT_REASONS = frozenset({"tenant_registry", "containment"})
 
 
+class UnregisteredAISystemBlock(Exception):
+    """The fail-secure check denied because the tenant has no such AI system.
+
+    That is a governance decision, not an outage. ``enforce_fail_secure_or_raise`` raises this instead of the 503 only
+    when the call site asks with ``unknown_ai_system_is_governance_block``, and the caller must turn it into a denial
+    (see ``enforce_gateway_fail_secure_or_raise``). Left uncaught it is still a denial, never an allow."""
+
+    def __init__(self, ai_system_id: str | None) -> None:
+        super().__init__("ai_system_not_found")
+        self.ai_system_id = ai_system_id
+
+
 def validate_governance_context(
     db: Session,
     *,
@@ -217,8 +229,13 @@ def enforce_fail_secure_or_raise(
     ai_system_id: str | None = None,
     request_id: str | None = None,
     no_ai_system_context_reason: str | None = None,
+    unknown_ai_system_is_governance_block: bool = False,
 ) -> None:
     """Raise 503 ``fail_secure_block`` unless the database answers and the governance context is valid.
+
+    With ``unknown_ai_system_is_governance_block`` an AI system the tenant does not have raises
+    ``UnregisteredAISystemBlock`` instead of the 503, so the caller can answer with its governance 403; it is denied
+    either way.
 
     Without an AI system this denies (``governance_context_failed:no_ai_system_context``) unless the call site states
     why it has none with ``no_ai_system_context_reason`` (see NO_AI_SYSTEM_CONTEXT_REASONS)."""
@@ -257,6 +274,8 @@ def enforce_fail_secure_or_raise(
         return
 
     if not governance_ok:
+        if unknown_ai_system_is_governance_block and governance_reason == "ai_system_not_found":
+            raise UnregisteredAISystemBlock(ai_system_id)
         _raise_fail_secure(
             db=db,
             tenant_id=tenant_id,
@@ -265,6 +284,86 @@ def enforce_fail_secure_or_raise(
             request_id=request_id,
             ai_system_id=ai_system_id,
         )
+
+
+def enforce_gateway_fail_secure_or_raise(
+    db: Session,
+    *,
+    tenant_id: str,
+    ai_system_id: str | None,
+    request_id: str | None,
+    governance_route: str,
+    governance_action: str,
+    module: str = "gateway",
+) -> None:
+    """The fail-secure check for gateway and LLM-gateway routes.
+
+    Genuine governance-unavailable reasons (database down, governance query failed, no AI-system context, missing risk
+    tier, blocked lifecycle) stay a 503 ``fail_secure_block``. An AI system the tenant does not have is a governance
+    decision: the governance guard records it as shadow-AI usage and the route answers with the guard's 403
+    ``governance_context_blocked`` contract (``reason_code`` ``ai_system_not_registered``). Every path denies; should
+    the guard not block, the 403 is raised all the same."""
+
+    try:
+        enforce_fail_secure_or_raise(
+            db,
+            tenant_id=tenant_id,
+            module=module,
+            ai_system_id=ai_system_id,
+            request_id=request_id,
+            unknown_ai_system_is_governance_block=True,
+        )
+    except UnregisteredAISystemBlock:
+        _raise_unregistered_ai_system_block(
+            db,
+            tenant_id=tenant_id,
+            ai_system_id=ai_system_id,
+            governance_route=governance_route,
+            governance_action=governance_action,
+        )
+
+
+def _raise_unregistered_ai_system_block(
+    db: Session,
+    *,
+    tenant_id: str,
+    ai_system_id: str | None,
+    governance_route: str,
+    governance_action: str,
+) -> None:
+    from app.services.governance_guard import GovernanceFailSecureError, GovernanceViolationError
+    from app.services.governance_guard import enforce as enforce_governance
+
+    reason_code = "ai_system_not_registered"
+    message = "Governance context blocked"
+    try:
+        enforce_governance(
+            db,
+            tenant_id=tenant_id,
+            ai_system_id=ai_system_id,
+            action=governance_action,
+            route=governance_route,
+            module="gateway_service",
+            commit_logs=True,
+        )
+    except GovernanceViolationError as exc:
+        reason_code = exc.reason_code or reason_code
+        message = exc.message or message
+    except GovernanceFailSecureError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"code": "governance_fail_secure", "reason_code": exc.reason_code, "message": exc.message},
+        ) from exc
+    except Exception:
+        # Recording the shadow usage failed: still a denial, with the registration contract.
+        try:
+            db.rollback()
+        except Exception:
+            pass
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail={"code": "governance_context_blocked", "reason_code": reason_code, "message": message},
+    )
 
 
 def get_control_plane_health(
