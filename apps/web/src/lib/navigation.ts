@@ -106,6 +106,7 @@ export const SPECIALIST_WORKSPACES = [
       { href: "/guided-demo", label: "Guided Demo" },
       { href: "/settings/activation", label: "Activation codes" },
       { href: "/settings/https", label: "HTTPS" },
+      { href: "/settings/backups", label: "Backups & health" },
     ],
   },
 ] as const;

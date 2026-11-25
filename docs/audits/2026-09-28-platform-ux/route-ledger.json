@@ -1732,6 +1732,25 @@
     "mobile": "not-observed"
   },
   {
+    "route": "/settings/backups",
+    "file": "apps/web/src/app/settings/backups/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Settings → Backups & health (deploy/README.md: Backups), laid out as FTR Command Center's Settings → Backups & health with CxMissionZero's backups behind it (encryption, the server's backup key, the staged restore). Covered by apps/web/tests/backups-settings.test.mjs (pure view logic and source checks) and the API tests in apps/api/tests/test_backups.py. Observed against the live compose stack on desktop (1440px) and 393px mobile: no horizontal scroll; the populated page (backups, the key box, readiness) rendered, and its actions exercised through the API routes it calls.",
+    "desktop": "observed",
+    "mobile": "observed"
+  },
+  {
     "route": "/settings/https",
     "file": "apps/web/src/app/settings/https/page.tsx",
     "owner": "W3",
