@@ -1482,13 +1482,13 @@ def test_enforcement_requires_lookup_and_accepts_only_server_issued_session(test
         (
             False,
             None,
-            {"expiry": (datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat()},
+            {"expiry": timedelta(minutes=-1)},
             "agent_session_expired",
         ),
         (
             False,
             None,
-            {"expiry": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()},
+            {"expiry": timedelta(hours=1)},
             "agent_session_context_widening",
         ),
     ],
@@ -1500,6 +1500,10 @@ def test_enforcement_rejects_token_expiry_and_context_spoofing(
     caller_context: dict | None,
     expected_reason: str,
 ) -> None:
+    # Expiry offsets are turned into times when the test runs, not when the module is collected: a slow
+    # run must not let "an hour from now" fall behind the session's own expiry.
+    if caller_context and isinstance(caller_context.get("expiry"), timedelta):
+        caller_context = {**caller_context, "expiry": (datetime.now(timezone.utc) + caller_context["expiry"]).isoformat()}
     owner, ai_system_id, agent_id, raw_token = _setup_authority(test_env)
     opened = _open_session(
         test_env,
