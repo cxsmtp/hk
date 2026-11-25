@@ -26,7 +26,7 @@ from sqlalchemy.engine import make_url
 
 ROOT = Path(__file__).resolve().parents[2]
 API = ROOT / "apps/api"
-DATABASE = "hawk_collaboration_test"
+DATABASE = "hawk_test"
 ACCEPTANCE_DATABASE = "aicontrol_phase5_acceptance"
 
 
@@ -196,7 +196,7 @@ def main() -> int:
                 raise RuntimeError("Owned web server did not become ready")
             if args.browser_smoke:
                 overrides = {"HAWK_BROWSER_EXECUTABLE": str(args.browser_executable.resolve())} if args.browser_executable else {}
-                run("web-browser", ["node", str(ROOT / "tools/collaboration/native_browser_smoke.cjs"),
+                run("web-browser", ["node", str(ROOT / "tools/dev/native_browser_smoke.cjs"),
                                     report["api_url"], report["web_url"], str(output)], overrides)
         report["passed"] = True
         if args.serve:

@@ -528,7 +528,7 @@ def create_policy_pack_definition(
     default_rollout: str = "MONITORING",
     exception_guidance: str = "",
     known_blind_spots: list[str] | None = None,
-    owner_publisher: str = "trinya",
+    owner_publisher: str = "hawk",
     release_notes: str = "",
     state: str = "PUBLISHED",
 ) -> PolicyPackDefinition:
@@ -544,7 +544,7 @@ def create_policy_pack_definition(
     normalized_state = _token(state, maximum=16).upper()
     if normalized_state not in PACK_DEFINITION_STATES:
         raise PolicyPackPlatformError("policy_pack_definition_state_invalid")
-    publisher_ref = "trinya" if publisher_tenant_id is None else f"tenant:{publisher_tenant_id}"
+    publisher_ref = "hawk" if publisher_tenant_id is None else f"tenant:{publisher_tenant_id}"
     existing = db.scalar(
         select(PolicyPackDefinition).where(
             PolicyPackDefinition.publisher_ref == publisher_ref,
@@ -609,7 +609,7 @@ def ensure_builtin_policy_pack_catalog(db: Session) -> PolicyPackDefinition:
     legacy = db.scalar(
         select(PolicyPackDefinition).where(
             PolicyPackDefinition.publisher_tenant_id.is_(None),
-            PolicyPackDefinition.stable_pack_id == "trinya:universal-ai-data-handling",
+            PolicyPackDefinition.stable_pack_id == "hawk:universal-ai-data-handling",
             PolicyPackDefinition.version == "1.0.0",
         )
     )
@@ -617,7 +617,7 @@ def ensure_builtin_policy_pack_catalog(db: Session) -> PolicyPackDefinition:
         legacy = create_policy_pack_definition(
             db,
             publisher_tenant_id=None,
-            stable_pack_id="trinya:universal-ai-data-handling",
+            stable_pack_id="hawk:universal-ai-data-handling",
             version="1.0.0",
             name="Universal AI Data Handling",
             description="A controlled starting point for sensitive data transfers to external AI destinations.",
@@ -663,7 +663,7 @@ def ensure_builtin_policy_pack_catalog(db: Session) -> PolicyPackDefinition:
             default_rollout="MONITORING",
             exception_guidance="Use a reviewed, exact-scope, time-limited exception.",
             known_blind_spots=["URL and content semantics depend on the selected deployment surface."],
-            owner_publisher="trinya",
+            owner_publisher="hawk",
             release_notes="Initial universal data-handling pack.",
         )
 
@@ -966,7 +966,7 @@ def _definition_for_inheritance_ref(
         PolicyPackDefinition.stable_pack_id == stable_id,
         PolicyPackDefinition.state != "WITHDRAWN",
     )
-    if stable_id.startswith("trinya:"):
+    if stable_id.startswith("hawk:"):
         query = query.where(PolicyPackDefinition.publisher_tenant_id.is_(None))
     else:
         query = query.where(
@@ -978,7 +978,7 @@ def _definition_for_inheritance_ref(
     rows = list(db.scalars(query.order_by(PolicyPackDefinition.created_at.desc(), PolicyPackDefinition.id.desc())).all())
     if not rows:
         return None
-    if not stable_id.startswith("trinya:"):
+    if not stable_id.startswith("hawk:"):
         tenant_owned = [row for row in rows if row.publisher_tenant_id == tenant_id]
         if tenant_owned:
             return tenant_owned[0]

@@ -1,7 +1,5 @@
 # Deployment Families
 
-> Imported reference documentation from the selected original worktree. Prior deployment, version and test claims below are historical source context, not current acceptance. See [the collaboration README](../README.md) for verified results and remaining limits. Commands require an isolated, explicitly configured environment.
-
 
 This document defines Hawk's approved customer-facing deployment-family contract. It groups existing technical Deployment Surfaces into four understandable families without renaming those surfaces or claiming capabilities that Hawk cannot verify.
 

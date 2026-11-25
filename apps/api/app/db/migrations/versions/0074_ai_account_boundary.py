@@ -1,4 +1,4 @@
-"""Add Trinya AI Account Boundary primitives.
+"""Add Hawk AI Account Boundary primitives.
 
 Revision ID: 0074_ai_account_boundary
 Revises: 0073_external_capability_integrity

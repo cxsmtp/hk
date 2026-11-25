@@ -795,7 +795,7 @@ def test_groups_membership_and_effective_pack_references_reuse_policy_pack_recor
             source_ref="test",
         )
         definition = PolicyPackDefinition(
-            publisher_ref="trinya",
+            publisher_ref="hawk",
             stable_pack_id="UAI-001",
             version="1.0.0",
             name="Approved AI",

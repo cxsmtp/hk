@@ -1,7 +1,5 @@
 # AI Exposure Reasoning Methodology
 
-> Imported reference documentation from the selected original worktree. Prior deployment, version and test claims below are historical source context, not current acceptance. See [the collaboration README](../../README.md) for verified results and remaining limits. Commands require an isolated, explicitly configured environment.
-
 
 **Methodology:** `ai-exposure-reasoning/1.2`  
 **Reasoning rules:** `1.2.0`  

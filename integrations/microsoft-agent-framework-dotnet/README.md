@@ -25,7 +25,7 @@ An own-account summary can execute only after Hawk returns an executable decisio
 - xUnit Visual Studio runner `3.1.5`
 
 ```bash
-cd "/Volumes/X10 Pro/New project/repo/integrations/microsoft-agent-framework-dotnet"
+cd "/opt/hawk/integrations/microsoft-agent-framework-dotnet"
 
 "$HOME/.dotnet/dotnet" restore Hawk.BankFoundry.sln --locked-mode
 "$HOME/.dotnet/dotnet" test Hawk.BankFoundry.sln \
@@ -59,7 +59,7 @@ The reference uses a synthetic in-memory bank—never a real account or provider
 Enter secrets through hidden prompts so values do not enter shell history:
 
 ```bash
-cd "/Volumes/X10 Pro/New project/repo/integrations/microsoft-agent-framework-dotnet"
+cd "/opt/hawk/integrations/microsoft-agent-framework-dotnet"
 
 export HAWK_API_URL="http://127.0.0.1:8000"
 export HAWK_TENANT_ID="<tenant-id>"

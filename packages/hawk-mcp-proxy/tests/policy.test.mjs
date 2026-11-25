@@ -143,16 +143,16 @@ test("classifyToolCall does not turn malformed or unrelated arguments into a Git
 });
 
 test("repository-scoped GitHub identities bind only their exact normalized repository", () => {
-  const scope = "github.com/dang070298/New-project-Hawki-ai-";
+  const scope = "github.com/hawk-demo/governed-repo";
   const mcpServerId = repositoryScopedMcpServerId(scope);
 
   assert.equal(
     mcpServerId,
-    "github-pull-requests--dang070298--new-project-hawki-ai-",
+    "github-pull-requests--hawk-demo--governed-repo",
   );
   assert.equal(
     matchesGitHubRepositoryScope(
-      { owner: "Dang070298", repo: "new-project-hawki-ai-" },
+      { owner: "Hawk-Demo", repo: "governed-repo" },
       scope,
     ),
     true,
@@ -169,8 +169,8 @@ test("repository-scoped GitHub identities bind only their exact normalized repos
     mcpServerId,
     repositoryScope: scope,
     toolName: "create_pull_request",
-    argumentsObject: { owner: "Dang070298", repo: "new-project-hawki-ai-" },
+    argumentsObject: { owner: "Hawk-Demo", repo: "governed-repo" },
   });
-  assert.equal(classified.resource, "github.com/dang070298/new-project-hawki-ai-");
-  assert.equal(classified.destination, "https://github.com/dang070298/new-project-hawki-ai-");
+  assert.equal(classified.resource, "github.com/hawk-demo/governed-repo");
+  assert.equal(classified.destination, "https://github.com/hawk-demo/governed-repo");
 });

@@ -28,7 +28,7 @@ EXPOSE 8000
 USER 1000
 
 FROM api-base AS test
-COPY tools/collaboration /workspace/tools/collaboration
+COPY tools/dev /workspace/tools/dev
 COPY scripts /workspace/scripts
 USER root
 RUN mkdir -p /test-results && chown 1000:1000 /test-results

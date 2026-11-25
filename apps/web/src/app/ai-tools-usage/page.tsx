@@ -369,7 +369,7 @@ export default function AIToolsUsagePage() {
   const runtimeProjectionCount = data?.window.runtime_projection_count ?? data?.window.runtime_event_count ?? 0;
   const observedSignals = providerSignalRecordCount + (data?.prompts_actions.total ?? 0) + (data?.overview.providers_observed ?? 0);
   const estimatedSpendRows = (data?.spend_utilization.records || []).filter((row) =>
-    ["CLIENT_ESTIMATE", "TRINYA_ESTIMATE", "CONTRACT_RATE_CARD", "CREDIT_CONSUMPTION"].includes(String(row.cost_type || "").toUpperCase()),
+    ["CLIENT_ESTIMATE", "HAWK_ESTIMATE", "CONTRACT_RATE_CARD", "CREDIT_CONSUMPTION"].includes(String(row.cost_type || "").toUpperCase()),
   );
   const authoritativeSpendRows = (data?.spend_utilization.records || []).filter((row) =>
     ["PROVIDER_BILLED", "PROVIDER_REPORTED"].includes(String(row.cost_type || "").toUpperCase()),

@@ -14,7 +14,7 @@ from app.services.hmair.contracts import canonical_json_bytes
 from app.services.hmair.deep_scan_contracts import DeepScanUnitCompletionReceipt
 
 
-_DOMAIN = b"trinya.hmair.deep-scan-unit-receipt.v1"
+_DOMAIN = b"hawk.hmair.deep-scan-unit-receipt.v1"
 _MAX_PRIVATE_VALUE_BYTES = 4_096
 
 

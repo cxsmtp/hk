@@ -1,7 +1,5 @@
 # Control Capability Matrix
 
-> Imported reference documentation from the selected original worktree. Prior deployment, version and test claims below are historical source context, not current acceptance. See [the collaboration README](../README.md) for verified results and remaining limits. Commands require an isolated, explicitly configured environment.
-
 
 The matrix is a versioned backend contract persisted in `control_capability_profiles`. It is not a marketing lookup table.
 

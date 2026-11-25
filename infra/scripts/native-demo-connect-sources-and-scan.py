@@ -21,7 +21,7 @@ import urllib.request
 import uuid
 
 
-API_BASE = os.environ.get("TRINYA_API", "http://127.0.0.1:8000").rstrip("/")
+API_BASE = os.environ.get("HAWK_EXEC_API", "http://127.0.0.1:8000").rstrip("/")
 
 
 def call(
@@ -59,8 +59,8 @@ def call(
 
 
 def login() -> tuple[str, str]:
-    email = os.environ.get("TRINYA_EMAIL") or input("Trinya owner/admin email: ").strip()
-    password = os.environ.get("TRINYA_PASSWORD") or getpass.getpass("Trinya password: ")
+    email = os.environ.get("HAWK_EXEC_EMAIL") or input("Hawk owner/admin email: ").strip()
+    password = os.environ.get("HAWK_EXEC_PASSWORD") or getpass.getpass("Hawk password: ")
     response = call("POST", "/auth/login", body={"email": email, "password": password})
     return response["selected_tenant_id"], response["access_token"]
 

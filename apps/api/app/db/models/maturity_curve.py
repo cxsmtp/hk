@@ -1,4 +1,4 @@
-"""Tenant-scoped persistence for Trinya's evidence-backed Maturity Curve.
+"""Tenant-scoped persistence for Hawk's evidence-backed Maturity Curve.
 
 The records in this module are derived product intelligence.  They retain
 opaque source references and digests, never raw prompts or duplicated AI

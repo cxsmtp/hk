@@ -464,7 +464,7 @@ def create_executive_mcp_presentation(
         ),
     ]
     artifact_id = f"exec-mcp-{uuid4()}"
-    output_dir = Path(tempfile.gettempdir()) / "trinya-executive-mcp"
+    output_dir = Path(tempfile.gettempdir()) / "hawk-executive-mcp"
     output_dir.mkdir(parents=True, exist_ok=True)
     filename = f"{artifact_id}.pptx"
     path = output_dir / filename
@@ -571,7 +571,7 @@ def _presentation_rels_xml(slides: str) -> str:
 
 
 def _theme_xml() -> str:
-    return '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?><a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="Trinya Executive"><a:themeElements><a:clrScheme name="Trinya"><a:dk1><a:srgbClr val="0B1020"/></a:dk1><a:lt1><a:srgbClr val="FFFFFF"/></a:lt1><a:accent1><a:srgbClr val="3EE7F2"/></a:accent1><a:accent2><a:srgbClr val="FF7A1A"/></a:accent2><a:accent3><a:srgbClr val="7CFFB2"/></a:accent3><a:accent4><a:srgbClr val="FFD966"/></a:accent4><a:accent5><a:srgbClr val="B794F6"/></a:accent5><a:accent6><a:srgbClr val="F87171"/></a:accent6><a:hlink><a:srgbClr val="3EE7F2"/></a:hlink><a:folHlink><a:srgbClr val="B794F6"/></a:folHlink></a:clrScheme><a:fontScheme name="Aptos"><a:majorFont><a:latin typeface="Aptos Display"/></a:majorFont><a:minorFont><a:latin typeface="Aptos"/></a:minorFont></a:fontScheme><a:fmtScheme name="default"><a:fillStyleLst/><a:lnStyleLst/><a:effectStyleLst/><a:bgFillStyleLst/></a:fmtScheme></a:themeElements></a:theme>'''
+    return '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?><a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="Hawk Executive"><a:themeElements><a:clrScheme name="Hawk"><a:dk1><a:srgbClr val="0B1020"/></a:dk1><a:lt1><a:srgbClr val="FFFFFF"/></a:lt1><a:accent1><a:srgbClr val="3EE7F2"/></a:accent1><a:accent2><a:srgbClr val="FF7A1A"/></a:accent2><a:accent3><a:srgbClr val="7CFFB2"/></a:accent3><a:accent4><a:srgbClr val="FFD966"/></a:accent4><a:accent5><a:srgbClr val="B794F6"/></a:accent5><a:accent6><a:srgbClr val="F87171"/></a:accent6><a:hlink><a:srgbClr val="3EE7F2"/></a:hlink><a:folHlink><a:srgbClr val="B794F6"/></a:folHlink></a:clrScheme><a:fontScheme name="Aptos"><a:majorFont><a:latin typeface="Aptos Display"/></a:majorFont><a:minorFont><a:latin typeface="Aptos"/></a:minorFont></a:fontScheme><a:fmtScheme name="default"><a:fillStyleLst/><a:lnStyleLst/><a:effectStyleLst/><a:bgFillStyleLst/></a:fmtScheme></a:themeElements></a:theme>'''
 
 
 def _empty_master_xml() -> str:

@@ -4,8 +4,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-TRINYA_API="${TRINYA_API:-http://127.0.0.1:8000}"
-TRINYA_GATEWAY_API="${TRINYA_GATEWAY_API:-https://hawk.localhost:3443}"
+HAWK_EXEC_API="${HAWK_EXEC_API:-http://127.0.0.1:8000}"
+HAWK_EXEC_GATEWAY_API="${HAWK_EXEC_GATEWAY_API:-https://hawk.localhost:3443}"
 HAWK_AGENT_ROOT="${HAWK_AGENT_ROOT:-$HOME/Library/Application Support/Hawk/EndpointAgent}"
 HAWK_AGENT_RUNTIME="${HAWK_AGENT_RUNTIME:-$HAWK_AGENT_ROOT/runtime/bin/hawk-endpoint-agent}"
 HAWK_AGENT_CONFIG="${HAWK_AGENT_CONFIG:-$HAWK_AGENT_ROOT/state/endpoint-agent.json}"
@@ -16,20 +16,20 @@ if [[ ! -x "$HAWK_AGENT_RUNTIME" ]]; then
   exit 1
 fi
 
-if [[ -z "${TRINYA_EMAIL:-}" ]]; then
-  read -r -p "Trinya owner/admin email: " TRINYA_EMAIL
+if [[ -z "${HAWK_EXEC_EMAIL:-}" ]]; then
+  read -r -p "Hawk owner/admin email: " HAWK_EXEC_EMAIL
 fi
-if [[ -z "${TRINYA_PASSWORD:-}" ]]; then
-  read -r -s -p "Trinya password: " TRINYA_PASSWORD
+if [[ -z "${HAWK_EXEC_PASSWORD:-}" ]]; then
+  read -r -s -p "Hawk password: " HAWK_EXEC_PASSWORD
   echo
 fi
 
 login_json="$(
-  printf '{"email":"%s","password":"%s"}' "$TRINYA_EMAIL" "$TRINYA_PASSWORD" |
+  printf '{"email":"%s","password":"%s"}' "$HAWK_EXEC_EMAIL" "$HAWK_EXEC_PASSWORD" |
     curl --silent --show-error --fail-with-body \
       -H 'Content-Type: application/json' \
       --data-binary @- \
-      "$TRINYA_API/auth/login"
+      "$HAWK_EXEC_API/auth/login"
 )"
 
 tenant_id="$(
@@ -64,7 +64,7 @@ if [[ -z "$ai_system_id" ]]; then
     curl --silent --show-error --fail-with-body \
       -H "Authorization: Bearer $token" \
       -H "X-Tenant-ID: $tenant_id" \
-      "$TRINYA_API/ai-systems?page_size=100" |
+      "$HAWK_EXEC_API/ai-systems?page_size=100" |
       python3 -c '
 import json, sys
 data = json.load(sys.stdin)
@@ -100,7 +100,7 @@ if [[ -z "$ai_system_id" ]]; then
         "connected_data_sources": ["managed_browser", "endpoint_agent", "mcp_gateway"],
         "permissions": ["endpoint:heartbeat:write", "endpoint:discovery:write", "endpoint:decision:execute"]
       }' \
-      "$TRINYA_API/ai-systems" |
+      "$HAWK_EXEC_API/ai-systems" |
       python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])'
   )"
 fi
@@ -113,7 +113,7 @@ authorization_json="$(
     -H "X-Tenant-ID: $tenant_id" \
     -H 'Content-Type: application/json' \
     --data '{}' \
-    "$TRINYA_API/endpoint-agent/identities/$endpoint_id/reenroll-authorizations" 2>&1
+    "$HAWK_EXEC_API/endpoint-agent/identities/$endpoint_id/reenroll-authorizations" 2>&1
 )"
 authorization_status=$?
 set -e
@@ -126,7 +126,7 @@ if [[ "$authorization_status" -ne 0 ]]; then
       -H "X-Tenant-ID: $tenant_id" \
       -H 'Content-Type: application/json' \
       --data "{\"endpoint_id\":\"$endpoint_id\"}" \
-      "$TRINYA_API/endpoint-agent/enrollment-authorizations"
+      "$HAWK_EXEC_API/endpoint-agent/enrollment-authorizations"
   )"
 fi
 
@@ -148,7 +148,7 @@ printf '%s' "$bundle_json" |
     --config "$HAWK_AGENT_CONFIG" \
     --enroll \
     --enrollment-bundle-stdin \
-    --api-url "$TRINYA_GATEWAY_API" \
+    --api-url "$HAWK_EXEC_GATEWAY_API" \
     --tenant-id "$tenant_id" \
     --endpoint-id "$endpoint_id" \
     --ai-system-id "$ai_system_id" \
@@ -170,6 +170,6 @@ echo "Endpoint re-enrollment completed."
 echo "Tenant: $tenant_id"
 echo "Endpoint: $endpoint_id"
 echo "AI system: $ai_system_id"
-echo "Endpoint API base in config: $TRINYA_GATEWAY_API"
+echo "Endpoint API base in config: $HAWK_EXEC_GATEWAY_API"
 echo ""
 echo "Next: restart Claude Desktop / Codex Desktop, then retry the governed MCP prompts."

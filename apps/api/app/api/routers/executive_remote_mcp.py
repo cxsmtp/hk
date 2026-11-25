@@ -542,7 +542,7 @@ async def _read_form_body(request: Request) -> dict[str, str]:
 
 def _stable_client_id(client_name: str, redirect_uris: list[str]) -> str:
     seed = f"{client_name}\n{','.join(redirect_uris)}"
-    return "trinya_exec_" + hashlib.sha256(seed.encode("utf-8")).hexdigest()[:24]
+    return "hawk_exec_" + hashlib.sha256(seed.encode("utf-8")).hexdigest()[:24]
 
 
 def _normalize_scope(scope: str) -> str:
@@ -561,7 +561,7 @@ def _authorization_html(hidden: dict[str, str]) -> str:
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Authorize Trinya Executive MCP</title>
+  <title>Authorize Hawk Executive MCP</title>
   <style>
     body {{ font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #071019; color: #eef6ff; }}
     main {{ max-width: 520px; margin: 8vh auto; padding: 32px; border: 1px solid #203040; border-radius: 18px; background: #0d1724; }}
@@ -595,7 +595,7 @@ def _device_authorization_html(user_code: str) -> str:
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Authorize Trinya Executive MCP Device</title>
+  <title>Authorize Hawk Executive MCP Device</title>
   <style>
     body {{ font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #071019; color: #eef6ff; }}
     main {{ max-width: 520px; margin: 8vh auto; padding: 32px; border: 1px solid #203040; border-radius: 18px; background: #0d1724; }}

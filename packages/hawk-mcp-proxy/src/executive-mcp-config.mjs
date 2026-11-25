@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-export const DEFAULT_EXECUTIVE_MCP_NAME = "trinya-executive";
+export const DEFAULT_EXECUTIVE_MCP_NAME = "hawk-executive";
 export const DEFAULT_API_URL = "https://api.hawk.localhost:3443";
 export const DEFAULT_NODE_PATH = "/usr/local/bin/node";
 
@@ -17,7 +17,7 @@ export function buildExecutiveMcpArgs({
   const tenant = required("tenantId", tenantId);
   const token = required("accessToken", accessToken);
   return [
-    path.join(root, "packages/hawk-mcp-proxy/bin/trinya-executive-mcp.mjs"),
+    path.join(root, "packages/hawk-mcp-proxy/bin/hawk-executive-mcp.mjs"),
     "--gateway",
     String(apiUrl || DEFAULT_API_URL).replace(/\/+$/, ""),
     "--tenant",
@@ -112,7 +112,7 @@ export function writeExecutiveMcpConfigs({
   });
   const existingCodex = readOptionalText(codexConfigPath);
   if (existingCodex !== null) {
-    const backup = `${codexConfigPath}.trinya-executive-${timestamp}.backup`;
+    const backup = `${codexConfigPath}.hawk-executive-${timestamp}.backup`;
     fs.copyFileSync(codexConfigPath, backup);
     backups.push(backup);
   }
@@ -125,7 +125,7 @@ export function writeExecutiveMcpConfigs({
 
   const existingClaude = readOptionalJson(claudeConfigPath) || {};
   if (fs.existsSync(claudeConfigPath)) {
-    const backup = `${claudeConfigPath}.trinya-executive-${timestamp}.backup`;
+    const backup = `${claudeConfigPath}.hawk-executive-${timestamp}.backup`;
     fs.copyFileSync(claudeConfigPath, backup);
     backups.push(backup);
   }

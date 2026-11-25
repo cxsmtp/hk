@@ -1,7 +1,5 @@
 # Deployment Hardening: 50-User Local Pilot
 
-> Imported reference documentation from the selected original worktree. Prior deployment, version and test claims below are historical source context, not current acceptance. See [the collaboration README](../README.md) for verified results and remaining limits. Commands require an isolated, explicitly configured environment.
-
 
 This checklist keeps Hawk as a local AI Action Control Plane pilot while making the operational risks explicit.
 
@@ -131,7 +129,7 @@ For a fully hardened HTTPS deployment, add:
 Windows API machine example after copying the repo/API transfer folder:
 
 ```powershell
-cd C:\Users\Ayushmaan\Desktop\api-machine-transfer
+cd C:\Hawk\api-machine-transfer
 .\apps\api\.venv\Scripts\python.exe .\scripts\pilot_deployment_readiness.py `
   --api-env .\apps\api\.env `
   --extension-dir .\hawk-extension-pilot-0.1.8-REPLACE_HASH `
@@ -183,7 +181,7 @@ DATABASE_URL="postgresql+psycopg2://postgres:REPLACE@127.0.0.1:5432/hawk_pilot" 
 Windows:
 
 ```powershell
-cd C:\Users\Ayushmaan\Desktop\api-machine-transfer\apps\api
+cd C:\Hawk\api-machine-transfer\apps\api
 $env:DATABASE_URL = "postgresql+psycopg2://postgres:REPLACE@127.0.0.1:5432/hawk_pilot"
 .\scripts\backup_postgres.ps1
 ```

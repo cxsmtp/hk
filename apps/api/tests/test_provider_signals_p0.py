@@ -553,7 +553,7 @@ def test_anthropic_source_profiles_keep_console_enterprise_and_personal_paths_di
             "status": "SELF_REPORTED",
             "cost_label": "client_estimate",
             "source_types": ["otel"],
-            "required_credential": "Trinya proxy response usage or Claude Code OpenTelemetry",
+            "required_credential": "Hawk proxy response usage or Claude Code OpenTelemetry",
             "notes": [
                 "Personal-tier usage is modeled or client-reported, not provider-billed truth.",
                 "Join Claude Code OTel to hook evidence with prompt_id and tool_use_id when present.",

@@ -93,7 +93,7 @@ test("endpoint mode governs benign reads, writes, and secret pulls before the ch
 test("proxy exposes governed repository scope as a local read-only MCP tool", async (t) => {
   const endpoint = await startEndpoint(() => "allow");
   const harness = await startProxy(endpoint.path, {
-    repositoryScope: "github.com/dang070298/New-project-Hawki-ai-",
+    repositoryScope: "github.com/hawk-demo/governed-repo",
   });
   t.after(async () => { await harness.close(); await endpoint.close(); });
 
@@ -109,7 +109,7 @@ test("proxy exposes governed repository scope as a local read-only MCP tool", as
   });
 
   assert.equal(result.result.content[0].type, "text");
-  assert.match(result.result.content[0].text, /github\.com\/dang070298\/new-project-hawki-ai-/);
+  assert.match(result.result.content[0].text, /github\.com\/hawk-demo\/governed-repo/);
   assert.match(result.result.content[0].text, /blocked outside scope/i);
   assert.equal(
     (await harness.childMessages()).filter((item) => item.method === "tools/call").length,

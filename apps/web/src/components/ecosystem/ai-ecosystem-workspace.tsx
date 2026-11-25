@@ -453,7 +453,7 @@ export function AIEcosystemWorkspace() {
           <EvidenceTruthPanel
             title="AI ecosystem evidence"
             description="Known AI, unresolved signals, and source gaps stay separate so this view never turns missing evidence into a claim."
-            whyUnknown="Unknown appears when Trinya has activity without enough source-backed identity, account, model, department, or surface evidence to turn it into a verified graph fact. Connect authoritative source evidence or inspect the unresolved signal queue."
+            whyUnknown="Unknown appears when Hawk has activity without enough source-backed identity, account, model, department, or surface evidence to turn it into a verified graph fact. Connect authoritative source evidence or inspect the unresolved signal queue."
             lastEvidence={lastFreshness}
             connectHref="/integrations"
             testHref="/validate"

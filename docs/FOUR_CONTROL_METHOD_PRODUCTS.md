@@ -1,7 +1,5 @@
 # Four control-method products
 
-> Imported reference documentation from the selected original worktree. Prior deployment, version and test claims below are historical source context, not current acceptance. See [the collaboration README](../README.md) for verified results and remaining limits. Commands require an isolated, explicitly configured environment.
-
 
 These four methods have distinct controls and acceptance boundaries. A passing
 repository check establishes only the behavior it exercised. It does not imply

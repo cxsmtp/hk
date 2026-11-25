@@ -1,7 +1,7 @@
 """Enterprise Developer AI Control package.
 
 This module builds the customer-facing repository-boundary package as a
-derived, tenant-scoped view over existing Trinya primitives.  It intentionally
+derived, tenant-scoped view over existing Hawk primitives.  It intentionally
 does not claim live provider enforcement where no source-backed control exists.
 """
 

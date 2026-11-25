@@ -52,7 +52,7 @@ test("executive MCP lists and calls tenant summary tools", async () => {
   );
   await new Promise((resolve) => setTimeout(resolve, 20));
 
-  assert.equal(received[0].result.serverInfo.name, "trinya-executive-mcp");
+  assert.equal(received[0].result.serverInfo.name, "hawk-executive-mcp");
   assert.deepEqual(
     received[1].result.tools.map((tool) => tool.name),
     ["get_executive_summary", "query_executive_metrics", "create_executive_presentation"],

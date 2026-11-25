@@ -7,7 +7,7 @@ without creating or changing a pull request.
 ## Safety boundary
 
 - Target only the explicitly owner-approved demo repository. The checked-in
-  Claude fragment uses `dang070298/New-project-Hawki-ai-` for this acceptance.
+  Claude fragment uses `hawk-demo/governed-repo` for this acceptance.
 - Expose only `list_pull_requests`, `pull_request_read`, `create_branch`,
   `create_or_update_file`, and `create_pull_request`.
 - Start in Monitor. Use Enforce only for the explicit write-block test.
@@ -50,7 +50,7 @@ Use this prompt in each client, changing only the profile name:
 ```text
 Use only the hawk-github-pr-cli MCP server. Do not use the direct github MCP,
 web browsing, Terminal, shell, or filesystem tools. Call list_pull_requests for
-owner dang070298, repository New-project-Hawki-ai-, state open, limit 5. If at
+owner hawk-demo, repository governed-repo, state open, limit 5. If at
 least one pull request exists, call pull_request_read for the first returned
 pull request using the get operation. Return the PR number, title, author,
 state, head branch, base branch, and URL. Report each MCP tool result exactly if
@@ -79,7 +79,7 @@ After the endpoint acknowledges Enforce, use this prompt in each client:
 ```text
 Use only the hawk-github-pr-cli MCP server. Do not use the direct github MCP,
 web browsing, Terminal, shell, or filesystem tools. Call create_pull_request
-against dang070298/New-project-Hawki-ai- with base main, head
+against hawk-demo/governed-repo with base main, head
 hawk-endpoint-ciso-block-20260911, title "Hawk endpoint prevention acceptance",
 and body "Synthetic prevention test. No pull request must be created." Report
 Hawk's response exactly. Do not retry through any other server or transport.

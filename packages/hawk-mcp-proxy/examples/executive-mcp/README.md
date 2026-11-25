@@ -1,4 +1,4 @@
-# Trinya Executive MCP
+# Hawk Executive MCP
 
 Read-only MCP server for executives who need tenant-scoped AI governance answers from Claude or Codex without opening the full web platform.
 
@@ -10,7 +10,7 @@ Read-only MCP server for executives who need tenant-scoped AI governance answers
 
 ## Security model
 
-- Requires `TRINYA_API_URL`, `TRINYA_TENANT_ID`, and `TRINYA_ACCESS_TOKEN` or their `HAWK_*` aliases.
+- Requires `HAWK_EXEC_API_URL`, `HAWK_EXEC_TENANT_ID`, and `HAWK_EXEC_ACCESS_TOKEN` or their `HAWK_*` aliases.
 - All API calls include `X-Tenant-ID`.
 - Platform RBAC is enforced by the API.
 - Raw prompt content is excluded.
@@ -24,26 +24,26 @@ the same tenant-scoped Executive MCP server into Claude Desktop and Codex
 Desktop, and preserves the existing MCP servers in both config files.
 
 ```bash
-node "/Volumes/X10 Pro/New project/repo/packages/hawk-mcp-proxy/bin/setup-trinya-executive-mcp.mjs" \
+node "/opt/hawk/packages/hawk-mcp-proxy/bin/setup-hawk-executive-mcp.mjs" \
   --api https://api.hawk.localhost:3443 \
-  --repo "/Volumes/X10 Pro/New project/repo" \
+  --repo "/opt/hawk" \
   --insecure-local-tls
 ```
 
 If you already have a short-lived tenant token in the current shell:
 
 ```bash
-node "/Volumes/X10 Pro/New project/repo/packages/hawk-mcp-proxy/bin/setup-trinya-executive-mcp.mjs" \
+node "/opt/hawk/packages/hawk-mcp-proxy/bin/setup-hawk-executive-mcp.mjs" \
   --api https://api.hawk.localhost:3443 \
-  --repo "/Volumes/X10 Pro/New project/repo" \
-  --tenant "$TRINYA_TENANT_ID" \
-  --token "$TRINYA_ACCESS_TOKEN"
+  --repo "/opt/hawk" \
+  --tenant "$HAWK_EXEC_TENANT_ID" \
+  --token "$HAWK_EXEC_ACCESS_TOKEN"
 ```
 
 Then restart Claude Desktop and Codex Desktop. The MCP server name should be:
 
 ```text
-trinya-executive
+hawk-executive
 ```
 
 Use the local stdio setup above for desktop demos. Claude/Codex hosted custom
@@ -55,23 +55,23 @@ may not be reachable from their remote connector runtimes.
 Use these exact prompts in Claude Desktop or Codex Desktop after restart:
 
 ```text
-Use the Trinya Executive MCP to get an executive summary for the last 30 days. Return only the summary and mention which MCP tool was used.
+Use the Hawk Executive MCP to get an executive summary for the last 30 days. Return only the summary and mention which MCP tool was used.
 ```
 
 ```text
-Use the Trinya Executive MCP to query executive metrics for blocked actions grouped by application for the last 30 days. Return the top 10 rows and mention which MCP tool was used.
+Use the Hawk Executive MCP to query executive metrics for blocked actions grouped by application for the last 30 days. Return the top 10 rows and mention which MCP tool was used.
 ```
 
 ```text
-Use the Trinya Executive MCP to query executive metrics for github_repositories for the last 30 days. Return repositories, AI tools involved, and policy decision summary if present.
+Use the Hawk Executive MCP to query executive metrics for github_repositories for the last 30 days. Return repositories, AI tools involved, and policy decision summary if present.
 ```
 
 ```text
-Use the Trinya Executive MCP to query tokens, then spend, for the last 30 days. Explain whether the values are provider-reported, estimated, or unavailable.
+Use the Hawk Executive MCP to query tokens, then spend, for the last 30 days. Explain whether the values are provider-reported, estimated, or unavailable.
 ```
 
 ```text
-Use the Trinya Executive MCP to create an executive presentation titled 'AI Governance Executive Brief' for the last 30 days. Return the generated file path and do not include raw prompts.
+Use the Hawk Executive MCP to create an executive presentation titled 'AI Governance Executive Brief' for the last 30 days. Return the generated file path and do not include raw prompts.
 ```
 
 ## Claude Desktop config fragment
@@ -79,10 +79,10 @@ Use the Trinya Executive MCP to create an executive presentation titled 'AI Gove
 ```json
 {
   "mcpServers": {
-    "trinya-executive": {
+    "hawk-executive": {
       "command": "/usr/local/bin/node",
       "args": [
-        "/Volumes/X10 Pro/New project/repo/packages/hawk-mcp-proxy/bin/trinya-executive-mcp.mjs",
+        "/opt/hawk/packages/hawk-mcp-proxy/bin/hawk-executive-mcp.mjs",
         "--gateway",
         "https://api.hawk.localhost:3443",
         "--tenant",
@@ -100,10 +100,10 @@ Use the Trinya Executive MCP to create an executive presentation titled 'AI Gove
 ## Codex config fragment
 
 ```toml
-[mcp_servers.trinya-executive]
+[mcp_servers.hawk-executive]
 command = "/usr/local/bin/node"
 args = [
-  "/Volumes/X10 Pro/New project/repo/packages/hawk-mcp-proxy/bin/trinya-executive-mcp.mjs",
+  "/opt/hawk/packages/hawk-mcp-proxy/bin/hawk-executive-mcp.mjs",
   "--gateway", "https://api.hawk.localhost:3443",
   "--tenant", "TENANT_ID",
   "--token", "SHORT_LIVED_ACCESS_TOKEN",
@@ -128,10 +128,10 @@ HTTPS endpoint.
 In Codex, choose **Connect to a custom MCP → Streamable HTTP**:
 
 ```text
-Name: Trinya Executive
+Name: Hawk Executive
 Type: Streamable HTTP
 URL: https://api.hawk.localhost:3443/mcp/executive
-Bearer token env var: TRINYA_ACCESS_TOKEN
+Bearer token env var: HAWK_EXEC_ACCESS_TOKEN
 Headers:
   X-Tenant-ID: TENANT_ID
 ```
@@ -144,18 +144,18 @@ user's tenant role and never returns raw prompt content.
 Claude's custom connector screen accepts an HTTPS MCP server URL. Use:
 
 ```text
-Name: Trinya Executive
+Name: Hawk Executive
 MCP server URL: https://api.hawk.localhost:3443/mcp/executive
 ```
 
 The hosted gateway advertises OAuth protected-resource metadata and dynamic
 client registration for MCP clients that cannot send custom tenant headers. The
-authorization flow signs in with a Trinya tenant user, selects or confirms the
+authorization flow signs in with a Hawk tenant user, selects or confirms the
 tenant, and returns a short-lived tenant-bound connector token.
 
 For local development, Claude may reject `hawk.localhost` if the certificate is
 self-signed or the host is not reachable from Claude's connector runtime. For a
-production demo, expose the same path behind the public Trinya API hostname with
+production demo, expose the same path behind the public Hawk API hostname with
 trusted TLS:
 
 ```text
@@ -177,8 +177,8 @@ Authenticated tool discovery:
 
 ```bash
 curl --insecure https://api.hawk.localhost:3443/mcp/executive \
-  -H "Authorization: Bearer $TRINYA_ACCESS_TOKEN" \
-  -H "X-Tenant-ID: $TRINYA_TENANT_ID" \
+  -H "Authorization: Bearer $HAWK_EXEC_ACCESS_TOKEN" \
+  -H "X-Tenant-ID: $HAWK_EXEC_TENANT_ID" \
   -H "Content-Type: application/json" \
   --data '{"jsonrpc":"2.0","id":"tools","method":"tools/list"}'
 ```

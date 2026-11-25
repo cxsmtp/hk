@@ -53,7 +53,7 @@ class CostType(StrEnum):
     CONTRACT_RATE_CARD = "CONTRACT_RATE_CARD"
     CREDIT_CONSUMPTION = "CREDIT_CONSUMPTION"
     CLIENT_ESTIMATE = "CLIENT_ESTIMATE"
-    TRINYA_ESTIMATE = "TRINYA_ESTIMATE"
+    HAWK_ESTIMATE = "HAWK_ESTIMATE"
     UNAVAILABLE = "UNAVAILABLE"
 
 
@@ -409,7 +409,7 @@ _COST_PRECEDENCE = {
     CostType.CONTRACT_RATE_CARD.value: 3,
     CostType.CREDIT_CONSUMPTION.value: 4,
     CostType.CLIENT_ESTIMATE.value: 5,
-    CostType.TRINYA_ESTIMATE.value: 6,
+    CostType.HAWK_ESTIMATE.value: 6,
     CostType.UNAVAILABLE.value: 7,
 }
 _CURRENT_AGE = timedelta(hours=24)
@@ -1960,7 +1960,7 @@ def _authoritative_source_readiness(
         observed_spend.append("contract_rate_card")
     if "CREDIT_CONSUMPTION" in cost_types:
         observed_spend.append("credit_consumption")
-    if cost_types.intersection({"CLIENT_ESTIMATE", "TRINYA_ESTIMATE"}):
+    if cost_types.intersection({"CLIENT_ESTIMATE", "HAWK_ESTIMATE"}):
         observed_spend.append("client_estimated_spend")
 
     control_evidence: list[str] = []
@@ -2109,7 +2109,7 @@ def _anthropic_source_profiles(records: list[ProviderSignalRecord]) -> dict[str,
             "status": "SELF_REPORTED" if personal_sources else "MISSING_SOURCE",
             "cost_label": "client_estimate" if personal_sources else "unavailable",
             "source_types": personal_sources,
-            "required_credential": "Trinya proxy response usage or Claude Code OpenTelemetry",
+            "required_credential": "Hawk proxy response usage or Claude Code OpenTelemetry",
             "notes": [
                 "Personal-tier usage is modeled or client-reported, not provider-billed truth.",
                 "Join Claude Code OTel to hook evidence with prompt_id and tool_use_id when present.",
@@ -2143,7 +2143,7 @@ def _anthropic_source_profiles(records: list[ProviderSignalRecord]) -> dict[str,
         "connector_guidance": {
             "console_path": "Use Anthropic Console organization Admin API for usage_report/messages, cost_report and Claude Code usage reports.",
             "enterprise_path": "Use Claude Enterprise Analytics API for claude.ai Enterprise organizations.",
-            "personal_path": "Use Trinya proxy response usage or Claude Code OpenTelemetry; mark costs as self-reported/client-estimated.",
+            "personal_path": "Use Hawk proxy response usage or Claude Code OpenTelemetry; mark costs as self-reported/client-estimated.",
             "desktop_path": "Do not claim provider billing telemetry for Claude Desktop or consumer chat.",
         },
     }

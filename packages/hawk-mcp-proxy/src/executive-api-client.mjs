@@ -4,18 +4,18 @@ import path from "node:path";
 
 export class ExecutiveApiClient {
   constructor({ apiUrl, tenantId, accessToken, timeoutMs = 15000 } = {}) {
-    this.apiUrl = normalizeBaseUrl(apiUrl || process.env.TRINYA_API_URL || process.env.HAWK_API_URL);
-    this.tenantId = String(tenantId || process.env.TRINYA_TENANT_ID || process.env.HAWK_TENANT_ID || "").trim();
-    this.accessToken = String(accessToken || process.env.TRINYA_ACCESS_TOKEN || process.env.HAWK_ACCESS_TOKEN || "").trim();
-    this.timeoutMs = Number(timeoutMs || process.env.TRINYA_MCP_TIMEOUT_MS || process.env.HAWK_MCP_TIMEOUT_MS || 15000);
+    this.apiUrl = normalizeBaseUrl(apiUrl || process.env.HAWK_EXEC_API_URL || process.env.HAWK_API_URL);
+    this.tenantId = String(tenantId || process.env.HAWK_EXEC_TENANT_ID || process.env.HAWK_TENANT_ID || "").trim();
+    this.accessToken = String(accessToken || process.env.HAWK_EXEC_ACCESS_TOKEN || process.env.HAWK_ACCESS_TOKEN || "").trim();
+    this.timeoutMs = Number(timeoutMs || process.env.HAWK_EXEC_MCP_TIMEOUT_MS || process.env.HAWK_MCP_TIMEOUT_MS || 15000);
     if (!this.apiUrl) {
-      throw new Error("Executive MCP requires TRINYA_API_URL or HAWK_API_URL");
+      throw new Error("Executive MCP requires HAWK_EXEC_API_URL or HAWK_API_URL");
     }
     if (!this.tenantId) {
-      throw new Error("Executive MCP requires TRINYA_TENANT_ID or HAWK_TENANT_ID");
+      throw new Error("Executive MCP requires HAWK_EXEC_TENANT_ID or HAWK_TENANT_ID");
     }
     if (!this.accessToken) {
-      throw new Error("Executive MCP requires TRINYA_ACCESS_TOKEN or HAWK_ACCESS_TOKEN");
+      throw new Error("Executive MCP requires HAWK_EXEC_ACCESS_TOKEN or HAWK_ACCESS_TOKEN");
     }
   }
 
@@ -39,7 +39,7 @@ export class ExecutiveApiClient {
       window_days: boundedInt(windowDays, 1, 366),
     });
     if (result?.content_base64 && result?.filename) {
-      const outputDir = path.join(os.tmpdir(), "trinya-executive-mcp");
+      const outputDir = path.join(os.tmpdir(), "hawk-executive-mcp");
       fs.mkdirSync(outputDir, { recursive: true });
       const localPath = path.join(outputDir, sanitizeFilename(result.filename));
       fs.writeFileSync(localPath, Buffer.from(result.content_base64, "base64"));

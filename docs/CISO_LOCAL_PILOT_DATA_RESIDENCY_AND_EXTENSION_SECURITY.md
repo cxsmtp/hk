@@ -1,7 +1,5 @@
 # Hawk AI Local Pilot: Data Residency, Data Flow, and Extension Security
 
-> Imported reference documentation from the selected original worktree. Prior deployment, version and test claims below are historical source context, not current acceptance. See [the collaboration README](../README.md) for verified results and remaining limits. Commands require an isolated, explicitly configured environment.
-
 
 Audience: CISO, Security, IT, Infrastructure, Compliance
 

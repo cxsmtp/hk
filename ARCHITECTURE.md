@@ -1,7 +1,5 @@
 # Platform Architecture
 
-> Imported reference documentation from the selected original worktree. Prior deployment, version and test claims below are historical source context, not current acceptance. See [the collaboration README](README.md) for verified results and remaining limits. Commands require an isolated, explicitly configured environment.
-
 
 ## 1. Purpose of This Document
 This document is the single source of truth for the current Hawk AI platform architecture in this repository.

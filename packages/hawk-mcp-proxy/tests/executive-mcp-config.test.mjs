@@ -11,9 +11,9 @@ import {
   writeExecutiveMcpConfigs,
 } from "../src/executive-mcp-config.mjs";
 
-const REPO_ROOT = "/Volumes/X10 Pro/New project/repo";
+const REPO_ROOT = "/opt/Hawk AI/repo";
 
-test("executive MCP config preserves existing Claude servers and adds Trinya executive", () => {
+test("executive MCP config preserves existing Claude servers and adds Hawk executive", () => {
   const config = buildClaudeDesktopConfig({
     existing: {
       mcpServers: {
@@ -28,9 +28,9 @@ test("executive MCP config preserves existing Claude servers and adds Trinya exe
 
   assert.equal(config.preferences.theme, "dark");
   assert.equal(config.mcpServers["existing-github"].command, "node");
-  assert.equal(config.mcpServers["trinya-executive"].command, "/usr/local/bin/node");
-  assert.deepEqual(config.mcpServers["trinya-executive"].args.slice(-2), ["--stdio-framing", "content-length"]);
-  assert.ok(config.mcpServers["trinya-executive"].args[0].endsWith("trinya-executive-mcp.mjs"));
+  assert.equal(config.mcpServers["hawk-executive"].command, "/usr/local/bin/node");
+  assert.deepEqual(config.mcpServers["hawk-executive"].args.slice(-2), ["--stdio-framing", "content-length"]);
+  assert.ok(config.mcpServers["hawk-executive"].args[0].endsWith("hawk-executive-mcp.mjs"));
 });
 
 test("executive MCP config upserts one Codex server block", () => {
@@ -42,7 +42,7 @@ test("executive MCP config upserts one Codex server block", () => {
   const first = upsertCodexMcpServerBlock('model = "gpt-5"\n', { block });
   const second = upsertCodexMcpServerBlock(first, { block: block.replace("token-1", "token-2") });
 
-  assert.equal((second.match(/\[mcp_servers\."trinya-executive"\]/g) || []).length, 1);
+  assert.equal((second.match(/\[mcp_servers\."hawk-executive"\]/g) || []).length, 1);
   assert.match(second, /token-2/);
   assert.doesNotMatch(second, /token-1/);
   assert.match(second, /model = "gpt-5"/);
@@ -50,7 +50,7 @@ test("executive MCP config upserts one Codex server block", () => {
 });
 
 test("executive MCP setup writes Claude and Codex configs with backups", () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "trinya-exec-mcp-config-"));
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "hawk-exec-mcp-config-"));
   const codexConfigPath = path.join(tmp, ".codex/config.toml");
   const claudeConfigPath = path.join(tmp, "Claude/claude_desktop_config.json");
   fs.mkdirSync(path.dirname(codexConfigPath), { recursive: true });
@@ -66,10 +66,10 @@ test("executive MCP setup writes Claude and Codex configs with backups", () => {
     accessToken: "token-1",
   });
 
-  assert.equal(result.serverName, "trinya-executive");
+  assert.equal(result.serverName, "hawk-executive");
   assert.equal(result.backups.length, 2);
-  assert.match(fs.readFileSync(codexConfigPath, "utf8"), /\[mcp_servers\."trinya-executive"\]/);
+  assert.match(fs.readFileSync(codexConfigPath, "utf8"), /\[mcp_servers\."hawk-executive"\]/);
   const claude = JSON.parse(fs.readFileSync(claudeConfigPath, "utf8"));
   assert.ok(claude.mcpServers.old);
-  assert.ok(claude.mcpServers["trinya-executive"]);
+  assert.ok(claude.mcpServers["hawk-executive"]);
 });

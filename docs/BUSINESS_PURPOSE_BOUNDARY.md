@@ -1,7 +1,5 @@
 # Business Purpose Boundary
 
-> Imported reference documentation from the selected original worktree. Prior deployment, version and test claims below are historical source context, not current acceptance. See [the collaboration README](../README.md) for verified results and remaining limits. Commands require an isolated, explicitly configured environment.
-
 
 Business Purpose Boundary is Hawk AI's sector-aware AI usage control inside the existing AI Action Control Plane. It is not a new module or product area. It extends the same loop:
 

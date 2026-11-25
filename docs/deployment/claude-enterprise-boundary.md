@@ -1,7 +1,5 @@
 # Claude Enterprise organization boundary
 
-> Imported reference documentation from the selected original worktree. Prior deployment, version and test claims below are historical source context, not current acceptance. See [the collaboration README](../../README.md) for verified results and remaining limits. Commands require an isolated, explicitly configured environment.
-
 
 Implemented: endpoint-package deployment renderer, generic TLS-proxy tenant-header adapter, and tenant-bound Hawk API inference-hook receiver. Status: **not deployed; enterprise acceptance unverified**. Existing capability declarations remain unverified.
 

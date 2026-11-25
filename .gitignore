@@ -35,3 +35,8 @@ dist/
 
 # Generated Python editable-install metadata
 *.egg-info/
+
+# Local build and test output
+*.tsbuildinfo
+apps/api/artifacts/
+/evidence/

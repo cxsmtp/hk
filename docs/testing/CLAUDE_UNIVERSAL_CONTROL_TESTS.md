@@ -1,7 +1,5 @@
 # Claude Universal Control Manual Tests
 
-> Imported reference documentation from the selected original worktree. Prior deployment, version and test claims below are historical source context, not current acceptance. See [the collaboration README](../../README.md) for verified results and remaining limits. Commands require an isolated, explicitly configured environment.
-
 
 This runbook separates Claude Code native-hook coverage from ordinary Claude chat and direct API coverage. A test passes only when the action traverses the stated Hawk control point and the dashboard shows matching evidence. Do not use real bank data or credentials.
 

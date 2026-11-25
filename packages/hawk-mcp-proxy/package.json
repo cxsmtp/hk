@@ -5,8 +5,8 @@
   "type": "module",
   "bin": {
     "hawk-mcp-proxy": "./bin/hawk-mcp-proxy.mjs",
-    "trinya-executive-mcp": "./bin/trinya-executive-mcp.mjs",
-    "setup-trinya-executive-mcp": "./bin/setup-trinya-executive-mcp.mjs"
+    "hawk-executive-mcp": "./bin/hawk-executive-mcp.mjs",
+    "setup-hawk-executive-mcp": "./bin/setup-hawk-executive-mcp.mjs"
   },
   "files": [
     "bin",
@@ -28,5 +28,5 @@
     "mcp-proxy",
     "ai-action-control"
   ],
-  "license": "UNLICENSED"
+  "license": "SEE LICENSE IN ../../LICENSE"
 }
