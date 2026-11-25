@@ -23,14 +23,34 @@ def check_db_connectivity(db: Session) -> None:
     db.execute(text("SELECT 1"))
 
 
+#: Documented reasons a route may run the fail-secure check without an AI-system context. Missing context is denied
+#: (fail closed) unless the call site names one of these explicitly: there is no global allow.
+#: - ``tenant_registry``: reading or administering the tenant's AI IAM registry (agents, identities, users, purpose
+#:   sessions) is not an action of any one AI system; the database check still applies.
+#: - ``containment``: revoking a token or using an agent's kill switch must stay possible whichever AI system the
+#:   agent served; the database check still applies.
+NO_AI_SYSTEM_CONTEXT_REASONS = frozenset({"tenant_registry", "containment"})
+
+
 def validate_governance_context(
     db: Session,
     *,
     tenant_id: str,
     ai_system_id: str | None,
+    no_ai_system_context_reason: str | None = None,
 ) -> tuple[bool, str]:
+    """Whether the governance context lets the action go ahead: ``(ok, reason)``.
+
+    Fails closed: no AI system given, or one this tenant does not have, is a denial. A route that genuinely acts
+    without an AI system passes ``no_ai_system_context_reason`` (one of NO_AI_SYSTEM_CONTEXT_REASONS); should it
+    give an ``ai_system_id`` all the same, that AI system is checked like any other."""
+
     if not ai_system_id:
-        return True, "no_ai_system_context"
+        if no_ai_system_context_reason is None:
+            return False, "no_ai_system_context"
+        if no_ai_system_context_reason not in NO_AI_SYSTEM_CONTEXT_REASONS:
+            return False, "invalid_no_ai_system_context_reason"
+        return True, f"not_ai_system_scoped:{no_ai_system_context_reason}"
 
     ai_system = db.scalar(
         select(AISystem).where(
@@ -39,8 +59,7 @@ def validate_governance_context(
         )
     )
     if ai_system is None:
-        # Preserve existing router/service behavior for not-found AI systems.
-        return True, "ai_system_not_found"
+        return False, "ai_system_not_found"
 
     if not ai_system.risk_tier:
         return False, "risk_tier_missing"
@@ -197,7 +216,13 @@ def enforce_fail_secure_or_raise(
     module: str,
     ai_system_id: str | None = None,
     request_id: str | None = None,
+    no_ai_system_context_reason: str | None = None,
 ) -> None:
+    """Raise 503 ``fail_secure_block`` unless the database answers and the governance context is valid.
+
+    Without an AI system this denies (``governance_context_failed:no_ai_system_context``) unless the call site states
+    why it has none with ``no_ai_system_context_reason`` (see NO_AI_SYSTEM_CONTEXT_REASONS)."""
+
     if not settings.fail_secure_mode:
         return
 
@@ -218,6 +243,7 @@ def enforce_fail_secure_or_raise(
             db,
             tenant_id=tenant_id,
             ai_system_id=ai_system_id,
+            no_ai_system_context_reason=no_ai_system_context_reason,
         )
     except SQLAlchemyError:
         _raise_fail_secure(

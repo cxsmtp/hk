@@ -320,3 +320,114 @@ def test_risk_escalation_persists_bounded_distinct_remediation_ids(test_env, ris
             assert db.get(AISystem, system_id).metadata_json["governance_state"] == "REVIEW"
             identifiers.append(remediation.source_trigger_id)
     assert len(set(identifiers)) == 2
+
+
+# --- Missing or unknown AI-system context fails closed -------------------------------------------------------------
+
+
+def _intercept_body(ai_system_id: str) -> dict:
+    return {
+        "ai_system_id": ai_system_id,
+        "actor_type": "human",
+        "actor_id": "user-ctx",
+        "request_id": str(uuid4()),
+        "prompt": "test",
+        "context_summary": "",
+        "attachments_meta": [],
+    }
+
+
+def test_validate_governance_context_denies_missing_context_by_default(test_env) -> None:
+    with test_env["SessionLocal"]() as db:
+        assert fail_secure_service.validate_governance_context(db, tenant_id="t-1", ai_system_id=None) == (
+            False,
+            "no_ai_system_context",
+        )
+        assert fail_secure_service.validate_governance_context(db, tenant_id="t-1", ai_system_id="") == (
+            False,
+            "no_ai_system_context",
+        )
+        assert fail_secure_service.validate_governance_context(db, tenant_id="t-1", ai_system_id="missing-system") == (
+            False,
+            "ai_system_not_found",
+        )
+
+
+def test_validate_governance_context_explicit_reason_is_the_only_allow(test_env) -> None:
+    with test_env["SessionLocal"]() as db:
+        assert fail_secure_service.validate_governance_context(
+            db, tenant_id="t-1", ai_system_id=None, no_ai_system_context_reason="tenant_registry"
+        ) == (True, "not_ai_system_scoped:tenant_registry")
+        assert fail_secure_service.validate_governance_context(
+            db, tenant_id="t-1", ai_system_id=None, no_ai_system_context_reason="containment"
+        ) == (True, "not_ai_system_scoped:containment")
+        # An undocumented reason is not an allow.
+        assert fail_secure_service.validate_governance_context(
+            db, tenant_id="t-1", ai_system_id=None, no_ai_system_context_reason="because"
+        ) == (False, "invalid_no_ai_system_context_reason")
+        # A reason never excuses an AI system that is given but unknown.
+        assert fail_secure_service.validate_governance_context(
+            db, tenant_id="t-1", ai_system_id="missing-system", no_ai_system_context_reason="tenant_registry"
+        ) == (False, "ai_system_not_found")
+
+
+def test_enforce_fail_secure_denies_missing_context(monkeypatch, test_env) -> None:
+    from fastapi import HTTPException
+
+    monkeypatch.setattr(settings, "fail_secure_mode", True)
+    monkeypatch.setattr(
+        fail_secure_service,
+        "queue_auditor_fail_secure_job",
+        lambda **_kwargs: {"queued": False, "error": None},
+    )
+    with test_env["SessionLocal"]() as db:
+        with pytest.raises(HTTPException) as raised:
+            fail_secure_service.enforce_fail_secure_or_raise(db, tenant_id="t-1", module="gateway", request_id="r-1")
+        assert raised.value.status_code == 503
+        assert raised.value.detail["code"] == "fail_secure_block"
+        assert raised.value.detail["reason"] == "governance_context_failed:no_ai_system_context"
+        # Stated at the call site: allowed.
+        fail_secure_service.enforce_fail_secure_or_raise(
+            db, tenant_id="t-1", module="ai_iam", request_id="r-2", no_ai_system_context_reason="tenant_registry"
+        )
+
+
+def test_gateway_unknown_ai_system_is_blocked_fail_secure(monkeypatch, test_env) -> None:
+    monkeypatch.setattr(settings, "fail_secure_mode", True)
+    client: TestClient = test_env["client"]
+    owner = _register_owner(client, email="fail-secure-unknown@example.com")
+    headers = _headers(owner["access_token"], owner["tenant_id"])
+
+    response = client.post("/gateway/llm/intercept", headers=headers, json=_intercept_body("no-such-ai-system"))
+    assert response.status_code == 503, response.text
+    detail = response.json()["detail"]
+    assert detail["code"] == "fail_secure_block"
+    assert detail["reason"] == "governance_context_failed:ai_system_not_found"
+
+
+def test_gateway_another_tenants_ai_system_is_blocked_fail_secure(monkeypatch, test_env) -> None:
+    monkeypatch.setattr(settings, "fail_secure_mode", True)
+    client: TestClient = test_env["client"]
+    other = _register_owner(client, email="fail-secure-other@example.com")
+    other_system = _create_ai_system(client, _headers(other["access_token"], other["tenant_id"]))
+    owner = _register_owner(client, email="fail-secure-mine@example.com")
+    headers = _headers(owner["access_token"], owner["tenant_id"])
+
+    response = client.post("/gateway/llm/intercept", headers=headers, json=_intercept_body(other_system))
+    assert response.status_code == 503, response.text
+    assert response.json()["detail"]["reason"] == "governance_context_failed:ai_system_not_found"
+
+
+def test_ai_iam_registry_and_containment_routes_state_their_missing_context(monkeypatch, test_env) -> None:
+    monkeypatch.setattr(settings, "fail_secure_mode", True)
+    client: TestClient = test_env["client"]
+    owner = _register_owner(client, email="fail-secure-registry@example.com")
+    headers = _headers(owner["access_token"], owner["tenant_id"])
+
+    agent_id = _create_agent(client, headers)
+    listed = client.get("/ai-iam/agents", headers=headers)
+    assert listed.status_code == 200, listed.text
+    fetched = client.get(f"/agents/{agent_id}", headers=headers)
+    assert fetched.status_code == 200, fetched.text
+    kill = client.post(f"/ai-iam/agents/{agent_id}/kill-switch", headers=headers)
+    assert kill.status_code == 200, kill.text

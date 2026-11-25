@@ -52,6 +52,8 @@ def get_agent(
         tenant_id=ctx.tenant.id,
         module="ai_iam",
         request_id=f"agents.get:{agent_id}",
+        # Not an action of one AI system (fail_secure_service.NO_AI_SYSTEM_CONTEXT_REASONS).
+        no_ai_system_context_reason="tenant_registry",
     )
     row = db.scalar(
         select(AgentIdentity).where(
