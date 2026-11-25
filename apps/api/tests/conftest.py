@@ -26,3 +26,19 @@ def _licence_out_of_the_way(request, monkeypatch):
     monkeypatch.setattr(activation_service, "licence_active", lambda now=None: True)
     monkeypatch.setattr(activation_service, "assert_may_add_tenant", lambda db: None)
     monkeypatch.setattr(activation_service, "assert_may_add_member", lambda db, tenant_id: None)
+
+
+@pytest.fixture(autouse=True)
+def _terms_out_of_the_way(request, monkeypatch):
+    """Keep the terms-of-use gate (TERMS.md, app/core/access_gate.py) out of tests about other things.
+
+    Without this, every signed-in route would answer 403 terms_required until an owner accepted the terms. Tests marked
+    ``terms_gate`` (tests/test_first_run_access.py) exercise the real gate.
+    """
+
+    if request.node.get_closest_marker("terms_gate"):
+        return
+    from app.services import terms_service
+
+    monkeypatch.setattr(terms_service, "gate_open_for", lambda db, user: True)
+    monkeypatch.setattr(terms_service, "organisation_accepted", lambda db=None: True)

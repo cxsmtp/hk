@@ -13,7 +13,8 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.routers import account_boundary, action_integrity, activity_audit, agui, agents, ai_discovery, ai_iam, ai_orchestration, ai_systems, ai_tools_usage, audit, auditor, auth, banking_transaction_integrity, brain, checkmarx, continuous_assurance, control_coverage, coverage, dashboard, deployments, discovery, discovery_adv, discovery_assets, discovery_capabilities, discovery_collectors, discovery_ecosystems, discovery_erg, discovery_exposure, discovery_scans, discovery_source_connections, discovery_surface_sources, discovery_targets, endpoint_agent, enforcement, executive_mcp, executive_remote_mcp, extension, external_risk, findings, gateway, guardian_contracts_v2, investigations, kb, llm_gateway, maturity_curve, monitoring, native_controls, onprem, ops, policies, policy_pack_platform, runtime, runtime_control, runtime_intelligence, scans, shadow_ai, simulation_policies, simulations, surface_coverage, system, trust_center, user_visibility
-from app.api.routers import claude_enterprise, licence
+from app.api.routers import access, claude_enterprise, licence
+from app.core.access_gate import AccessRequired, access_required_response
 from app.core.config import configured_secret_sources, settings
 from app.core.licence_gate import licence_gate
 from app.core.observability import (
@@ -35,6 +36,8 @@ from app.services.production_hardening import (
     validate_production_configuration,
 )
 from app.services.snapshot_service import ensure_artifact_storage_writable
+from app.services import first_run_service, terms_service
+from app.version import APP_VERSION
 
 
 def _safe_internal_error_message(exc: Exception) -> str:
@@ -46,7 +49,44 @@ def _safe_internal_error_message(exc: Exception) -> str:
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     _assert_production_readiness_or_fail_startup()
     _assert_schema_integrity_or_fail_startup()
+    _prepare_access_at_start()
+    print(f"Hawk AI {APP_VERSION} running", flush=True)
     yield
+
+
+def _prepare_access_at_start() -> None:
+    """At start-up, as CxMissionZero does: ACCEPT_TERMS=<email> accepts the terms of use for the organisation and
+    everyone (refusing to start if it is not an email address), then, with FIRST_RUN_ACCESS on (deploy/compose.yaml),
+    the first administrator is made on an empty database (app/services/first_run_service.py)."""
+
+    import os
+
+    accept_terms = str(os.environ.get("ACCEPT_TERMS") or "").strip()
+    if accept_terms:
+        with SessionLocal() as db:
+            try:
+                recorded = terms_service.accept_from_environment(db, accept_terms)
+            except ValueError as error:
+                raise RuntimeError(str(error)) from error
+            if recorded:
+                terms = terms_service.current()
+                write_audit_log(
+                    db,
+                    tenant_id=None,
+                    actor_user_id=None,
+                    actor_type="system",
+                    action="terms.accepted",
+                    resource_type="terms",
+                    resource_id=terms.hash,
+                    payload={
+                        "reason": f"Terms of use v{terms.version} accepted for the organisation and everyone using this installation by {accept_terms} (ACCEPT_TERMS).",
+                        "terms": {"version": terms.version, "hash": terms.hash, "via": "ACCEPT_TERMS"},
+                    },
+                )
+                print(f"[terms] Terms of use v{terms.version} accepted for the organisation by {accept_terms} (ACCEPT_TERMS).", flush=True)
+            db.commit()
+    if settings.first_run_access:
+        first_run_service.prepare_access(SessionLocal)
 
 
 _production_topology = settings.deployment_topology == "single_node_compose"
@@ -58,6 +98,10 @@ app = FastAPI(
     redoc_url=None if _production_topology else "/redoc",
     openapi_url=None if _production_topology else "/openapi.json",
 )
+
+
+# A temporary password to change, or terms of use to accept, first (app/core/access_gate.py).
+app.add_exception_handler(AccessRequired, access_required_response)
 
 
 @app.exception_handler(RequestValidationError)
@@ -448,6 +492,7 @@ def health():
     return {
         "status": "ok" if schema_report.healthy else "degraded",
         "service": "api",
+        "version": APP_VERSION,
         "strict_schema": strict_schema,
         "schema_healthy": schema_report.healthy,
     }
@@ -480,6 +525,7 @@ def health_schema():
 
 app.include_router(auth.router)
 app.include_router(licence.router)
+app.include_router(access.router)
 app.include_router(account_boundary.router)
 app.include_router(action_integrity.router)
 app.include_router(investigations.router)

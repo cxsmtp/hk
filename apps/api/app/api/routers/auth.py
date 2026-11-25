@@ -1,26 +1,29 @@
 from __future__ import annotations
 
+import re
 from datetime import datetime, timezone
 from time import perf_counter, sleep
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Query, Response, status
 from fastapi.responses import RedirectResponse
-from pydantic import BaseModel, EmailStr
+from pydantic import AfterValidator, BaseModel, EmailStr
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.envelopes import ListEnvelope, paginate_rows
-from app.core.auth import get_current_user
+from app.core.auth import get_current_user, oauth2_scheme
 from app.core.config import settings
-from app.core.security import get_password_hash
+from app.core.security import decode_token, get_password_hash, verify_password
 from app.db.models.tenant import Tenant
-from app.db.models.user import User, UserTenantRole
+from app.db.models.user import RefreshToken, User, UserTenantRole
 from app.db.session import get_db
-from app.services import activation_service
+from app.services import activation_service, first_run_service, terms_service
 from app.services.audit_service import write_audit_log
 from app.services.auth_service import authenticate_user, get_user_tenants, issue_tokens, refresh_tokens
 from app.services import oidc_auth_service
+from app.services.passwords import password_problem
+from app.version import APP_VERSION
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -41,9 +44,30 @@ class RegisterRequest(BaseModel):
     full_name: str
 
 
+_SIGN_IN_EMAIL = re.compile(r"^[^\s@<>\"]+@[^\s@<>\"]+\.[^\s@<>\"]+$")
+
+
+def _sign_in_email(value: str) -> str:
+    """An email to sign in with. Not EmailStr: that refuses special-use names such as the first administrator's
+    admin@hawk.local (app/services/first_run_service.py). The domain is lower-cased, as EmailStr did."""
+
+    email = first_run_service.normalize_email(value)
+    if len(email) > 320 or not _SIGN_IN_EMAIL.match(email):
+        raise ValueError("value is not a valid email address")
+    return email
+
+
+SignInEmail = Annotated[str, AfterValidator(_sign_in_email)]
+
+
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: SignInEmail
     password: str
+
+
+class ChangePasswordRequest(BaseModel):
+    current: str = ""
+    next: str = ""
 
 
 class RefreshRequest(BaseModel):
@@ -82,6 +106,8 @@ class LoginResponse(AuthTokensResponse):
     user: AuthUserResponse
     tenants: list[TenantMembershipResponse]
     selected_tenant_id: str
+    # A temporary password (the first administrator, or after reset_admin): the console asks for a new one first.
+    must_change_password: bool = False
 
 
 class MeResponse(BaseModel):
@@ -92,6 +118,13 @@ class MeResponse(BaseModel):
     # The product licence's end, for the admins' banner in its last 30 days (docs/activation-codes.md): only for
     # someone who is an owner or admin of a tenant, as they may enter activation codes.
     licence: dict[str, Any] | None = None
+    # Choose a new password first (app/core/access_gate.py).
+    must_change_password: bool = False
+    # Where this person stands with the terms of use (TERMS.md): {version, organisationAccepted, accepted,
+    # canAcceptForOrganisation}.
+    terms: dict[str, Any] | None = None
+    # This build's version, shown bottom-left in the console (VERSION).
+    version: str = APP_VERSION
 
 
 class SelectTenantResponse(AuthTokensResponse):
@@ -239,6 +272,7 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
             user=AuthUserResponse(id=user.id, email=user.email, full_name=user.full_name),
             tenants=[TenantMembershipResponse(**tenant_row) for tenant_row in tenants],
             selected_tenant_id=default_membership.tenant_id,
+            must_change_password=bool(user.must_change_password),
         )
     finally:
         _normalize_auth_timing(started_at)
@@ -275,6 +309,65 @@ def me(current_user: Annotated[User, Depends(get_current_user)], db: Session = D
         full_name=current_user.full_name,
         tenants=[TenantMembershipResponse(**tenant_row) for tenant_row in tenants],
         licence=licence,
+        must_change_password=bool(current_user.must_change_password),
+        terms=terms_service.describe(db, current_user),
+    )
+
+
+@router.post("/me/password", response_model=LoginResponse)
+def change_password(
+    payload: ChangePasswordRequest,
+    current_user: Annotated[User, Depends(get_current_user)],
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+):
+    """Change one's own password (required after a generated or reset one), ported from CxMissionZero's
+    /api/me/password. Anyone else signed in as this person is signed out (their refresh tokens stop working); this
+    browser gets new tokens and stays signed in."""
+
+    if not verify_password(payload.current, current_user.hashed_password):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Your current password is wrong.")
+    if payload.next == payload.current:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Choose a password different from the current one.")
+    problem = password_problem(payload.next)
+    if problem:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=problem)
+    current_user.hashed_password = get_password_hash(payload.next)
+    current_user.must_change_password = False
+    now = datetime.now(timezone.utc)
+    for record in db.scalars(select(RefreshToken).where(RefreshToken.user_id == current_user.id, RefreshToken.revoked_at.is_(None))):
+        record.revoked_at = now
+    # The generated first password is no longer any use: its file goes (CxMissionZero removes it here too).
+    first_run_service.remove_first_admin_file()
+
+    memberships = get_user_tenants(db, current_user.id)
+    if not memberships:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant membership not found")
+    wanted = str(decode_token(token).get("tenant_id") or "")
+    membership = next((m for m in memberships if m.tenant_id == wanted), memberships[0])
+    write_audit_log(
+        db,
+        tenant_id=membership.tenant_id,
+        actor_user_id=current_user.id,
+        actor_type="human",
+        action="auth.password.changed",
+        resource_type="user",
+        resource_id=current_user.id,
+        payload={"reason": f"{current_user.email} changed their password."},
+    )
+    tokens = issue_tokens(db, user=current_user, tenant_id=membership.tenant_id, role=membership.role)
+    db.commit()
+    tenants = []
+    for m in memberships:
+        tenant = db.get(Tenant, m.tenant_id)
+        if tenant:
+            tenants.append(TenantMembershipResponse(id=tenant.id, name=tenant.name, role=m.role))
+    return LoginResponse(
+        **tokens,
+        user=AuthUserResponse(id=current_user.id, email=current_user.email, full_name=current_user.full_name),
+        tenants=tenants,
+        selected_tenant_id=membership.tenant_id,
+        must_change_password=False,
     )
 
 

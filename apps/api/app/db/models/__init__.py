@@ -59,6 +59,7 @@ from app.db.models.execution_effect import (
     EffectReservationV2,
     ExecutionPermitEffectBindingV2,
 )
+from app.db.models.access import FirstRunState, TermsAcceptance
 from app.db.models.activation import ActivationState
 from app.db.models.audit import AuditLog
 from app.db.models.control_coverage import (
@@ -303,6 +304,8 @@ __all__ = [
     "AIReasoningTrace",
     "RefreshToken",
     "ActivationState",
+    "FirstRunState",
+    "TermsAcceptance",
     "AuditLog",
     "DeploymentSurface",
     "ControlCoveragePath",
