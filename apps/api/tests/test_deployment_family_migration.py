@@ -671,8 +671,9 @@ def test_current_revision_is_the_sole_short_migration_head() -> None:
     scripts = ScriptDirectory.from_config(config)
     heads = scripts.get_heads()
 
-    assert heads == ["0092_github_repository_runtime_controls"]
+    assert heads == ["0093_activation_state"]
     assert [revision.revision for revision in scripts.iterate_revisions(heads[0], "0089_provider_signal_lifecycle")] == [
+        "0093_activation_state",
         "0092_github_repository_runtime_controls",
         "0091_exec_mcp_device_auth",
         "0090_github_repo_access",

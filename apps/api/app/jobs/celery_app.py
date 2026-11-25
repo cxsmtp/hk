@@ -8,6 +8,7 @@ from celery.schedules import crontab
 from celery.signals import beat_init, heartbeat_sent, task_failure, worker_ready
 
 from app.core.config import settings
+from app.jobs.licence_task import LicensedTask
 from app.services.control_plane_health_service import write_beat_heartbeat, write_worker_heartbeat
 from app.services.job_run_service import write_dead_letter_job_run
 
@@ -16,6 +17,8 @@ celery_app = Celery(
     "ai_control_plane",
     broker=settings.celery_broker_url,
     backend=settings.celery_result_backend,
+    # While Hawk AI is deactivated, tasks do not run (app/jobs/licence_task.py).
+    task_cls=LicensedTask,
 )
 
 _DEFAULT_TASK_RETRY_POLICY = {

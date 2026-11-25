@@ -2,6 +2,8 @@ import { clearSession, getSession, updateSessionTokens } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/api-url";
 import { approvalStatusFilters, mergeApprovalStatusResults } from "@/lib/approval-workflow";
 import { demoFallbackRequest, isDemoFallbackEnabled } from "@/lib/demo-fallback";
+import { isDeactivatedAnswer, LICENCE_DEACTIVATED_EVENT } from "@/lib/licence";
+import type { ActivationApplied, ActivationView, AdminLicence, LicenceStatus } from "@/lib/licence";
 import type {
   AIDiscoveryAnomalyEvent,
   ActionIntegrityDetail,
@@ -242,6 +244,23 @@ type RequestBehavior = {
 let refreshTokenInFlight: Promise<boolean> | null = null;
 const inflightGetRequests = new Map<string, Promise<unknown>>();
 
+/**
+ * The licence gate's answer (docs/activation-codes.md): Hawk AI has been deactivated. Tells the page, which then
+ * shows the deactivation screen, and says whether it was that answer (so it is not retried).
+ */
+function reportDeactivated(status: number, text: string): boolean {
+  if (status !== 503) return false;
+  let body: unknown = null;
+  try {
+    body = JSON.parse(text);
+  } catch {
+    return false;
+  }
+  if (!isDeactivatedAnswer(status, body)) return false;
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(LICENCE_DEACTIVATED_EVENT));
+  return true;
+}
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -457,6 +476,11 @@ async function request<T>(
         }
       }
 
+      if (res.status === 503) {
+        const text = await res.clone().text();
+        if (reportDeactivated(res.status, text)) throw new Error(text);
+      }
+
       if (!res.ok) {
         const canRetryStatus = retryable && TRANSIENT_HTTP_STATUSES.has(res.status) && attempt < maxNetworkAttempts - 1;
         if (canRetryStatus) {
@@ -571,6 +595,7 @@ async function requestBlob(path: string, init?: RequestInit, allowRefresh = true
 
   if (!res.ok) {
     const text = await res.text();
+    reportDeactivated(res.status, text);
     throw new Error(text || `API ${res.status}`);
   }
 
@@ -607,6 +632,7 @@ async function requestMultipart<T>(path: string, form: FormData, allowRefresh = 
   }
   if (!res.ok) {
     let message = `API ${res.status}`;
+    if (res.status === 503 && reportDeactivated(res.status, await res.clone().text())) throw new Error(message);
     try {
       const payload = await res.json() as { detail?: unknown; message?: unknown; code?: unknown };
       const detail = payload.detail && typeof payload.detail === "object"
@@ -632,6 +658,15 @@ function boundedQuery<T extends object>(params: T): string {
   return encoded ? `?${encoded}` : "";
 }
 
+/** The signed-in person (/auth/me): with the product licence's end for a tenant's owners and admins. */
+export type CurrentUser = {
+  id: string;
+  email: string;
+  full_name: string;
+  tenants: { id: string; name: string; role: string }[];
+  licence?: AdminLicence | null;
+};
+
 export const api = {
   login: (email: string, password: string) =>
     request("/auth/login", {
@@ -648,7 +683,14 @@ export const api = {
     ),
   oidcComplete: (ticket: string) =>
     request<LoginResponse>("/auth/oidc/complete", { method: "POST", body: JSON.stringify({ ticket }) }, false),
-  me: () => request("/auth/me"),
+  me: () => request<CurrentUser>("/auth/me"),
+  // The product licence and activation codes (docs/activation-codes.md).
+  getLicence: () => request<LicenceStatus>("/licence", undefined, false),
+  activateLicence: (code: string) =>
+    request<{ active: boolean; until: string }>("/licence/activate", { method: "POST", body: JSON.stringify({ code }) }, false),
+  getActivation: () => request<ActivationView>("/activation"),
+  applyActivation: (code: string) =>
+    request<ActivationApplied>("/activation", { method: "POST", body: JSON.stringify({ code }) }),
   getPlatformMode: () => request<PlatformModeResponse>("/system/platform-mode"),
   updatePlatformMode: (platformMode: PlatformMode) =>
     request<PlatformModeResponse>("/system/platform-mode", {
