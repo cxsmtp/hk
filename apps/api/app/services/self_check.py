@@ -6,6 +6,8 @@ WATCHDOG_EVERY_SECONDS (300), the replies every INBOX_EVERY_SECONDS (120), the w
 
 The checks (MZ's, adapted to Hawk AI):
   - each Checkmarx One connector: it signs in and asks one small question (MZ's Checkmarx One check);
+  - each other connector with a health call (the monitoring connectors that sign in and read over HTTP): it signs in
+    with the connector's own credentials and makes the first read of its pull, keeping nothing;
   - the email server, once set up and tested: it connects and signs in, but sends nothing;
   - reading replies, when it failed three times in a row;
   - the automatic runs Hawk AI relies on (backups, the monitoring checks, the daily snapshot pack): did the last two
@@ -152,6 +154,16 @@ def _probe_checkmarx(connector: Any) -> None:
         raise
 
 
+def _probe_connector(connector: Any) -> None:
+    """The other connectors that have a health call (app/services/integration_connector_service.py
+    check_connector_health): they sign in with their own credentials and make the first read of their pull."""
+
+    from app.services.connector_secret_service import decrypt_connector_secrets
+    from app.services.integration_connector_service import check_connector_health
+
+    check_connector_health(provider_key=str(connector.provider_key), connector_config=dict(connector.config or {}), secrets=decrypt_connector_secrets(connector.encrypted_secrets or ""))
+
+
 def _redis_factory() -> Any | None:
     if (os.getenv("TEST_PROFILE") or "").strip().lower() == "unit":
         return None
@@ -171,6 +183,7 @@ class SelfCheck:
         session_factory: Callable[[], Session] | None = None,
         send: Callable[[Any, str], None] | None = None,
         probe_checkmarx: Callable[[Any], None] = _probe_checkmarx,
+        probe_connector: Callable[[Any], None] = _probe_connector,
         test_smtp: Callable[[], None] | None = None,
         redis_factory: Callable[[], Any | None] = _redis_factory,
         read_replies: Callable[[Any], list[dict[str, str]]] | None = None,
@@ -187,6 +200,7 @@ class SelfCheck:
         self.session_factory = session_factory or _default_session_factory()
         self.send = send or _default_send
         self.probe_checkmarx = probe_checkmarx
+        self.probe_connector = probe_connector
         self.test_smtp = test_smtp or (lambda: mailer.test_connection())
         self.redis_factory = redis_factory
         self._read_replies = read_replies
@@ -578,6 +592,32 @@ class SelfCheck:
             log.warning("[self-check] Could not note the working connection: %s", error)
         return None
 
+    def other_connectors(self, db: Session) -> list[Any]:
+        """Every other connector that is on, real (not a stub) and has a health call: the monitoring connectors that
+        sign in and read over HTTP (Microsoft 365, Okta, Slack, SailPoint, CrowdStrike, the AI providers' admin APIs…)."""
+
+        from app.db.models.monitoring import Connector
+        from app.services.integration_connector_service import has_health_check
+
+        rows = db.scalars(select(Connector).where(Connector.provider_key != "checkmarx", Connector.enabled.is_(True), Connector.is_stub.is_(False)).order_by(Connector.created_at)).all()
+        return [c for c in rows if has_health_check(str(c.provider_key))]
+
+    def check_connector(self, connector: Any) -> dict[str, Any] | None:
+        from app.services.integration_connector_service import PROVIDERS
+
+        provider = PROVIDERS.get(str(connector.provider_key))
+        label = provider.display_name if provider else str(connector.provider_key)
+        key = f"connector:{connector.tenant_id}:{connector.id}"
+        title = f"{label} connection ({connector.name})"
+        try:
+            self.probe_connector(connector)
+        except Exception as error:  # noqa: BLE001
+            outside = outside_fault(error)
+            message = " ".join(str(error).split())[:300] or error.__class__.__name__
+            detail = f"{message}. This is on {label}'s side; Hawk AI keeps trying." if outside else message
+            return {"key": key, "title": title, "detail": detail, "tenant": connector.tenant_id, "outside": outside}
+        return None
+
     def check_smtp(self, db: Session) -> dict[str, Any] | None:
         if not self.mail_ready(db):
             return None
@@ -617,6 +657,10 @@ class SelfCheck:
             problem = self.check_checkmarx(connector)
             if problem:
                 found.append(problem)
+        for connector in self.other_connectors(db):
+            problem = self.check_connector(connector)
+            if problem:
+                found.append(problem)
         smtp = self.check_smtp(db)
         if smtp:
             found.append(smtp)
@@ -637,6 +681,10 @@ class SelfCheck:
             connector_id = key.rsplit(":", 1)[1]
             connector = next((c for c in self.checkmarx_connectors(db) if c.id == connector_id), None)
             return connector is None or self.check_checkmarx(connector) is None
+        if key.startswith("connector:"):
+            connector_id = key.rsplit(":", 1)[1]
+            connector = next((c for c in self.other_connectors(db) if c.id == connector_id), None)
+            return connector is None or self.check_connector(connector) is None
         if key == "smtp":
             return self.check_smtp(db) is None
         return not any(p["key"] == key for p in self.collect(db))
@@ -677,6 +725,13 @@ class SelfCheck:
                     return True
             # Signing in again: a new client, so a new token (Checkmarx One's tokens are per client).
             return attempt("Signed in to Checkmarx One again", lambda: self.probe_checkmarx(connector))
+        if key.startswith("connector:"):
+            connector_id = key.rsplit(":", 1)[1]
+            connector = next((c for c in self.other_connectors(db) if c.id == connector_id), None)
+            if connector is None:
+                return False
+            # Signing in again: a new token for each look (none is kept between them).
+            return attempt("Signed in to the connector again", lambda: self.probe_connector(connector))
         if key == "smtp":
             return attempt("Tried the mail server again after a pause", lambda: self.sleep(10))
         return False

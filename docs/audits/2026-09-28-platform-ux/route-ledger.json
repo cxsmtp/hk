@@ -2072,5 +2072,81 @@
     "notes": "The \"Yes, do it\" page an emailed hands-off button opens (CxMissionZero's /a/:token): says what the signed link would do and acts only on the button. No sign-in. Covered by apps/web/tests/hands-off-settings.test.mjs and apps/api/tests/test_watchdog.py; not yet observed in a browser.",
     "desktop": "not-observed",
     "mobile": "not-observed"
+  },
+  {
+    "route": "/settings/general",
+    "file": "apps/web/src/app/settings/general/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Settings → General: FTR Command Center's page (general(), public/js/settings.js) in its settings look, inside the Settings menu (apps/web/src/lib/settings-menu.mjs). Covered by apps/web/tests/settings-shell.test.mjs (source checks and the menu's logic) and apps/api/tests/test_settings_console.py; not yet observed in a browser.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
+  },
+  {
+    "route": "/settings/branding",
+    "file": "apps/web/src/app/settings/branding/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Settings → Branding: FTR Command Center's page (branding(), public/js/settings.js) in its settings look, inside the Settings menu (apps/web/src/lib/settings-menu.mjs). Covered by apps/web/tests/settings-shell.test.mjs (source checks and the menu's logic) and apps/api/tests/test_settings_console.py; not yet observed in a browser.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
+  },
+  {
+    "route": "/settings/email",
+    "file": "apps/web/src/app/settings/email/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Settings → Email (SMTP): FTR Command Center's page (email(), smtpPanel and wireSmtp, public/js/settings.js) in its settings look, inside the Settings menu (apps/web/src/lib/settings-menu.mjs). Covered by apps/web/tests/settings-shell.test.mjs (source checks and the menu's logic) and apps/api/tests/test_settings_console.py; not yet observed in a browser.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
+  },
+  {
+    "route": "/settings/about",
+    "file": "apps/web/src/app/settings/about/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Settings → About: FTR Command Center's page (public/js/about.js aboutHtml(), public/js/settings.js) in its settings look, inside the Settings menu (apps/web/src/lib/settings-menu.mjs). Covered by apps/web/tests/settings-shell.test.mjs (source checks and the menu's logic) and apps/api/tests/test_settings_console.py; not yet observed in a browser.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
   }
 ]

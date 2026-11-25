@@ -73,7 +73,7 @@ test("People, Teams and Roles copy FTR's pages and use the shared FTR stylesheet
 });
 
 test("People, Teams and Roles & permissions are in the Administration menu; joining is offered from sign-in", () => {
-  const nav = source("lib/navigation.ts");
+  const nav = (source("lib/navigation.ts") + source("lib/settings-menu.mjs"));
   for (const [href, label] of [["/settings/people", "People"], ["/settings/teams", "Teams"], ["/settings/roles", "Roles & permissions"]]) {
     assert.ok(nav.includes(`{ href: "${href}", label: "${label}" }`), href);
   }

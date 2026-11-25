@@ -72,7 +72,7 @@ test("the console shows the deactivation page, the banner and Settings → Activ
   assert.match(api, /reportDeactivated\(res\.status, text\)\) throw new Error\(text\)/);
   assert.match(api, /"\/licence\/activate"/);
   assert.match(source("components/app-shell.tsx"), /<LicenceBanner \/>/);
-  assert.match(source("lib/navigation.ts"), /\{ href: "\/settings\/activation", label: "Activation codes" \}/);
+  assert.match((source("lib/navigation.ts") + source("lib/settings-menu.mjs")), /\{ href: "\/settings\/activation", label: "Activation codes" \}/);
   const page = source("app/settings/activation/page.tsx");
   assert.match(page, /Apply the code/);
   assert.match(page, /Applied: \$\{result\.applied\}\./);

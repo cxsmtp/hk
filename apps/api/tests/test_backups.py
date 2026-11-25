@@ -30,7 +30,7 @@ from app.db.session import Base, get_db
 from app.jobs import backup_jobs
 from app.main import app
 from app.services import backup_archive as archive
-from app.services import backup_service, mail_inbox, backup_mailer as mailer
+from app.services import backup_service, mail_inbox, mailer
 from app.services.backup_key import ALPHABET, BackupKeyStore, canonical_backup_key, earlier_state, generate_backup_key
 
 DUMP = b"PGDMP-fake-custom-format-dump"

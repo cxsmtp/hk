@@ -78,6 +78,6 @@ test("the Records pages keep FTR's panels, controls and wording", () => {
 });
 
 test("the pages are in the Administration menu", () => {
-  const nav = source("lib/navigation.ts");
+  const nav = (source("lib/navigation.ts") + source("lib/settings-menu.mjs"));
   for (const href of ["/settings/audit", "/settings/connector-activity", "/settings/network", "/settings/help", "/help"]) assert.ok(nav.includes(`href: "${href}"`), href);
 });

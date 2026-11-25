@@ -17,9 +17,8 @@ from sqlalchemy.orm import Session
 from app.core.rbac import holds, require_permission
 from app.core.tenant import TenantContext, require_tenant
 from app.db.models.platform_records import SupportTicket
-from app.db.models.user import User, UserTenantRole
 from app.db.session import get_db
-from app.services import account_security, mailer, password_reset_service, support_desk
+from app.services import account_security, iam_service, mailer, password_reset_service, support_desk
 from app.services.audit_service import write_audit_log
 from app.version import APP_VERSION
 
@@ -74,25 +73,21 @@ def _view(ctx: TenantContext, t: SupportTicket, *, full: bool = False) -> dict[s
 
 
 def support_team(db: Session, tenant_id: str | None) -> list[str]:
-    """The addresses of the team that answers requests raised in a tenant: its active owners and admins."""
+    """The addresses of the team that answers requests raised in a tenant: everyone active whose role holds
+    support.manage (Settings → Roles & permissions), not the owners and admins by name."""
 
     if not tenant_id:
         return []
-    rows = db.scalars(
-        select(User)
-        .join(UserTenantRole, UserTenantRole.user_id == User.id)
-        .where(UserTenantRole.tenant_id == tenant_id, UserTenantRole.role.in_(support_desk.TEAM_ROLES), User.is_active.is_(True))
-    ).all()
-    return sorted({str(u.email).lower() for u in rows if u.email})
+    return iam_service.emails_holding(db, tenant_id, "support.manage")
 
 
 def mail_ready(db: Session) -> str:
     """'' when email can go out; otherwise why not (the email server must be set up and tested, docs/sign-in.md)."""
 
     if not mailer.configured():
-        return "The email server is not set up (SMTP_* settings)."
+        return "The email server is not set up (Settings → Email (SMTP))."
     if account_security.policy(db).smtp_verified != mailer.fingerprint():
-        return "The email server is not tested: send a test email under Settings → Sign-in."
+        return "The email server is not tested: test it under Settings → Email (SMTP)."
     return ""
 
 

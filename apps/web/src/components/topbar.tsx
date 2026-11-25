@@ -9,7 +9,8 @@ import { clearSession, getSession, SESSION_CHANGE_EVENT } from "@/lib/auth";
 import { api } from "@/lib/api";
 import type { DashboardNotificationItem } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { SPECIALIST_WORKSPACES } from "@/lib/navigation";
+import { JumpTo } from "@/components/jump-to";
+import { SETTINGS_ENTRY, SPECIALIST_WORKSPACES } from "@/lib/navigation";
 
 const ADMINISTRATION_ITEMS = SPECIALIST_WORKSPACES.find((group) => group.label === "Administration")?.items ?? [];
 
@@ -266,6 +267,7 @@ export function Topbar() {
         <p className="max-w-[9rem] truncate font-mono text-xs text-slate-300 sm:max-w-none">{tenantId}</p>
       </div>
       <div className="flex min-w-0 items-center justify-between gap-2 sm:justify-end sm:gap-4">
+        <JumpTo />
         <div className="relative" ref={hubRef}>
           <button
             type="button"
@@ -426,6 +428,14 @@ export function Topbar() {
               </div>
               <div className="p-2">
                 <p className="px-2 py-1.5 text-[9px] font-semibold uppercase tracking-[0.16em] text-slate-600">Administration</p>
+                <Link
+                  href={SETTINGS_ENTRY.href}
+                  onClick={() => setAccountOpen(false)}
+                  className="flex items-center gap-2 rounded-lg px-2 py-2 text-xs text-slate-300 transition hover:bg-white/[0.05] hover:text-white"
+                >
+                  <Settings2 className="h-3.5 w-3.5 text-slate-500" />
+                  {SETTINGS_ENTRY.label}
+                </Link>
                 {ADMINISTRATION_ITEMS.map((item) => (
                   <Link
                     key={item.href}

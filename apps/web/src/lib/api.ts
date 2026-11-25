@@ -4,6 +4,7 @@ import type { AcmeStatus, HttpsCertificateReport, HttpsMode, HttpsStatus, Upload
 import type { BackupEncryption, BackupFile, BackupInfo, BackupKeyShown, BackupNotice, BackupsStatus, Readiness } from "@/lib/backups-settings";
 import type { Integrity, IntegrityState, UpdateSettings, UpdatesStatus } from "@/lib/updates-settings";
 import type { HandsOffSettings, HandsOffView, LinkAnswer, SelfCheckHealth } from "@/lib/hands-off-settings";
+import type { AboutView, BrandingPatch, BrandingView, GeneralView, SmtpSettings, SmtpView } from "@/lib/settings-console";
 import type { AuditPage, AuditVerify, ConnectorActivity, Emailed, NetworkCheck, NetworkInfo, SupportChannel, SupportKind, SupportList, SupportRequest, TrustDiagnosis, TrustedCertificate } from "@/lib/records";
 import { approvalStatusFilters, mergeApprovalStatusResults } from "@/lib/approval-workflow";
 import { demoFallbackRequest, isDemoFallbackEnabled } from "@/lib/demo-fallback";
@@ -860,6 +861,18 @@ export const api = {
   removeTrusted: (fingerprint: string) => request<{ certificates: TrustedCertificate[] }>(`/trust/${encodeURIComponent(fingerprint)}`, { method: "DELETE" }),
   setReadiness: (id: string, accept: boolean) =>
     request<{ ok: boolean }>(`/backups/readiness/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify({ accept }) }),
+  // Settings → General, Branding, Email (SMTP) and About, and the Settings menu (app/api/routers/settings_console.py).
+  getSettingsMe: () => request<{ role: string; permissions: string[] }>("/settings/me"),
+  getGeneralSettings: () => request<GeneralView>("/settings/general"),
+  getBranding: () => request<BrandingView>("/branding", undefined, false),
+  saveBranding: (patch: BrandingPatch) => request<BrandingView>("/settings/branding", { method: "PUT", body: JSON.stringify(patch) }),
+  getSmtp: () => request<SmtpView>("/settings/smtp"),
+  saveSmtp: (body: { smtp?: Partial<SmtpSettings> & { password?: string }; passwordReset?: string; test?: boolean }) =>
+    request<SmtpView>("/settings/smtp", { method: "PUT", body: JSON.stringify(body) }),
+  testSmtp: () => request<SmtpView & { message: string }>("/settings/smtp/test", { method: "POST", body: "{}" }),
+  sendTestSmtp: (to: string) => request<{ message: string }>("/settings/smtp/send-test", { method: "POST", body: JSON.stringify({ to }) }),
+  forgetSmtp: () => request<SmtpView>("/settings/smtp", { method: "DELETE" }),
+  getAbout: () => request<AboutView>("/settings/about"),
   // Settings → Hands-off and the self-check (app/api/routers/hands_off.py); the emailed links need no sign-in.
   getHandsOff: () => request<HandsOffView>("/hands-off"),
   saveHandsOff: (body: { handsOff: Partial<Omit<HandsOffSettings, "statusTo">> & { statusTo?: string | string[] } }) =>

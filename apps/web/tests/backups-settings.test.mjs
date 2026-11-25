@@ -79,7 +79,7 @@ test("the page keeps FTR's panels, controls and wording, at /settings/backups", 
   }
   assert.ok(page.includes('import "../ftr-settings.css"'));
   assert.ok(source("app/settings/https/page.tsx").includes('import "../ftr-settings.css"'));
-  assert.match(source("lib/navigation.ts"), /href: "\/settings\/backups", label: "Backups & health"/);
+  assert.match((source("lib/navigation.ts") + source("lib/settings-menu.mjs")), /href: "\/settings\/backups", label: "Backups & health"/);
   assert.match(source("components/app-shell.tsx"), /<BackupNotice \/>/);
   const css = source("app/settings/ftr-settings.css");
   for (const rule of [".ftr-settings .ready-table", ".ftr-settings td.actions", ".ftr-settings button.danger", ".ftr-settings .wide-panel"]) assert.ok(css.includes(rule), rule);

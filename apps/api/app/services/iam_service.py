@@ -156,6 +156,28 @@ def roles(db: Session, tenant_id: str) -> list[Role]:
     return [r for r in out if r is not None]
 
 
+def emails_holding(db: Session, tenant_id: str, permission: str) -> list[str]:
+    """The addresses of the active people of a tenant whose role holds this permission (whatever the role is called:
+    a role made here holds it as much as a built-in one). Lower case, sorted, once each."""
+
+    rows = db.execute(
+        select(User.email, UserTenantRole.role)
+        .join(UserTenantRole, UserTenantRole.user_id == User.id)
+        .where(UserTenantRole.tenant_id == tenant_id, User.is_active.is_(True))
+    ).all()
+    holds: dict[str, bool] = {}
+    out: set[str] = set()
+    for email, key in rows:
+        if not email:
+            continue
+        if key not in holds:
+            found = role(db, tenant_id, str(key or ""))
+            holds[key] = bool(found and permission in found.permissions)
+        if holds[key]:
+            out.add(str(email).lower())
+    return sorted(out)
+
+
 def holders(db: Session, tenant_id: str) -> dict[str, int]:
     return {key: int(n) for key, n in db.execute(select(UserTenantRole.role, func.count()).where(UserTenantRole.tenant_id == tenant_id).group_by(UserTenantRole.role))}
 

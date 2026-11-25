@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from functools import lru_cache
@@ -2845,3 +2846,56 @@ def run_provider_pull(
         pulled_count=len(pulled),
         normalized_signals=normalized,
     )
+
+
+class ConnectorHealthError(RuntimeError):
+    """A connector's health check failed; ``http_status`` is what the far side answered, when it answered."""
+
+    def __init__(self, message: str, http_status: int | None = None) -> None:
+        super().__init__(message)
+        self.http_status = http_status
+
+
+def has_health_check(provider_key: str) -> bool:
+    """Whether this provider's connector can be checked: it signs in and reads over HTTP (the live pull's own way)."""
+
+    provider = PROVIDERS.get(str(provider_key or ""))
+    return bool(provider and provider.supports_live_pull and provider.auth_mode != "aws_sdk" and provider.signal_mappings)
+
+
+def check_connector_health(
+    *,
+    provider_key: str,
+    connector_config: dict[str, Any],
+    secrets: dict[str, Any],
+    destination_policy: OutboundDestinationPolicy | None = None,
+) -> None:
+    """One small look with the connector's own credentials, as its live pull starts: sign in, then the first read of
+    the pull. Nothing is kept. Raises ConnectorHealthError (with the far side's status when it answered); the timeouts
+    and refused connections of httpx are left as they are, so the self-check can tell an outage from a refusal."""
+
+    provider = PROVIDERS.get(provider_key)
+    if provider is None or not has_health_check(provider_key):
+        raise ConnectorHealthError(f"No health check for provider {provider_key}.")
+    policy = validate_monitoring_connector_destination(
+        provider_key=provider_key,
+        connector_config=connector_config,
+        destination_policy=destination_policy,
+    )
+    base_url, headers, auth_error = _authenticate_http(provider, connector_config, secrets, destination_policy=policy)
+    if auth_error:
+        found = re.search(r"\((\d{3})\)", auth_error)
+        raise ConnectorHealthError(auth_error, int(found.group(1)) if found else None)
+    mappings = _sailpoint_signal_mappings(connector_config, secrets) if provider.key == "sailpoint" else provider.signal_mappings
+    endpoint = _resolve_endpoint(mappings[0].endpoint, {**connector_config, **secrets})
+    response = request_with_redirect_validation(
+        "GET",
+        f"{base_url}{endpoint}",
+        source=_monitoring_destination_source(provider.key),
+        policy=policy,
+        timeout=20.0,
+        client_factory=httpx.Client,
+        headers=headers,
+    )
+    if response.status_code >= 400:
+        raise ConnectorHealthError(f"{provider.display_name} answered {response.status_code}.", response.status_code)

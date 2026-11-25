@@ -70,7 +70,7 @@ test("Settings → Hands-off keeps MZ's wording in FTR's settings look, at /sett
   for (const cls of ['className="grid g2"', 'className="panel"', 'className="form"', 'className="f"', 'className="check"']) assert.ok(page.includes(cls), cls);
   const box = source("components/self-check-box.tsx");
   for (const text of ["Check now", "Last events", "chip ${chip.tone}"]) assert.ok(box.includes(text), text);
-  assert.match(source("lib/navigation.ts"), /href: "\/settings\/hands-off", label: "Hands-off"/);
+  assert.match((source("lib/navigation.ts") + source("lib/settings-menu.mjs")), /href: "\/settings\/hands-off", label: "Hands-off"/);
 });
 
 test("Backups & health shows the self-check in FTR's Health panel", () => {
