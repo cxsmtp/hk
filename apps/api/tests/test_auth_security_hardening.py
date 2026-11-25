@@ -83,7 +83,7 @@ def test_login_invalid_credentials_uses_normalized_timing(test_env: TestClient) 
     elapsed = perf_counter() - started
 
     assert response.status_code == 401, response.text
-    assert response.json().get("detail") == "Invalid credentials"
+    assert response.json().get("detail") == "Wrong email or password."
     assert elapsed >= AUTH_MIN_EXPECTED_SECONDS
 
 

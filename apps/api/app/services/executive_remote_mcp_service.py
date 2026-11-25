@@ -179,7 +179,7 @@ def build_oauth_authorization_server_metadata(base_url: str) -> dict[str, Any]:
         "response_types_supported": ["code"],
         "grant_types_supported": ["authorization_code", "urn:ietf:params:oauth:grant-type:device_code"],
         "token_endpoint_auth_methods_supported": ["none"],
-        "code_challenge_methods_supported": ["S256", "plain"],
+        "code_challenge_methods_supported": ["S256"],
         "scopes_supported": [
             EXECUTIVE_REMOTE_MCP_SCOPE_READ,
             EXECUTIVE_REMOTE_MCP_SCOPE_PRESENTATION,

@@ -671,8 +671,9 @@ def test_current_revision_is_the_sole_short_migration_head() -> None:
     scripts = ScriptDirectory.from_config(config)
     heads = scripts.get_heads()
 
-    assert heads == ["0094_first_run_and_terms"]
+    assert heads == ["0096_signin_hardening"]
     assert [revision.revision for revision in scripts.iterate_revisions(heads[0], "0089_provider_signal_lifecycle")] == [
+        "0096_signin_hardening",
         "0094_first_run_and_terms",
         "0093_activation_state",
         "0092_github_repository_runtime_controls",

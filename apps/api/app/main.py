@@ -13,7 +13,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.routers import account_boundary, action_integrity, activity_audit, agui, agents, ai_discovery, ai_iam, ai_orchestration, ai_systems, ai_tools_usage, audit, auditor, auth, banking_transaction_integrity, brain, checkmarx, continuous_assurance, control_coverage, coverage, dashboard, deployments, discovery, discovery_adv, discovery_assets, discovery_capabilities, discovery_collectors, discovery_ecosystems, discovery_erg, discovery_exposure, discovery_scans, discovery_source_connections, discovery_surface_sources, discovery_targets, endpoint_agent, enforcement, executive_mcp, executive_remote_mcp, extension, external_risk, findings, gateway, guardian_contracts_v2, investigations, kb, llm_gateway, maturity_curve, monitoring, native_controls, onprem, ops, policies, policy_pack_platform, runtime, runtime_control, runtime_intelligence, scans, shadow_ai, simulation_policies, simulations, surface_coverage, system, trust_center, user_visibility
-from app.api.routers import access, claude_enterprise, https, licence
+from app.api.routers import access, claude_enterprise, https, licence, sign_in
 from app.core.access_gate import AccessRequired, access_required_response
 from app.core.config import configured_secret_sources, settings
 from app.core.licence_gate import licence_gate
@@ -93,6 +93,15 @@ def _prepare_access_at_start() -> None:
             db.commit()
     if settings.first_run_access:
         first_run_service.prepare_access(SessionLocal)
+    # RESET_TWO_STEP=<email>: two-step sign-in taken off once for that person (docs/sign-in.md).
+    reset_two_step = os.environ.get("RESET_TWO_STEP")
+    try:
+        with SessionLocal() as db:
+            sign_in.reset_two_step_from_environment(db, reset_two_step, log=lambda line: print(line, flush=True))
+            db.commit()
+    except Exception as error:  # noqa: BLE001 - a database not migrated yet must not stop the start
+        if reset_two_step:
+            print(f"! [access] RESET_TWO_STEP could not be used: {error}", flush=True)
 
 
 _production_topology = settings.deployment_topology == "single_node_compose"
@@ -530,6 +539,7 @@ def health_schema():
 
 
 app.include_router(auth.router)
+app.include_router(sign_in.router)
 app.include_router(licence.router)
 app.include_router(https.router)
 app.include_router(access.router)

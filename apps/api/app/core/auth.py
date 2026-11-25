@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import timezone
+
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import select
@@ -33,6 +35,13 @@ def get_current_user(
     user = db.scalar(select(User).where(User.id == user_id, User.is_active.is_(True)))
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+    # Signed out everywhere (a password reset, docs/sign-in.md): tokens issued before that moment no longer work.
+    signed_out = user.signed_out_at
+    if signed_out is not None:
+        if signed_out.tzinfo is None:
+            signed_out = signed_out.replace(tzinfo=timezone.utc)
+        if int(payload.get("iat") or 0) < int(signed_out.timestamp()):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Signed out")
     # A temporary password to change, or terms of use to accept, first (app/core/access_gate.py).
     access_gate.enforce(request, db, user)
     return user

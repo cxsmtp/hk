@@ -6,6 +6,7 @@ import { demoFallbackRequest, isDemoFallbackEnabled } from "@/lib/demo-fallback"
 import { isDeactivatedAnswer, LICENCE_DEACTIVATED_EVENT } from "@/lib/licence";
 import { accessNeededFrom, PASSWORD_CHANGE_EVENT, TERMS_REQUIRED_EVENT } from "@/lib/access";
 import type { TermsState, TermsView } from "@/lib/access";
+import type { SignInPerson, SignInSettings, TwoStepChallenge, TwoStepSetup, TwoStepState } from "@/lib/sign-in";
 import type { ActivationApplied, ActivationView, AdminLicence, LicenceStatus } from "@/lib/licence";
 import type {
   AIDiscoveryAnomalyEvent,
@@ -685,14 +686,44 @@ export type CurrentUser = {
   must_change_password?: boolean;
   terms?: TermsState | null;
   version?: string;
+  // Two-step sign-in for this person (docs/sign-in.md).
+  two_step?: TwoStepState | null;
 };
 
 export const api = {
   login: (email: string, password: string) =>
-    request("/auth/login", {
+    request<LoginResponse | TwoStepChallenge>("/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     }, false),
+  // Sign-in (docs/sign-in.md): the second step, "Forgot your password?", one's own two-step sign-in, and the
+  // administrator's sign-in rules.
+  signInOptions: () => request<{ passwordReset: boolean; ssoPasswordAdminsOnly: boolean }>("/auth/sign-in-options", undefined, false),
+  twoStep: (ticket: string, code: string) =>
+    request<LoginResponse & { recovery_codes?: string[] }>("/auth/two-step", { method: "POST", body: JSON.stringify({ ticket, code }) }, false),
+  askPasswordReset: (email: string) =>
+    request<{ message: string }>("/auth/password-reset", { method: "POST", body: JSON.stringify({ email }) }, false),
+  checkPasswordReset: (token: string) =>
+    request<{ email: string; minutes: number }>("/auth/password-reset/check", { method: "POST", body: JSON.stringify({ token }) }, false),
+  confirmPasswordReset: (token: string, password: string) =>
+    request<{ email: string }>("/auth/password-reset/confirm", { method: "POST", body: JSON.stringify({ token, password }) }, false),
+  twoStepSetup: () => request<TwoStepSetup>("/auth/me/two-step/setup", { method: "POST", body: "{}" }),
+  twoStepEnable: (code: string) =>
+    request<{ recovery_codes: string[]; two_step: TwoStepState }>("/auth/me/two-step/enable", { method: "POST", body: JSON.stringify({ code }) }),
+  twoStepDisable: (code: string) =>
+    request<{ two_step: TwoStepState }>("/auth/me/two-step/disable", { method: "POST", body: JSON.stringify({ code }) }),
+  twoStepRecoveryCodes: (code: string) =>
+    request<{ recovery_codes: string[]; two_step: TwoStepState }>("/auth/me/two-step/recovery-codes", { method: "POST", body: JSON.stringify({ code }) }),
+  getSignInSettings: () => request<SignInSettings>("/auth/sign-in-settings"),
+  saveSignInSettings: (patch: Record<string, unknown>) =>
+    request<SignInSettings>("/auth/sign-in-settings", { method: "PUT", body: JSON.stringify(patch) }),
+  sendTestEmail: () =>
+    request<SignInSettings & { message: string }>("/auth/sign-in-settings/test-email", { method: "POST", body: "{}" }),
+  signInPeople: () => request<{ people: SignInPerson[] }>("/auth/sign-in-settings/people"),
+  resetPersonTwoStep: (userId: string) =>
+    request<{ people: SignInPerson[] }>(`/auth/sign-in-settings/people/${encodeURIComponent(userId)}/two-step`, { method: "DELETE" }),
+  resetPersonSsoLink: (userId: string) =>
+    request<{ people: SignInPerson[] }>(`/auth/sign-in-settings/people/${encodeURIComponent(userId)}/sso-link`, { method: "DELETE" }),
   oidcProviders: (workspace: string) =>
     request<OIDCProviderList>(`/auth/oidc/providers?workspace=${encodeURIComponent(workspace)}`, undefined, false),
   oidcStart: (providerKey: string, workspace: string) =>
