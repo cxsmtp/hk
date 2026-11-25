@@ -9,7 +9,7 @@ from sqlalchemy import asc, desc, select
 from sqlalchemy.orm import Session
 
 from app.api.envelopes import ListEnvelope, paginate_rows
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.runtime_intelligence import RuntimeEvent, RuntimeGovernanceRecommendation, RuntimePattern
 from app.db.session import get_db
@@ -426,7 +426,7 @@ def runtime_patterns(
     page_size: int = 50,
     type_filter: str | None = None,
     severity: str | None = None,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     stmt = select(RuntimePattern).where(RuntimePattern.tenant_id == ctx.tenant.id)
@@ -447,7 +447,7 @@ def runtime_recommendations(
     status_filter: str | None = None,
     recommendation_type: str | None = None,
     ai_system_id: str | None = None,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     stmt = select(RuntimeGovernanceRecommendation).where(RuntimeGovernanceRecommendation.tenant_id == ctx.tenant.id)
@@ -487,7 +487,7 @@ def runtime_events(
     session_id: str | None = None,
     chain_id: str | None = None,
     correlation_id: str | None = None,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     stmt = select(RuntimeEvent).where(RuntimeEvent.tenant_id == ctx.tenant.id)
@@ -550,7 +550,7 @@ def runtime_activities(
     session_id: str | None = None,
     chain_id: str | None = None,
     correlation_id: str | None = None,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     stmt = select(RuntimeEvent).where(RuntimeEvent.tenant_id == ctx.tenant.id)
@@ -622,7 +622,7 @@ def runtime_activities(
 @router.get("/activities/{event_id}", response_model=RuntimeEventResponse)
 def runtime_activity_detail(
     event_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     row = db.scalar(
@@ -641,7 +641,7 @@ def runtime_user_activity(
     user_id: str,
     page: int = 1,
     page_size: int = 100,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     rows = db.scalars(
@@ -662,7 +662,7 @@ def runtime_agent_activity(
     agent_id: str,
     page: int = 1,
     page_size: int = 100,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     rows = db.scalars(
@@ -683,7 +683,7 @@ def runtime_asset_activity(
     asset_id: str,
     page: int = 1,
     page_size: int = 100,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     rows = db.scalars(
@@ -711,7 +711,7 @@ def runtime_asset_activity(
 @router.get("/sessions/{session_id}", response_model=RuntimeSessionTraceResponse)
 def runtime_session_trace(
     session_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     rows = db.scalars(
@@ -760,7 +760,7 @@ def runtime_session_trace(
 @router.get("/trace/{event_id}", response_model=RuntimeTraceResponse)
 def runtime_trace(
     event_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     anchor = db.scalar(
@@ -804,7 +804,7 @@ def runtime_trace(
 @router.get("/context/{context_id}", response_model=RuntimeContextGraphResponse)
 def runtime_context(
     context_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     return RuntimeContextGraphResponse.model_validate(
@@ -819,7 +819,7 @@ def runtime_context(
 @router.get("/chain/{chain_id}", response_model=RuntimeContextGraphResponse)
 def runtime_chain(
     chain_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     return RuntimeContextGraphResponse.model_validate(
@@ -843,7 +843,7 @@ class RuntimeAgentChainResponse(BaseModel):
 @router.get("/chain", response_model=RuntimeAgentChainResponse)
 def runtime_chain_by_agent(
     agent_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     rows = db.scalars(

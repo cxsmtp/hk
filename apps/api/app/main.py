@@ -14,7 +14,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.routers import account_boundary, action_integrity, activity_audit, agui, agents, ai_discovery, ai_iam, ai_orchestration, ai_systems, ai_tools_usage, audit, auditor, auth, banking_transaction_integrity, brain, checkmarx, continuous_assurance, control_coverage, coverage, dashboard, deployments, discovery, discovery_adv, discovery_assets, discovery_capabilities, discovery_collectors, discovery_ecosystems, discovery_erg, discovery_exposure, discovery_scans, discovery_source_connections, discovery_surface_sources, discovery_targets, endpoint_agent, enforcement, executive_mcp, executive_remote_mcp, extension, external_risk, findings, gateway, guardian_contracts_v2, investigations, kb, llm_gateway, maturity_curve, monitoring, native_controls, onprem, ops, policies, policy_pack_platform, runtime, runtime_control, runtime_intelligence, scans, shadow_ai, simulation_policies, simulations, surface_coverage, system, trust_center, user_visibility
-from app.api.routers import access, backups, claude_enterprise, hands_off, https, licence, network, records, sign_in, support, updates
+from app.api.routers import access, backups, claude_enterprise, hands_off, https, iam, licence, network, records, sign_in, support, updates
 from app.core.access_gate import AccessRequired, access_required_response
 from app.core.config import configured_secret_sources, settings
 from app.core.licence_gate import licence_gate
@@ -646,6 +646,7 @@ def health_schema():
 
 app.include_router(auth.router)
 app.include_router(sign_in.router)
+app.include_router(iam.router)
 app.include_router(licence.router)
 app.include_router(https.router)
 app.include_router(backups.router)

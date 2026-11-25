@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.api.envelopes import ListEnvelope, paginate_rows
 from app.core.auth import get_current_user
 from app.core.deps_control_plane import require_control_plane_healthy
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.user import User
 from app.db.models.external_risk import ExternalRiskRecord, ExternalRiskSource
@@ -100,7 +100,7 @@ class ExternalRiskRecordResponse(BaseModel):
 def get_sources(
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     rows = list_sources(db, tenant_id=ctx.tenant.id)
@@ -118,7 +118,7 @@ def get_sources(
 @router.post("/sources", response_model=ExternalRiskSourceResponse)
 def post_source(
     payload: ExternalRiskSourcePayload,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("discovery.manage")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -148,7 +148,7 @@ def get_records(
     limit: int = Query(default=200, ge=1, le=1000),
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     rows: list[ExternalRiskRecord] = list_records(
@@ -171,7 +171,7 @@ def get_records(
 @router.get("/assets/{asset_id}")
 def get_asset_view(
     asset_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     payload = get_asset_records(db, tenant_id=ctx.tenant.id, asset_id=asset_id)
@@ -186,7 +186,7 @@ def get_asset_view(
 @router.get("/mappings/{risk_record_id}")
 def get_mappings_view(
     risk_record_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     rows = get_record_mappings(db, tenant_id=ctx.tenant.id, risk_record_id=risk_record_id)
@@ -215,7 +215,7 @@ def get_mappings_view(
 
 @router.post("/sync")
 def post_sync(
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("discovery.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -234,7 +234,7 @@ def post_sync(
 @router.get("/summary")
 def get_external_risk_summary(
     lookback_hours: int = Query(default=24 * 7, ge=1, le=24 * 90),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     payload = get_summary(db, tenant_id=ctx.tenant.id, lookback_hours=lookback_hours)

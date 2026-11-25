@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.session import get_db
 from app.services.hmair.exposure.category_catalog import load_category_catalog
@@ -120,7 +120,7 @@ def _not_found() -> HTTPException:
 @router.get("/assets/{asset_id}/exposure", response_model=ExposureProjection)
 def get_asset_exposure(
     asset_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> ExposureProjection:
     _require_exposure()
@@ -145,7 +145,7 @@ def get_asset_exposure_timeline(
     page_size: int = Query(default=50, ge=1, le=200),
     lookback_days: int = Query(default=30, ge=1, le=3650),
     as_of: datetime | None = Query(default=None),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> ExposureTimelineResponse:
     _require_exposure()
@@ -205,7 +205,7 @@ def get_asset_exposure_graph(
     max_nodes: int = Query(default=200, ge=1, le=200),
     max_edges: int = Query(default=400, ge=1, le=400),
     as_of: datetime | None = Query(default=None),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> ExposureGraphResponse:
     _require_exposure()
@@ -251,7 +251,7 @@ def get_asset_exposure_graph(
 
 @router.get("/exposure/methodology", response_model=ExposureMethodologyResponse)
 def get_exposure_methodology(
-    _ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    _ctx: TenantContext = Depends(require_permission("discovery.view")),
 ) -> ExposureMethodologyResponse:
     _require_exposure()
     catalog = load_category_catalog()

@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.discovery_resolution import (
     DiscoveryResolutionGraphEdge,
@@ -228,7 +228,7 @@ def _ecosystem(db: Session, tenant_id: str, ecosystem_id: str) -> DiscoveryAIEco
 
 @router.get("/ecosystems", response_model=list[EcosystemSummaryResponse])
 def list_ecosystems(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> list[EcosystemSummaryResponse]:
     _require_erg()
@@ -238,7 +238,7 @@ def list_ecosystems(
 @router.get("/ecosystems/{ecosystem_id}", response_model=EcosystemDetailResponse)
 def get_ecosystem(
     ecosystem_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> EcosystemDetailResponse:
     _require_erg()
@@ -380,7 +380,7 @@ def get_ecosystem(
 def get_timeline(
     ecosystem_id: str,
     limit: int = Query(default=200, ge=1, le=1000),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> TimelineResponse:
     _require_erg()
@@ -394,7 +394,7 @@ def get_timeline(
 @router.get("/ecosystems/{ecosystem_id}/graph", response_model=GraphResponse)
 def get_graph(
     ecosystem_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> GraphResponse:
     detail = get_ecosystem(ecosystem_id=ecosystem_id, ctx=ctx, db=db)
@@ -417,7 +417,7 @@ def _mutation_response(result) -> MutationResponse:
 @router.post("/resolve", response_model=ResolveResponse)
 def resolve_observations(
     request: ResolveRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("discovery.manage")),
     db: Session = Depends(get_db),
 ) -> ResolveResponse:
     _require_erg()
@@ -458,7 +458,7 @@ def resolve_observations(
 def attach_observation(
     ecosystem_id: str,
     request: AttachRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("discovery.manage")),
     db: Session = Depends(get_db),
 ) -> MutationResponse:
     _require_erg()
@@ -490,7 +490,7 @@ def attach_observation(
 @router.post("/dispositions", response_model=MutationResponse)
 def record_disposition(
     request: DispositionRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("discovery.manage")),
     db: Session = Depends(get_db),
 ) -> MutationResponse:
     _require_erg()
@@ -521,7 +521,7 @@ def record_disposition(
 @router.post("/ecosystems/merge", response_model=MutationResponse)
 def merge_ecosystems(
     request: MergeRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("discovery.manage")),
     db: Session = Depends(get_db),
 ) -> MutationResponse:
     _require_erg()
@@ -545,7 +545,7 @@ def merge_ecosystems(
 @router.post("/ecosystems/{ecosystem_id}/split", response_model=MutationResponse)
 def split_ecosystem(
     ecosystem_id: str, request: SplitRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("discovery.manage")),
     db: Session = Depends(get_db),
 ) -> MutationResponse:
     _require_erg()
@@ -570,7 +570,7 @@ def split_ecosystem(
 @router.post("/resolution-events/{event_id}/reverse", response_model=MutationResponse)
 def reverse_resolution(
     event_id: str, request: ReverseRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("discovery.manage")),
     db: Session = Depends(get_db),
 ) -> MutationResponse:
     _require_erg()

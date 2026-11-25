@@ -20,7 +20,7 @@ from fastapi.responses import Response
 from sqlalchemy import String, cast, func, or_, select
 from sqlalchemy.orm import Session
 
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.audit import AuditLog
 from app.db.models.user import User, UserTenantRole
@@ -29,7 +29,8 @@ from app.services import audit_chain, connector_activity, user_activity
 from app.services.audit_service import write_audit_log
 
 router = APIRouter(tags=["records"])
-readers = require_role(min_role="auditor")
+readers = require_permission("audit.view")
+exporters = require_permission("audit.export")
 PAGE = 100
 
 
@@ -215,12 +216,12 @@ def _export(ctx: TenantContext, db: Session, fmt: str, filters: dict[str, str]) 
 
 
 @router.get("/audit/log/export.csv")
-def export_audit_csv(q: str = "", who: str = "", what: str = "", since: str = Query(default="", alias="from"), until: str = Query(default="", alias="to"), outcome: str = "", ctx: TenantContext = Depends(readers), db: Session = Depends(get_db)):
+def export_audit_csv(q: str = "", who: str = "", what: str = "", since: str = Query(default="", alias="from"), until: str = Query(default="", alias="to"), outcome: str = "", ctx: TenantContext = Depends(exporters), db: Session = Depends(get_db)):
     return _export(ctx, db, "csv", {"q": q, "who": who, "what": what, "since": since, "until": until, "outcome": outcome})
 
 
 @router.get("/audit/log/export.jsonl")
-def export_audit_jsonl(q: str = "", who: str = "", what: str = "", since: str = Query(default="", alias="from"), until: str = Query(default="", alias="to"), outcome: str = "", ctx: TenantContext = Depends(readers), db: Session = Depends(get_db)):
+def export_audit_jsonl(q: str = "", who: str = "", what: str = "", since: str = Query(default="", alias="from"), until: str = Query(default="", alias="to"), outcome: str = "", ctx: TenantContext = Depends(exporters), db: Session = Depends(get_db)):
     return _export(ctx, db, "jsonl", {"q": q, "who": who, "what": what, "since": since, "until": until, "outcome": outcome})
 
 
@@ -243,7 +244,7 @@ def activity_log(
 
 
 @router.get("/activity/log/export.csv")
-def export_activity_csv(ctx: TenantContext = Depends(readers), db: Session = Depends(get_db)):
+def export_activity_csv(ctx: TenantContext = Depends(exporters), db: Session = Depends(get_db)):
     body = audit_chain.to_csv(user_activity.CSV_COLUMNS, user_activity.csv_rows(db, ctx.tenant.id))
     stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
     return Response(body, media_type="text/csv; charset=utf-8", headers={"Content-Disposition": f'attachment; filename="activity-{stamp}.csv"', "Cache-Control": "no-store"})
@@ -268,7 +269,7 @@ def connector_calls(
 
 
 @router.get("/connector-activity/export.csv")
-def export_connector_calls(ctx: TenantContext = Depends(readers), db: Session = Depends(get_db)):
+def export_connector_calls(ctx: TenantContext = Depends(exporters), db: Session = Depends(get_db)):
     body = audit_chain.to_csv(connector_activity.CSV_HEADER, connector_activity.csv_rows(db, ctx.tenant.id))
     stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
     return Response(body, media_type="text/csv; charset=utf-8", headers={"Content-Disposition": f'attachment; filename="connector-activity-{stamp}.csv"', "Cache-Control": "no-store"})

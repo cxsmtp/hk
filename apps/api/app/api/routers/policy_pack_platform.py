@@ -16,7 +16,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import parse_policy_pack_platform_rollout, settings
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.policy_pack_platform import (
     PolicyPackAssignment,
@@ -45,7 +45,7 @@ from app.services.policy_pack_platform.service import (
 )
 
 
-def _require_policy_pack_platform_enabled(ctx: TenantContext = Depends(require_role(min_role="viewer"))) -> None:
+def _require_policy_pack_platform_enabled(ctx: TenantContext = Depends(require_permission("policies.view"))) -> None:
     rollout = parse_policy_pack_platform_rollout(settings.policy_pack_platform_rollout)
     if not settings.policy_pack_platform_enabled or rollout.get(str(ctx.tenant.id)) is not True:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
@@ -237,7 +237,7 @@ def list_catalog(
     department_persona: str | None = Query(default=None, max_length=128),
     surface: str | None = Query(default=None, max_length=64),
     package_tier: str | None = Query(default=None, max_length=16),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -253,7 +253,7 @@ def list_catalog(
 
 @router.get("/framework-atlas")
 def get_framework_atlas(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -265,7 +265,7 @@ def get_framework_atlas(
 @router.get("/definitions/{definition_id}")
 def get_definition(
     definition_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     row = db.scalar(
@@ -283,7 +283,7 @@ def get_definition(
 def preview_definition(
     definition_id: str,
     surfaces: list[str] = Query(default=[]),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     row = db.scalar(
@@ -304,7 +304,7 @@ def preview_definition(
 def apply_definition(
     definition_id: str,
     payload: ApplyPackRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("policies.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -331,7 +331,7 @@ def apply_definition(
 @router.get("/instances")
 def list_instances(
     state_filter: str | None = Query(default=None, alias="state", max_length=32),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     query = select(PolicyPackInstance).where(PolicyPackInstance.tenant_id == ctx.tenant.id)
@@ -345,7 +345,7 @@ def list_instances(
 def simulate_instance(
     instance_id: str,
     payload: SimulationRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("policies.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -362,7 +362,7 @@ def simulate_instance(
 def transition_instance(
     instance_id: str,
     payload: TransitionRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("policies.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -379,7 +379,7 @@ def transition_instance(
 def bulk_assign(
     instance_id: str,
     payload: BulkAssignmentRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("policies.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -395,7 +395,7 @@ def bulk_assign(
 @router.get("/instances/{instance_id}/assignments")
 def list_assignments(
     instance_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     instance = db.scalar(select(PolicyPackInstance).where(PolicyPackInstance.tenant_id == ctx.tenant.id, PolicyPackInstance.id == instance_id))
@@ -409,7 +409,7 @@ def list_assignments(
 def compare_update(
     instance_id: str,
     definition_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("policies.inspect")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -426,7 +426,7 @@ def accept_update(
     instance_id: str,
     definition_id: str,
     payload: UpdateAcceptRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("policies.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -442,7 +442,7 @@ def accept_update(
 @router.post("/groups", status_code=status.HTTP_201_CREATED)
 def create_group(
     payload: GroupRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("policies.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -458,7 +458,7 @@ def create_group(
 @router.get("/groups/{group_id}/members")
 def preview_group_members(
     group_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     group = db.scalar(select(PolicyPackUserGroup).where(PolicyPackUserGroup.tenant_id == ctx.tenant.id, PolicyPackUserGroup.id == group_id))
@@ -476,7 +476,7 @@ def effective_policy(
     agent_id: str | None = Query(default=None),
     source_surface: str | None = Query(default=None),
     action_class: str | None = Query(default=None),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     return resolve_effective_policy_explanation(db, tenant_id=ctx.tenant.id, context={"actor_user_id": actor_user_id, "application": application, "provider": provider, "model": model, "agent_id": agent_id, "source_surface": source_surface, "action_class": action_class})

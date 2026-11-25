@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.session import get_db
 from app.services.deployment_family_read_service import (
@@ -374,7 +374,7 @@ def _coverage_payload(
 
 @router.get("/overview", response_model=DeploymentOverviewResponse)
 def deployment_overview(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     return read_overview(db, tenant_id=ctx.tenant.id)
@@ -384,7 +384,7 @@ def deployment_overview(
 def deployment_families(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     return read_families(
@@ -438,7 +438,7 @@ def deployment_instances(
         max_length=128,
     ),
     health_status: HealthStatusLiteral | None = Query(default=None),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     return read_instances(
@@ -470,7 +470,7 @@ def deployment_coverage(
         ge=1,
         le=90,
     ),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     return _coverage_payload(
@@ -492,7 +492,7 @@ def deployment_coverage_detail(
         ge=1,
         le=90,
     ),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     payload = _coverage_payload(
@@ -515,7 +515,7 @@ def deployment_coverage_detail(
     dependencies=[Depends(_require_deployment_family_coverage_enabled)],
 )
 def deployment_blind_spots(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     return read_deployment_blind_spots(
@@ -528,7 +528,7 @@ def deployment_blind_spots(
 def deployment_health(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     return read_deployment_health(
@@ -542,7 +542,7 @@ def deployment_health(
 @router.get("/instances/{id}", response_model=DeploymentInstanceResponse)
 def deployment_instance_detail(
     id: str = Path(min_length=1, max_length=36),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     item = read_instance(

@@ -16,7 +16,7 @@ from app.core.provenance import (
     OpaqueProvenanceId,
     validate_authoritative_provenance_id,
 )
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.response_control import (
     RESPONSE_CONTROL_COVERAGE_ORDER,
     ResponseControlCoverage,
@@ -524,7 +524,7 @@ def _handle_openai_compatible_chat(
 
 
 @router.get("/config")
-def llm_gateway_config_route(ctx: TenantContext = Depends(require_role(min_role="viewer"))):
+def llm_gateway_config_route(ctx: TenantContext = Depends(require_permission("gateway.view"))):
     return {
         "tenant_id": ctx.tenant.id,
         "mode": "action_control",
@@ -568,7 +568,7 @@ def llm_gateway_config_route(ctx: TenantContext = Depends(require_role(min_role=
 @router.get("/events/{event_id}")
 def llm_gateway_event_route(
     event_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("gateway.view")),
     db: Session = Depends(get_db),
 ):
     event = db.scalar(
@@ -609,7 +609,7 @@ def llm_gateway_event_route(
 @router.get("/logs")
 def llm_gateway_logs_route(
     limit: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("gateway.view")),
     db: Session = Depends(get_db),
 ):
     capped_limit = min(max(limit, 1), 200)
@@ -663,7 +663,7 @@ def llm_gateway_logs_route(
 )
 def llm_gateway_v1_chat_completions_route(
     payload: OpenAICompatibleChatCompletionPayload,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("gateway.operate")),
     db: Session = Depends(get_db),
 ):
     return _handle_openai_compatible_chat(payload=payload, ctx=ctx, db=db)
@@ -683,7 +683,7 @@ def llm_gateway_v1_chat_completions_route(
 )
 def openai_compatible_chat_completions_route(
     payload: OpenAICompatibleChatCompletionPayload,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("gateway.operate")),
     db: Session = Depends(get_db),
 ):
     return _handle_openai_compatible_chat(payload=payload, ctx=ctx, db=db)
@@ -704,7 +704,7 @@ def openai_compatible_chat_completions_route(
 )
 def llm_gateway_request_route(
     payload: LLMGatewayRequestPayload,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("gateway.operate")),
     db: Session = Depends(get_db),
 ):
     _assert_payload_tenant(payload.tenant_id, ctx)
@@ -781,7 +781,7 @@ def llm_gateway_request_route(
 )
 def llm_gateway_response_route(
     payload: LLMGatewayResponsePayload,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("gateway.operate")),
     db: Session = Depends(get_db),
 ):
     _assert_payload_tenant(payload.tenant_id, ctx)
@@ -858,7 +858,7 @@ def llm_gateway_response_route(
 )
 def llm_gateway_chat_complete_route(
     payload: LLMGatewayChatCompletePayload,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("gateway.operate")),
     db: Session = Depends(get_db),
 ):
     _assert_payload_tenant(payload.tenant_id, ctx)
@@ -989,7 +989,7 @@ def llm_gateway_document_complete_route(
     chain_id: str | None = Form(None),
     parent_action_id: str | None = Form(None),
     file: UploadFile | None = File(None),
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("gateway.operate")),
     db: Session = Depends(get_db),
 ):
     _assert_payload_tenant(tenant_id, ctx)

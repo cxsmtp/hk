@@ -14,7 +14,7 @@ from app.api.envelopes import ListEnvelope, paginate_rows
 from app.core.deps_control_plane import require_control_plane_healthy
 from app.core.control_engine.canonical_action import CanonicalProjectionError
 from app.core.observability import get_correlation_id, log_structured
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.ai_iam import AgentIdentity, CapabilityToken
 from app.db.models.ai_system import AISystem
@@ -485,7 +485,7 @@ class DelegateTokenResponse(BaseModel):
 def list_agents(
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("identities.view")),
     db: Session = Depends(get_db),
 ):
     enforce_fail_secure_or_raise(
@@ -512,7 +512,7 @@ def get_agent_activity(
     agent_id: str,
     lookback_hours: int = 24 * 30,
     limit: int = 30,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("identities.view")),
     db: Session = Depends(get_db),
 ):
     enforce_fail_secure_or_raise(
@@ -619,7 +619,7 @@ def list_ai_iam_users_registry(
     q: str | None = None,
     page: int = 1,
     page_size: int = 100,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("identities.view")),
     db: Session = Depends(get_db),
 ):
     enforce_fail_secure_or_raise(
@@ -649,7 +649,7 @@ def list_ai_iam_users_registry(
 def get_ai_iam_user_registry(
     user_id: str,
     action_limit: int = 20,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("identities.view")),
     db: Session = Depends(get_db),
 ):
     enforce_fail_secure_or_raise(
@@ -674,7 +674,7 @@ def get_ai_iam_user_registry(
 @router.post("/purpose-sessions", response_model=PurposeSessionResponse, status_code=status.HTTP_201_CREATED)
 def create_purpose_session(
     payload: PurposeSessionCreateRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("identities.manage")),
     db: Session = Depends(get_db),
 ):
     if ctx.user is None:
@@ -744,7 +744,7 @@ def list_identities(
     page_size: int = 25,
     q: str | None = None,
     lookback_hours: int = 24 * 30,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("identities.view")),
     db: Session = Depends(get_db),
 ):
     enforce_fail_secure_or_raise(
@@ -778,7 +778,7 @@ def get_identity(
     identity_id: str,
     lookback_hours: int = 24 * 30,
     include_graph_details: bool = True,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("identities.view")),
     db: Session = Depends(get_db),
 ):
     enforce_fail_secure_or_raise(
@@ -808,7 +808,7 @@ def get_identity(
 @router.post("/agents", response_model=AgentIdentityResponse)
 def create_agent(
     payload: AgentCreate,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("identities.manage")),
     db: Session = Depends(get_db),
 ):
     enforce_fail_secure_or_raise(
@@ -865,7 +865,7 @@ def create_agent(
 def update_agent(
     agent_id: str,
     payload: AgentUpdate,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("identities.manage")),
     db: Session = Depends(get_db),
 ):
     enforce_fail_secure_or_raise(
@@ -918,7 +918,7 @@ def update_agent(
 def refresh_owner_attestation(
     agent_id: str,
     payload: OwnerAttestationRefreshRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("identities.manage")),
     db: Session = Depends(get_db),
 ):
     enforce_fail_secure_or_raise(
@@ -960,7 +960,7 @@ def refresh_owner_attestation(
 def mint_token(
     agent_id: str,
     payload: MintTokenRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("identities.manage")),
     db: Session = Depends(get_db),
     background_tasks: BackgroundTasks = None,
 ):
@@ -1057,7 +1057,7 @@ def mint_token(
 @router.post("/delegate", response_model=DelegateTokenResponse)
 def delegate_token(
     payload: DelegateTokenRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("identities.manage")),
     db: Session = Depends(get_db),
 ):
     enforce_fail_secure_or_raise(
@@ -1247,7 +1247,7 @@ def delegate_token(
 def revoke_token(
     token_id: str,
     background_tasks: BackgroundTasks,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("identities.manage")),
     db: Session = Depends(get_db),
 ):
     enforce_fail_secure_or_raise(
@@ -1292,7 +1292,7 @@ def revoke_token(
 @router.post("/agents/{agent_id}/kill-switch", response_model=KillSwitchResponse)
 def kill_switch_agent(
     agent_id: str,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("identities.manage")),
     db: Session = Depends(get_db),
 ):
     enforce_fail_secure_or_raise(
@@ -1512,7 +1512,7 @@ def kill_switch_agent(
 @router.post("/agents/{agent_id}/disable", response_model=KillSwitchResponse)
 def disable_agent(
     agent_id: str,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("identities.manage")),
     db: Session = Depends(get_db),
 ):
     return kill_switch_agent(agent_id=agent_id, ctx=ctx, db=db)
@@ -1521,7 +1521,7 @@ def disable_agent(
 @router.post("/identity/jit/evaluate")
 def evaluate_agentic_jit_grant(
     payload: JITGrantEvaluateRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("identities.operate")),
     db: Session = Depends(get_db),
 ):
     return evaluate_jit_grant(
@@ -1542,7 +1542,7 @@ def evaluate_agentic_jit_grant(
 @router.get("/agents/{agent_id}/touchpoints")
 def get_agent_touchpoints(
     agent_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("identities.view")),
     db: Session = Depends(get_db),
 ):
     return agent_touchpoints(db, tenant_id=ctx.tenant.id, agent_id=agent_id)
@@ -1551,7 +1551,7 @@ def get_agent_touchpoints(
 @router.get("/agents/{agent_id}/blast-radius")
 def get_agent_blast_radius(
     agent_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("identities.view")),
     db: Session = Depends(get_db),
 ):
     return agent_blast_radius(db, tenant_id=ctx.tenant.id, agent_id=agent_id)

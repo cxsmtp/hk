@@ -1808,6 +1808,82 @@
     "mobile": "not-observed"
   },
   {
+    "route": "/settings/people",
+    "file": "apps/web/src/app/settings/people/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Settings → People, FTR Command Center's People (people.js peopleTable, reviewJoiners, openPerson). Covered by apps/web/tests/iam-pages.test.mjs (source checks) and apps/api/tests/test_iam_people_roles_teams.py; not yet observed in a browser.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
+  },
+  {
+    "route": "/settings/teams",
+    "file": "apps/web/src/app/settings/teams/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Settings → Teams, FTR Command Center's Teams (teams.js). Covered by apps/web/tests/iam-pages.test.mjs and apps/api/tests/test_iam_people_roles_teams.py; not yet observed in a browser.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
+  },
+  {
+    "route": "/settings/roles",
+    "file": "apps/web/src/app/settings/roles/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Settings → Roles & permissions, FTR Command Center's roles matrix (people.js rolesMatrix). Covered by apps/web/tests/iam-pages.test.mjs and apps/api/tests/test_iam_equivalence.py; not yet observed in a browser.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
+  },
+  {
+    "route": "/join",
+    "file": "apps/web/src/app/join/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Joining by oneself (FTR CC-01.116.00, auth.js viewJoin); off unless an Admin turns it on. Covered by apps/web/tests/iam-pages.test.mjs and apps/api/tests/test_iam_people_roles_teams.py; not yet observed in a browser.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
+  },
+  {
     "route": "/settings/sso",
     "file": "apps/web/src/app/settings/sso/page.tsx",
     "owner": "W3",

@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.session import get_db
 from app.services.control_graph_service import (
@@ -131,7 +131,7 @@ class GitHubRepositoryOperationControlsUpdate(BaseModel):
 
 @router.get("/coverage", response_model=DeploymentCoverageResponse)
 def deployment_coverage(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     payload = get_deployment_coverage(
@@ -143,7 +143,7 @@ def deployment_coverage(
 
 @router.get("/control-coverage/source-control/github-repository-boundary")
 def github_repository_boundary_control(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     return build_enterprise_developer_ai_control_from_db(db, tenant_id=ctx.tenant.id)
@@ -153,7 +153,7 @@ def github_repository_boundary_control(
 def github_repository_organizations(
     limit: int = Query(default=100, ge=1, le=200),
     cursor: str | None = Query(default=None, max_length=32),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     return serialize_github_page(list_github_organizations(db, tenant_id=ctx.tenant.id, limit=limit, cursor=cursor))
@@ -166,7 +166,7 @@ def github_repositories(
     visibility: str | None = Query(default=None, max_length=32),
     host: str | None = Query(default=None, max_length=255),
     source_organization_id: str | None = Query(default=None, max_length=64),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     filters = {key: value for key, value in {"visibility": visibility, "host": host, "source_organization_id": source_organization_id}.items() if value}
@@ -176,7 +176,7 @@ def github_repositories(
 @router.get("/control-coverage/source-control/github-repositories/repositories/{repository_id}")
 def github_repository_detail(
     repository_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -189,7 +189,7 @@ def github_repository_detail(
 def update_github_repository_governance_route(
     repository_id: str,
     body: GitHubRepositoryGovernanceUpdate,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("deployments.manage")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -216,7 +216,7 @@ def update_github_repository_governance_route(
 def github_repository_runtime_bindings(
     repository_id: str | None = Query(default=None, max_length=64),
     limit: int = Query(default=100, ge=1, le=200),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     return list_github_runtime_bindings(db, tenant_id=ctx.tenant.id, repository_id=repository_id, limit=limit)
@@ -226,7 +226,7 @@ def github_repository_runtime_bindings(
 def bind_github_repository_runtime_route(
     repository_id: str,
     body: GitHubRepositoryRuntimeBindingRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("deployments.manage")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -243,7 +243,7 @@ def bind_github_repository_runtime_route(
 def revoke_github_repository_runtime_route(
     binding_id: str,
     expected_governance_version: int = Query(ge=0),
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("deployments.manage")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -260,7 +260,7 @@ def revoke_github_repository_runtime_route(
 def save_github_repository_operation_controls_route(
     repository_id: str,
     body: GitHubRepositoryOperationControlsUpdate,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("deployments.manage")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -280,7 +280,7 @@ def github_repository_developers(
     repository_id: str | None = Query(default=None, max_length=64),
     access_path: str | None = Query(default=None, max_length=32),
     principal_type: str | None = Query(default=None, max_length=32),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     filters = {key: value for key, value in {"repository_id": repository_id, "access_path": access_path, "principal_type": principal_type}.items() if value}
@@ -295,7 +295,7 @@ def github_repository_ai_connections(
     provider: str | None = Query(default=None, max_length=128),
     model: str | None = Query(default=None, max_length=255),
     agent_id: str | None = Query(default=None, max_length=255),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     filters = {key: value for key, value in {"repository_id": repository_id, "provider": provider, "model": model, "agent_id": agent_id}.items() if value}
@@ -306,7 +306,7 @@ def github_repository_ai_connections(
 def control_coverage(
     control_id: str,
     trend_points: int = Query(default=20, ge=1, le=200),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     persist_tenant_canonical_controls(db, tenant_id=ctx.tenant.id)
@@ -325,7 +325,7 @@ def control_coverage(
 def framework_coverage(
     framework_name: str,
     min_simulations: int = Query(default=1, ge=1, le=100),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     persist_tenant_canonical_controls(db, tenant_id=ctx.tenant.id)
@@ -347,7 +347,7 @@ def control_explorer(
     category: str | None = Query(default=None),
     enforcement_point: str | None = Query(default=None),
     risk_tag: str | None = Query(default=None),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     persist_tenant_canonical_controls(db, tenant_id=ctx.tenant.id)
@@ -367,7 +367,7 @@ def control_explorer(
 def runtime_control_view(
     lookback_hours: int = Query(default=24, ge=1, le=24 * 30),
     foundation_only: bool = Query(default=True),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     persist_tenant_canonical_controls(db, tenant_id=ctx.tenant.id)
@@ -383,7 +383,7 @@ def runtime_control_view(
 @router.get("/controls/simulation-view", response_model=SimulationControlViewResponse)
 def simulation_control_view(
     foundation_only: bool = Query(default=True),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     persist_tenant_canonical_controls(db, tenant_id=ctx.tenant.id)

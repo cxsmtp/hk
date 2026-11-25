@@ -20,7 +20,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.monitoring import Connector
 from app.db.session import get_db
@@ -118,7 +118,7 @@ class PullRequest(BaseModel):
 
 @router.get("/health")
 def checkmarx_health(
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("integrations.inspect")),
     db: Session = Depends(get_db),
     connector_id: str | None = Query(default=None),
 ) -> CheckmarxHealthResponse:
@@ -131,7 +131,7 @@ def checkmarx_health(
 
 @router.get("/projects")
 def list_projects(
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("integrations.inspect")),
     db: Session = Depends(get_db),
     connector_id: str | None = Query(default=None),
     limit: int = Query(default=20, le=100),
@@ -147,7 +147,7 @@ def list_projects(
 @router.get("/projects/{project_id}")
 def get_project(
     project_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("integrations.inspect")),
     db: Session = Depends(get_db),
     connector_id: str | None = Query(default=None),
 ):
@@ -159,7 +159,7 @@ def get_project(
 
 @router.get("/scans")
 def list_scans(
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("integrations.inspect")),
     db: Session = Depends(get_db),
     connector_id: str | None = Query(default=None),
     project_id: str | None = Query(default=None),
@@ -175,7 +175,7 @@ def list_scans(
 @router.get("/scans/{scan_id}")
 def get_scan(
     scan_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("integrations.inspect")),
     db: Session = Depends(get_db),
     connector_id: str | None = Query(default=None),
 ):
@@ -188,7 +188,7 @@ def get_scan(
 @router.post("/scans/trigger")
 def trigger_new_scan(
     payload: ScanTriggerRequest,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("integrations.manage")),
     db: Session = Depends(get_db),
     connector_id: str | None = Query(default=None),
 ):
@@ -228,7 +228,7 @@ def trigger_new_scan(
 @router.get("/results/{scan_id}")
 def get_results(
     scan_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("integrations.inspect")),
     db: Session = Depends(get_db),
     connector_id: str | None = Query(default=None),
     limit: int = Query(default=100, le=500),
@@ -251,7 +251,7 @@ def get_results(
 @router.get("/results/{scan_id}/sast")
 def get_sast_results(
     scan_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("integrations.inspect")),
     db: Session = Depends(get_db),
     connector_id: str | None = Query(default=None),
     limit: int = Query(default=100, le=500),
@@ -266,7 +266,7 @@ def get_sast_results(
 @router.get("/results/{scan_id}/sca")
 def get_sca_results(
     scan_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("integrations.inspect")),
     db: Session = Depends(get_db),
     connector_id: str | None = Query(default=None),
     limit: int = Query(default=100, le=500),
@@ -281,7 +281,7 @@ def get_sca_results(
 @router.get("/results/{scan_id}/summary")
 def get_results_summary(
     scan_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("integrations.inspect")),
     db: Session = Depends(get_db),
     connector_id: str | None = Query(default=None),
 ):
@@ -294,7 +294,7 @@ def get_results_summary(
 @router.post("/enforce")
 def enforce_policy(
     payload: ScanPolicyRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("integrations.operate")),
     db: Session = Depends(get_db),
     connector_id: str | None = Query(default=None),
 ):
@@ -339,7 +339,7 @@ def enforce_policy(
 @router.post("/remediate")
 def remediate(
     payload: RemediateRequest,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("integrations.manage")),
     db: Session = Depends(get_db),
     connector_id: str | None = Query(default=None),
 ):
@@ -380,7 +380,7 @@ def remediate(
 @router.post("/pull")
 def full_data_pull(
     payload: PullRequest,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("integrations.manage")),
     db: Session = Depends(get_db),
     connector_id: str | None = Query(default=None),
 ):
@@ -463,7 +463,7 @@ def full_data_pull(
 @router.post("/reports/{scan_id}")
 def generate_report(
     scan_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("integrations.operate")),
     db: Session = Depends(get_db),
     connector_id: str | None = Query(default=None),
     file_format: str = Query(default="pdf", pattern="^(pdf|csv|json|sarif|cyclonedx)$"),
@@ -477,7 +477,7 @@ def generate_report(
 @router.get("/reports/{report_id}/status")
 def report_status(
     report_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("integrations.inspect")),
     db: Session = Depends(get_db),
     connector_id: str | None = Query(default=None),
 ):
@@ -489,7 +489,7 @@ def report_status(
 
 @router.get("/audit-trail")
 def audit_trail(
-    ctx: TenantContext = Depends(require_role(min_role="auditor")),
+    ctx: TenantContext = Depends(require_permission("integrations.review")),
     db: Session = Depends(get_db),
     connector_id: str | None = Query(default=None),
     limit: int = Query(default=100, le=500),

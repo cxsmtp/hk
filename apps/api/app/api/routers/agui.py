@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.api.envelopes import ListEnvelope, paginate_rows
 from app.core.auth import get_current_user
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.agui import AGUIDecision
 from app.db.models.ai_iam import AgentIdentity, CapabilityToken
@@ -300,7 +300,7 @@ def list_actions(
     action_prefix: str | None = None,
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("assistant.use")),
     db: Session = Depends(get_db),
 ):
     rows = get_agui_registry().list_actions()
@@ -324,7 +324,7 @@ def list_actions(
 @router.get("/actions/{action_id}", response_model=AGUIActionResponse)
 def get_action(
     action_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("assistant.use")),
     db: Session = Depends(get_db),
 ):
     registration = get_agui_registry().get_action(action_id)
@@ -342,7 +342,7 @@ def list_decisions(
     source_object_id: str | None = None,
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("assistant.use")),
     db: Session = Depends(get_db),
 ):
     query = select(AGUIDecision).where(AGUIDecision.tenant_id == ctx.tenant.id)
@@ -371,7 +371,7 @@ def decide_action(
     action_id: str,
     payload: AGUIActionDecisionRequest,
     request: Request,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("assistant.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):

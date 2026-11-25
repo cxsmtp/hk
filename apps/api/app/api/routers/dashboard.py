@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.auth import get_current_user
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.runtime_intelligence import RuntimeEvent
 from app.db.models.user import User
@@ -132,7 +132,7 @@ def command_center_dashboard(
     output_sensitivity: str | None = Query(default=None),
     action_alignment: str | None = Query(default=None),
     force_refresh: bool = False,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("dashboard.view")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -158,7 +158,7 @@ def command_center_dashboard(
 def record_decision_explanation_tuning_action(
     explanation_id: str,
     request: DecisionTuningActionRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin", "auditor"])),
+    ctx: TenantContext = Depends(require_permission("dashboard.tune")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -217,7 +217,7 @@ def record_decision_explanation_tuning_action(
 def dashboard_notifications(
     limit: int = Query(default=25, ge=1, le=100),
     lookback_hours: int = Query(default=24, ge=1, le=24 * 30),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("dashboard.view")),
     db: Session = Depends(get_db),
 ):
     payload = get_dashboard_notifications_state(
@@ -231,7 +231,7 @@ def dashboard_notifications(
 
 @router.get("/pilot-health", response_model=PilotHealthResponse)
 def dashboard_pilot_health(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("dashboard.view")),
     db: Session = Depends(get_db),
 ):
     payload = get_pilot_health_state(

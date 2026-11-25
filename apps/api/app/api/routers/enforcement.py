@@ -9,7 +9,7 @@ from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.api.envelopes import ListEnvelope, paginate_rows
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.enforcement import EnforcementEvent
 from app.db.models.policy import ApprovalRequest
@@ -113,7 +113,7 @@ class ApprovalRequestResponse(BaseModel):
 def list_events(
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="auditor")),
+    ctx: TenantContext = Depends(require_permission("policies.review")),
     db: Session = Depends(get_db),
 ):
     rows = db.scalars(
@@ -217,7 +217,7 @@ def list_approvals(
     status_filter: str = "pending",
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="auditor")),
+    ctx: TenantContext = Depends(require_permission("policies.review")),
     db: Session = Depends(get_db),
 ):
     rows = db.scalars(
@@ -241,7 +241,7 @@ def decide_approval(
     payload: ApprovalDecisionRequestV2 | ApprovalDecisionRequest,
     # A V2 decision endpoint is an approver surface; viewers/auditors cannot
     # reach the replay path before the request-specific role check below.
-    ctx: TenantContext = Depends(require_role(allow_list=["operator", "admin", "owner"])),
+    ctx: TenantContext = Depends(require_permission("policies.operate")),
     db: Session = Depends(get_db),
 ):
     if payload.decision not in {"approve", "deny"}:

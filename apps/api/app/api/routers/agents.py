@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.deps_control_plane import require_control_plane_healthy
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.ai_iam import AgentIdentity
 from app.db.session import get_db
@@ -44,7 +44,7 @@ class AgentDetailResponse(BaseModel):
 @router.get("/{agent_id}", response_model=AgentDetailResponse)
 def get_agent(
     agent_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     enforce_fail_secure_or_raise(

@@ -11,7 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import parse_maturity_curve_rollout, settings
-from app.core.rbac import require_role
+from app.core.rbac import holds, require_permission
 from app.core.tenant import TenantContext
 from app.db.models.maturity_curve import (
     MaturityAssessment,
@@ -39,7 +39,7 @@ from app.services.maturity_curve.service import create_maturity_scope, materiali
 from app.services.maturity_curve.simulation import simulate_policy_recommendation
 
 
-def _require_maturity_curve_enabled(ctx: TenantContext = Depends(require_role(min_role="viewer"))) -> None:
+def _require_maturity_curve_enabled(ctx: TenantContext = Depends(require_permission("policies.view"))) -> None:
     rollout = parse_maturity_curve_rollout(settings.maturity_curve_policy_intelligence_rollout)
     if not settings.maturity_curve_policy_intelligence or rollout.get(str(ctx.tenant.id)) is not True:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
@@ -232,7 +232,7 @@ def _pattern_payload(row: MaturityObservedUsagePattern) -> dict[str, Any]:
 
 @router.get("/entitlement")
 def get_entitlement(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     row = db.scalar(
@@ -250,7 +250,7 @@ def get_entitlement(
 
 @router.get("/overview")
 def overview(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     scopes = list(
@@ -306,7 +306,7 @@ def overview(
 
 @router.get("/scopes")
 def list_scopes(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     rows = list(
@@ -322,7 +322,7 @@ def list_scopes(
 @router.post("/scopes", status_code=status.HTTP_201_CREATED)
 def create_scope(
     payload: ScopeCreateRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("policies.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -355,7 +355,7 @@ def create_scope(
 @router.get("/scopes/{scope_id}")
 def scope_detail(
     scope_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     scope = db.scalar(select(MaturityScope).where(MaturityScope.tenant_id == ctx.tenant.id, MaturityScope.id == scope_id))
@@ -426,7 +426,7 @@ def scope_detail(
 def list_scope_patterns(
     scope_id: str,
     dimension: str | None = Query(default=None, max_length=64),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     query = select(MaturityObservedUsagePattern).where(
@@ -450,7 +450,7 @@ def list_scope_patterns(
 def refresh_scope(
     scope_id: str,
     payload: RefreshRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("policies.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -492,7 +492,7 @@ def refresh_scope(
 @router.get("/recommendations")
 def list_recommendations(
     scope_id: str | None = Query(default=None, max_length=36),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     query = select(MaturityPolicyRecommendation).where(MaturityPolicyRecommendation.tenant_id == ctx.tenant.id)
@@ -505,7 +505,7 @@ def list_recommendations(
 @router.get("/recommendations/{recommendation_id}")
 def get_recommendation(
     recommendation_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     row = db.scalar(
@@ -523,10 +523,10 @@ def get_recommendation(
 def review_recommendation(
     recommendation_id: str,
     payload: RecommendationReviewRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("policies.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
-    if payload.action.strip().upper() == "APPROVE" and ctx.role not in {"admin", "owner"}:
+    if payload.action.strip().upper() == "APPROVE" and not holds(ctx, "policies.manage"):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin approval is required for this recommendation.")
     try:
         recommendation = review_policy_recommendation(
@@ -557,7 +557,7 @@ def review_recommendation(
 @router.post("/recommendations/{recommendation_id}/simulate")
 def simulate_recommendation(
     recommendation_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("policies.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -582,7 +582,7 @@ def simulate_recommendation(
 @router.post("/recommendations/{recommendation_id}/rollouts", status_code=status.HTTP_201_CREATED)
 def start_rollout(
     recommendation_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("policies.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -613,10 +613,10 @@ def start_rollout(
 def transition_rollout(
     rollout_id: str,
     payload: RolloutTransitionRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("policies.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
-    if str(payload.target_state or "").upper() != "REVIEW" and ctx.role not in {"admin", "owner"}:
+    if str(payload.target_state or "").upper() != "REVIEW" and not holds(ctx, "policies.manage"):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin approval is required for this rollout transition.")
     try:
         rollout = transition_policy_rollout(
@@ -648,7 +648,7 @@ def transition_rollout(
 @router.post("/rollouts/{rollout_id}/effectiveness")
 def refresh_effectiveness(
     rollout_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("policies.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -674,7 +674,7 @@ def refresh_effectiveness(
 def approve_exception(
     rollout_id: str,
     payload: PolicyExceptionRequest,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("policies.manage")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     rollout = db.scalar(
@@ -725,7 +725,7 @@ def approve_exception(
 @router.post("/scopes/{scope_id}/executive")
 def refresh_executive(
     scope_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("policies.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:

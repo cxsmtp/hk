@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.envelopes import ListEnvelope, paginate_rows
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.ai_system import AISystem
 from app.db.session import get_db
@@ -193,7 +193,7 @@ def _to_ai_system_response(row: AISystem) -> AISystemResponse:
 def list_ai_systems(
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     rows = db.scalars(select(AISystem).where(AISystem.tenant_id == ctx.tenant.id)).all()
@@ -205,7 +205,7 @@ def list_ai_systems(
 @router.post("", response_model=AISystemResponse)
 def create_ai_system(
     payload: AISystemCreate,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("discovery.operate")),
     db: Session = Depends(get_db),
 ):
     metadata = {
@@ -252,7 +252,7 @@ def create_ai_system(
 @router.get("/{ai_system_id}", response_model=AISystemResponse)
 def get_ai_system(
     ai_system_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     row = db.scalar(select(AISystem).where(AISystem.id == ai_system_id, AISystem.tenant_id == ctx.tenant.id))
@@ -265,7 +265,7 @@ def get_ai_system(
 def update_ai_system(
     ai_system_id: str,
     payload: AISystemUpdate,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("discovery.operate")),
     db: Session = Depends(get_db),
 ):
     row = db.scalar(select(AISystem).where(AISystem.id == ai_system_id, AISystem.tenant_id == ctx.tenant.id))

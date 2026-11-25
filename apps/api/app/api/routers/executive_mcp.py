@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.session import get_db
 from app.services.audit_service import write_audit_log
@@ -48,7 +48,7 @@ class ExecutivePresentationRequest(BaseModel):
 @router.get("/summary")
 def executive_mcp_summary(
     window_days: int = Query(default=30, ge=1, le=366),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("assistant.use")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     result = build_executive_mcp_summary(
@@ -74,7 +74,7 @@ def executive_mcp_summary(
 @router.post("/query")
 def executive_mcp_query(
     payload: ExecutiveQueryRequest,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("assistant.use")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     result = query_executive_mcp_metrics(
@@ -112,7 +112,7 @@ def executive_mcp_query(
 @router.post("/presentations")
 def executive_mcp_presentation(
     payload: ExecutivePresentationRequest,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("assistant.use")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     result = create_executive_mcp_presentation(

@@ -25,7 +25,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.monitoring import Connector
 from app.db.session import get_db
@@ -33,7 +33,7 @@ from app.services import network_proxy, trust_store
 from app.services.audit_service import write_audit_log
 
 router = APIRouter(tags=["network"])
-admin_only = require_role(min_role="admin")
+admin_only = require_permission("network.manage")
 
 CHECK_HINT = "Give the address of a service to check, for example graph.microsoft.com (one of the services your connectors use)."
 

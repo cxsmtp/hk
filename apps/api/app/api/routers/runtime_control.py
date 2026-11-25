@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from app.core.auth import get_current_user
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.user import User
 from app.db.session import get_db
@@ -213,7 +213,7 @@ class AgentActionInterceptResponse(BaseModel):
 def data_transfer_check(
     request: Request,
     payload: DataTransferCheckRequest,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -241,7 +241,7 @@ def data_transfer_check(
 def data_transfer_justify(
     request: Request,
     payload: DataTransferJustifyRequest,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -268,7 +268,7 @@ def data_transfer_justify(
 def agent_action_intercept(
     request: Request,
     payload: AgentActionInterceptRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("activity.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
