@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
 
+import { AccessGate } from "@/components/access-gate";
+import { LicenceGate } from "@/components/licence-gate";
+import { VersionTag } from "@/components/version-tag";
+
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -12,7 +16,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        {children}
+        <LicenceGate>
+          <AccessGate>{children}</AccessGate>
+        </LicenceGate>
+        <VersionTag />
         <Toaster richColors position="top-right" />
       </body>
     </html>

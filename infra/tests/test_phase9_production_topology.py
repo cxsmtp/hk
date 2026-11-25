@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def test_production_overlay_keeps_one_service_graph_and_hardens_application_containers() -> None:
     base = yaml.safe_load((ROOT / "infra/docker-compose.demo.yml").read_text(encoding="utf-8"))
-    production = yaml.safe_load((ROOT / "infra/docker-compose.production.yml").read_text(encoding="utf-8"))
+    production = yaml.safe_load((ROOT / "infra/legacy/docker-compose.production.yml").read_text(encoding="utf-8"))
 
     assert set(base["services"]) == set(production["services"])
     for name in ("api", "worker", "celery-beat", "web"):
@@ -42,7 +42,7 @@ def test_worker_healthchecks_load_secret_references_and_verify_component_registr
 
 
 def test_read_only_production_beat_uses_bounded_writable_schedule_path() -> None:
-    production = yaml.safe_load((ROOT / "infra/docker-compose.production.yml").read_text(encoding="utf-8"))
+    production = yaml.safe_load((ROOT / "infra/legacy/docker-compose.production.yml").read_text(encoding="utf-8"))
     beat = production["services"]["celery-beat"]
 
     assert beat["read_only"] is True
@@ -53,7 +53,7 @@ def test_read_only_production_beat_uses_bounded_writable_schedule_path() -> None
 
 
 def test_production_secret_files_are_mounted_only_into_backend_components() -> None:
-    production = yaml.safe_load((ROOT / "infra/docker-compose.production.yml").read_text(encoding="utf-8"))
+    production = yaml.safe_load((ROOT / "infra/legacy/docker-compose.production.yml").read_text(encoding="utf-8"))
     assert "secrets" not in production["services"]["web"]
     for name in ("api", "worker", "celery-beat", "migrate", "seed-demo"):
         mounted = {item["source"] if isinstance(item, dict) else item for item in production["services"][name]["secrets"]}
@@ -62,7 +62,7 @@ def test_production_secret_files_are_mounted_only_into_backend_components() -> N
 
 
 def test_secret_key_lock_state_is_persistent_and_never_stored_in_the_policy_channel() -> None:
-    production = yaml.safe_load((ROOT / "infra/docker-compose.production.yml").read_text(encoding="utf-8"))
+    production = yaml.safe_load((ROOT / "infra/legacy/docker-compose.production.yml").read_text(encoding="utf-8"))
     for name in ("api", "worker", "celery-beat", "migrate", "seed-demo"):
         mounts = production["services"][name]["volumes"]
         assert any("hawk_runtime_state" in str(mount) and "/run/hawk" in str(mount) for mount in mounts)
@@ -107,7 +107,7 @@ def test_api_image_separates_build_toolchain_from_non_root_runtime() -> None:
 
 
 def test_production_wrapper_uses_dedicated_env_project_and_volume_without_deleting_volumes() -> None:
-    script = (ROOT / "infra/scripts/hawk_production_stack.sh").read_text(encoding="utf-8")
+    script = (ROOT / "infra/legacy/hawk_production_stack.sh").read_text(encoding="utf-8")
     assert "HAWK_ENV_FILE" in script
     assert ".env.production" in script
     assert "hawk-production" in script

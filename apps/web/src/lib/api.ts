@@ -2,6 +2,10 @@ import { clearSession, getSession, updateSessionTokens } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/api-url";
 import { approvalStatusFilters, mergeApprovalStatusResults } from "@/lib/approval-workflow";
 import { demoFallbackRequest, isDemoFallbackEnabled } from "@/lib/demo-fallback";
+import { isDeactivatedAnswer, LICENCE_DEACTIVATED_EVENT } from "@/lib/licence";
+import { accessNeededFrom, PASSWORD_CHANGE_EVENT, TERMS_REQUIRED_EVENT } from "@/lib/access";
+import type { TermsState, TermsView } from "@/lib/access";
+import type { ActivationApplied, ActivationView, AdminLicence, LicenceStatus } from "@/lib/licence";
 import type {
   AIDiscoveryAnomalyEvent,
   ActionIntegrityDetail,
@@ -242,6 +246,31 @@ type RequestBehavior = {
 let refreshTokenInFlight: Promise<boolean> | null = null;
 const inflightGetRequests = new Map<string, Promise<unknown>>();
 
+/**
+ * The licence gate's answer (docs/activation-codes.md): Hawk AI has been deactivated. Tells the page, which then
+ * shows the deactivation screen, and says whether it was that answer (so it is not retried).
+ */
+function reportDeactivated(status: number, text: string): boolean {
+  if (status !== 503) return false;
+  let body: unknown = null;
+  try {
+    body = JSON.parse(text);
+  } catch {
+    return false;
+  }
+  if (!isDeactivatedAnswer(status, body)) return false;
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(LICENCE_DEACTIVATED_EVENT));
+  return true;
+}
+
+/** A 403 asking for a new password or the terms of use first (apps/api/app/core/access_gate.py): tell the page. */
+function reportAccessNeeded(status: number, text: string): boolean {
+  const needed = accessNeededFrom(status, text);
+  if (!needed) return false;
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(needed === "password" ? PASSWORD_CHANGE_EVENT : TERMS_REQUIRED_EVENT));
+  return true;
+}
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -457,6 +486,11 @@ async function request<T>(
         }
       }
 
+      if (res.status === 503) {
+        const text = await res.clone().text();
+        if (reportDeactivated(res.status, text)) throw new Error(text);
+      }
+
       if (!res.ok) {
         const canRetryStatus = retryable && TRANSIENT_HTTP_STATUSES.has(res.status) && attempt < maxNetworkAttempts - 1;
         if (canRetryStatus) {
@@ -465,6 +499,10 @@ async function request<T>(
           await sleep(backoffMs);
           attempt += 1;
           continue;
+        }
+        if (res.status === 403) {
+          const text = await res.clone().text();
+          if (reportAccessNeeded(res.status, text)) throw new Error(text);
         }
         if (isDemoFallbackEnabled()) {
           const fallback = demoFallbackRequest(path, init, session);
@@ -571,6 +609,8 @@ async function requestBlob(path: string, init?: RequestInit, allowRefresh = true
 
   if (!res.ok) {
     const text = await res.text();
+    reportDeactivated(res.status, text);
+    reportAccessNeeded(res.status, text);
     throw new Error(text || `API ${res.status}`);
   }
 
@@ -607,6 +647,7 @@ async function requestMultipart<T>(path: string, form: FormData, allowRefresh = 
   }
   if (!res.ok) {
     let message = `API ${res.status}`;
+    if (res.status === 503 && reportDeactivated(res.status, await res.clone().text())) throw new Error(message);
     try {
       const payload = await res.json() as { detail?: unknown; message?: unknown; code?: unknown };
       const detail = payload.detail && typeof payload.detail === "object"
@@ -632,6 +673,19 @@ function boundedQuery<T extends object>(params: T): string {
   return encoded ? `?${encoded}` : "";
 }
 
+/** The signed-in person (/auth/me): with the product licence's end for a tenant's owners and admins. */
+export type CurrentUser = {
+  id: string;
+  email: string;
+  full_name: string;
+  tenants: { id: string; name: string; role: string }[];
+  licence?: AdminLicence | null;
+  // A temporary password to change, and the terms of use, first (deploy/README.md).
+  must_change_password?: boolean;
+  terms?: TermsState | null;
+  version?: string;
+};
+
 export const api = {
   login: (email: string, password: string) =>
     request("/auth/login", {
@@ -648,7 +702,27 @@ export const api = {
     ),
   oidcComplete: (ticket: string) =>
     request<LoginResponse>("/auth/oidc/complete", { method: "POST", body: JSON.stringify({ ticket }) }, false),
-  me: () => request("/auth/me"),
+  me: () => request<CurrentUser>("/auth/me"),
+  // First sign-in (deploy/README.md): a new password, the terms of use, and the first administrator's setup code.
+  changePassword: (current: string, next: string) =>
+    request<LoginResponse>("/auth/me/password", { method: "POST", body: JSON.stringify({ current, next }) }),
+  getTerms: () => {
+    const session = getSession();
+    const headers: Record<string, string> = session?.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {};
+    return request<TermsView>("/terms", { headers }, false);
+  },
+  acceptTerms: (payload: { version: string; forOrganisation?: boolean; organisationName?: string }) =>
+    request<{ terms: TermsState }>("/terms/accept", { method: "POST", body: JSON.stringify(payload) }),
+  setupStatus: () => request<{ setup: boolean }>("/setup", undefined, false),
+  setup: (payload: { code: string; email: string; name: string; password: string }) =>
+    request<LoginResponse>("/setup", { method: "POST", body: JSON.stringify(payload) }, false),
+  // The product licence and activation codes (docs/activation-codes.md).
+  getLicence: () => request<LicenceStatus>("/licence", undefined, false),
+  activateLicence: (code: string) =>
+    request<{ active: boolean; until: string }>("/licence/activate", { method: "POST", body: JSON.stringify({ code }) }, false),
+  getActivation: () => request<ActivationView>("/activation"),
+  applyActivation: (code: string) =>
+    request<ActivationApplied>("/activation", { method: "POST", body: JSON.stringify({ code }) }),
   getPlatformMode: () => request<PlatformModeResponse>("/system/platform-mode"),
   updatePlatformMode: (platformMode: PlatformMode) =>
     request<PlatformModeResponse>("/system/platform-mode", {

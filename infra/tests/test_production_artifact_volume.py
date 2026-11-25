@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def test_production_artifacts_use_ssd_backed_docker_volume_not_host_bind() -> None:
     production = yaml.safe_load(
-        (ROOT / "infra/docker-compose.production.yml").read_text(encoding="utf-8")
+        (ROOT / "infra/legacy/docker-compose.production.yml").read_text(encoding="utf-8")
     )
 
     assert production["volumes"]["hawk_artifacts"]["name"] == (

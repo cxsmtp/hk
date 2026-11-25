@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, Header, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -48,10 +48,11 @@ def require_tenant(
 
 
 def require_stream_tenant(
+    request: Request = None,  # type: ignore[assignment]  # FastAPI fills it; direct callers may pass it
     x_tenant_id: str | None = Header(default=None),
     token: str = Depends(oauth2_scheme),
 ) -> TenantContext:
     with SessionLocal() as db:
-        current_user = get_current_user(token=token, db=db)
+        current_user = get_current_user(request=request, token=token, db=db)
         context = _tenant_context_for_user(tenant_id=x_tenant_id, db=db, current_user=current_user)
     return context

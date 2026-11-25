@@ -190,6 +190,11 @@ class Settings(BaseSettings):
     minimum_component_versions_json: str = (
         '{"api":"0.1.0","worker":"0.1.0","celery_beat":"0.1.0","web":"0.1.0"}'
     )
+    # First run (deploy/README.md, app/services/first_run_service.py): the API's own data folder (0700) holds the
+    # generated first administrator's password (0600) until they choose their own; it is never in a backup.
+    hawk_data_dir: str = ".runtime/data"
+    # Make the first administrator when the API starts on an empty database (deploy/compose.yaml turns it on).
+    first_run_access: bool = False
 
     database_url: str  # Supply DATABASE_URL through the deployment environment.
     redis_url: str = "redis://redis:6379/0"

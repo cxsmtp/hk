@@ -1,0 +1,20 @@
+# The front proxy of deploy/compose.yaml (deploy/Caddyfile): one HTTPS origin for the console and the API.
+# TODO(owner): pin by digest, as infra/Dockerfile.api is; the tag is the one infra/Dockerfile.local-production-gateway
+# already uses, and no digest for it is recorded in this repository.
+FROM caddy:2.8.4-alpine
+
+COPY deploy/Caddyfile /etc/caddy/Caddyfile
+
+# Runs as uid 1000 with no capabilities: the binary's own file capability (to bind ports below 1024) is dropped by
+# copying it, as it would stop the binary from starting under cap_drop ALL; it listens on 8443 and 8081 only.
+RUN cp /usr/bin/caddy /tmp/caddy && mv /tmp/caddy /usr/bin/caddy \
+  && mkdir -p /data /config \
+  && chown -R 1000:1000 /data /config \
+  && chmod 0700 /data
+
+ENV XDG_DATA_HOME=/data XDG_CONFIG_HOME=/config
+USER 1000
+EXPOSE 8443
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD ["wget", "-q", "-O", "/dev/null", "-T", "4", "http://127.0.0.1:8081/"]

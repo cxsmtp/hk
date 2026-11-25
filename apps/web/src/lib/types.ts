@@ -13,6 +13,8 @@ export type LoginResponse = {
   };
   tenants: Array<{ id: string; name: string; role: string }>;
   selected_tenant_id?: string;
+  // A temporary password (the first administrator, or after reset_admin): a new one is chosen first.
+  must_change_password?: boolean;
 };
 
 export type PlatformMode = "discovery" | "enforce";

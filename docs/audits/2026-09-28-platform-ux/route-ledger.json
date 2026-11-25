@@ -1711,5 +1711,24 @@
     "notes": "Final 2026-09-30 authenticated render/navigation observed; see final-browser/observations.json. This is not an end-to-end functional or stability pass. Some sources are unavailable; the extended walk exposed a database connection lifetime defect in live updates. The scoped fix passed two tests and one authenticated connect-close/readiness smoke; endurance remains unverified.",
     "desktop": "observed",
     "mobile": "blocked"
+  },
+  {
+    "route": "/settings/activation",
+    "file": "apps/web/src/app/settings/activation/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Settings → Activation codes (docs/activation-codes.md), added with product licensing. Covered by apps/web/tests/licence.test.mjs (pure view logic and source checks) and the API tests in apps/api/tests/test_activation_licence.py; not yet observed in a browser.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
   }
 ]

@@ -1,4 +1,60 @@
-FROM node:20-alpine
+# The web console. Three stages:
+#   build, runtime  the production image deploy/compose.yaml runs (target: runtime);
+#   dev             the last stage, the default for the development compose files (npm run dev).
+# The base image is pinned by digest, the same node:20-alpine infra/Dockerfile.web.demo uses.
+
+FROM node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS build
+
+WORKDIR /workspace/apps/web
+
+COPY apps/web/package.json apps/web/package-lock.json ./
+# Building behind a company proxy that inspects TLS? Pass its CA certificate (as CxMissionZero's Dockerfile does):
+#   docker build --secret id=ca,src=company-ca.pem ...   (deploy/install.sh: HAWK_BUILD_CA_FILE=company-ca.pem)
+RUN --mount=type=secret,id=ca,required=false \
+    if [ -s /run/secrets/ca ]; then export NODE_EXTRA_CA_CERTS=/run/secrets/ca; fi && \
+    npm ci
+
+COPY apps/web ./
+COPY packages /workspace/packages
+# The version shown bottom-left on every screen (next.config.mjs reads it).
+COPY VERSION /workspace/VERSION
+
+# "/api": the API on the console's own address, behind deploy/compose.yaml's front proxy, so one image serves any
+# name or address people use to reach it.
+ARG NEXT_PUBLIC_API_URL=/api
+ARG NEXT_PUBLIC_CONTROL_COVERAGE_UI_ENABLED=false
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV NEXT_PUBLIC_CONTROL_COVERAGE_UI_ENABLED=${NEXT_PUBLIC_CONTROL_COVERAGE_UI_ENABLED}
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN npm run build && npm prune --omit=dev && npm cache clean --force
+
+FROM node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS runtime
+
+# No package manager at run time (as CxMissionZero's image): Next.js is started with node directly.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
+    /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /opt/yarn-* /usr/local/bin/yarn /usr/local/bin/yarnpkg
+
+WORKDIR /workspace/apps/web
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3000
+
+COPY --from=build --chown=1000:1000 /workspace/apps/web ./
+COPY --from=build --chown=1000:1000 /workspace/packages /workspace/packages
+COPY --from=build /workspace/VERSION /workspace/VERSION
+
+# The node user, uid 1000.
+USER 1000
+EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD ["node", "-e", "fetch('http://127.0.0.1:3000/login',{signal:AbortSignal.timeout(4000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+
+CMD ["node", "node_modules/next/dist/bin/next", "start", "--hostname", "0.0.0.0", "--port", "3000"]
+
+FROM node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS dev
 
 WORKDIR /workspace/apps/web
 
@@ -8,6 +64,7 @@ RUN npm ci
 
 COPY apps/web /workspace/apps/web
 COPY packages /workspace/packages
+COPY VERSION /workspace/VERSION
 
 EXPOSE 3000
 RUN chown -R 1000:1000 /workspace/apps/web /workspace/packages
