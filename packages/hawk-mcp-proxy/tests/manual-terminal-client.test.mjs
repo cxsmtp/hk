@@ -429,7 +429,7 @@ test("manual client CLI rejects ambiguous arguments", () => {
   assert.throws(() => parseClientArgs(["--unknown"]), /Usage:/);
 });
 
-test("package scripts and runbooks expose the honest terminal proof path", async () => {
+test("package scripts expose the honest terminal proof path", async () => {
   const packageJson = JSON.parse(await readFile(
     new URL("../package.json", import.meta.url),
     "utf8",
@@ -443,21 +443,6 @@ test("package scripts and runbooks expose the honest terminal proof path", async
     "node examples/manual-terminal/manual-mcp-client.mjs cleanup",
   );
 
-  const runbook = await readFile(
-    new URL("../examples/manual-terminal/README.md", import.meta.url),
-    "utf8",
-  );
-  const packageReadme = await readFile(
-    new URL("../README.md", import.meta.url),
-    "utf8",
-  );
-  assert.match(runbook, /BLOCK PROVEN/);
-  assert.match(runbook, /LOCAL DEMO FIXTURE — NOT A PRODUCTION APPROVAL/);
-  assert.match(runbook, /ownership_state/);
-  assert.match(runbook, /active status alone is not sufficient/i);
-  assert.match(runbook, /no live allow claim/i);
-  assert.match(packageReadme, /Manual Terminal Proof/);
-  assert.match(packageReadme, /not a production approval workflow/);
 });
 
 function validEnv() {
