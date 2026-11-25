@@ -107,7 +107,7 @@ test("the page is FTR's Updates page: its panels, controls and words", () => {
     assert.ok(page.includes(text), text);
   }
   assert.ok(page.includes('import "../ftr-settings.css"'));
-  const nav = source("lib/navigation.ts");
+  const nav = (source("lib/navigation.ts") + source("lib/settings-menu.mjs"));
   assert.ok(nav.includes('{ href: "/settings/updates", label: "Updates" }'));
   assert.ok(source("components/app-shell.tsx").includes("<IntegrityNotice />"));
 });

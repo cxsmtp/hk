@@ -127,7 +127,7 @@ test("Settings pages follow FTR's look: autosave, the saved banner and foot, pan
   assert.match(sso, /Who may still sign in with a password/);
   const css = source("styles/ftr.css");
   for (const cls of [".panel h2 small", ".saved-banner", ".saved-foot", "label.f", ".callout.warn", ".kv dt", ".chip.ok"]) assert.ok(css.includes(cls), cls);
-  const nav = source("lib/navigation.ts");
+  const nav = (source("lib/navigation.ts") + source("lib/settings-menu.mjs"));
   assert.match(nav, /\{ href: "\/settings\/signin", label: "Sign-in" \}/);
   assert.match(nav, /\{ href: "\/settings\/sso", label: "Single sign-on" \}/);
   assert.match(nav, /\{ href: "\/settings\/two-step", label: "Two-step sign-in" \}/);

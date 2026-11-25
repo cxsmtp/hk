@@ -327,3 +327,75 @@
 .ftr-settings .ftr-dialog .db { padding: 16px 22px; }
 .ftr-settings .ftr-dialog .df { padding: 0 22px 18px; display: flex; justify-content: flex-end; gap: 8px; }
 .ftr-settings .join-in { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: center; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+
+/* FTR's fonts (public/fonts, SIL Open Font License 1.1: public/fonts/OFL.txt): IBM Plex Sans and Mono, which every
+   FTR look uses. Fraunces, the Command Center look's headings, is not used by the Standard look and is not copied. */
+@font-face { font-family: "Plex"; src: url(/fonts/ibm-plex-sans-latin-400-normal.woff2) format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Plex"; src: url(/fonts/ibm-plex-sans-latin-500-normal.woff2) format("woff2"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "Plex"; src: url(/fonts/ibm-plex-sans-latin-600-normal.woff2) format("woff2"); font-weight: 600 700; font-display: swap; }
+@font-face { font-family: "PlexMono"; src: url(/fonts/ibm-plex-mono-latin-400-normal.woff2) format("woff2"); font-display: swap; }
+
+/* ---- Settings: its own menu beside the page (app.css .set-nav, .set-group, .set-label; standard.css colours). The
+   columns themselves (.set-wrap: 188 px, 164 px up to 1360 px, one column up to 900 px) are on the shell. ------------ */
+.ftr-settings .set-nav { display: grid; gap: 18px; padding: 22px 0 22px 14px; background: transparent; }
+.ftr-settings .set-group { display: grid; gap: 2px; }
+.ftr-settings .set-label { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding: 0 10px 4px; }
+.ftr-settings .set-nav a { display: block; padding: 6px 10px; border-radius: 8px; color: var(--text); text-decoration: none; font-size: 13.5px; line-height: 1.35; }
+.ftr-settings .set-nav a:hover { background: color-mix(in srgb, var(--brand) 8%, transparent); text-decoration: none; }
+.ftr-settings .set-nav a.on { background: color-mix(in srgb, var(--brand) 11%, transparent); font-weight: 600; }
+@media (max-width: 1360px) {
+  .ftr-settings .set-nav { padding-left: 8px; }
+}
+@media (max-width: 900px) {
+  .ftr-settings .set-nav { position: static; display: flex; flex-wrap: wrap; gap: 10px 18px; padding: 14px 16px 0; }
+  .ftr-settings .set-group { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+  .ftr-settings .set-label { padding: 0 4px 0 0; }
+}
+
+/* ---- Settings → Branding (app.css .brand-grid, .colour, .img-pick, .img-prev, .toggle) ---------------------------- */
+.ftr-settings .brand-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.ftr-settings .brand-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ftr-settings .colour { display: flex; align-items: center; gap: 10px; }
+.ftr-settings .colour input[type="color"] { width: 64px; height: 38px; padding: 3px; }
+.ftr-settings .img-pick { display: flex; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+.ftr-settings .img-prev { width: 44px; height: 44px; flex: none; display: grid; place-items: center; border-radius: 12px; border: 1px solid var(--line); background: var(--grad); overflow: hidden; }
+.ftr-settings .img-prev img { width: 100%; height: 100%; object-fit: contain; background: var(--panel-solid); }
+.ftr-settings .img-prev svg { width: 24px; height: 24px; color: var(--on-brand); }
+.ftr-settings .img-prev.small { width: 36px; height: 36px; background: var(--panel-solid); }
+.ftr-settings div.f { display: grid; gap: 6px; font-size: 12.5px; color: var(--muted); font-weight: 500; }
+.ftr-settings label.f small, .ftr-settings div.f small { color: var(--faint); font-weight: 400; }
+@media (max-width: 1000px) {
+  .ftr-settings .brand-grid, .ftr-settings .brand-grid.two { grid-template-columns: 1fr; }
+}
+
+/* ---- About (app.css .about, .about-facts, .onprem-note, .terms-card, .versions-log, .md; the reading overlay
+   dialog.docd, .doc-head, .doc-text, .doc-foot) ---------------------------------------------------------------------- */
+.ftr-settings .about h2 { margin-bottom: 6px; }
+.ftr-settings .about-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px 20px; margin: 16px 0; }
+.ftr-settings .about-facts dt { font-size: 11.5px; color: var(--muted); font-weight: 600; }
+.ftr-settings .about-facts dd { margin: 3px 0 0; font-size: 14px; overflow-wrap: anywhere; }
+.ftr-settings .onprem-note { padding: 12px 14px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--green) 35%, transparent); background: color-mix(in srgb, var(--green) 7%, transparent); font-size: 13.5px; }
+.ftr-settings .terms-card { margin-top: 14px; padding: 14px 16px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel-hi); display: grid; gap: 8px; }
+.ftr-settings .terms-card h3 { margin: 0; font-size: 15px; }
+.ftr-settings .terms-card p { margin: 0; }
+.ftr-settings .versions-log { display: grid; gap: 6px; }
+.ftr-settings .versions-log details { border: 1px solid var(--line); border-radius: 12px; padding: 8px 14px; background: var(--panel-hi); }
+.ftr-settings .versions-log summary { cursor: pointer; font-weight: 600; }
+.ftr-settings .versions-log .md { padding-top: 6px; }
+.ftr-settings .versions-log > button { justify-self: start; }
+.ftr-settings .md h2, .ftr-settings .md h3, .ftr-settings .md h4 { margin: 18px 0 8px; font-size: 15px; }
+.ftr-settings .md p, .ftr-settings .md li { color: var(--muted); }
+.ftr-settings .md strong { color: var(--text); }
+.ftr-settings .md ul { margin: 6px 0; padding-left: 20px; list-style: disc; }
+.ftr-settings .md li { margin: 4px 0; }
+.ftr-settings .md code { font-family: var(--mono); font-size: .92em; }
+.ftr-settings dialog.docd { width: min(860px, 96vw); max-height: 88vh; padding: 0; border: 1px solid var(--line-hi); border-radius: 20px; background: var(--panel-solid); color: var(--text); }
+.ftr-settings dialog.docd[open] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+.ftr-settings dialog.docd::backdrop { background: rgba(3, 6, 18, .6); backdrop-filter: blur(4px); }
+.ftr-settings .doc-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.ftr-settings .doc-text { overflow: auto; padding: 8px 24px 18px; font-size: 14px; line-height: 1.6; max-height: calc(88vh - 120px); }
+.ftr-settings .doc-text p, .ftr-settings .doc-text li { color: var(--text); }
+.ftr-settings .doc-text pre { white-space: pre-wrap; font-family: var(--mono); font-size: 12.5px; }
+.ftr-settings .doc-foot { padding: 10px 16px; border-top: 1px solid var(--line); background: var(--panel-hi); }
+.ftr-settings [hidden] { display: none !important; }
+.ftr-settings .img-prev.small svg { color: var(--brand); }

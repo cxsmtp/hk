@@ -20,14 +20,14 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.session import get_db
 from app.services import hands_off
 from app.services.self_check import SelfCheck
 
 router = APIRouter(tags=["hands-off"])
-admin_only = require_role(min_role="admin")
+admin_only = require_permission("settings.manage")
 NO_STORE = {"Cache-Control": "no-store", "Referrer-Policy": "no-referrer"}
 
 #: Injected by tests; otherwise made for each request (its state is in files and the database).

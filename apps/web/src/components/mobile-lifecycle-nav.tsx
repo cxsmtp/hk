@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { isLifecycleItemActive, isLifecyclePathActive, LIFECYCLE_NAV_ITEMS } from "@/lib/navigation";
+import { isLifecycleItemActive, isLifecyclePathActive, LIFECYCLE_NAV_ITEMS, SETTINGS_ENTRY } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
 export function MobileLifecycleNav() {
-  const pathname = usePathname();
+  const pathname = usePathname() || "";
   const activeItem = LIFECYCLE_NAV_ITEMS.find((item) => isLifecycleItemActive(pathname, item));
 
   return (
@@ -34,6 +34,18 @@ export function MobileLifecycleNav() {
             </Link>
           );
         })}
+        <Link
+          href={SETTINGS_ENTRY.href}
+          aria-current={pathname.startsWith("/settings/") ? "page" : undefined}
+          className={cn(
+            "shrink-0 rounded-lg px-3 py-2 text-xs font-semibold transition",
+            pathname.startsWith("/settings/")
+              ? "bg-orange-400/[0.12] text-orange-200 shadow-[inset_0_0_0_1px_rgba(251,146,60,0.16)]"
+              : "text-slate-500 hover:bg-white/[0.04] hover:text-slate-200",
+          )}
+        >
+          {SETTINGS_ENTRY.label}
+        </Link>
       </div>
       {activeItem?.children?.length ? (
         <div

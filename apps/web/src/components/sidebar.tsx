@@ -13,6 +13,7 @@ import {
   PanelLeftOpen,
   Plug,
   Rocket,
+  Settings,
   ShieldCheck,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -23,8 +24,10 @@ import {
   isLifecycleItemActive,
   isLifecyclePathActive,
   LIFECYCLE_NAV_ITEMS,
+  SETTINGS_ENTRY,
   SPECIALIST_WORKSPACES,
 } from "@/lib/navigation";
+import { brandingImage, useBranding } from "@/lib/settings-console";
 
 const SIDEBAR_COLLAPSE_KEY = "hawk_ui_sidebar_collapsed";
 
@@ -42,6 +45,10 @@ export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  // Settings → Branding: the name, the line under it and the logo (FTR brandHtml()).
+  const brand = useBranding();
+  const logo = brandingImage(brand.logo);
+  const inSettings = pathname.startsWith("/settings/");
 
   useEffect(() => {
     try {
@@ -70,14 +77,19 @@ export function Sidebar() {
       aria-label="Primary navigation"
     >
       <div className={cn("flex items-center", collapsed ? "justify-center" : "justify-between px-2")}>
-        <Link href="/dashboard/command-center" className="flex min-w-0 items-center gap-3" aria-label="Hawk home">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-orange-400/30 bg-orange-400/10 shadow-[0_0_28px_rgba(251,146,60,0.12)]">
-            <ShieldCheck className="h-[18px] w-[18px] text-orange-300" />
+        <Link href="/dashboard/command-center" className="flex min-w-0 items-center gap-3" aria-label={`${brand.appName} home`}>
+          <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-xl border border-orange-400/30 bg-orange-400/10 shadow-[0_0_28px_rgba(251,146,60,0.12)]">
+            {logo ? (
+              // eslint-disable-next-line @next/next/no-img-element -- the organisation's own logo, kept on the API
+              <img src={logo} alt="" className="h-full w-full object-contain" />
+            ) : (
+              <ShieldCheck className="h-[18px] w-[18px] text-orange-300" />
+            )}
           </span>
           {!collapsed ? (
             <span className="min-w-0">
-              <span className="block text-[15px] font-semibold tracking-[-0.02em] text-white">Hawk</span>
-              <span className="block truncate text-[10px] uppercase tracking-[0.16em] text-slate-500">AI control plane</span>
+              <span className="block truncate text-[15px] font-semibold tracking-[-0.02em] text-white">{brand.appName}</span>
+              {brand.tagline ? <span className="block truncate text-[10px] uppercase tracking-[0.16em] text-slate-500">{brand.tagline}</span> : null}
             </span>
           ) : null}
         </Link>
@@ -168,6 +180,27 @@ export function Sidebar() {
             </div>
           );
         })}
+        {/* FTR: Settings in the main menu, after the areas; open (and marked) on every Settings page. */}
+        <Link
+          href={SETTINGS_ENTRY.href}
+          title={collapsed ? SETTINGS_ENTRY.label : undefined}
+          aria-current={inSettings ? "page" : undefined}
+          className={cn(
+            "group flex items-center rounded-xl transition",
+            collapsed ? "mx-auto h-11 w-11 justify-center" : "gap-3 px-3 py-2.5",
+            inSettings
+              ? "bg-orange-400/[0.11] text-orange-200 shadow-[inset_0_0_0_1px_rgba(251,146,60,0.15)]"
+              : "text-slate-400 hover:bg-white/[0.04] hover:text-slate-100",
+          )}
+        >
+          <Settings className={cn("h-[18px] w-[18px] shrink-0", inSettings && "text-orange-300")} strokeWidth={1.8} />
+          {!collapsed ? (
+            <span className="min-w-0">
+              <span className="block text-sm font-medium">{SETTINGS_ENTRY.label}</span>
+              <span className={cn("mt-0.5 block truncate text-[11px]", inSettings ? "text-orange-200/60" : "text-slate-600 group-hover:text-slate-500")}>People, records and the system</span>
+            </span>
+          ) : null}
+        </Link>
       </nav>
 
       <div className="mt-auto pt-4">

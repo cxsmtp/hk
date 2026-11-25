@@ -101,28 +101,18 @@ export const SPECIALIST_WORKSPACES = [
     ],
   },
   {
+    // Settings (people, licensing, records and the system) live in the Settings menu only (lib/settings-menu.mjs, FTR
+    // Command Center's settingsNav), opened from "Settings" in the main menu. What stays here is not a setting.
     label: "Administration",
     items: [
       { href: "/guided-demo", label: "Guided Demo" },
-      { href: "/settings/activation", label: "Activation codes" },
-      { href: "/settings/https", label: "HTTPS" },
-      { href: "/settings/people", label: "People" },
-      { href: "/settings/teams", label: "Teams" },
-      { href: "/settings/roles", label: "Roles & permissions" },
-      { href: "/settings/signin", label: "Sign-in" },
-      { href: "/settings/sso", label: "Single sign-on" },
       { href: "/settings/two-step", label: "Two-step sign-in" },
-      { href: "/settings/backups", label: "Backups & health" },
-      { href: "/settings/hands-off", label: "Hands-off" },
-      { href: "/settings/updates", label: "Updates" },
-      { href: "/settings/audit", label: "Audit log" },
-      { href: "/settings/connector-activity", label: "Connector API activity" },
-      { href: "/settings/network", label: "Network & proxy" },
-      { href: "/settings/help", label: "Get help (settings)" },
       { href: "/help", label: "Get help" },
     ],
   },
 ] as const;
+
+export { SETTINGS_ENTRY } from "@/lib/settings-menu";
 
 export function isLifecyclePathActive(pathname: string, href: string): boolean {
   if (href === "/dashboard/command-center") {
