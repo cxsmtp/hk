@@ -331,6 +331,8 @@ export function buildManualProxyArgs({
     "--session-id", sessionId,
     "--capability-token", capabilityToken,
     "--stdio-framing", "content-length",
+    // The proxy gives the lab server a minimal environment: its lab directory is passed explicitly.
+    "--pass-env", "HAWK_MCP_LAB_DIR",
     "--",
     process.execPath,
     serverPath,

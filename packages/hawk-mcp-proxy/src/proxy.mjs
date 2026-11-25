@@ -40,6 +40,37 @@ const MAX_CONCURRENT_TOOL_SCANS = 2;
 // aggregate window.
 export const DEFAULT_TOOL_SCAN_DEADLINE_MS = 30_000;
 const DEFAULT_RESULT_INSPECTION_MAX_BYTES = 256 * 1024;
+// What a child MCP server inherits from the proxy's environment by default: what a process needs to start, find
+// programs, reach the network through a proxy and trust certificates (the same list as
+// bin/hawk-github-pr-endpoint.mjs, plus what Windows needs to start a process). Anything else, such as an API key the
+// server needs, is passed only when named with --pass-env NAME[,NAME] or HAWK_MCP_PASS_ENV=NAME[,NAME].
+export const CHILD_ENVIRONMENT_ALLOWLIST = Object.freeze([
+  "ALL_PROXY",
+  "HOME",
+  "HTTPS_PROXY",
+  "HTTP_PROXY",
+  "LANG",
+  "LC_ALL",
+  "LC_CTYPE",
+  "NO_PROXY",
+  "PATH",
+  "SSL_CERT_DIR",
+  "SSL_CERT_FILE",
+  "TERM",
+  "TMPDIR",
+  // Windows
+  "APPDATA",
+  "COMSPEC",
+  "LOCALAPPDATA",
+  "PATHEXT",
+  "SYSTEMROOT",
+  "TEMP",
+  "TMP",
+  "USERPROFILE",
+  "WINDIR",
+]);
+const ENVIRONMENT_NAME_PATTERN = /^[A-Za-z_][A-Za-z0-9_]{0,127}$/;
+// Never passed to a child, even when named with --pass-env.
 const CHILD_ENVIRONMENT_DENYLIST = new Set([
   "HAWK_ACCESS_TOKEN",
   "HAWK_CAPABILITY_TOKEN",
@@ -115,8 +146,10 @@ export class HawkMcpProxy {
     allowedTools = null,
     resultInspectionEnabled = false,
     resultInspectionMaxBytes = DEFAULT_RESULT_INSPECTION_MAX_BYTES,
+    passEnv = null,
     stderr = process.stderr,
   }) {
+    this.childPassEnv = normalizePassEnv(passEnv);
     this.childCommand = childCommand;
     this.childArgs = childArgs;
     this.hawkClient = hawkClient;
@@ -163,7 +196,7 @@ export class HawkMcpProxy {
 
     this.child = spawn(this.childCommand, this.childArgs, {
       stdio: ["pipe", "pipe", "pipe"],
-      env: childEnvironment(process.env),
+      env: childEnvironment(process.env, this.childPassEnv),
     });
     this.output = output;
     this.childUnavailable = false;
@@ -840,12 +873,51 @@ function createBarrier() {
   return { promise, resolve };
 }
 
-function childEnvironment(environment) {
+function neverPassedToChild(name) {
+  return CHILD_ENVIRONMENT_DENYLIST.has(name)
+    || name.startsWith("HAWK_AGENT_")
+    || name.startsWith("HAWK_ENDPOINT_");
+}
+
+/**
+ * The names a child MCP server may receive beyond CHILD_ENVIRONMENT_ALLOWLIST, from `--pass-env` or
+ * HAWK_MCP_PASS_ENV: a list or comma-separated text of environment variable names. Hawk's own tokens and endpoint
+ * identity can never be named.
+ */
+export function normalizePassEnv(value) {
+  if (value === null || value === undefined || value === "") {
+    return [];
+  }
+  const entries = Array.isArray(value) ? value : String(value).split(",");
+  const names = [];
+  for (const entry of entries) {
+    const name = String(entry ?? "").trim();
+    if (!name) continue;
+    if (!ENVIRONMENT_NAME_PATTERN.test(name)) {
+      throw new Error(`Invalid environment variable name for --pass-env: ${name.slice(0, 64)}`);
+    }
+    if (neverPassedToChild(name)) {
+      throw new Error(`${name} is a Hawk credential or endpoint identity and is never passed to an MCP server`);
+    }
+    if (!names.includes(name)) names.push(name);
+  }
+  return names;
+}
+
+/**
+ * The environment of the child MCP server: only CHILD_ENVIRONMENT_ALLOWLIST (what a process needs to run) and the
+ * names passed explicitly. Everything else the proxy was started with (API keys, cloud credentials, tokens) stays
+ * with the proxy.
+ */
+export function childEnvironment(environment, passEnv = [], { platform = process.platform } = {}) {
+  // Windows names are case-insensitive (Path, SystemRoot).
+  const fold = platform === "win32" ? (name) => name.toUpperCase() : (name) => name;
+  const allowed = new Set([...CHILD_ENVIRONMENT_ALLOWLIST, ...passEnv].map(fold));
   return Object.fromEntries(
-    Object.entries(environment).filter(([name]) => (
-      !CHILD_ENVIRONMENT_DENYLIST.has(name)
-      && !name.startsWith("HAWK_AGENT_")
-      && !name.startsWith("HAWK_ENDPOINT_")
+    Object.entries(environment).filter(([name, value]) => (
+      allowed.has(fold(name))
+      && !neverPassedToChild(fold(name))
+      && typeof value === "string"
     )),
   );
 }

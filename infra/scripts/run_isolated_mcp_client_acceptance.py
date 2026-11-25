@@ -1177,7 +1177,7 @@ def _write_config(path: Path, *, api_url: str, owner: dict, ai_system_id: str, a
     node = shutil.which("node")
     if not node or not PROXY.is_file() or not CHILD.is_file():
         raise RuntimeError("installed_proxy_or_child_missing")
-    config = {"mcpServers": {"hawk_lab": {"command": node, "args": [str(PROXY), "--gateway", api_url, "--tenant", owner["tenant_id"], "--ai-system-id", ai_system_id, "--actor-id", agent_id, "--server-id", "manual-terminal-lab", "--session-id", session_id, "--allowed-tools", TOOL_NAME, "--", node, str(CHILD)], "env": {"HAWK_ACCESS_TOKEN": owner["access_token"], "HAWK_CAPABILITY_TOKEN": capability, "HAWK_MCP_LAB_DIR": str(lab), "HAWK_MCP_STDIO_FRAMING": "ndjson"}}}}
+    config = {"mcpServers": {"hawk_lab": {"command": node, "args": [str(PROXY), "--gateway", api_url, "--tenant", owner["tenant_id"], "--ai-system-id", ai_system_id, "--actor-id", agent_id, "--server-id", "manual-terminal-lab", "--session-id", session_id, "--allowed-tools", TOOL_NAME, "--pass-env", "HAWK_MCP_LAB_DIR", "--", node, str(CHILD)], "env": {"HAWK_ACCESS_TOKEN": owner["access_token"], "HAWK_CAPABILITY_TOKEN": capability, "HAWK_MCP_LAB_DIR": str(lab), "HAWK_MCP_STDIO_FRAMING": "ndjson"}}}}
     descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     with os.fdopen(descriptor, "w") as stream:
         json.dump(config, stream)
