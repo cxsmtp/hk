@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from time import perf_counter, sleep
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Query, Response, status
 from fastapi.responses import RedirectResponse
@@ -17,6 +17,7 @@ from app.core.security import get_password_hash
 from app.db.models.tenant import Tenant
 from app.db.models.user import User, UserTenantRole
 from app.db.session import get_db
+from app.services import activation_service
 from app.services.audit_service import write_audit_log
 from app.services.auth_service import authenticate_user, get_user_tenants, issue_tokens, refresh_tokens
 from app.services import oidc_auth_service
@@ -88,6 +89,9 @@ class MeResponse(BaseModel):
     email: str
     full_name: str
     tenants: list[TenantMembershipResponse]
+    # The product licence's end, for the admins' banner in its last 30 days (docs/activation-codes.md): only for
+    # someone who is an owner or admin of a tenant, as they may enter activation codes.
+    licence: dict[str, Any] | None = None
 
 
 class SelectTenantResponse(AuthTokensResponse):
@@ -177,10 +181,13 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         db.add(user)
         db.flush()
 
+        # Several tenants need a tenants activation code (docs/activation-codes.md).
+        activation_service.assert_may_add_tenant(db)
         tenant = Tenant(name=f"{payload.full_name} Org", slug=f"{payload.email.split('@')[0]}-org", is_active=True)
         db.add(tenant)
         db.flush()
 
+        activation_service.assert_may_add_member(db, tenant.id)
         membership = UserTenantRole(user_id=user.id, tenant_id=tenant.id, role="owner")
         db.add(membership)
 
@@ -257,11 +264,17 @@ def me(current_user: Annotated[User, Depends(get_current_user)], db: Session = D
         if tenant:
             tenants.append({"id": tenant.id, "name": tenant.name, "role": m.role})
 
+    licence = None
+    if any(m.role in {"owner", "admin"} for m in memberships):
+        licence = activation_service.licence_for_admins(db)
+        db.commit()
+
     return MeResponse(
         id=current_user.id,
         email=current_user.email,
         full_name=current_user.full_name,
         tenants=[TenantMembershipResponse(**tenant_row) for tenant_row in tenants],
+        licence=licence,
     )
 
 

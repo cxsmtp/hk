@@ -13,8 +13,9 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.routers import account_boundary, action_integrity, activity_audit, agui, agents, ai_discovery, ai_iam, ai_orchestration, ai_systems, ai_tools_usage, audit, auditor, auth, banking_transaction_integrity, brain, checkmarx, continuous_assurance, control_coverage, coverage, dashboard, deployments, discovery, discovery_adv, discovery_assets, discovery_capabilities, discovery_collectors, discovery_ecosystems, discovery_erg, discovery_exposure, discovery_scans, discovery_source_connections, discovery_surface_sources, discovery_targets, endpoint_agent, enforcement, executive_mcp, executive_remote_mcp, extension, external_risk, findings, gateway, guardian_contracts_v2, investigations, kb, llm_gateway, maturity_curve, monitoring, native_controls, onprem, ops, policies, policy_pack_platform, runtime, runtime_control, runtime_intelligence, scans, shadow_ai, simulation_policies, simulations, surface_coverage, system, trust_center, user_visibility
-from app.api.routers import claude_enterprise
+from app.api.routers import claude_enterprise, licence
 from app.core.config import configured_secret_sources, settings
+from app.core.licence_gate import licence_gate
 from app.core.observability import (
     gateway_latency_paths,
     latency_tracker,
@@ -115,6 +116,10 @@ def _build_cors_allowed_origins(
         )
     )
     return sorted(origin for origin in origins if origin and not _is_wildcard_origin(origin))
+
+# The licence gate (app/core/licence_gate.py): registered before CORS, so CORS wraps it and the console can read the
+# 503 that says Hawk AI has been deactivated.
+app.middleware("http")(licence_gate)
 
 app.add_middleware(
     CORSMiddleware,
@@ -474,6 +479,7 @@ def health_schema():
 
 
 app.include_router(auth.router)
+app.include_router(licence.router)
 app.include_router(account_boundary.router)
 app.include_router(action_integrity.router)
 app.include_router(investigations.router)
