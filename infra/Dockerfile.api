@@ -27,11 +27,12 @@ COPY infra/scripts /workspace/infra/scripts
 # The version shown in the console and on /health, and the terms of use people accept (deploy/README.md).
 COPY VERSION TERMS.md /workspace/
 
-# /data: the API's own data folder (0700), e.g. the first administrator's one-time password file until it is changed.
+# /data: the API's own data folder (0700), e.g. the first administrator's one-time password file until it is changed,
+# and the HTTPS choices and certificates (Settings → HTTPS). /hawk-proxy: the front proxy's configuration, written here.
 RUN useradd --uid 1000 --create-home --shell /bin/bash appuser \
-  && mkdir -p /artifacts /run/hawk /data \
-  && chown -R 1000:1000 /workspace /artifacts /run/hawk /data \
-  && chmod 0700 /data
+  && mkdir -p /artifacts /run/hawk /data /hawk-proxy /certs \
+  && chown -R 1000:1000 /workspace /artifacts /run/hawk /data /hawk-proxy /certs \
+  && chmod 0700 /data /hawk-proxy
 
 EXPOSE 8000
 USER 1000

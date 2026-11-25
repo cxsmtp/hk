@@ -1,20 +1,23 @@
-# The front proxy of deploy/compose.yaml (deploy/Caddyfile): one HTTPS origin for the console and the API.
+# The front proxy of deploy/compose.yaml: one HTTPS origin for the console and the API.
+# Its configuration is written by the API (app/services/https_proxy.py, Settings → HTTPS) into /hawk-proxy, a volume
+# the proxy reads only: Caddy waits for it at the first start, then reloads it by itself whenever it changes (--watch).
 # TODO(owner): pin by digest, as infra/Dockerfile.api is; the tag is the one infra/Dockerfile.local-production-gateway
 # already uses, and no digest for it is recorded in this repository.
 FROM caddy:2.8.4-alpine
 
-COPY deploy/Caddyfile /etc/caddy/Caddyfile
-
 # Runs as uid 1000 with no capabilities: the binary's own file capability (to bind ports below 1024) is dropped by
-# copying it, as it would stop the binary from starting under cap_drop ALL; it listens on 8443 and 8081 only.
+# copying it, as it would stop the binary from starting under cap_drop ALL; it listens on 8443, 8080 and 8081 only.
 RUN cp /usr/bin/caddy /tmp/caddy && mv /tmp/caddy /usr/bin/caddy \
-  && mkdir -p /data /config \
-  && chown -R 1000:1000 /data /config \
-  && chmod 0700 /data
+  && mkdir -p /data /config /hawk-proxy \
+  && chown -R 1000:1000 /data /config /hawk-proxy \
+  && chmod 0700 /data /hawk-proxy
 
 ENV XDG_DATA_HOME=/data XDG_CONFIG_HOME=/config
 USER 1000
-EXPOSE 8443
+EXPOSE 8443 8080
+
+# No configuration of its own: only what the API wrote (never a default that would serve plain http).
+CMD ["sh", "-c", "until [ -s /hawk-proxy/Caddyfile ]; do sleep 1; done; exec caddy run --config /hawk-proxy/Caddyfile --adapter caddyfile --watch"]
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD ["wget", "-q", "-O", "/dev/null", "-T", "4", "http://127.0.0.1:8081/"]
