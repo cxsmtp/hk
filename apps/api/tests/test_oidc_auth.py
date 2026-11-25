@@ -78,14 +78,15 @@ def test_signed_rs256_assertion_requires_mfa_and_rejects_wrong_claims(monkeypatc
     monkeypatch.setattr(oidc, "provider_metadata", lambda p: {"issuer": p.issuer, "jwks_uri": p.issuer + "/keys"})
     monkeypatch.setattr(oidc, "_jwks", lambda p, metadata, force=False: {"keys": [{"kid": "kid-1", "kty": "RSA", "n": enc(public.n), "e": enc(public.e)}]})
     def signed(**overrides):
-        payload = {"sub": "subject-1", "nonce": "n", "amr": ["pwd", "mfa"], "exp": int(time.time()) + 60, "iss": provider.issuer, "aud": provider.client_id}
+        payload = {"sub": "subject-1", "nonce": "n", "amr": ["pwd", "mfa"], "iat": int(time.time()), "exp": int(time.time()) + 60, "iss": provider.issuer, "aud": provider.client_id}
         payload.update(overrides)
         return jwt.encode(payload, private_pem, algorithm="RS256", headers={"kid": "kid-1"})
     claims = oidc._decode_id_token(signed(), provider, nonce="n")
     assert claims["sub"] == "subject-1"
     with pytest.raises(oidc.OIDCError):
         oidc._decode_id_token(signed(amr=["pwd"]), provider, nonce="n")
-    for overrides in ({"iss": "https://wrong.example"}, {"aud": "wrong"}, {"exp": int(time.time()) - 1}, {"nonce": "wrong"}, {"sub": ""}):
+    # A minute of clock difference is allowed (CxMissionZero), so an expired token is one more than a minute old.
+    for overrides in ({"iss": "https://wrong.example"}, {"aud": "wrong"}, {"exp": int(time.time()) - 61}, {"iat": int(time.time()) + 3600}, {"nonce": "wrong"}, {"sub": ""}):
         with pytest.raises(oidc.OIDCError):
             oidc._decode_id_token(signed(**overrides), provider, nonce="n")
     bad_alg = jwt.encode({"sub": "subject-1", "nonce": "n", "amr": ["mfa"], "exp": int(time.time()) + 60, "iss": provider.issuer, "aud": provider.client_id}, "secret", algorithm="HS256", headers={"kid": "kid-1"})

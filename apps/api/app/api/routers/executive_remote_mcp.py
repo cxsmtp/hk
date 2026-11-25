@@ -4,8 +4,10 @@ import base64
 from datetime import datetime, timedelta, timezone
 import hashlib
 from html import escape
+import json
+import re
 import secrets
-from urllib.parse import parse_qs, urlencode
+from urllib.parse import parse_qs, urlencode, urlsplit
 from typing import Any
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response, status
@@ -22,9 +24,10 @@ from app.core.security import create_token, decode_token
 from app.core.tenant import TenantContext
 from app.db.models.tenant import Tenant
 from app.db.models.user import User, UserTenantRole
-from app.db.models.executive_mcp import ExecutiveMCPDeviceAuthorization
+from app.db.models.executive_mcp import ExecutiveMCPDeviceAuthorization, ExecutiveMCPOAuthClient
 from app.db.session import get_db
-from app.services.auth_service import authenticate_user
+from app.services import account_security, sign_in_store
+from app.services.account_security import SignInRefused
 from app.services.audit_service import write_audit_log
 from app.services.executive_mcp_service import (
     ExecutiveQuery,
@@ -163,19 +166,72 @@ def executive_remote_mcp_root_authorization_server_metadata(request: Request) ->
     return build_oauth_authorization_server_metadata(_base_url(request))
 
 
+#: Redirect URIs a client may register: https, or plain http to this computer only (RFC 8252 native apps).
+_LOOPBACK_HOSTS = {"localhost", "127.0.0.1", "::1"}
+_OAUTH_CODE_SECONDS = _OAUTH_CODE_MINUTES * 60
+
+
+def _valid_redirect_uri(uri: str) -> bool:
+    try:
+        parts = urlsplit(uri)
+    except ValueError:
+        return False
+    if parts.fragment or not parts.hostname or len(uri) > 512:
+        return False
+    if parts.scheme == "https":
+        return True
+    return parts.scheme == "http" and parts.hostname in _LOOPBACK_HOSTS
+
+
+def _registered_client(db: Session, client_id: str) -> tuple[ExecutiveMCPOAuthClient, list[str]] | None:
+    if not client_id:
+        return None
+    client = db.scalar(select(ExecutiveMCPOAuthClient).where(ExecutiveMCPOAuthClient.client_id == client_id))
+    if client is None:
+        return None
+    try:
+        uris = [str(u) for u in json.loads(client.redirect_uris or "[]") if isinstance(u, str)]
+    except (TypeError, ValueError):
+        uris = []
+    return client, uris
+
+
+def _check_authorization_request(db: Session, *, client_id: str, redirect_uri: str, code_challenge: str, code_challenge_method: str) -> str:
+    """What is wrong with an authorization request, or "". Never answered with a redirect: a redirect URI that is not
+    registered for the client is never sent anything."""
+
+    found = _registered_client(db, client_id)
+    if found is None:
+        return "Unknown client: register it first."
+    _, uris = found
+    if redirect_uri not in uris:
+        return "The redirect URI is not one registered for this client."
+    if code_challenge_method != "S256" or not re.fullmatch(r"[A-Za-z0-9_-]{43,128}", code_challenge or ""):
+        return "PKCE with S256 is required."
+    return ""
+
+
 @router.post("/register")
-async def executive_remote_mcp_register_client(request: Request) -> dict[str, Any]:
+async def executive_remote_mcp_register_client(request: Request, db: Session = Depends(get_db)) -> dict[str, Any]:
+    """Dynamic client registration (RFC 7591): the client's exact redirect URIs are kept, and codes only ever go to
+    one of them."""
+
     payload = await _read_request_payload(request)
     client_name = _bounded_string(payload.get("client_name"), default="Claude executive connector", max_length=80)
     redirect_uris = payload.get("redirect_uris")
-    if not isinstance(redirect_uris, list) or not redirect_uris:
-        redirect_uris = ["http://localhost"]
-    redirect_uris = [str(uri)[:512] for uri in redirect_uris[:10]]
+    if not isinstance(redirect_uris, list) or not redirect_uris or len(redirect_uris) > 10:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": "invalid_redirect_uri", "error_description": "Give 1 to 10 redirect_uris."})
+    uris = [str(uri) for uri in redirect_uris]
+    if not all(_valid_redirect_uri(uri) for uri in uris):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": "invalid_redirect_uri", "error_description": "Redirect URIs must be https (or http to localhost), without a fragment."})
+    client = ExecutiveMCPOAuthClient(client_id="hawk_exec_" + secrets.token_hex(12), client_name=client_name, redirect_uris=json.dumps(uris))
+    db.add(client)
+    db.commit()
     return {
-        "client_id": _stable_client_id(client_name, redirect_uris),
+        "client_id": client.client_id,
         "client_name": client_name,
-        "redirect_uris": redirect_uris,
-        "client_id_issued_at": 0,
+        "redirect_uris": uris,
+        "client_id_issued_at": int(datetime.now(timezone.utc).timestamp()),
         "token_endpoint_auth_method": "none",
         "grant_types": ["authorization_code"],
         "response_types": ["code"],
@@ -193,19 +249,162 @@ def executive_remote_mcp_authorize_page(
     scope: str = Query(default=EXECUTIVE_REMOTE_MCP_SCOPE_READ),
     code_challenge: str | None = Query(default=None),
     code_challenge_method: str | None = Query(default=None),
+    db: Session = Depends(get_db),
 ) -> HTMLResponse:
-    if response_type != "code" or not redirect_uri:
+    if response_type != "code":
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unsupported OAuth authorization request")
+    problem = _check_authorization_request(db, client_id=client_id, redirect_uri=redirect_uri, code_challenge=code_challenge or "", code_challenge_method=code_challenge_method or "")
+    if problem:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=problem)
     hidden = {
         "response_type": response_type,
         "client_id": client_id,
         "redirect_uri": redirect_uri,
-        "state": state,
+        "state": state[:512],
         "scope": _normalize_scope(scope),
         "code_challenge": code_challenge or "",
         "code_challenge_method": code_challenge_method or "",
     }
     return HTMLResponse(_authorization_html(hidden))
+
+
+def _password_sign_in(db: Session, request: Request, form: dict[str, str]) -> User | str:
+    """The connector forms' email and password, with the console's rules (docs/sign-in.md): 30 attempts per 10
+    minutes from one address, the lock after 5 wrong passwords, passwords kept for Admins when single sign-on says so,
+    and the two-step code for whoever has it on. Returns the user, or the sentence to show."""
+
+    if account_security.too_many_sign_ins(request):
+        return account_security.TOO_MANY
+    try:
+        user = account_security.check_password(db, form.get("email", ""), form.get("password", ""), more=True)
+    except SignInRefused as refusal:
+        db.commit()
+        return refusal.message
+    if account_security.password_not_enough(db, user):
+        return "Signing in with a password is turned off for this account. Use single sign-on."
+    if account_security.two_step_on(user):
+        try:
+            account_security.check_two_step(db, user, form.get("code", ""))
+        except SignInRefused as refusal:
+            db.commit()
+            return refusal.message if refusal.status_code == 423 else "Enter the code from your authenticator app (or a recovery code)."
+    elif account_security.two_step_required(db):
+        return "Two-step sign-in is required: sign in to the Hawk AI console once to set it up, then try again."
+    account_security.record_sign_in(user)
+    db.flush()
+    return user
+
+
+@router.post("/device", response_class=HTMLResponse)
+async def executive_remote_mcp_device_submit(request: Request, db: Session = Depends(get_db)) -> HTMLResponse:
+    form = await _read_form_body(request)
+    user_code = form.get("user_code", "").strip().upper()
+    tenant_id = form.get("tenant_id", "")
+    if not user_code or not form.get("email") or not form.get("password"):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing device authorization form fields")
+
+    record = _get_pending_device_authorization(db, user_code=user_code)
+    user = _password_sign_in(db, request, form)
+    if isinstance(user, str):
+        return HTMLResponse(_device_authorization_html(user_code, error=user), status_code=status.HTTP_401_UNAUTHORIZED)
+    ctx = _resolve_authorized_tenant_context(db, user=user, requested_tenant_id=tenant_id or None)
+    now = datetime.now(timezone.utc)
+    record.tenant_id = ctx.tenant.id
+    record.user_id = user.id
+    record.role = ctx.role
+    record.status = "APPROVED"
+    record.approved_at = now
+    db.commit()
+    return HTMLResponse(_device_authorized_html())
+
+
+@router.post("/authorize")
+async def executive_remote_mcp_authorize_submit(request: Request, db: Session = Depends(get_db)) -> Response:
+    form = await _read_form_body(request)
+    redirect_uri = form.get("redirect_uri", "")
+    client_id = form.get("client_id", "")
+    code_challenge = form.get("code_challenge", "")
+    code_challenge_method = form.get("code_challenge_method", "")
+    problem = _check_authorization_request(db, client_id=client_id, redirect_uri=redirect_uri, code_challenge=code_challenge, code_challenge_method=code_challenge_method)
+    if problem:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=problem)
+    if not form.get("email") or not form.get("password"):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing authorization form fields")
+    hidden = {key: form.get(key, "") for key in ("response_type", "client_id", "redirect_uri", "state", "scope", "code_challenge", "code_challenge_method")}
+
+    user = _password_sign_in(db, request, form)
+    if isinstance(user, str):
+        return HTMLResponse(_authorization_html(hidden, error=user), status_code=status.HTTP_401_UNAUTHORIZED)
+    ctx = _resolve_authorized_tenant_context(db, user=user, requested_tenant_id=form.get("tenant_id") or None)
+    db.commit()
+    scope = _normalize_scope(form.get("scope", EXECUTIVE_REMOTE_MCP_SCOPE_READ))
+    # A random code, kept (as its hash) for five minutes in the sign-in store, and taken once at /token.
+    code = secrets.token_urlsafe(32)
+    try:
+        sign_in_store.store().put(
+            f"mcp-code:{_secret_hash(code)}",
+            {
+                "user_id": user.id,
+                "tenant_id": ctx.tenant.id,
+                "role": ctx.role,
+                "scope": scope,
+                "client_id": client_id,
+                "redirect_uri": redirect_uri,
+                "code_challenge": code_challenge,
+                "exp": sign_in_store.now() + _OAUTH_CODE_SECONDS,
+            },
+            _OAUTH_CODE_SECONDS + 5,
+        )
+    except sign_in_store.StoreUnavailable as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Authorization is unavailable for a moment") from exc
+    params = {"code": code}
+    if form.get("state"):
+        params["state"] = form["state"]
+    separator = "&" if "?" in redirect_uri else "?"
+    return RedirectResponse(f"{redirect_uri}{separator}{urlencode(params)}", status_code=status.HTTP_302_FOUND)
+
+
+@router.post("/token")
+async def executive_remote_mcp_token(request: Request, db: Session = Depends(get_db)) -> dict[str, Any]:
+    payload = await _read_request_payload(request)
+    grant_type = str(payload.get("grant_type") or "")
+    if grant_type == "urn:ietf:params:oauth:grant-type:device_code":
+        return _exchange_device_code(db, str(payload.get("device_code") or ""))
+    if grant_type != "authorization_code":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unsupported grant_type")
+    code = str(payload.get("code") or "")
+    redirect_uri = str(payload.get("redirect_uri") or "")
+    client_id = str(payload.get("client_id") or "")
+    if not code or not redirect_uri or not client_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing authorization code, redirect_uri or client_id")
+    try:
+        # Taken: a code works once, whatever happens next.
+        code_payload = sign_in_store.store().take(f"mcp-code:{_secret_hash(code)}")
+    except sign_in_store.StoreUnavailable as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Authorization is unavailable for a moment") from exc
+    if not code_payload or float(code_payload.get("exp", 0)) <= sign_in_store.now():
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authorization code")
+    if not secrets.compare_digest(str(code_payload.get("client_id") or ""), client_id):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authorization code client mismatch")
+    if code_payload.get("redirect_uri") != redirect_uri:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authorization code redirect mismatch")
+    _verify_pkce(code_payload, str(payload.get("code_verifier") or ""))
+
+    user = _require_active_user(db, str(code_payload.get("sub") or code_payload.get("user_id") or ""))
+    ctx = _resolve_authorized_tenant_context(
+        db,
+        user=user,
+        requested_tenant_id=str(code_payload.get("tenant_id") or ""),
+        token_role=str(code_payload.get("role") or ""),
+    )
+    token_scope = _normalize_scope(str(code_payload.get("scope") or EXECUTIVE_REMOTE_MCP_SCOPE_READ))
+    connector_token = _create_connector_token(user=user, ctx=ctx, scope=token_scope)
+    return {
+        "access_token": connector_token,
+        "token_type": "Bearer",
+        "expires_in": _CONNECTOR_TOKEN_MINUTES * 60,
+        "scope": token_scope,
+    }
 
 
 @router.post("/device_authorization")
@@ -240,101 +439,6 @@ async def executive_remote_mcp_device_authorization(request: Request, db: Sessio
 @router.get("/device", response_class=HTMLResponse)
 def executive_remote_mcp_device_page(user_code: str = Query(default="")) -> HTMLResponse:
     return HTMLResponse(_device_authorization_html(user_code))
-
-
-@router.post("/device", response_class=HTMLResponse)
-async def executive_remote_mcp_device_submit(request: Request, db: Session = Depends(get_db)) -> HTMLResponse:
-    form = await _read_form_body(request)
-    user_code = form.get("user_code", "").strip().upper()
-    email = form.get("email", "")
-    password = form.get("password", "")
-    tenant_id = form.get("tenant_id", "")
-    if not user_code or not email or not password:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing device authorization form fields")
-
-    record = _get_pending_device_authorization(db, user_code=user_code)
-    user = authenticate_user(db, email=email, password=password)
-    ctx = _resolve_authorized_tenant_context(db, user=user, requested_tenant_id=tenant_id or None)
-    now = datetime.now(timezone.utc)
-    record.tenant_id = ctx.tenant.id
-    record.user_id = user.id
-    record.role = ctx.role
-    record.status = "APPROVED"
-    record.approved_at = now
-    db.commit()
-    return HTMLResponse(_device_authorized_html())
-
-
-@router.post("/authorize")
-async def executive_remote_mcp_authorize_submit(request: Request, db: Session = Depends(get_db)) -> RedirectResponse:
-    form = await _read_form_body(request)
-    email = form.get("email", "")
-    password = form.get("password", "")
-    tenant_id = form.get("tenant_id", "")
-    redirect_uri = form.get("redirect_uri", "")
-    if not email or not password or not redirect_uri:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing authorization form fields")
-
-    user = authenticate_user(db, email=email, password=password)
-    ctx = _resolve_authorized_tenant_context(db, user=user, requested_tenant_id=tenant_id or None)
-    scope = _normalize_scope(form.get("scope", EXECUTIVE_REMOTE_MCP_SCOPE_READ))
-    code = create_token(
-        subject=user.id,
-        token_type="mcp_oauth_code",
-        expires_delta=timedelta(minutes=_OAUTH_CODE_MINUTES),
-        extra={
-            "tenant_id": ctx.tenant.id,
-            "role": ctx.role,
-            "scope": scope,
-            "redirect_uri": redirect_uri,
-            "client_id": form.get("client_id", ""),
-            "code_challenge": form.get("code_challenge", ""),
-            "code_challenge_method": form.get("code_challenge_method", ""),
-        },
-    )
-    params = {"code": code}
-    if form.get("state"):
-        params["state"] = form["state"]
-    separator = "&" if "?" in redirect_uri else "?"
-    return RedirectResponse(f"{redirect_uri}{separator}{urlencode(params)}", status_code=status.HTTP_302_FOUND)
-
-
-@router.post("/token")
-async def executive_remote_mcp_token(request: Request, db: Session = Depends(get_db)) -> dict[str, Any]:
-    payload = await _read_request_payload(request)
-    grant_type = str(payload.get("grant_type") or "")
-    if grant_type == "urn:ietf:params:oauth:grant-type:device_code":
-        return _exchange_device_code(db, str(payload.get("device_code") or ""))
-    if grant_type != "authorization_code":
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unsupported grant_type")
-    code = str(payload.get("code") or "")
-    redirect_uri = str(payload.get("redirect_uri") or "")
-    if not code or not redirect_uri:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing authorization code or redirect_uri")
-    try:
-        code_payload = decode_token(code)
-    except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authorization code") from exc
-    if code_payload.get("type") != "mcp_oauth_code":
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authorization code type")
-    if code_payload.get("redirect_uri") != redirect_uri:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authorization code redirect mismatch")
-    _verify_pkce(code_payload, str(payload.get("code_verifier") or ""))
-
-    user = _require_active_user(db, str(code_payload.get("sub") or ""))
-    ctx = _resolve_authorized_tenant_context(
-        db,
-        user=user,
-        requested_tenant_id=str(code_payload.get("tenant_id") or ""),
-    )
-    token_scope = _normalize_scope(str(code_payload.get("scope") or EXECUTIVE_REMOTE_MCP_SCOPE_READ))
-    connector_token = _create_connector_token(user=user, ctx=ctx, scope=token_scope)
-    return {
-        "access_token": connector_token,
-        "token_type": "Bearer",
-        "expires_in": _CONNECTOR_TOKEN_MINUTES * 60,
-        "scope": token_scope,
-    }
 
 
 @router.post("", response_model=None)
@@ -552,7 +656,8 @@ def _normalize_scope(scope: str) -> str:
     return " ".join(sorted(requested))
 
 
-def _authorization_html(hidden: dict[str, str]) -> str:
+def _authorization_html(hidden: dict[str, str], error: str = "") -> str:
+    error_html = f'<p role="alert" style="color:#f87171">{escape(error)}</p>' if error else ""
     hidden_inputs = "\n".join(
         f'<input type="hidden" name="{escape(key)}" value="{escape(value)}" />' for key, value in hidden.items()
     )
@@ -576,10 +681,12 @@ def _authorization_html(hidden: dict[str, str]) -> str:
   <main>
     <h1>Connect Executive MCP</h1>
     <p>This grants a short-lived, tenant-scoped connector token for executive summaries, metrics, and presentation generation. Raw prompt content is not exposed.</p>
+    {error_html}
     <form method="post" action="/mcp/executive/authorize">
       {hidden_inputs}
       <label>Email<input name="email" type="email" autocomplete="username" required /></label>
       <label>Password<input name="password" type="password" autocomplete="current-password" required /></label>
+      <label>Two-step code <span style="color:#7f8ea3">(when two-step sign-in is on: the code from your authenticator app, or a recovery code)</span><input name="code" autocomplete="one-time-code" inputmode="numeric" /></label>
       <label>Tenant ID <span style="color:#7f8ea3">(optional if your user has one tenant)</span><input name="tenant_id" placeholder="5043d9f6-..." /></label>
       <button type="submit">Authorize connector</button>
     </form>
@@ -588,7 +695,8 @@ def _authorization_html(hidden: dict[str, str]) -> str:
 </html>"""
 
 
-def _device_authorization_html(user_code: str) -> str:
+def _device_authorization_html(user_code: str, error: str = "") -> str:
+    error_html = f'<p role="alert" style="color:#f87171">{escape(error)}</p>' if error else ""
     safe_user_code = escape(user_code.strip().upper())
     return f"""<!doctype html>
 <html lang="en">
@@ -609,10 +717,12 @@ def _device_authorization_html(user_code: str) -> str:
   <main>
     <h1>Authorize Executive MCP device</h1>
     <p>Enter the code shown by Claude or Codex. This grants a short-lived, tenant-scoped executive connector token.</p>
+    {error_html}
     <form method="post" action="/mcp/executive/device">
       <label>Device code<input name="user_code" value="{safe_user_code}" required /></label>
       <label>Email<input name="email" type="email" autocomplete="username" required /></label>
       <label>Password<input name="password" type="password" autocomplete="current-password" required /></label>
+      <label>Two-step code <span style="color:#7f8ea3">(when two-step sign-in is on)</span><input name="code" autocomplete="one-time-code" inputmode="numeric" /></label>
       <label>Tenant ID <span style="color:#7f8ea3">(optional if your user has one tenant)</span><input name="tenant_id" placeholder="5043d9f6-..." /></label>
       <button type="submit">Authorize device</button>
     </form>
@@ -684,20 +794,16 @@ def _create_connector_token(*, user: User, ctx: TenantContext, scope: str) -> st
 
 
 def _verify_pkce(code_payload: dict[str, Any], code_verifier: str) -> None:
+    """PKCE with S256 only: every code was issued for a challenge (RFC 7636)."""
+
     challenge = str(code_payload.get("code_challenge") or "")
-    method = str(code_payload.get("code_challenge_method") or "")
     if not challenge:
-        return
-    if not code_verifier:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authorization code")
+    if not code_verifier or not re.fullmatch(r"[A-Za-z0-9._~-]{43,128}", code_verifier):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing PKCE verifier")
-    if method == "S256":
-        digest = hashlib.sha256(code_verifier.encode("ascii")).digest()
-        computed = base64.urlsafe_b64encode(digest).decode("ascii").rstrip("=")
-    elif method in {"plain", ""}:
-        computed = code_verifier
-    else:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unsupported PKCE method")
-    if computed != challenge:
+    digest = hashlib.sha256(code_verifier.encode("ascii")).digest()
+    computed = base64.urlsafe_b64encode(digest).decode("ascii").rstrip("=")
+    if not secrets.compare_digest(computed, challenge):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid PKCE verifier")
 
 

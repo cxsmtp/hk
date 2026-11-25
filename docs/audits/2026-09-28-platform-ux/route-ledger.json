@@ -1732,6 +1732,25 @@
     "mobile": "not-observed"
   },
   {
+    "route": "/settings/backups",
+    "file": "apps/web/src/app/settings/backups/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Settings → Backups & health (deploy/README.md: Backups), laid out as FTR Command Center's Settings → Backups & health with CxMissionZero's backups behind it (encryption, the server's backup key, the staged restore). Covered by apps/web/tests/backups-settings.test.mjs (pure view logic and source checks) and the API tests in apps/api/tests/test_backups.py. Observed against the live compose stack on desktop (1440px) and 393px mobile: no horizontal scroll; the populated page (backups, the key box, readiness) rendered, and its actions exercised through the API routes it calls.",
+    "desktop": "observed",
+    "mobile": "observed"
+  },
+  {
     "route": "/settings/https",
     "file": "apps/web/src/app/settings/https/page.tsx",
     "owner": "W3",
@@ -1749,5 +1768,81 @@
     "notes": "Settings → HTTPS (docs/https-and-hosting.md), laid out as FTR Command Center's Settings → HTTPS with CxMissionZero's behaviour behind it. Covered by apps/web/tests/https-settings.test.mjs (pure view logic and source checks) and the API tests in apps/api/tests/test_https_settings.py. Observed against the live compose stack on desktop (1440px) and 393px mobile: no horizontal scroll, hardening autosave and its refusal (the last good setting kept) exercised.",
     "desktop": "observed",
     "mobile": "observed"
+  },
+  {
+    "route": "/login/reset",
+    "file": "apps/web/src/app/login/reset/page.tsx",
+    "owner": "W1",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Choose a new password from an emailed link (docs/sign-in.md). Covered by apps/web/tests/two-step-qr.test.mjs and apps/api/tests/test_sign_in_hardening.py; not yet observed in a browser.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
+  },
+  {
+    "route": "/settings/signin",
+    "file": "apps/web/src/app/settings/signin/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Settings → Sign-in (docs/sign-in.md), FTR Command Center's People → Sign-in look. Covered by apps/web/tests/two-step-qr.test.mjs (source checks) and apps/api/tests/test_sign_in_hardening.py; not yet observed in a browser.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
+  },
+  {
+    "route": "/settings/sso",
+    "file": "apps/web/src/app/settings/sso/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Settings → Single sign-on (docs/sign-in.md), FTR Command Center's System → Single sign-on look with OIDC fields. Covered by apps/web/tests/two-step-qr.test.mjs (source checks) and apps/api/tests/test_sign_in_hardening.py; not yet observed in a browser.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
+  },
+  {
+    "route": "/settings/two-step",
+    "file": "apps/web/src/app/settings/two-step/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Settings → Two-step sign-in, for oneself (docs/sign-in.md). Covered by apps/web/tests/two-step-qr.test.mjs and apps/api/tests/test_sign_in_hardening.py; not yet observed in a browser.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
   }
 ]

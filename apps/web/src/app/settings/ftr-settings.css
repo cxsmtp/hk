@@ -120,3 +120,31 @@
 .ftr-settings .saved-banner { margin-bottom: 10px; padding: 6px 12px; border-radius: 12px; font-weight: 600; font-size: 13px; color: var(--green); border: 1px solid color-mix(in srgb, var(--green) 30%, transparent); background: color-mix(in srgb, var(--green) 8%, transparent); }
 .ftr-settings .saved-foot { position: sticky; bottom: 12px; margin-top: 10px; padding: 7px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-solid); font-size: 13px; color: var(--muted); box-shadow: var(--shadow); }
 .ftr-settings .saved-foot.bad { color: var(--red); border-color: color-mix(in srgb, var(--red) 40%, transparent); }
+
+/* Tables, small and danger buttons, link buttons (app.css .tw, table, th, td, td.num, td.actions, .empty, button.sm,
+   button.danger, .btn, .warn-t, .wide-panel, .ready-table, .ready-act; standard.css table and small-button sizes), for
+   Settings → Backups & health */
+.ftr-settings .tw { overflow-x: auto; margin: 0 -6px; }
+.ftr-settings table { width: 100%; border-collapse: collapse; border-spacing: 0; font-size: 13.5px; }
+.ftr-settings th { text-align: left; font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .02em; text-transform: none; padding: 6px 10px; border-bottom: 1px solid var(--line-hi); white-space: nowrap; background: transparent; }
+.ftr-settings td { padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.ftr-settings td.num, .ftr-settings th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.ftr-settings td.actions { white-space: nowrap; text-align: right; }
+.ftr-settings td.actions > * + * { margin-left: 6px; }
+.ftr-settings .empty { padding: 34px 10px; text-align: center; color: var(--muted); }
+.ftr-settings .empty b { display: block; color: var(--text); font-size: 15px; margin-bottom: 4px; }
+.ftr-settings button.sm, .ftr-settings .btn.sm { min-height: 28px; padding: 3px 9px; border-radius: 7px; font-size: 12.5px; }
+.ftr-settings button.danger { color: var(--red); border-color: rgba(248, 113, 113, .35); background: transparent; }
+.ftr-settings .btn { font: inherit; font-weight: 500; border-radius: 8px; min-height: 34px; padding: 6px 12px; border: 1px solid var(--line-hi); background: var(--panel); color: var(--text); cursor: pointer; display: inline-flex; align-items: center; gap: 7px; text-decoration: none; white-space: nowrap; }
+.ftr-settings .btn.ghost { background: transparent; }
+.ftr-settings .btn:hover { border-color: var(--brand); background: var(--panel-hi); text-decoration: none; }
+.ftr-settings .warn-t { color: var(--amber); }
+.ftr-settings .wide-panel { grid-column: 1 / -1; }
+.ftr-settings .ready-table { table-layout: fixed; }
+.ftr-settings .ready-table :is(th, td) { white-space: normal; overflow-wrap: anywhere; vertical-align: top; }
+.ftr-settings .ready-table th:nth-child(1) { width: 24%; }
+.ftr-settings .ready-table th:nth-child(2) { width: 92px; }
+.ftr-settings .ready-table th:nth-child(4) { width: 132px; }
+.ftr-settings .ready-act { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ftr-settings td .chip, .ftr-settings td button, .ftr-settings td .btn { white-space: nowrap; }
+.ftr-settings .callout.bad { border-color: color-mix(in srgb, var(--red) 40%, transparent); background: color-mix(in srgb, var(--red) 8%, transparent); }

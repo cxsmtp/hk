@@ -11,7 +11,7 @@ def test_0076_is_single_head_and_has_reversible_collective_tables() -> None:
     api_root = Path(__file__).resolve().parents[1]
     config = Config(str(api_root / "app/db/migrations/alembic.ini"))
     config.set_main_option("script_location", str(api_root / "app/db/migrations"))
-    assert ScriptDirectory.from_config(config).get_heads() == ["0094_first_run_and_terms"]
+    assert ScriptDirectory.from_config(config).get_heads() == ["0096_signin_hardening"]
     migration = import_module("app.db.migrations.versions.0076_agent_collective_security")
     assert migration.down_revision == "0075_account_boundary_production_core"
     source = (api_root / "app/db/migrations/versions/0076_agent_collective_security.py").read_text(

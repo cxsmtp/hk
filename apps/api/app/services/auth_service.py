@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.security import (
     create_access_token,
     create_refresh_token,
@@ -89,8 +90,15 @@ def refresh_tokens(db: Session, refresh_token: str) -> dict:
     if not record:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token revoked or unknown")
 
-    if _as_utc(record.expires_at) < datetime.now(timezone.utc):
+    now = datetime.now(timezone.utc)
+    if _as_utc(record.expires_at) < now:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token expired")
+    # Idle sign-ins end (CxMissionZero's SESSION_IDLE_MINUTES, docs/sign-in.md): every refresh issues a new refresh
+    # token, so the age of this one is the time since this sign-in was last used.
+    if _as_utc(record.created_at) + timedelta(minutes=max(1, int(settings.session_idle_minutes))) < now:
+        record.revoked_at = now
+        db.flush()
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Signed out after a time without activity")
 
     membership = db.scalar(
         select(UserTenantRole).where(UserTenantRole.user_id == user_id, UserTenantRole.tenant_id == tenant_id)

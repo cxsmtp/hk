@@ -5,8 +5,8 @@ from datetime import datetime, timezone
 from time import perf_counter, sleep
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Query, Response, status
-from fastapi.responses import RedirectResponse
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Query, Request, Response, status
+from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import AfterValidator, BaseModel, EmailStr
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -20,8 +20,9 @@ from app.db.models.user import RefreshToken, User, UserTenantRole
 from app.db.session import get_db
 from app.services import activation_service, first_run_service, terms_service
 from app.services.audit_service import write_audit_log
-from app.services.auth_service import authenticate_user, get_user_tenants, issue_tokens, refresh_tokens
-from app.services import oidc_auth_service
+from app.services.auth_service import get_user_tenants, issue_tokens, refresh_tokens
+from app.services import account_security, mfa_service, oidc_auth_service, sign_in_store
+from app.services.account_security import SignInRefused
 from app.services.passwords import password_problem
 from app.version import APP_VERSION
 
@@ -110,6 +111,17 @@ class LoginResponse(AuthTokensResponse):
     must_change_password: bool = False
 
 
+class TwoStepChallenge(BaseModel):
+    """The password was right and a second step follows (docs/sign-in.md): no tokens yet, only a ticket for the code.
+    ``setup``: an administrator requires two-step sign-in and this person has none yet; the page shows the key and its
+    QR code, and the first right code turns it on."""
+
+    two_step: bool = True
+    ticket: str
+    minutes: int
+    setup: dict[str, str] | None = None
+
+
 class MeResponse(BaseModel):
     id: str
     email: str
@@ -125,6 +137,8 @@ class MeResponse(BaseModel):
     terms: dict[str, Any] | None = None
     # This build's version, shown bottom-left in the console (VERSION).
     version: str = APP_VERSION
+    # Two-step sign-in for this person (docs/sign-in.md): {available, on, since, recoveryLeft, required}.
+    two_step: dict[str, Any] | None = None
 
 
 class SelectTenantResponse(AuthTokensResponse):
@@ -157,14 +171,52 @@ def oidc_start(provider_key: str, response: Response, workspace: str = Query(...
     return {"authorization_url": authorization_url}
 
 
+def _sso_refused(db: Session, exc: oidc_auth_service.OIDCError, provider_key: str = "") -> Response:
+    """Back to the sign-in page with a short code, which picks the sentence the page shows (CxMissionZero's
+    /#sso=<code>). What went wrong is in the audit log: never a token, the client secret or the provider's own text."""
+
+    db.rollback()
+    try:
+        oidc_auth_service.audit_refusal(db, provider_key=provider_key, error=exc)
+        db.commit()
+    except Exception:  # noqa: BLE001 - the refusal is still answered
+        db.rollback()
+    print(f"! [single sign-on] Not signed in ({exc.code}): {exc}.", flush=True)
+    if not settings.oidc_frontend_url:
+        raise _oidc_failure(exc)
+    base = settings.oidc_frontend_url.split("#", 1)[0]
+    login = base.rsplit("/oidc/callback", 1)[0] if base.endswith("/oidc/callback") else base
+    redirect = RedirectResponse(url=f"{login}#sso={re.sub(r'[^a-z]', '', exc.code)[:20] or 'token'}", status_code=status.HTTP_303_SEE_OTHER)
+    redirect.headers["Cache-Control"] = "no-store"
+    redirect.headers["Referrer-Policy"] = "no-referrer"
+    redirect.delete_cookie(oidc_auth_service.STATE_COOKIE, path="/")
+    return redirect
+
+
 @router.get("/oidc/callback")
-def oidc_callback(code: str, state: str, browser: str | None = Cookie(default=None, alias=oidc_auth_service.STATE_COOKIE)):
+def oidc_callback(
+    request: Request,
+    code: str = Query(default="", max_length=4096),
+    state: str = Query(default="", max_length=200),
+    error: str | None = Query(default=None, max_length=200),
+    browser: str | None = Cookie(default=None, alias=oidc_auth_service.STATE_COOKIE),
+    db: Session = Depends(get_db),
+):
+    # The same limit as every sign-in: 30 attempts in ten minutes from one address.
+    if account_security.too_many_sign_ins(request):
+        return _sso_refused(db, oidc_auth_service.OIDCError("too many sign-in attempts from this address", "busy"))
     try:
         if not browser:
-            raise oidc_auth_service.OIDCError("OIDC state invalid")
-        ticket = oidc_auth_service.callback(code=code, state=state, browser=browser)
+            raise oidc_auth_service.OIDCError("the answer belongs to no sign-in started from this browser (state)", "expired")
+        if error is not None:
+            said = error if re.fullmatch(r"[a-z0-9_.-]{1,60}", error, re.IGNORECASE) else "an error"
+            raise oidc_auth_service.OIDCError(f"the identity provider answered {said}", "cancelled")
+        if not code:
+            raise oidc_auth_service.OIDCError("the identity provider sent no code", "provider")
+        ticket = oidc_auth_service.callback(code=code, state=state, browser=browser, db=db)
+        db.commit()
     except oidc_auth_service.OIDCError as exc:
-        raise _oidc_failure(exc) from exc
+        return _sso_refused(db, exc)
     redirect = RedirectResponse(url=f"{settings.oidc_frontend_url}#ticket={ticket}", status_code=status.HTTP_303_SEE_OTHER)
     redirect.headers["Cache-Control"] = "no-store"
     redirect.headers["Referrer-Policy"] = "no-referrer"
@@ -192,6 +244,10 @@ def oidc_complete(payload: OIDCCompleteRequest, response: Response, db: Session 
 def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     started_at = perf_counter()
     try:
+        # The same password rule as everywhere (12+ characters, not repetitive).
+        problem = password_problem(payload.password)
+        if problem:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=problem)
         if not settings.self_registration_enabled:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -248,32 +304,94 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         _normalize_auth_timing(started_at)
 
 
-@router.post("/login", response_model=LoginResponse)
-def login(payload: LoginRequest, db: Session = Depends(get_db)):
+def _tenant_rows(db: Session, user: User) -> tuple[list[UserTenantRole], list[TenantMembershipResponse]]:
+    memberships = get_user_tenants(db, user.id)
+    tenants = []
+    for m in memberships:
+        tenant = db.get(Tenant, m.tenant_id)
+        if tenant:
+            tenants.append(TenantMembershipResponse(id=tenant.id, name=tenant.name, role=m.role))
+    return memberships, tenants
+
+
+def signed_in_response(db: Session, user: User) -> LoginResponse:
+    """The tokens a password sign-in gives (after the second step when there is one). The caller commits."""
+
+    memberships, tenants = _tenant_rows(db, user)
+    if not memberships:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=account_security.WRONG)
+    default_membership = memberships[0]
+    tokens = issue_tokens(db, user=user, tenant_id=default_membership.tenant_id, role=default_membership.role)
+    return LoginResponse(
+        **tokens,
+        user=AuthUserResponse(id=user.id, email=user.email, full_name=user.full_name),
+        tenants=tenants,
+        selected_tenant_id=default_membership.tenant_id,
+        must_change_password=bool(user.must_change_password),
+    )
+
+
+def audit_access(db: Session, user: User | None, *, action: str, reason: str, request: Request | None) -> None:
+    """A sign-in event in the audit log (CxMissionZero's auditAccess): never a password, code, ticket or token."""
+
+    membership = get_user_tenants(db, user.id)[:1] if user is not None else []
+    write_audit_log(
+        db,
+        tenant_id=membership[0].tenant_id if membership else None,
+        actor_user_id=user.id if user is not None else None,
+        actor_type="human" if user is not None else "system",
+        action=action,
+        resource_type="user",
+        resource_id=user.id if user is not None else "sign-in",
+        payload={"reason": reason, "ip": account_security.client_ip(request)},
+    )
+
+
+def refused(status_code: int, message: str, **extra: Any) -> JSONResponse:
+    return JSONResponse(status_code=status_code, content={"detail": message, **extra}, headers={"Cache-Control": "no-store"})
+
+
+@router.post("/login", response_model=LoginResponse | TwoStepChallenge)
+def login(payload: LoginRequest, request: Request, db: Session = Depends(get_db)):
+    """Sign in with an email and password (CxMissionZero's POST /api/session/password): limited per address, five
+    wrong passwords lock the account for 15 minutes, and with two-step sign-in only a ticket for the code comes back."""
+
     started_at = perf_counter()
     try:
-        user = authenticate_user(db, payload.email, payload.password)
-        memberships = get_user_tenants(db, user.id)
-        if not memberships:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-
-        default_membership = memberships[0]
-        tokens = issue_tokens(db, user=user, tenant_id=default_membership.tenant_id, role=default_membership.role)
+        if account_security.too_many_sign_ins(request):
+            return refused(429, account_security.TOO_MANY)
+        try:
+            user = account_security.check_password(db, payload.email, payload.password, more=True)
+        except SignInRefused as refusal:
+            db.commit()  # the wrong attempt counts
+            audit_access(db, refusal.user, action="auth.sign_in.refused", reason=f"Sign-in refused for {refusal.user.email if refusal.user else 'an address with no account here'}: {refusal.message}{' Account locked.' if refusal.locked else ''}", request=request)
+            db.commit()
+            return refused(refusal.status_code, refusal.message)
+        # Single sign-on is on and passwords are kept for Admins: said only to someone who typed the right password.
+        if account_security.password_not_enough(db, user):
+            audit_access(db, user, action="auth.sign_in.refused", reason=f"Sign-in refused for {user.email}: only Admins may sign in with a password; everyone else uses single sign-on.", request=request)
+            db.commit()
+            return refused(403, "Signing in with a password is turned off for this account. Use single sign-on.", sso=True)
+        if account_security.needs_two_step(db, user):
+            try:
+                secret = "" if account_security.two_step_on(user) else mfa_service.new_secret()
+                ticket = mfa_service.issue_ticket(user.id, secret=secret)
+            except sign_in_store.StoreUnavailable:
+                db.commit()
+                return refused(503, "Sign-in is unavailable for a moment. Try again shortly.")
+            db.commit()
+            challenge = TwoStepChallenge(
+                ticket=ticket,
+                minutes=mfa_service.TICKET_TTL_SECONDS // 60,
+                setup=mfa_service.setup_view(user.email, secret) if secret else None,
+            )
+            return JSONResponse(content=challenge.model_dump(), headers={"Cache-Control": "no-store"})
+        # Only now is it a sign-in: wrong attempts before it are forgotten.
+        account_security.record_sign_in(user)
+        result = signed_in_response(db, user)
+        audit_access(db, user, action="auth.sign_in", reason=f"{user.email} signed in with a password.", request=request)
         db.commit()
-
-        tenants = []
-        for m in memberships:
-            tenant = db.get(Tenant, m.tenant_id)
-            if tenant:
-                tenants.append({"id": tenant.id, "name": tenant.name, "role": m.role})
-
-        return LoginResponse(
-            **tokens,
-            user=AuthUserResponse(id=user.id, email=user.email, full_name=user.full_name),
-            tenants=[TenantMembershipResponse(**tenant_row) for tenant_row in tenants],
-            selected_tenant_id=default_membership.tenant_id,
-            must_change_password=bool(user.must_change_password),
-        )
+        return result
     finally:
         _normalize_auth_timing(started_at)
 
@@ -303,6 +421,8 @@ def me(current_user: Annotated[User, Depends(get_current_user)], db: Session = D
         licence = activation_service.licence_for_admins(db)
         db.commit()
 
+    two_step = account_security.two_step_view(db, current_user)
+    db.commit()
     return MeResponse(
         id=current_user.id,
         email=current_user.email,
@@ -311,6 +431,7 @@ def me(current_user: Annotated[User, Depends(get_current_user)], db: Session = D
         licence=licence,
         must_change_password=bool(current_user.must_change_password),
         terms=terms_service.describe(db, current_user),
+        two_step=two_step,
     )
 
 
@@ -334,9 +455,13 @@ def change_password(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=problem)
     current_user.hashed_password = get_password_hash(payload.next)
     current_user.must_change_password = False
-    now = datetime.now(timezone.utc)
-    for record in db.scalars(select(RefreshToken).where(RefreshToken.user_id == current_user.id, RefreshToken.revoked_at.is_(None))):
-        record.revoked_at = now
+    # Anyone else signed in as this person is signed out; a reset link sent earlier stops working (its stamp no longer
+    # matches the password), and so do two-step tickets.
+    account_security.sign_out_everywhere(db, current_user)
+    try:
+        mfa_service.revoke_tickets(current_user.id)
+    except sign_in_store.StoreUnavailable:
+        pass
     # The generated first password is no longer any use: its file goes (CxMissionZero removes it here too).
     first_run_service.remove_first_admin_file()
 
