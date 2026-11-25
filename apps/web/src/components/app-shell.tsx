@@ -7,6 +7,7 @@ import { Sidebar } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
 import { LicenceBanner } from "@/components/licence-banner";
 import { BackupNotice } from "@/components/backup-notice";
+import { IntegrityNotice } from "@/components/integrity-notice";
 import { MobileLifecycleNav } from "@/components/mobile-lifecycle-nav";
 import { getSession, SESSION_CHANGE_EVENT } from "@/lib/auth";
 import { useDevRouteWarmup } from "@/hooks/use-dev-route-warmup";
@@ -47,6 +48,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <main className="min-w-0 flex-1 overflow-x-clip">
         <LicenceBanner />
         <BackupNotice />
+        <IntegrityNotice />
         <Topbar />
         <MobileLifecycleNav />
         <div className="mx-auto w-full max-w-[1800px] px-4 pb-8 pt-6 sm:px-6">{children}</div>

@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { api } from "@/lib/api";
 import { BACKUP_NOTICE_CHANGED_EVENT } from "@/components/backup-notice";
-import { backupKeyFile, backupsHeading, kb, READINESS, restoreQuestion, sealedLine } from "@/lib/backups-settings";
+import { backupKeyFile, backupsHeading, beforeUpdateLine, kb, READINESS, restoreQuestion, sealedLine } from "@/lib/backups-settings";
 import type { BackupEncryption, BackupKeyShown, BackupsStatus, Readiness } from "@/lib/backups-settings";
 import { errorMessageFrom } from "@/lib/licence";
 
@@ -215,6 +215,11 @@ export default function BackupsSettingsPage() {
                     <div className="callout warn mt">
                       The last backup failed ({dateTime(b.last.at)}): {b.last.error}
                     </div>
+                  ) : null}
+                  {beforeUpdateLine(b) ? (
+                    <p className="muted small">
+                      {beforeUpdateLine(b)} <a href="/settings/updates">Settings → Updates</a>
+                    </p>
                   ) : null}
                   <div className="flex">
                     <button className="primary" id="now" type="button" disabled={busy} onClick={now}>
