@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.capability_inference import (
     DiscoveryCapabilityEvidence,
@@ -189,7 +189,7 @@ def _run_response(
 
 @router.get("/catalog", response_model=CatalogResponse)
 def get_catalog(
-    _ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    _ctx: TenantContext = Depends(require_permission("discovery.view")),
 ) -> CatalogResponse:
     return CatalogResponse(
         enabled=settings.cie_core,
@@ -213,7 +213,7 @@ def get_catalog(
 @router.get("/runs", response_model=list[InferenceRunResponse])
 def list_runs(
     limit: int = Query(default=100, ge=1, le=200),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> list[InferenceRunResponse]:
     _require_cie()
@@ -234,7 +234,7 @@ def list_runs(
 @router.get("/runs/{run_id}", response_model=InferenceRunResponse)
 def get_run(
     run_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> InferenceRunResponse:
     _require_cie()
@@ -262,7 +262,7 @@ def get_run(
 @router.get("/subjects/{subject_hash}/genomes", response_model=list[GenomeResponse])
 def list_genomes(
     subject_hash: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> list[GenomeResponse]:
     _require_cie()
@@ -306,7 +306,7 @@ def list_genomes(
 def list_events(
     subject_hash: str,
     limit: int = Query(default=200, ge=1, le=500),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> list[CapabilityEventResponse]:
     _require_cie()

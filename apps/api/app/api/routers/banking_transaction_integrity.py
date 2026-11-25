@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.auth import get_current_user
 from app.core.config import settings
 from app.core.observability import banking_runtime_metrics
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.user import User
 from app.db.session import get_db
@@ -111,7 +111,7 @@ def _unprocessable(db: Session, exc: ValueError) -> HTTPException:
 @router.post("/banking-actions/authorize", response_model=BankingAuthorizationResult)
 def authorize_action(
     payload: BankingActionPayload,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("activity.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -154,7 +154,7 @@ def authorize_action(
 @router.post("/banking-actions/pre-execution", response_model=BankingPreExecutionResult)
 def pre_execution(
     payload: BankingPreExecutionPayload,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("activity.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -196,7 +196,7 @@ def pre_execution(
 @router.post("/banking-actions/execution", response_model=BankingExecutionResult)
 def execution(
     payload: BankingExecutionPayload,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("activity.operate")),
     db: Session = Depends(get_db),
 ):
     started = perf_counter()
@@ -233,7 +233,7 @@ def execution(
 )
 def authorize_model_request(
     payload: BankingModelRequestPayload,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("activity.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -272,7 +272,7 @@ def authorize_model_request(
 )
 def validate_model_response(
     payload: BankingModelResponsePayload,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("activity.operate")),
     db: Session = Depends(get_db),
 ):
     started = perf_counter()
@@ -309,7 +309,7 @@ def validate_model_response(
 )
 def assure_structured_response(
     payload: BankingStructuredResponsePayload,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("activity.operate")),
     db: Session = Depends(get_db),
 ):
     started = perf_counter()
@@ -345,7 +345,7 @@ def assure_structured_response(
     response_model=BankingCisoSummary,
 )
 def get_banking_ciso_summary(
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("activity.inspect")),
     db: Session = Depends(get_db),
 ):
     return build_banking_ciso_summary(db, tenant_id=ctx.tenant.id)
@@ -357,7 +357,7 @@ def get_banking_ciso_summary(
 )
 def get_banking_transaction(
     ai_transaction_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("activity.inspect")),
     db: Session = Depends(get_db),
 ):
     projection = build_banking_transaction_projection(

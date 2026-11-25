@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.auth import get_current_user
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.user import User
 from app.db.session import get_db
@@ -56,7 +56,7 @@ class ScanResultResponse(BaseModel):
 @router.post("/trigger", response_model=ScanTriggerResponse, status_code=status.HTTP_202_ACCEPTED)
 def trigger_scan_route(
     payload: ScanTriggerRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin", "auditor", "operator"])),
+    ctx: TenantContext = Depends(require_permission("discovery.scan")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -81,7 +81,7 @@ def trigger_scan_route(
 
 @router.get("/latest", response_model=ScanResultResponse)
 def latest_scan_route(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     row = get_latest_scan(db, tenant_id=ctx.tenant.id)
@@ -92,7 +92,7 @@ def latest_scan_route(
 @router.get("/{scan_id}", response_model=ScanResultResponse)
 def get_scan_route(
     scan_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     row = get_scan_by_id(db, tenant_id=ctx.tenant.id, scan_id=scan_id)

@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.api.envelopes import ListEnvelope, paginate_rows
 from app.core.auth import get_current_user
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.discovery import DiscoveryApplication
 from app.db.models.enforcement import EnforcementEvent
@@ -955,7 +955,7 @@ def list_findings(
     tool_filter: str | None = None,
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("findings.view")),
     db: Session = Depends(get_db),
 ):
     query = select(Finding).where(Finding.tenant_id == ctx.tenant.id)
@@ -990,7 +990,7 @@ def list_remediations(
     finding_id: str | None = None,
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("findings.view")),
     db: Session = Depends(get_db),
 ):
     rows = list_remediation_actions(
@@ -1017,7 +1017,7 @@ def finding_remediations(
     finding_id: str,
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("findings.view")),
     db: Session = Depends(get_db),
 ):
     _finding_or_404(db, finding_id=finding_id, tenant_id=ctx.tenant.id)
@@ -1040,7 +1040,7 @@ def finding_remediations(
 def approve_remediation(
     remediation_id: str,
     payload: RemediationActionRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin", "auditor"])),
+    ctx: TenantContext = Depends(require_permission("findings.review")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -1061,7 +1061,7 @@ def approve_remediation(
 def reject_remediation(
     remediation_id: str,
     payload: RemediationActionRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin", "auditor"])),
+    ctx: TenantContext = Depends(require_permission("findings.review")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -1082,7 +1082,7 @@ def reject_remediation(
 def apply_remediation(
     remediation_id: str,
     payload: RemediationActionRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin", "auditor"])),
+    ctx: TenantContext = Depends(require_permission("findings.review")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -1107,7 +1107,7 @@ def apply_remediation(
 def rollback_remediation(
     remediation_id: str,
     payload: RemediationActionRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin", "auditor"])),
+    ctx: TenantContext = Depends(require_permission("findings.review")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -1131,7 +1131,7 @@ def rollback_remediation(
 @router.get("/{finding_id}", response_model=FindingResponse)
 def get_finding(
     finding_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("findings.view")),
     db: Session = Depends(get_db),
 ):
     row = _finding_or_404(db, finding_id=finding_id, tenant_id=ctx.tenant.id)
@@ -1142,7 +1142,7 @@ def get_finding(
 def update_finding_status(
     finding_id: str,
     payload: FindingStatusUpdateRequest,
-    ctx: TenantContext = Depends(require_role(min_role="auditor")),
+    ctx: TenantContext = Depends(require_permission("findings.review")),
     db: Session = Depends(get_db),
 ):
     normalized = str(payload.status or "").strip().lower()
@@ -1174,7 +1174,7 @@ def update_finding_status(
 def assign_finding_owner(
     finding_id: str,
     payload: FindingAssignOwnerRequest,
-    ctx: TenantContext = Depends(require_role(min_role="auditor")),
+    ctx: TenantContext = Depends(require_permission("findings.review")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -1237,7 +1237,7 @@ def assign_finding_owner(
 def escalate_finding(
     finding_id: str,
     payload: FindingEscalateRequest,
-    ctx: TenantContext = Depends(require_role(min_role="auditor")),
+    ctx: TenantContext = Depends(require_permission("findings.review")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -1283,7 +1283,7 @@ def escalate_finding(
 def run_finding_validation_pack(
     finding_id: str,
     payload: FindingValidationPackRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("findings.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -1409,7 +1409,7 @@ def run_finding_validation_pack(
 def create_finding_ticket(
     finding_id: str,
     payload: FindingCreateTicketRequest,
-    ctx: TenantContext = Depends(require_role(min_role="auditor")),
+    ctx: TenantContext = Depends(require_permission("findings.review")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -1469,7 +1469,7 @@ def create_finding_ticket(
 def accept_finding_recommendation(
     finding_id: str,
     payload: FindingAcceptRecommendationRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("findings.manage")),
     db: Session = Depends(get_db),
 ):
     row = _finding_or_404(db, finding_id=finding_id, tenant_id=ctx.tenant.id)
@@ -1515,7 +1515,7 @@ def _timeline_step(
 @router.get("/{finding_id}/traceability", response_model=FindingTraceabilityResponse)
 def get_finding_traceability(
     finding_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("findings.view")),
     db: Session = Depends(get_db),
 ):
     finding = _finding_or_404(db, finding_id=finding_id, tenant_id=ctx.tenant.id)

@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.api.envelopes import ListEnvelope
 from app.core.auth import get_current_user
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.activity_audit import UserRegistry
 from app.db.models.user import User
@@ -70,7 +70,7 @@ def list_users_registry(
     q: str | None = None,
     page: int = 1,
     page_size: int = 100,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     payload = list_user_registry(
@@ -92,7 +92,7 @@ def list_users_registry(
 def get_user_registry(
     user_id: str,
     action_limit: int = 20,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     payload = get_user_registry_entry(
@@ -110,7 +110,7 @@ def get_user_registry(
 def block_user_registry(
     user_id: str,
     payload: UserEnforcementRequest | None = None,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("activity.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -180,7 +180,7 @@ def block_user_registry(
 def enforce_policy_for_user(
     user_id: str,
     payload: UserEnforcementRequest | None = None,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("activity.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -239,7 +239,7 @@ def list_endpoints_registry(
     user_id: str | None = None,
     page: int = 1,
     page_size: int = 100,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     payload = list_deployment_endpoints(
@@ -266,7 +266,7 @@ def user_timeline(
     severity: str | None = None,
     page: int = 1,
     page_size: int = 200,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     payload = get_user_timeline(
@@ -290,7 +290,7 @@ def endpoint_timeline(
     severity: str | None = None,
     page: int = 1,
     page_size: int = 200,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     payload = get_endpoint_timeline(
@@ -316,7 +316,7 @@ def search_activity(
     runtime_event_id: str | None = None,
     page: int = 1,
     page_size: int = 100,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     payload = search_activity_audit(

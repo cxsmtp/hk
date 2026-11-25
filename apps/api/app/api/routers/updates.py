@@ -20,7 +20,7 @@ from fastapi import APIRouter, Body, Depends
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
 
-from app.core.rbac import ROLE_ORDER, require_role
+from app.core.rbac import holds, require_permission
 from app.core.tenant import TenantContext, require_tenant
 from app.services.integrity.service import IntegrityService, audit_system
 from app.services.updates.registry import UpdateError
@@ -28,7 +28,7 @@ from app.services.updates.service import UpdateService, oneline
 from app.version import APP_VERSION
 
 router = APIRouter(tags=["updates"])
-admin_only = require_role(min_role="admin")
+admin_only = require_permission("system.update")
 STARTED = time.time()
 
 #: Injected by tests; otherwise made for each request (they read their state from files).
@@ -214,7 +214,7 @@ async def integrity_check(ctx: TenantContext = Depends(admin_only)):
 def integrity_notice(ctx: TenantContext = Depends(require_tenant)):
     """Owners and admins see an alert while the state is Files changed or Not signed by the release workflow."""
 
-    if ROLE_ORDER.get(ctx.role, -1) < ROLE_ORDER["admin"]:
+    if not holds(ctx, "system.update"):
         return {"notice": None}
     try:
         return {"notice": integrity_service().notice()}

@@ -7,5 +7,6 @@
   "desktop_app": "Claude",
   "machine_id": "",
   "poll_seconds": 0.5,
-  "dialog": true
+  "dialog": true,
+  "full_prompt_capture": false
 }

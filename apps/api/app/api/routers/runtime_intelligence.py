@@ -18,7 +18,7 @@ from app.core.control_engine.canonical_action import (
     MAX_LIST_ITEMS,
     canonical_field_material,
 )
-from app.core.rbac import ROLE_ORDER, require_role
+from app.core.rbac import holds, require_permission
 from app.core.tenant import TenantContext, require_stream_tenant
 from app.db.models.evidence import DecisionReceipt, EvidenceNode, ExecutionIntegrityResult, ExecutionReceipt
 from app.db.models.finding import Finding
@@ -46,7 +46,7 @@ router = APIRouter(prefix="/runtime-intelligence", tags=["runtime-intelligence"]
 
 
 def _require_stream_viewer(ctx: TenantContext = Depends(require_stream_tenant)) -> TenantContext:
-    if ROLE_ORDER.get(ctx.role, -1) < ROLE_ORDER["viewer"]:
+    if not holds(ctx, "activity.view"):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient role")
     return ctx
 
@@ -1126,7 +1126,7 @@ def stream_runtime_recommendations(
 @router.get("/chains/{chain_id}")
 def runtime_chain_detail(
     chain_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     return chain_graph(db, tenant_id=ctx.tenant.id, chain_id=chain_id)
@@ -1135,7 +1135,7 @@ def runtime_chain_detail(
 @router.get("/chains/{chain_id}/graph")
 def runtime_chain_graph(
     chain_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     return chain_graph(db, tenant_id=ctx.tenant.id, chain_id=chain_id)
@@ -1144,7 +1144,7 @@ def runtime_chain_graph(
 @router.get("/chains/{chain_id}/evidence")
 def runtime_chain_evidence(
     chain_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     return chain_evidence(db, tenant_id=ctx.tenant.id, chain_id=chain_id)
@@ -1153,7 +1153,7 @@ def runtime_chain_evidence(
 @router.post("/deferred-side-effects")
 def runtime_record_deferred_side_effect(
     payload: DeferredSideEffectRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("activity.operate")),
     db: Session = Depends(get_db),
 ):
     return record_deferred_side_effect(
@@ -1322,7 +1322,7 @@ def list_runtime_events(
     ai_system_id: str | None = None,
     agent_id: str | None = None,
     correlation_id: str | None = None,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     stmt = select(RuntimeEvent).where(RuntimeEvent.tenant_id == ctx.tenant.id)
@@ -1350,7 +1350,7 @@ def list_runtime_findings(
     ai_system_id: str | None = None,
     severity: str | None = None,
     finding_type: str | None = None,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     finding_types = sorted(RUNTIME_FINDING_TYPES)
@@ -1390,7 +1390,7 @@ def list_runtime_findings(
 @router.get("/graph/{ai_system_id}", response_model=RuntimeGraphResponse)
 def runtime_graph(
     ai_system_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     rows = db.scalars(
@@ -1443,7 +1443,7 @@ def runtime_graph(
 @router.get("/action-graph/{action_id}", response_model=RuntimeActionGraphResponse)
 def runtime_action_graph(
     action_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     normalized_action_id = str(action_id or "").strip()
@@ -1496,7 +1496,7 @@ def runtime_action_graph(
 @router.get("/action-trace/{action_id}", response_model=RuntimeActionTraceResponse)
 def runtime_action_trace(
     action_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     normalized_action_id = str(action_id or "").strip()
@@ -1792,7 +1792,7 @@ def runtime_action_trace(
 @router.get("/agent-graph/{agent_id}", response_model=RuntimeAgentGraphResponse)
 def runtime_agent_graph(
     agent_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     agent_events = db.scalars(
@@ -1903,7 +1903,7 @@ def list_runtime_triggers(
     status_filter: str | None = None,
     ai_system_id: str | None = None,
     reason_code: str | None = None,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     stmt = select(RuntimeSimulationTrigger).where(RuntimeSimulationTrigger.tenant_id == ctx.tenant.id)
@@ -1927,7 +1927,7 @@ def list_runtime_recommendations(
     status_filter: str | None = None,
     ai_system_id: str | None = None,
     recommendation_type: str | None = None,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ):
     stmt = select(RuntimeGovernanceRecommendation).where(RuntimeGovernanceRecommendation.tenant_id == ctx.tenant.id)

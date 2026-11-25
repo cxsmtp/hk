@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from app.api.envelopes import ListEnvelope
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.session import get_db
 from app.services.user_visibility_service import (
@@ -100,7 +100,7 @@ def _policy_pack_error(exc: PolicyPackPlatformError) -> HTTPException:
 @router.post("/access-grants", status_code=status.HTTP_201_CREATED)
 def create_access_grant(
     payload: AccessGrantRequest,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("identities.manage")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -132,7 +132,7 @@ def create_access_grant(
 
 @router.get("/access-grants", response_model=ListEnvelope[dict[str, Any]])
 def get_access_grants(
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("identities.manage")),
     db: Session = Depends(get_db),
 ):
     items = list_visibility_access_grants(db, tenant_id=ctx.tenant.id)
@@ -141,7 +141,7 @@ def get_access_grants(
 
 @router.get("/privacy-settings")
 def get_tenant_privacy_settings(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("identities.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -160,7 +160,7 @@ def get_tenant_privacy_settings(
 @router.put("/privacy-settings")
 def put_tenant_privacy_settings(
     payload: PrivacySettingsRequest,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("identities.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -183,7 +183,7 @@ def put_tenant_privacy_settings(
 def create_prompt_reveal_grant(
     action_id: str,
     payload: PromptRevealRequest,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("identities.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -212,7 +212,7 @@ def create_prompt_reveal_grant(
 @router.post("/prompt-reveal/{grant_id}")
 def consume_prompt_reveal_grant(
     grant_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("identities.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -245,7 +245,7 @@ def get_users(
     sort_direction: Literal["asc", "desc"] | None = None,
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=100),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("identities.view")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -283,7 +283,7 @@ def get_users(
 
 @router.get("/users/summary")
 def get_user_directory_summary(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("identities.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -302,7 +302,7 @@ def get_user_directory_summary(
 @router.get("/users/{user_id}")
 def get_user_detail(
     user_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("identities.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -331,7 +331,7 @@ def get_user_experience_section(
     section: str,
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=25, ge=1, le=100),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("identities.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -360,7 +360,7 @@ def get_user_experience_section(
 def get_departments(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=100),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("identities.view")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -381,7 +381,7 @@ def get_departments(
 @router.get("/organization")
 def get_organization(
     lookback_hours: int = Query(default=24 * 30, ge=1, le=24 * 90),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("identities.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -427,7 +427,7 @@ def get_actions(
     end_time: datetime | None = None,
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=100),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("identities.view")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -477,7 +477,7 @@ def get_actions(
 def get_groups(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=100),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("identities.view")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -500,7 +500,7 @@ def get_group(
     group_id: str,
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=100),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("identities.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -527,7 +527,7 @@ def get_group(
 def update_group_memberships(
     group_id: str,
     payload: BulkMembershipRequest,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("identities.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, list[str]]:
     try:
@@ -559,7 +559,7 @@ def update_group_memberships(
 @router.get("/users/{user_id}/effective-policies")
 def get_effective_policies(
     user_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("identities.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -583,7 +583,7 @@ def get_effective_policies(
 @router.get("/users/{user_id}/policy-stack")
 def get_user_policy_stack(
     user_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("identities.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:

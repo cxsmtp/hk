@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.api.envelopes import ListEnvelope, paginate_rows
 from app.core.auth import get_current_user
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.discovery import DiscoveryApplication
 from app.db.models.finding import Finding
@@ -136,7 +136,7 @@ def list_discovery_applications(
     status_filter: str | None = None,
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     query = select(DiscoveryApplication).where(DiscoveryApplication.tenant_id == ctx.tenant.id)
@@ -158,7 +158,7 @@ def list_discovery_applications(
 @router.get("/applications/{application_id}", response_model=DiscoveryApplicationResponse)
 def get_discovery_application_by_id(
     application_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     row = get_discovery_application(db, tenant_id=ctx.tenant.id, application_id=application_id)
@@ -177,7 +177,7 @@ def get_discovery_application_by_id(
 def promote_discovery_application_endpoint(
     application_id: str,
     payload: DiscoveryApplicationPromoteRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("discovery.manage")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -205,7 +205,7 @@ def promote_discovery_application_endpoint(
 def block_discovery_application_endpoint(
     application_id: str,
     payload: DiscoveryApplicationBlockRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("discovery.manage")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -229,7 +229,7 @@ def block_discovery_application_endpoint(
 def assign_discovery_application_owner_endpoint(
     application_id: str,
     payload: DiscoveryApplicationAssignOwnerRequest,
-    ctx: TenantContext = Depends(require_role(min_role="auditor")),
+    ctx: TenantContext = Depends(require_permission("discovery.review")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):

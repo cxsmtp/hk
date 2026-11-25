@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 from app.core.auth import get_current_user
 from app.core.config import settings
 from app.core.endpoint_auth import EndpointPrincipal, require_endpoint_scope
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.endpoint_identity import EndpointDeviceIdentity
 from app.db.models.user import User
@@ -82,7 +82,7 @@ router = APIRouter(prefix="/endpoint-agent", tags=["endpoint-agent"])
 
 @router.get("/floor/status")
 def endpoint_enforcement_floor_status(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     """Latest evidence-backed endpoint floor posture for the active tenant."""
@@ -91,7 +91,7 @@ def endpoint_enforcement_floor_status(
 
 @router.get("/health")
 def endpoint_health(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     """Tenant-scoped endpoint identity, signed heartbeat, and policy freshness."""
@@ -193,7 +193,7 @@ def _endpoint_tenant_context(principal: EndpointPrincipal) -> TenantContext:
 )
 def issue_endpoint_enrollment_authorization(
     payload: EnrollmentAuthorizationRequest,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("deployments.manage")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -239,7 +239,7 @@ def issue_endpoint_enrollment_authorization(
 )
 def issue_endpoint_reenrollment_authorization(
     endpoint_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("deployments.manage")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -344,7 +344,7 @@ def endpoint_auth_token(payload: EndpointTokenRequest, db: Session = Depends(get
 def revoke_endpoint_identity(
     endpoint_id: str,
     payload: EndpointRevokeRequest,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("deployments.manage")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -676,7 +676,7 @@ def endpoint_policy(
 )
 def create_metadata_inventory_run(
     payload: EndpointMetadataInventoryRunRequest,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("deployments.manage")),
     db: Session = Depends(get_db),
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
 ):
@@ -724,7 +724,7 @@ def create_metadata_inventory_run(
 )
 def list_metadata_inventory_runs(
     limit: int = Query(default=20, ge=1, le=100),
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.inspect")),
     db: Session = Depends(get_db),
 ):
     """List bounded aggregate history for the active tenant only."""
@@ -747,7 +747,7 @@ def list_metadata_inventory_runs(
 )
 def get_metadata_inventory_run(
     run_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.inspect")),
     db: Session = Depends(get_db),
 ):
     """Return tenant-scoped aggregate progress without exposing endpoint names."""
@@ -852,7 +852,7 @@ def notetaker_platform_action(
 @router.post("/notetaker/calendar-signal")
 def notetaker_calendar_signal(
     payload: NotetakerCalendarSignalRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -867,7 +867,7 @@ def notetaker_calendar_signal(
 @router.post("/notetaker/oauth-signal")
 def notetaker_oauth_signal(
     payload: NotetakerOAuthAppSignalRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -882,7 +882,7 @@ def notetaker_oauth_signal(
 @router.post("/notetaker/hidden-signal")
 def notetaker_hidden_signal(
     payload: NotetakerHiddenSignalRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -897,7 +897,7 @@ def notetaker_hidden_signal(
 @router.post("/notetaker/artifact-signal")
 def notetaker_artifact_signal(
     payload: NotetakerArtifactSignalRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):

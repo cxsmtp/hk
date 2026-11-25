@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { JoinSettingsPanel } from "@/components/iam/join-settings-panel";
 import { api } from "@/lib/api";
 import { autosave, SAVES_AS_YOU_TYPE } from "@/lib/ftr-autosave";
 import { idleHours, refusalFrom, RESET_POLICY_OPTIONS } from "@/lib/sign-in";
@@ -107,6 +108,7 @@ export default function SignInSettingsPage() {
         {!view && !loadError ? <p className="muted small">Loading…</p> : null}
         {view ? (
           <>
+            <JoinSettingsPanel />
             <form className="form" ref={formRef} autoComplete="off">
               <div className="grid g2">
                 <div className="panel">

@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from app.api.envelopes import ListEnvelope, paginate_rows
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.policy import GuardianContractBindingV2, GuardianContractV2
 from app.db.session import get_db
@@ -120,7 +120,7 @@ class GuardianContractDeleteResponse(BaseModel):
 def list_contracts(
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ):
     persist_tenant_guardian_defaults(db, tenant_id=ctx.tenant.id)
@@ -138,7 +138,7 @@ def list_contracts(
 @router.post("", response_model=GuardianContractV2Response)
 def create_contract(
     payload: GuardianContractV2Create,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("policies.manage")),
     db: Session = Depends(get_db),
 ):
     persist_tenant_guardian_defaults(db, tenant_id=ctx.tenant.id)
@@ -171,7 +171,7 @@ def list_bindings(
     policy_version_id: str | None = None,
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ):
     persist_tenant_guardian_defaults(db, tenant_id=ctx.tenant.id)
@@ -194,7 +194,7 @@ def list_bindings(
 @router.post("/bindings", response_model=GuardianContractBindingV2Response)
 def create_or_update_binding(
     payload: GuardianContractBindingV2Create,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("policies.manage")),
     db: Session = Depends(get_db),
 ):
     persist_tenant_guardian_defaults(db, tenant_id=ctx.tenant.id)
@@ -246,7 +246,7 @@ def matrix(
     policy_version_id: str | None = None,
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ):
     persist_tenant_guardian_defaults(db, tenant_id=ctx.tenant.id)
@@ -268,7 +268,7 @@ def matrix(
 @router.get("/{contract_id}", response_model=GuardianContractV2Response)
 def get_contract(
     contract_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ):
     persist_tenant_guardian_defaults(db, tenant_id=ctx.tenant.id)
@@ -282,7 +282,7 @@ def get_contract(
 def update_contract(
     contract_id: str,
     payload: GuardianContractV2Update,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("policies.manage")),
     db: Session = Depends(get_db),
 ):
     persist_tenant_guardian_defaults(db, tenant_id=ctx.tenant.id)
@@ -318,7 +318,7 @@ def update_contract(
 @router.delete("/{contract_id}", response_model=GuardianContractDeleteResponse)
 def delete_contract(
     contract_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("policies.manage")),
     db: Session = Depends(get_db),
 ):
     persist_tenant_guardian_defaults(db, tenant_id=ctx.tenant.id)

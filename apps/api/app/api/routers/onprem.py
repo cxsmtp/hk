@@ -12,7 +12,7 @@ from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.policy import PolicyPack, PolicyVersion
 from app.db.session import get_db
@@ -179,7 +179,7 @@ def _verify_bundle(bundle: OnPremEvidenceBundle) -> tuple[bool, str]:
 
 @router.get("/policy-sync", response_model=OnPremPolicySyncResponse)
 def onprem_policy_sync(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     packs = db.scalars(
@@ -262,7 +262,7 @@ def onprem_policy_sync(
 @router.post("/evidence-bundles/ingest", response_model=OnPremBundleIngestResponse)
 def ingest_onprem_bundle(
     bundle: OnPremEvidenceBundle,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     db: Session = Depends(get_db),
 ):
     if bundle.tenant_id != ctx.tenant.id:

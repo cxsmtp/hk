@@ -35,7 +35,7 @@ class DesktopGuardRunner:
         snapshot = self.collector.collect()
         if snapshot is None:
             return False
-        if not snapshot.prompt_preview_redacted.strip():
+        if not snapshot.prompt_text.strip():
             return False
         if snapshot.prompt_hash == self._last_prompt_hash:
             return False

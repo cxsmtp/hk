@@ -63,7 +63,6 @@ def _snapshot(text: str) -> PromptSnapshot:
         application="Claude Desktop",
         desktop_app="Claude",
         prompt_text=text,
-        prompt_preview_redacted=text,
         capture_method="accessibility_api",
         machine_id="macbook-claude-01",
         os_type="macos",

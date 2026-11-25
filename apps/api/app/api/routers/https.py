@@ -19,7 +19,7 @@ from fastapi import APIRouter, Body, Depends, Request, Response
 from fastapi.responses import JSONResponse, PlainTextResponse
 from sqlalchemy.orm import Session
 
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.session import get_db
 from app.services import https_runtime
@@ -28,7 +28,7 @@ from app.services.audit_service import write_audit_log
 from app.services.https_manager import MODE_NAMES, HttpsError
 
 router = APIRouter(tags=["https"])
-admin_only = require_role(min_role="admin")
+admin_only = require_permission("security.https")
 FALLBACK_NAMES = {"environment": "the deployment's certificate", "self-signed": "a self-signed one"}
 
 

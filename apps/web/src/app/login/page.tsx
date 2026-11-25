@@ -2,6 +2,7 @@
 
 import "@/styles/ftr.css";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -71,6 +72,16 @@ export default function LoginPage() {
     return () => { active = false; };
   }, []);
 
+  // Joining by oneself (FTR CC-01.116.00): offered only where an Admin turned it on for this workspace.
+  const [joinDomains, setJoinDomains] = useState<string[]>([]);
+  useEffect(() => {
+    let active = true;
+    api.joinAvailable(workspace).then((r) => {
+      if (active) setJoinDomains(r.available ? r.domains : []);
+    }).catch(() => undefined);
+    return () => { active = false; };
+  }, [workspace]);
+
   useEffect(() => {
     let active = true;
     api.oidcProviders(workspace).then((result) => {
@@ -117,6 +128,15 @@ export default function LoginPage() {
     try {
       const result = await api.setup({ code: cleanSetupCode(setupCode), email, name: setupName, password });
       toast.success("Administrator created");
+      if (isTwoStepChallenge(result)) {
+        // Two-step sign-in is required for everyone: it is set up before anyone is signed in.
+        setChallenge(result);
+        setUseRecovery(false);
+        setTwoStepCode("");
+        setTwoStepStatus("");
+        setBox("twostep");
+        return;
+      }
       signedIn(result);
     } catch (err) {
       toast.error(errorMessageFrom(err instanceof Error ? err.message : "", "The administrator could not be created."));
@@ -380,6 +400,14 @@ export default function LoginPage() {
               <button type="button" data-ui="forgot-link" className="text-sm text-sky-300 hover:underline" onClick={() => { setForgotEmail(email.trim()); setForgotStatus({ text: "", kind: "" }); setBox("forgot"); }}>
                 Forgot your password?
               </button>
+            ) : null}
+            {joinDomains.length ? (
+              <p data-ui="join-in" className="text-sm text-slate-400">
+                New here, or no password yet?{" "}
+                <Link className="text-sky-300 hover:underline" href={`/join?workspace=${encodeURIComponent(workspace)}`}>
+                  Join with your {joinDomains.map((d) => `@${d}`).join(" or ")} email
+                </Link>
+              </p>
             ) : null}
             <p data-ui="onprem-note" className="text-xs text-emerald-400">
               Runs on your own servers and sends your data to no one: it connects only to the services you connect it to. No telemetry, no analytics, nothing calls home. Use of Hawk AI is subject to its terms of use.

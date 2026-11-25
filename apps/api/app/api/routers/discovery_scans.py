@@ -18,7 +18,7 @@ from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.discovery_canonical import (
     DiscoveryCollector,
@@ -791,7 +791,7 @@ def _decode_cursor(value: str) -> tuple[datetime, str]:
 @router.post("/estimate", response_model=DiscoveryScanEstimateResponse)
 def estimate_scan(
     payload: DiscoveryScanEstimateRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=_SAFE_SCAN_ROLES)),
+    ctx: TenantContext = Depends(require_permission("discovery.scan")),
     db: Session = Depends(get_db),
 ) -> DiscoveryScanEstimateResponse:
     if not payload.target_ids or not payload.collector_ids:
@@ -869,7 +869,7 @@ def estimate_scan(
 )
 def preflight_production_deep_scan(
     payload: DeepScanPreflightRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=_DEEP_SCAN_ROLES)),
+    ctx: TenantContext = Depends(require_permission("discovery.manage")),
     db: Session = Depends(get_db),
 ) -> DeepScanPreflightResponse:
     """Return only current, tenant-scoped Deep Scan readiness metadata."""
@@ -918,7 +918,7 @@ def launch_production_deep_scan(
         min_length=1,
         max_length=128,
     ),
-    ctx: TenantContext = Depends(require_role(allow_list=_DEEP_SCAN_ROLES)),
+    ctx: TenantContext = Depends(require_permission("discovery.manage")),
     db: Session = Depends(get_db),
 ) -> DeepScanLaunchResponse:
     """Freeze a current profile and launch only its exact ready source pairs."""
@@ -1103,7 +1103,7 @@ def create_scan(
         min_length=1,
         max_length=128,
     ),
-    ctx: TenantContext = Depends(require_role(allow_list=_SAFE_SCAN_ROLES)),
+    ctx: TenantContext = Depends(require_permission("discovery.scan")),
     db: Session = Depends(get_db),
 ) -> DiscoveryScanResponse:
     _require_active_scan()
@@ -1168,7 +1168,7 @@ def create_scan(
 def list_scans(
     limit: int = Query(default=50, ge=1, le=200),
     cursor: str | None = Query(default=None, max_length=255),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> DiscoveryScanListResponse:
     total = int(
@@ -1217,7 +1217,7 @@ def list_scans(
 @router.post("/retention/plan", response_model=ScanSummaryCompactionPlan)
 def plan_scan_summary_retention(
     payload: ScanRetentionPlanRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=_DEEP_SCAN_ROLES)),
+    ctx: TenantContext = Depends(require_permission("discovery.manage")),
     db: Session = Depends(get_db),
 ) -> ScanSummaryCompactionPlan:
     try:
@@ -1238,7 +1238,7 @@ def plan_scan_summary_retention(
 @router.post("/retention/compact", response_model=ScanSummaryCompactionResult)
 def compact_scan_summaries(
     payload: ScanRetentionExecuteRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=_DEEP_SCAN_ROLES)),
+    ctx: TenantContext = Depends(require_permission("discovery.manage")),
     db: Session = Depends(get_db),
 ) -> ScanSummaryCompactionResult:
     try:
@@ -1268,7 +1268,7 @@ def compact_scan_summaries(
 @router.get("/{scan_id}/coverage", response_model=DeepScanCoverageResponse)
 def get_deep_scan_coverage(
     scan_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> DeepScanCoverageResponse:
     """Return bounded coverage facts for a frozen Deep Scan profile only."""
@@ -1335,7 +1335,7 @@ def get_deep_scan_coverage(
 @router.get("/{scan_id}", response_model=DiscoveryScanResponse)
 def get_scan(
     scan_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> DiscoveryScanResponse:
     row = get_scan_record(db, tenant_id=ctx.tenant.id, scan_id=scan_id)
@@ -1375,7 +1375,7 @@ def _scan_asset_ids(
 @router.get("/{scan_id}/progress", response_model=DiscoveryScanProgressResponse)
 def get_scan_progress(
     scan_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> DiscoveryScanProgressResponse:
     row = get_scan_record(db, tenant_id=ctx.tenant.id, scan_id=scan_id)
@@ -1442,7 +1442,7 @@ def get_scan_progress(
 @router.get("/{scan_id}/diagnostics", response_model=EnterpriseScanDiagnostics)
 def get_scan_diagnostics(
     scan_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> EnterpriseScanDiagnostics:
     try:
@@ -1458,7 +1458,7 @@ def get_scan_diagnostics(
 @router.get("/{scan_id}/results", response_model=DiscoveryScanResultsResponse)
 def get_scan_results(
     scan_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> DiscoveryScanResultsResponse:
     row = get_scan_record(db, tenant_id=ctx.tenant.id, scan_id=scan_id)
@@ -1527,7 +1527,7 @@ def get_scan_results(
 @router.post("/{scan_id}/cancel", response_model=DiscoveryScanResponse)
 def cancel_scan(
     scan_id: str,
-    ctx: TenantContext = Depends(require_role(allow_list=_SAFE_SCAN_ROLES)),
+    ctx: TenantContext = Depends(require_permission("discovery.scan")),
     db: Session = Depends(get_db),
 ) -> DiscoveryScanResponse:
     try:
@@ -1577,7 +1577,7 @@ def rescan(
         min_length=1,
         max_length=128,
     ),
-    ctx: TenantContext = Depends(require_role(allow_list=_SAFE_SCAN_ROLES)),
+    ctx: TenantContext = Depends(require_permission("discovery.scan")),
     db: Session = Depends(get_db),
 ) -> DiscoveryScanResponse:
     _require_active_scan()

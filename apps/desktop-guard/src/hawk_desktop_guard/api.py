@@ -16,14 +16,24 @@ class UnavailableApiClient:
 
 
 class HawkApiClient:
-    def __init__(self, *, api_url: str, access_token: str, tenant_id: str | None = None, timeout_seconds: float = 5.0) -> None:
+    def __init__(
+        self,
+        *,
+        api_url: str,
+        access_token: str,
+        tenant_id: str | None = None,
+        timeout_seconds: float = 5.0,
+        full_prompt_capture: bool = False,
+    ) -> None:
         self.api_url = api_url.rstrip("/")
+        # Off unless turned on in the config (full_prompt_capture / HAWK_DESKTOP_FULL_PROMPT_CAPTURE).
+        self.full_prompt_capture = bool(full_prompt_capture)
         self.access_token = access_token
         self.tenant_id = tenant_id
         self.timeout_seconds = float(timeout_seconds)
 
     def evaluate_prompt(self, snapshot: PromptSnapshot) -> GuardDecision:
-        payload = snapshot.to_api_payload()
+        payload = snapshot.to_api_payload(full_prompt_capture=self.full_prompt_capture)
         req = request.Request(
             f"{self.api_url}/telemetry/desktop/interaction-eval",
             data=json.dumps(payload).encode("utf-8"),
@@ -43,6 +53,7 @@ class HawkApiClient:
         password: str,
         tenant_id: str | None = None,
         timeout_seconds: float = 5.0,
+        full_prompt_capture: bool = False,
     ) -> "HawkApiClient":
         normalized_url = api_url.rstrip("/")
         req = request.Request(
@@ -65,6 +76,7 @@ class HawkApiClient:
             access_token=access_token,
             tenant_id=resolved_tenant_id,
             timeout_seconds=timeout_seconds,
+            full_prompt_capture=full_prompt_capture,
         )
 
     def _headers(self) -> dict[str, str]:

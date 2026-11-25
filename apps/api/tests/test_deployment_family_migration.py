@@ -671,8 +671,9 @@ def test_current_revision_is_the_sole_short_migration_head() -> None:
     scripts = ScriptDirectory.from_config(config)
     heads = scripts.get_heads()
 
-    assert heads == ["0097_audit_chain"]
+    assert heads == ["0099_iam_roles"]
     assert [revision.revision for revision in scripts.iterate_revisions(heads[0], "0089_provider_signal_lifecycle")] == [
+        "0099_iam_roles",
         "0097_audit_chain",
         "0096_signin_hardening",
         "0094_first_run_and_terms",

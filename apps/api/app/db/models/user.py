@@ -52,6 +52,16 @@ class UserTenantRole(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
     role: Mapped[str] = mapped_column(String(32), nullable=False)
+    # People, teams and roles (FTR Command Center's people.js; app/services/iam_service.py), per tenant: the person's
+    # team, title and whom they report to, and, for someone who joined by themselves, what they chose and who reviewed it.
+    team_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True)
+    title: Mapped[str] = mapped_column(String(120), default="", server_default="", nullable=False)
+    manager_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True)
+    joined_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    joined_role: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    joined_team_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True)
+    reviewed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    reviewed_by: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
     user = relationship("User", back_populates="tenant_roles")
 

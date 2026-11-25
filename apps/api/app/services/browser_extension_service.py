@@ -3093,6 +3093,28 @@ def _evaluate_sensitive_interaction_policy(
     return outcome, str(decision.reason_code or "sensitive_data_detected")
 
 
+#: What a desktop guard may say it redacted before sending its preview (apps/desktop-guard redaction.py).
+ENDPOINT_REDACTED_ENTITY_TYPES = frozenset({"email", "phone", "credit_card", "api_key", "emirates_id", "bank_account"})
+
+
+def _with_endpoint_redacted_entities(detection_result: dict[str, Any], reported: Any) -> dict[str, Any]:
+    """Count what the endpoint redacted before sending (it keeps the values) as detected here, so the sensitive-data
+    policy applies as if the API had seen them. It can only add findings, never remove one."""
+
+    if not isinstance(reported, (list, tuple)):
+        return detection_result
+    types = sorted({str(item).strip().lower() for item in reported if str(item).strip().lower() in ENDPOINT_REDACTED_ENTITY_TYPES})
+    if not types:
+        return detection_result
+    present = {str((row or {}).get("entity_type") or "").strip().lower() for row in detection_result.get("entities") or []}
+    added = [
+        {"entity_type": entity_type, "value_preview": "[redacted]", "confidence": 0.9, "source": "endpoint_redaction", "context": {}}
+        for entity_type in types
+        if entity_type not in present
+    ]
+    return {**detection_result, "entities": [*(detection_result.get("entities") or []), *added], "contains_sensitive": True}
+
+
 def evaluate_browser_interaction_and_record(
     db: Session,
     *,
@@ -3135,6 +3157,7 @@ def evaluate_browser_interaction_and_record(
         user_id=actor_user_id,
         correlation_id=str(payload.get("correlation_id") or "").strip() or None,
     )
+    detection_result = _with_endpoint_redacted_entities(detection_result, payload.get("redacted_entity_types"))
     source_classification = classify_data(
         detection_result=detection_result,
         classification_hint=str(payload.get("source_classification_hint") or ""),

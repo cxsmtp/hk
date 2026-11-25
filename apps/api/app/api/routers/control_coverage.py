@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.control_coverage import METHODOLOGY_VERSION, PHASE5_METHODOLOGY_VERSION, CoverageDimension, Phase5CoverageDimension
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.control_coverage import (
     ControlCoverageAssertion,
@@ -481,7 +481,7 @@ def _operational_context(
 def control_coverage_summary(
     window_days: int = Query(default=30, ge=1, le=90),
     methodology_version: Literal["1.0", "2.0"] = Query(default="1.0"),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     current = _now()
@@ -644,7 +644,7 @@ def control_coverage_paths(
     application: str | None = Query(default=None, max_length=180),
     destination: str | None = Query(default=None, max_length=255),
     tool: str | None = Query(default=None, max_length=180),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     return _list_paths(
@@ -668,7 +668,7 @@ def control_coverage_paths(
 @router.get("/paths/{path_id}", response_model=CoveragePathResponse)
 def control_coverage_path_detail(
     path_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     row = db.scalar(
@@ -688,7 +688,7 @@ def control_coverage_asset(
     asset_ref: str,
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     result = _list_paths(db, tenant_id=ctx.tenant.id, page=page, page_size=page_size, asset_ref=asset_ref)
@@ -703,7 +703,7 @@ def control_coverage_identity(
     identity_ref: str,
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     result = _list_paths(
@@ -722,7 +722,7 @@ def control_coverage_identity(
 @router.get("/methodology", response_model=MethodologyResponse)
 def control_coverage_methodology(
     version: Literal["1.0", "2.0"] = "1.0",
-    _ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    _ctx: TenantContext = Depends(require_permission("deployments.view")),
 ):
     phase5 = version == "2.0"
     return MethodologyResponse(
@@ -753,7 +753,7 @@ def _filter_executive_inputs(inputs, *, scope_type: str, scope_key: str):
 @router.post("/executive/refresh")
 def refresh_executive_coverage(
     payload: ExecutiveCoverageRefreshRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     db: Session = Depends(get_db),
 ):
     current = _now()
@@ -786,7 +786,7 @@ def refresh_executive_coverage(
 def executive_coverage_summary(
     scope_type: Literal["tenant", "deployment_surface", "asset", "action_class"] = Query(default="tenant"),
     scope_key: str = Query(default="all", min_length=1, max_length=255),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     result = get_executive_coverage_summary(
@@ -806,7 +806,7 @@ def executive_coverage_assessments(
     asset_ref: str | None = Query(default=None, max_length=255),
     action_class: str | None = Query(default=None, max_length=128),
     limit: int = Query(default=100, ge=1, le=200),
-    ctx: TenantContext = Depends(require_role(min_role="auditor")),
+    ctx: TenantContext = Depends(require_permission("deployments.review")),
     db: Session = Depends(get_db),
 ):
     summary = get_executive_coverage_summary(
@@ -831,7 +831,7 @@ def executive_coverage_assessments(
 @router.get("/executive/assessments/{assessment_id}")
 def executive_coverage_assessment_explanation(
     assessment_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="auditor")),
+    ctx: TenantContext = Depends(require_permission("deployments.review")),
     db: Session = Depends(get_db),
 ):
     result = get_coverage_assessment_explanation(
@@ -846,7 +846,7 @@ def executive_coverage_assessment_explanation(
 def executive_coverage_comparison(
     snapshot_id: str,
     previous_snapshot_id: str = Query(min_length=1, max_length=36),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     result = compare_coverage_snapshots(
@@ -863,7 +863,7 @@ def executive_coverage_comparison(
 @router.get("/executive/snapshots/{snapshot_id}/evidence")
 def executive_coverage_evidence_references(
     snapshot_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="auditor")),
+    ctx: TenantContext = Depends(require_permission("deployments.review")),
     db: Session = Depends(get_db),
 ):
     summary = get_executive_coverage_summary(

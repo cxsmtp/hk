@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 
 from app.api.routers.discovery_scans import require_hmair_core
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.session import get_db
 from app.services.audit_service import write_audit_log
@@ -399,7 +399,7 @@ SOURCE_CONNECTION_SETUP_CATALOG = (
 
 @router.get("/setup-catalog", response_model=SourceConnectionSetupCatalogResponse)
 def get_source_connection_setup_catalog(
-    _: TenantContext = Depends(require_role(min_role="viewer")),
+    _: TenantContext = Depends(require_permission("discovery.view")),
 ) -> SourceConnectionSetupCatalogResponse:
     return SourceConnectionSetupCatalogResponse(
         items=list(SOURCE_CONNECTION_SETUP_CATALOG),
@@ -409,7 +409,7 @@ def get_source_connection_setup_catalog(
 
 @router.get("/authority-status", response_model=EnterpriseDenominatorStatusResponse)
 def get_enterprise_denominator_authority_status(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> EnterpriseDenominatorStatusResponse:
     """Show exactly which enterprise denominators are authoritative.
@@ -559,7 +559,7 @@ def get_enterprise_denominator_authority_status(
 @router.post("", response_model=SourceConnectionResponse, status_code=status.HTTP_201_CREATED)
 def create_source_connection(
     payload: HMAIRSourceConnectionInput,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("discovery.manage")),
     db: Session = Depends(get_db),
     _: None = Depends(require_hmair_core),
 ) -> SourceConnectionResponse:
@@ -586,7 +586,7 @@ def create_source_connection(
 
 @router.get("", response_model=SourceConnectionListResponse)
 def list_connections(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
     _: None = Depends(require_hmair_core),
 ) -> SourceConnectionListResponse:
@@ -597,7 +597,7 @@ def list_connections(
 @router.get("/{connection_id}", response_model=SourceConnectionResponse)
 def get_connection(
     connection_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
     _: None = Depends(require_hmair_core),
 ) -> SourceConnectionResponse:
@@ -610,7 +610,7 @@ def get_connection(
 @router.post("/{connection_id}/validate", response_model=SourceConnectionResponse)
 def validate_connection(
     connection_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("discovery.manage")),
     db: Session = Depends(get_db),
     _: None = Depends(require_hmair_core),
 ) -> SourceConnectionResponse:

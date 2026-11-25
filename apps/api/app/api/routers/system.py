@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.session import get_db
 from app.services.audit_service import write_audit_log
@@ -44,7 +44,7 @@ class PlatformModeUpdateRequest(BaseModel):
 @router.get("/control-plane-health", response_model=ControlPlaneHealthResponse)
 def control_plane_health(
     ai_system_id: str | None = None,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("monitoring.view")),
     db: Session = Depends(get_db),
 ):
     del ai_system_id, ctx
@@ -61,7 +61,7 @@ def control_plane_health(
 
 @router.get("/platform-mode", response_model=PlatformModeResponse)
 def get_platform_mode(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("monitoring.view")),
     db: Session = Depends(get_db),
 ):
     return PlatformModeResponse(
@@ -73,7 +73,7 @@ def get_platform_mode(
 @router.post("/platform-mode", response_model=PlatformModeResponse)
 def update_platform_mode(
     payload: PlatformModeUpdateRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("settings.manage")),
     db: Session = Depends(get_db),
 ):
     requested = str(payload.platform_mode or "").strip().lower()

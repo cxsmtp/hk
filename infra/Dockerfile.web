@@ -30,8 +30,13 @@ ARG NEXT_PUBLIC_CONTROL_COVERAGE_UI_ENABLED=false
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV NEXT_PUBLIC_CONTROL_COVERAGE_UI_ENABLED=${NEXT_PUBLIC_CONTROL_COVERAGE_UI_ENABLED}
 ENV NEXT_TELEMETRY_DISABLED=1
+# Never the demo build: no invented demo data in the production console (apps/web/demo-build.mjs). next build fails if
+# demo flags are set, and the output is checked for the demo data module's marker.
+ENV DEMO_BUILD=0
 
-RUN npm run build && rm -rf node_modules && npm cache clean --force
+RUN npm run build \
+    && if grep -rqs "hawk-demo-fallback-data" .next; then echo "Demo data found in the production build" >&2; exit 1; fi \
+    && rm -rf node_modules && npm cache clean --force
 
 # The production dependencies, for the platform the image is for.
 FROM node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS deps

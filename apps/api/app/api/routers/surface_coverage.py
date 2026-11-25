@@ -16,7 +16,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.auth import get_current_user
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.user import User, UserTenantRole
 from app.db.session import get_db
@@ -2217,7 +2217,7 @@ def _resolve_endpoint_heartbeat_user_id(
 @router.post("/events", response_model=UnifiedSurfaceEventResponse)
 def ingest_unified_surface_event(
     payload: UnifiedSurfaceEventRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -2234,7 +2234,7 @@ def ingest_unified_surface_event(
 @router.post("/events/batch", response_model=UnifiedSurfaceBatchResponse)
 def ingest_unified_surface_batch(
     payload: UnifiedSurfaceBatchRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -2265,7 +2265,7 @@ def ingest_unified_surface_batch(
 @router.post("/saas/slack/events", response_model=UnifiedSurfaceEventResponse)
 def ingest_slack_event(
     payload: UnifiedSurfaceEventRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -2284,7 +2284,7 @@ def ingest_slack_event(
 @router.post("/saas/slack/events/raw")
 def ingest_slack_event_raw(
     payload: SlackEventApiRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -2306,7 +2306,7 @@ def ingest_slack_event_raw(
 @router.post("/saas/o365/events", response_model=UnifiedSurfaceEventResponse)
 def ingest_o365_event(
     payload: UnifiedSurfaceEventRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -2325,7 +2325,7 @@ def ingest_o365_event(
 @router.post("/saas/o365/events/raw", response_model=UnifiedSurfaceBatchResponse)
 def ingest_o365_event_raw(
     payload: O365GraphEventRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -2358,7 +2358,7 @@ def ingest_o365_event_raw(
 @router.post("/microsoft/outlook/events", response_model=UnifiedSurfaceEventResponse)
 def ingest_microsoft_outlook_event(
     payload: MicrosoftOutlookEventRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -2378,7 +2378,7 @@ def ingest_microsoft_outlook_event(
 @router.post("/microsoft/teams/events", response_model=UnifiedSurfaceEventResponse)
 def ingest_microsoft_teams_event(
     payload: MicrosoftTeamsEventRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -2398,7 +2398,7 @@ def ingest_microsoft_teams_event(
 @router.post("/microsoft/onedrive-sharepoint/events", response_model=UnifiedSurfaceEventResponse)
 def ingest_microsoft_drive_sharepoint_event(
     payload: MicrosoftDriveSharepointEventRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -2418,7 +2418,7 @@ def ingest_microsoft_drive_sharepoint_event(
 @router.post("/microsoft/office-copilot/events", response_model=UnifiedSurfaceEventResponse)
 def ingest_microsoft_office_copilot_event(
     payload: MicrosoftOfficeCopilotEventRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -2438,7 +2438,7 @@ def ingest_microsoft_office_copilot_event(
 @router.post("/microsoft/entra/events", response_model=UnifiedSurfaceEventResponse)
 def ingest_microsoft_entra_event(
     payload: MicrosoftEntraEventRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -2458,7 +2458,7 @@ def ingest_microsoft_entra_event(
 @router.post("/microsoft/azure-openai/events", response_model=UnifiedSurfaceEventResponse)
 def ingest_microsoft_azure_openai_event(
     payload: MicrosoftAzureOpenAIEventRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -2478,7 +2478,7 @@ def ingest_microsoft_azure_openai_event(
 @router.post("/microsoft/foundry/events", response_model=UnifiedSurfaceEventResponse)
 def ingest_microsoft_foundry_event(
     payload: MicrosoftFoundryEventRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -2504,7 +2504,7 @@ def ingest_microsoft_foundry_event(
 @router.post("/microsoft/foundry/sync", response_model=MicrosoftFoundrySyncResponse)
 def sync_microsoft_foundry_inventory(
     payload: MicrosoftFoundrySyncRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -2549,7 +2549,7 @@ def sync_microsoft_foundry_inventory(
 @router.post("/microsoft/copilot/sync", response_model=MicrosoftCopilotSyncResponse)
 def sync_microsoft_copilot_inventory(
     payload: MicrosoftCopilotSyncRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -2600,7 +2600,7 @@ def sync_microsoft_copilot_inventory(
 @router.post("/microsoft/copilot/events", response_model=UnifiedSurfaceEventResponse)
 def ingest_microsoft_copilot_event(
     payload: MicrosoftCopilotEventRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -2620,7 +2620,7 @@ def ingest_microsoft_copilot_event(
 @router.post("/microsoft/copilot-studio/events", response_model=UnifiedSurfaceEventResponse)
 def ingest_microsoft_copilot_studio_event(
     payload: MicrosoftCopilotStudioEventRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -2646,7 +2646,7 @@ def ingest_microsoft_copilot_studio_event(
 @router.post("/saas/google-workspace/events", response_model=UnifiedSurfaceEventResponse)
 def ingest_google_workspace_event(
     payload: UnifiedSurfaceEventRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -2665,7 +2665,7 @@ def ingest_google_workspace_event(
 @router.post("/saas/google-workspace/events/raw", response_model=UnifiedSurfaceEventResponse)
 def ingest_google_workspace_event_raw(
     payload: GoogleWorkspaceRawEventRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -2685,7 +2685,7 @@ def ingest_google_workspace_event_raw(
 @router.post("/endpoint/events", response_model=UnifiedSurfaceEventResponse)
 def ingest_endpoint_event(
     payload: UnifiedSurfaceEventRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -2703,7 +2703,7 @@ def ingest_endpoint_event(
 @router.post("/endpoint/heartbeat", response_model=EndpointHeartbeatResponse)
 def ingest_endpoint_heartbeat(
     payload: EndpointHeartbeatRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -2762,7 +2762,7 @@ def ingest_endpoint_heartbeat(
 @router.post("/dev-tools/events", response_model=UnifiedSurfaceEventResponse)
 def ingest_dev_tool_event(
     payload: UnifiedSurfaceEventRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -2781,7 +2781,7 @@ def ingest_dev_tool_event(
 def unified_identity_view(
     user_id: str,
     lookback_hours: int = 24 * 7,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     return UnifiedIdentityViewResponse.model_validate(
@@ -2802,7 +2802,7 @@ def unified_alerts(
     surface: str | None = None,
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     items = list_unified_alerts(
@@ -2825,7 +2825,7 @@ def unified_alerts(
 @router.get("/alerts/{alert_id}", response_model=UnifiedAlertTraceResponse)
 def unified_alert_trace(
     alert_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     payload = get_unified_alert_trace(

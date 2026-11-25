@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.continuous_assurance import (
     ControlAssertion,
@@ -126,7 +126,7 @@ def _assertion_projection(db: Session, *, assertion: ControlAssertion) -> dict[s
 @router.get("/assertions")
 def assertions(
     state: str | None = Query(default=None),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("evidence.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
     query = select(ControlAssertion).where(ControlAssertion.tenant_id == ctx.tenant.id)
@@ -146,7 +146,7 @@ def assertions(
 @router.get("/assertions/{assertion_id}")
 def assertion_detail(
     assertion_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("evidence.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
     row = db.scalar(

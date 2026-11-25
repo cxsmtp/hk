@@ -43,6 +43,9 @@ class DesktopGuardConfig:
     machine_id: str | None = None
     poll_seconds: float = 1.0
     dialog: bool = False
+    # Opt-in: also send the whole prompt to the API (prompt_storage_mode "full"). Off by default: the API then gets
+    # only a locally redacted, shortened preview and the types of what was redacted.
+    full_prompt_capture: bool = False
 
     @property
     def has_auth(self) -> bool:
@@ -62,6 +65,9 @@ class DesktopGuardConfig:
             machine_id=_optional_text(_value(file_config, "machine_id", "HAWK_MACHINE_ID")),
             poll_seconds=float(_value(file_config, "poll_seconds", "HAWK_POLL_SECONDS", 1.0)),
             dialog=_bool_value(_value(file_config, "dialog", "HAWK_DIALOG", False)),
+            full_prompt_capture=_bool_value(
+                _value(file_config, "full_prompt_capture", "HAWK_DESKTOP_FULL_PROMPT_CAPTURE", False)
+            ),
         )
 
 

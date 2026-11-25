@@ -11,6 +11,7 @@ import { isDeactivatedAnswer, LICENCE_DEACTIVATED_EVENT } from "@/lib/licence";
 import { accessNeededFrom, PASSWORD_CHANGE_EVENT, TERMS_REQUIRED_EVENT } from "@/lib/access";
 import type { TermsState, TermsView } from "@/lib/access";
 import type { SignInPerson, SignInSettings, TwoStepChallenge, TwoStepSetup, TwoStepState } from "@/lib/sign-in";
+import type { IamJoinSettings, IamRole, IamView, JoinLink } from "@/lib/iam";
 import type { ActivationApplied, ActivationView, AdminLicence, LicenceStatus } from "@/lib/licence";
 import type {
   AIDiscoveryAnomalyEvent,
@@ -220,8 +221,12 @@ import type {
 } from "@/lib/types";
 
 const API_URL = API_BASE_URL;
-const DEMO_FORCE = (process.env.NEXT_PUBLIC_DEMO_FORCE || "false").toLowerCase() === "true";
-const DEMO_FILL_EMPTY = (process.env.NEXT_PUBLIC_DEMO_FILL_EMPTY || "true").toLowerCase() !== "false";
+// Invented demo data exists only in the demo build (DEMO_BUILD=1, demo-build.mjs). Inlined at compile time: in every
+// other build the demo branches below are dead code and @/lib/demo-fallback is a module without data, so an API error
+// is shown as an error and an empty result as empty.
+const DEMO_BUILD = process.env.NEXT_PUBLIC_HAWK_DEMO_BUILD === "1";
+const DEMO_FORCE = DEMO_BUILD && (process.env.NEXT_PUBLIC_DEMO_FORCE || "false").toLowerCase() === "true";
+const DEMO_FILL_EMPTY = DEMO_BUILD && (process.env.NEXT_PUBLIC_DEMO_FILL_EMPTY || "true").toLowerCase() !== "false";
 const RETRYABLE_MUTATION_PATH_PREFIXES = [
   "/scans/trigger",
   "/discovery/scans",
@@ -510,7 +515,7 @@ async function request<T>(
           const text = await res.clone().text();
           if (reportAccessNeeded(res.status, text)) throw new Error(text);
         }
-        if (isDemoFallbackEnabled()) {
+        if (DEMO_BUILD && isDemoFallbackEnabled()) {
           const fallback = demoFallbackRequest(path, init, session);
           if (fallback !== null) return fallback as T;
         }
@@ -519,7 +524,7 @@ async function request<T>(
       }
 
       const payload = (await res.json()) as T;
-      if (isDemoFallbackEnabled() && (DEMO_FORCE || (DEMO_FILL_EMPTY && shouldUseFallbackForPayload(payload)))) {
+      if (DEMO_BUILD && isDemoFallbackEnabled() && (DEMO_FORCE || (DEMO_FILL_EMPTY && shouldUseFallbackForPayload(payload)))) {
         const fallback = demoFallbackRequest(path, init, session);
         if (fallback !== null) return fallback as T;
       }
@@ -533,7 +538,7 @@ async function request<T>(
           attempt += 1;
           continue;
         }
-        if (isDemoFallbackEnabled()) {
+        if (DEMO_BUILD && isDemoFallbackEnabled()) {
           const fallback = demoFallbackRequest(path, init, session);
           if (fallback !== null) return fallback as T;
         }
@@ -546,7 +551,7 @@ async function request<T>(
         attempt += 1;
         continue;
       }
-      if (isDemoFallbackEnabled()) {
+      if (DEMO_BUILD && isDemoFallbackEnabled()) {
         const fallback = demoFallbackRequest(path, init, session);
         if (fallback !== null) return fallback as T;
       }
@@ -728,6 +733,31 @@ export const api = {
     request<{ people: SignInPerson[] }>(`/auth/sign-in-settings/people/${encodeURIComponent(userId)}/two-step`, { method: "DELETE" }),
   resetPersonSsoLink: (userId: string) =>
     request<{ people: SignInPerson[] }>(`/auth/sign-in-settings/people/${encodeURIComponent(userId)}/sso-link`, { method: "DELETE" }),
+  // People, teams and roles (FTR Command Center's people.js / teams.js; apps/api/app/api/routers/iam.py).
+  iamPeople: () => request<IamView>("/iam/people"),
+  iamAddPerson: (body: Record<string, unknown>) =>
+    request<{ user: { id: string; email: string }; temporary: string | null; existingAccount: boolean; welcomed: boolean }>("/iam/people", { method: "POST", body: JSON.stringify(body) }),
+  iamChangePerson: (id: string, body: Record<string, unknown>) =>
+    request<{ ok: boolean; changed: string[] }>(`/iam/people/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify(body) }),
+  iamPersonAction: (id: string, action: "reset" | "unlock" | "signout" | "two-step-reset" | "welcome" | "approve") =>
+    request<{ ok?: boolean; temporary?: string }>(`/iam/people/${encodeURIComponent(id)}/${action}`, { method: "POST", body: "{}" }),
+  iamRemovePerson: (id: string) => request<{ ok: boolean }>(`/iam/people/${encodeURIComponent(id)}`, { method: "DELETE" }),
+  iamSaveRole: (id: string, body: Record<string, unknown>) =>
+    request<{ role: IamRole }>(`/iam/roles/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify(body) }),
+  iamRemoveRole: (id: string) => request<{ ok: boolean }>(`/iam/roles/${encodeURIComponent(id)}`, { method: "DELETE" }),
+  iamSaveTeam: (id: string | null, body: Record<string, unknown>) =>
+    request<{ team: { id: string; name: string } }>(id ? `/iam/teams/${encodeURIComponent(id)}` : "/iam/teams", { method: id ? "PUT" : "POST", body: JSON.stringify(body) }),
+  iamRemoveTeam: (id: string) => request<{ ok: boolean }>(`/iam/teams/${encodeURIComponent(id)}`, { method: "DELETE" }),
+  iamJoinSettings: () => request<IamJoinSettings>("/iam/join-settings"),
+  iamSaveJoinSettings: (body: Record<string, unknown>) =>
+    request<IamJoinSettings>("/iam/join-settings", { method: "PUT", body: JSON.stringify(body) }),
+  joinAvailable: (workspace: string) =>
+    request<{ available: boolean; domains: string[] }>(`/auth/join?workspace=${encodeURIComponent(workspace)}`, undefined, false),
+  askToJoin: (workspace: string, email: string) =>
+    request<{ message: string }>("/auth/join", { method: "POST", body: JSON.stringify({ workspace, email }) }, false),
+  checkJoinLink: (token: string) => request<JoinLink>("/auth/join/check", { method: "POST", body: JSON.stringify({ token }) }, false),
+  confirmJoin: (body: Record<string, unknown>) =>
+    request<LoginResponse | { ok: boolean; twoStep: true; message: string }>("/auth/join/confirm", { method: "POST", body: JSON.stringify(body) }, false),
   oidcProviders: (workspace: string) =>
     request<OIDCProviderList>(`/auth/oidc/providers?workspace=${encodeURIComponent(workspace)}`, undefined, false),
   oidcStart: (providerKey: string, workspace: string) =>
@@ -751,7 +781,7 @@ export const api = {
     request<{ terms: TermsState }>("/terms/accept", { method: "POST", body: JSON.stringify(payload) }),
   setupStatus: () => request<{ setup: boolean }>("/setup", undefined, false),
   setup: (payload: { code: string; email: string; name: string; password: string }) =>
-    request<LoginResponse>("/setup", { method: "POST", body: JSON.stringify(payload) }, false),
+    request<LoginResponse | TwoStepChallenge>("/setup", { method: "POST", body: JSON.stringify(payload) }, false),
   // The product licence and activation codes (docs/activation-codes.md).
   getLicence: () => request<LicenceStatus>("/licence", undefined, false),
   activateLicence: (code: string) =>

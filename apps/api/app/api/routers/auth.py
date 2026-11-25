@@ -240,7 +240,7 @@ def oidc_complete(payload: OIDCCompleteRequest, response: Response, db: Session 
         raise _oidc_failure(exc) from exc
 
 
-@router.post("/register", response_model=RegisterResponse)
+@router.post("/register", response_model=RegisterResponse | TwoStepChallenge)
 def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     started_at = perf_counter()
     try:
@@ -290,6 +290,17 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
             resource_id=user.id,
             payload={"email": user.email, "tenant_id": tenant.id},
         )
+        if account_security.needs_two_step(db, user):
+            # Two-step sign-in is required for everyone: no tokens yet. As at the password sign-in, the person sets it
+            # up first (the key comes with the ticket) and POST /auth/two-step gives the tokens. Without a ticket the
+            # account is not created, so registering can simply be tried again.
+            try:
+                challenge = two_step_challenge(user)
+            except sign_in_store.StoreUnavailable:
+                db.rollback()
+                return refused(503, SIGN_IN_UNAVAILABLE)
+            db.commit()
+            return JSONResponse(content=challenge.model_dump(), headers={"Cache-Control": "no-store"})
         db.commit()
 
         tokens = issue_tokens(db, user=user, tenant_id=tenant.id, role="owner")
@@ -351,6 +362,23 @@ def audit_access(db: Session, user: User | None, *, action: str, reason: str, re
     )
 
 
+SIGN_IN_UNAVAILABLE = "Sign-in is unavailable for a moment. Try again shortly."
+
+
+def two_step_challenge(user: User) -> TwoStepChallenge:
+    """The second step instead of tokens (docs/sign-in.md): a ticket for the code, and when an administrator requires
+    two-step sign-in and this person has none yet, the key to set it up (the first right code at POST /auth/two-step
+    turns it on and only then gives tokens). Raises sign_in_store.StoreUnavailable."""
+
+    secret = "" if account_security.two_step_on(user) else mfa_service.new_secret()
+    ticket = mfa_service.issue_ticket(user.id, secret=secret)
+    return TwoStepChallenge(
+        ticket=ticket,
+        minutes=mfa_service.TICKET_TTL_SECONDS // 60,
+        setup=mfa_service.setup_view(user.email, secret) if secret else None,
+    )
+
+
 def refused(status_code: int, message: str, **extra: Any) -> JSONResponse:
     return JSONResponse(status_code=status_code, content={"detail": message, **extra}, headers={"Cache-Control": "no-store"})
 
@@ -378,17 +406,11 @@ def login(payload: LoginRequest, request: Request, db: Session = Depends(get_db)
             return refused(403, "Signing in with a password is turned off for this account. Use single sign-on.", sso=True)
         if account_security.needs_two_step(db, user):
             try:
-                secret = "" if account_security.two_step_on(user) else mfa_service.new_secret()
-                ticket = mfa_service.issue_ticket(user.id, secret=secret)
+                challenge = two_step_challenge(user)
             except sign_in_store.StoreUnavailable:
                 db.commit()
-                return refused(503, "Sign-in is unavailable for a moment. Try again shortly.")
+                return refused(503, SIGN_IN_UNAVAILABLE)
             db.commit()
-            challenge = TwoStepChallenge(
-                ticket=ticket,
-                minutes=mfa_service.TICKET_TTL_SECONDS // 60,
-                setup=mfa_service.setup_view(user.email, secret) if secret else None,
-            )
             return JSONResponse(content=challenge.model_dump(), headers={"Cache-Control": "no-store"})
         # Only now is it a sign-in: wrong attempts before it are forgotten.
         account_security.record_sign_in(user)

@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session, aliased
 
 from app.api.envelopes import ListEnvelope, paginate_rows
 from app.core.config import settings
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.ai_asset import (
     DiscoveryAIAsset,
@@ -396,7 +396,7 @@ def list_assets(
     search: str | None = Query(default=None, max_length=128),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> ListEnvelope[AssetSummaryResponse]:
     query = select(DiscoveryAIAsset).where(
@@ -531,7 +531,7 @@ def _cursor_decode(
 @router.get("/{asset_id}", response_model=AssetDetailResponse)
 def get_asset_detail(
     asset_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> AssetDetailResponse:
     asset = _asset_or_404(db, tenant_id=ctx.tenant.id, asset_id=asset_id)
@@ -666,7 +666,7 @@ def get_asset_evidence(
     asset_id: str,
     limit: int = Query(default=50, ge=1, le=200),
     cursor: str | None = Query(default=None, max_length=1024),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> AssetEvidenceListResponse:
     _asset_or_404(db, tenant_id=ctx.tenant.id, asset_id=asset_id)
@@ -767,7 +767,7 @@ def get_asset_capabilities(
     asset_id: str,
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> ListEnvelope[CapabilityResponse]:
     _asset_or_404(db, tenant_id=ctx.tenant.id, asset_id=asset_id)
@@ -820,7 +820,7 @@ def get_asset_history(
     asset_id: str,
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> ListEnvelope[AssetHistoryResponse]:
     _asset_or_404(db, tenant_id=ctx.tenant.id, asset_id=asset_id)
@@ -883,7 +883,7 @@ def get_asset_history(
 @router.get("/{asset_id}/context", response_model=dict[str, Any])
 def get_asset_context(
     asset_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:

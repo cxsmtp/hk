@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.api.envelopes import ListEnvelope
 from app.core.auth import get_current_user
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.runtime_intelligence import RuntimeEvent
 from app.db.models.user import User
@@ -279,7 +279,7 @@ class AIAgentOWASPCoverageResponse(BaseModel):
 @router.get("/overview", response_model=AIDiscoveryOverviewResponse)
 def ai_discovery_overview(
     lookback_hours: int = 24 * 7,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     payload = build_discovery_panel_state(
@@ -297,7 +297,7 @@ def ai_usage_events(
     user_id: str | None = None,
     page: int = 1,
     page_size: int = 100,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     payload = list_usage_events(
@@ -324,7 +324,7 @@ def ai_discovery_graph(
     agent_id: str | None = None,
     ai_app: str | None = None,
     max_edges: int = 1200,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     payload = build_unified_ai_graph(
@@ -343,7 +343,7 @@ def ai_discovery_graph(
 def ai_discovery_identities(
     q: str | None = None,
     limit: int = 100,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     items = list_identity_profiles(
@@ -365,7 +365,7 @@ def ai_discovery_identities(
 def ai_discovery_identity_detail(
     user_id: str,
     lookback_hours: int = 24 * 30,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     payload = get_identity_profile(
@@ -383,7 +383,7 @@ def ai_discovery_anomalies(
     severity: str | None = None,
     user_id: str | None = None,
     limit: int = 200,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     rows = list_recent_anomaly_events(
@@ -406,7 +406,7 @@ def ai_discovery_anomalies(
 @router.get("/agents/overview", response_model=AIAgentDiscoveryOverviewResponse)
 def ai_discovery_agents_overview(
     lookback_hours: int = 24 * 7,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     payload = list_agent_entities(
@@ -422,7 +422,7 @@ def ai_discovery_agent_attack_surface(
     agent_id: str,
     lookback_hours: int = 24 * 7,
     max_edges: int = 1200,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -442,7 +442,7 @@ def ai_discovery_agent_attack_surface(
 def ai_discovery_agent_blast_radius(
     agent_id: str,
     lookback_hours: int = 24 * 7,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     payload = compute_agent_blast_radius(
@@ -458,7 +458,7 @@ def ai_discovery_agent_blast_radius(
 def ai_discovery_agent_behavior(
     agent_id: str,
     lookback_hours: int = 24 * 7,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     payload = get_agent_behavior_profile(
@@ -474,7 +474,7 @@ def ai_discovery_agent_behavior(
 def ai_discovery_agent_owasp_coverage(
     agent_id: str,
     lookback_hours: int = 24 * 7,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -494,7 +494,7 @@ def ai_discovery_agent_anomalies(
     agent_id: str,
     lookback_hours: int = 24 * 7,
     limit: int = 80,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     rows = list_agent_anomaly_events(
@@ -517,7 +517,7 @@ def ai_discovery_agent_anomalies(
 def ai_discovery_enforce_agent(
     agent_id: str,
     payload: AIAgentEnforcementRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("discovery.manage")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -545,7 +545,7 @@ def ai_discovery_enforce_agent(
 def ai_discovery_simulate_agent(
     agent_id: str,
     payload: AIAgentSimulationRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("discovery.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -574,7 +574,7 @@ def ai_discovery_simulate_agent(
 def recompute_discovery_from_runtime(
     lookback_hours: int = 24 * 7,
     max_events: int = 5000,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("discovery.manage")),
     db: Session = Depends(get_db),
 ):
     started = datetime.now(timezone.utc)

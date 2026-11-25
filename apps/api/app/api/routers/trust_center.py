@@ -9,7 +9,7 @@ from sqlalchemy import desc, func, select
 from sqlalchemy.orm import Session
 
 from app.api.envelopes import ListEnvelope, paginate_rows
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.activity_audit import AISession
 from app.db.models.ai_system import AISystem
@@ -239,7 +239,7 @@ def _runtime_activity_row(row: RuntimeEvent) -> TrustCenterAssetActivityResponse
 def list_evidence_nodes(
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("evidence.view")),
     db: Session = Depends(get_db),
 ):
     rows = db.scalars(select(EvidenceNode).where(EvidenceNode.tenant_id == ctx.tenant.id).order_by(EvidenceNode.created_at.desc())).all()
@@ -257,7 +257,7 @@ def list_evidence_nodes(
 def list_evidence_edges(
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("evidence.view")),
     db: Session = Depends(get_db),
 ):
     rows = db.scalars(select(EvidenceEdge).where(EvidenceEdge.tenant_id == ctx.tenant.id).order_by(EvidenceEdge.created_at.desc())).all()
@@ -275,7 +275,7 @@ def list_evidence_edges(
 def list_maturity(
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="auditor")),
+    ctx: TenantContext = Depends(require_permission("evidence.export")),
     db: Session = Depends(get_db),
 ):
     rows = db.scalars(select(ControlMaturity).where(ControlMaturity.tenant_id == ctx.tenant.id)).all()
@@ -293,7 +293,7 @@ def list_maturity(
 def maturity_score_explanation(
     ai_system_id: str,
     control_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="auditor")),
+    ctx: TenantContext = Depends(require_permission("evidence.export")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -311,7 +311,7 @@ def maturity_score_explanation(
 def list_audit_logs(
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="auditor")),
+    ctx: TenantContext = Depends(require_permission("evidence.export")),
     db: Session = Depends(get_db),
 ):
     safe_page = max(1, int(page))
@@ -337,7 +337,7 @@ def list_audit_logs(
 @router.get("/ai-systems/{ai_system_id}/remediation-state", response_model=TrustCenterRemediationStateResponse)
 def ai_system_remediation_state(
     ai_system_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("evidence.view")),
     db: Session = Depends(get_db),
 ):
     ai_system = db.scalar(
@@ -432,7 +432,7 @@ def trust_center_asset_activity(
     asset_id: str,
     page: int = 1,
     page_size: int = 100,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("evidence.view")),
     db: Session = Depends(get_db),
 ):
     asset_norm = str(asset_id or "").strip().lower()
@@ -460,7 +460,7 @@ def trust_center_asset_findings(
     asset_id: str,
     page: int = 1,
     page_size: int = 100,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("evidence.view")),
     db: Session = Depends(get_db),
 ):
     asset_norm = str(asset_id or "").strip().lower()
@@ -528,7 +528,7 @@ def trust_center_asset_evidence(
     asset_id: str,
     page: int = 1,
     page_size: int = 100,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("evidence.view")),
     db: Session = Depends(get_db),
 ):
     asset_norm = str(asset_id or "").strip().lower()
@@ -583,7 +583,7 @@ def trust_center_asset_sessions(
     asset_id: str,
     page: int = 1,
     page_size: int = 100,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("evidence.view")),
     db: Session = Depends(get_db),
 ):
     asset_norm = str(asset_id or "").strip().lower()

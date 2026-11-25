@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.core.auth import get_current_user
 from app.core.deps_control_plane import require_control_plane_healthy
 from app.core.observability import get_correlation_id
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.user import User
 from app.db.session import get_db
@@ -105,7 +105,7 @@ def _log_brain_request(
 @router.get("/health", response_model=BrainHealthResponse)
 def brain_health(
     request: Request,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("assistant.use")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -135,7 +135,7 @@ def brain_health(
 @router.get("/providers", response_model=BrainProvidersResponse)
 def brain_providers(
     request: Request,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("assistant.use")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -163,7 +163,7 @@ def brain_providers(
 def brain_plan(
     payload: BrainPlanRequest,
     request: Request,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("assistant.use")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -215,7 +215,7 @@ def brain_plan(
 def brain_execute(
     payload: BrainExecuteRequest,
     request: Request,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("assistant.use")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -264,7 +264,7 @@ def brain_execute(
 def brain_ask(
     payload: BrainAskRequest,
     request: Request,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("assistant.use")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -337,7 +337,7 @@ def brain_analyze_finding(
     finding_id: str,
     payload: BrainFindingAnalyzeRequest,
     request: Request,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("assistant.use")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):

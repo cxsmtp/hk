@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.session import get_db
 from app.services.enterprise_developer_ai_control import (
@@ -52,7 +52,7 @@ class ProviderSeatSnapshotIngestResponse(BaseModel):
 def get_ai_tools_usage(
     window_days: int = Query(default=30, ge=1, le=366),
     limit: int = Query(default=250, ge=1, le=5000),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ) -> dict:
     provider_workspace = build_provider_signal_workspace(
@@ -78,7 +78,7 @@ def get_ai_tools_usage(
 )
 def post_provider_signal(
     payload: ProviderSignalEnvelope,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("activity.manage")),
     db: Session = Depends(get_db),
 ) -> ProviderSignalIngestResponse:
     try:
@@ -106,7 +106,7 @@ def post_provider_signal(
 )
 def post_provider_seat_snapshot(
     payload: ProviderSeatSnapshotEnvelope,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("activity.manage")),
     db: Session = Depends(get_db),
 ) -> ProviderSeatSnapshotIngestResponse:
     try:

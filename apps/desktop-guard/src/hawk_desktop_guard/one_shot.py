@@ -28,7 +28,6 @@ def evaluate_text_once(
         application=application,
         desktop_app=desktop_app,
         prompt_text=text,
-        prompt_preview_redacted=text,
         capture_method=capture_method,
         machine_id=machine_id,
         os_type="macos",

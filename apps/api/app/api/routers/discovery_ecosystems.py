@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.api.envelopes import ListEnvelope, paginate_rows
 from app.api.routers.discovery_assets import DiscoveryFindingResponse
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.ai_asset import DiscoveryAIAsset
 from app.db.models.discovery_canonical import DiscoveryCollector
@@ -265,7 +265,7 @@ def _ecosystem_responses(
 
 @router.get("/estate", response_model=EstateSummaryResponse)
 def get_estate_summary(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> EstateSummaryResponse:
     assets = list(
@@ -323,7 +323,7 @@ def get_estate_summary(
 
 @router.get("/compatibility", response_model=HMAIRCompatibilitySummary)
 def get_compatibility_summary(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> HMAIRCompatibilitySummary:
     return build_hmair_compatibility_summary(
@@ -333,7 +333,7 @@ def get_compatibility_summary(
 
 @router.get("/coverage", response_model=DiscoveryCoverageResponse)
 def get_discovery_coverage(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> DiscoveryCoverageResponse:
     projection = calculate_discovery_coverage(
@@ -382,7 +382,7 @@ def get_discovery_coverage(
 def list_ecosystems(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> ListEnvelope[EcosystemResponse]:
     ecosystems = resolve_ai_ecosystems(db, tenant_id=ctx.tenant.id)
@@ -400,7 +400,7 @@ def list_ecosystems(
 @router.get("/ecosystems/{ecosystem_id}", response_model=EcosystemResponse)
 def get_ecosystem(
     ecosystem_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> EcosystemResponse:
     matches = tuple(
@@ -422,7 +422,7 @@ def get_ecosystem(
 def list_unknown_ai(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> ListEnvelope[UnknownAIResponse]:
     hypotheses = list(
@@ -526,7 +526,7 @@ def list_discovery_findings(
     severity: str | None = Query(default=None, max_length=16),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> ListEnvelope[DiscoveryFindingResponse]:
     query = select(DiscoveryAssetFinding).where(
@@ -573,7 +573,7 @@ def list_discovery_findings(
 
 @router.get("/collector-health", response_model=list[CollectorHealthResponse])
 def list_collector_health(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> list[CollectorHealthResponse]:
     now = datetime.now(timezone.utc)

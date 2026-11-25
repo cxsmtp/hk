@@ -23,7 +23,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.core.rbac import ROLE_ORDER, require_role
+from app.core.rbac import holds, require_permission
 from app.core.tenant import TenantContext, require_tenant
 from app.db.models.audit import AuditLog
 from app.db.models.user import User, UserTenantRole
@@ -34,7 +34,7 @@ from app.services.audit_service import write_audit_log
 from app.services.state_file import read_state, write_state
 
 router = APIRouter(tags=["backups"])
-admin_only = require_role(min_role="admin")
+admin_only = require_permission("backup.manage")
 
 #: A backup uploaded on the page: 200 MB at most (a larger one is restored on the server, deploy/README.md).
 MAX_RESTORE_UPLOAD_BYTES = 200 * 1024 * 1024
@@ -111,7 +111,7 @@ def backups_status(ctx: TenantContext = Depends(admin_only)):
 def backups_notice(ctx: TenantContext = Depends(require_tenant)):
     """What owners and admins are told on every page until they act (the key is not saved, backups are plain)."""
 
-    if ROLE_ORDER.get(ctx.role, -1) < ROLE_ORDER["admin"]:
+    if not holds(ctx, "backup.manage"):
         return {"notice": None}
     try:
         return {"notice": backup_service.key_store().status()["notice"]}
