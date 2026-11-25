@@ -11,7 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.envelopes import ListEnvelope, paginate_rows
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.monitoring import Connector, DriftAlert
 from app.db.session import get_db
@@ -449,7 +449,7 @@ class ConnectorCoverageSummaryResponse(BaseModel):
 def list_connectors(
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("monitoring.view")),
     db: Session = Depends(get_db),
 ):
     rows = db.scalars(select(Connector).where(Connector.tenant_id == ctx.tenant.id)).all()
@@ -467,7 +467,7 @@ def list_connectors(
 def list_connector_providers(
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("monitoring.view")),
 ):
     items = connector_catalog()
     page_items, total, safe_page, safe_page_size = paginate_rows(items, page=page, page_size=page_size)
@@ -478,7 +478,7 @@ def list_connector_providers(
 def list_microsoft_permission_modes(
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("monitoring.view")),
 ):
     del ctx
     items = microsoft_permission_modes()
@@ -489,7 +489,7 @@ def list_microsoft_permission_modes(
 @router.post("/connectors/microsoft/resolve-scopes", response_model=MicrosoftScopesResponse)
 def resolve_microsoft_scopes(
     payload: MicrosoftScopeResolveRequest,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("monitoring.manage")),
 ):
     del ctx
     provider_key = str(payload.provider_key or "").strip().lower()
@@ -519,7 +519,7 @@ def resolve_microsoft_scopes(
 @router.post("/connectors/microsoft/admin-consent-url", response_model=MicrosoftConsentUrlResponse)
 def microsoft_admin_consent_url(
     payload: MicrosoftConsentUrlRequest,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("monitoring.manage")),
 ):
     del ctx
     try:
@@ -541,7 +541,7 @@ def microsoft_admin_consent_url(
 
 @router.get("/connectors/microsoft/app-registration-template", response_model=MicrosoftAppRegistrationTemplateResponse)
 def microsoft_app_registration_template(
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("monitoring.manage")),
 ):
     del ctx
     return MicrosoftAppRegistrationTemplateResponse.model_validate(microsoft_graph_app_registration_template())
@@ -550,7 +550,7 @@ def microsoft_app_registration_template(
 @router.post("/connectors", response_model=ConnectorResponse)
 def create_connector(
     payload: ConnectorCreate,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("monitoring.manage")),
     db: Session = Depends(get_db),
 ):
     row = _create_connector_record(db=db, ctx=ctx, payload=payload)
@@ -563,7 +563,7 @@ def create_connector(
 @router.post("/connectors/bootstrap/slack", response_model=ConnectorBootstrapResponse)
 def bootstrap_slack_connector(
     payload: SlackConnectorBootstrapRequest,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("monitoring.manage")),
     db: Session = Depends(get_db),
 ):
     scopes = [scope.strip() for scope in (payload.scopes or ["channels:history", "groups:history", "search:read", "users:read"]) if scope and scope.strip()]
@@ -630,7 +630,7 @@ def bootstrap_slack_connector(
 @router.post("/connectors/bootstrap/microsoft", response_model=ConnectorBootstrapResponse)
 def bootstrap_microsoft_connector(
     payload: MicrosoftConnectorBootstrapRequest,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("monitoring.manage")),
     db: Session = Depends(get_db),
 ):
     provider_key = str(payload.provider_key or "").strip().lower()
@@ -780,7 +780,7 @@ def bootstrap_microsoft_connector(
 @router.post("/connectors/{connector_id}/pull", response_model=ConnectorResponse)
 def pull_connector_now(
     connector_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("monitoring.manage")),
     db: Session = Depends(get_db),
 ):
     attempt = 0
@@ -815,7 +815,7 @@ def pull_connector_now(
 @router.get("/connectors/{connector_id}/evaluation", response_model=ConnectorEvaluationResponse)
 def evaluate_connector(
     connector_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("monitoring.view")),
     db: Session = Depends(get_db),
 ):
     evaluation = connector_evaluation(
@@ -831,7 +831,7 @@ def evaluate_connector(
 @router.post("/signals", response_model=MonitoringSignalResponse)
 def ingest_signal(
     payload: SignalIngestRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("monitoring.operate")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -855,7 +855,7 @@ def ingest_signal(
 @router.post("/shadow-events", response_model=MonitoringSignalResponse)
 def ingest_shadow(
     payload: ShadowEventRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("monitoring.operate")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -880,7 +880,7 @@ def list_drift_alerts(
     status_filter: str | None = None,
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="auditor")),
+    ctx: TenantContext = Depends(require_permission("monitoring.review")),
     db: Session = Depends(get_db),
 ):
     query = select(DriftAlert).where(DriftAlert.tenant_id == ctx.tenant.id)
@@ -902,7 +902,7 @@ def list_connector_coverage(
     provider_key: str | None = None,
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("monitoring.view")),
     db: Session = Depends(get_db),
 ):
     rows = connector_control_coverage(
@@ -923,7 +923,7 @@ def list_connector_coverage(
 @router.get("/connectors/coverage/summary", response_model=ConnectorCoverageSummaryResponse)
 def connector_coverage_summary_view(
     provider_key: str | None = None,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("monitoring.view")),
     db: Session = Depends(get_db),
 ):
     payload = connector_coverage_summary(

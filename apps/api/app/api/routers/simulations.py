@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.api.envelopes import ListEnvelope, paginate_rows
 from app.core.deps_control_plane import require_control_plane_healthy
 from app.core.deps_governance import governance_payload_dependency
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.simulation import Control, SimulationDefinition, SimulationRun, SimulationTemplate
 from app.db.session import get_db
@@ -352,7 +352,7 @@ class AgenticChainRunResponse(BaseModel):
 def list_templates(
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("simulations.view")),
     db: Session = Depends(get_db),
 ):
     rows = db.scalars(select(SimulationTemplate).where(SimulationTemplate.tenant_id == ctx.tenant.id)).all()
@@ -368,7 +368,7 @@ def list_templates(
 
 @router.get("/agentic-chain-integrity/scenarios", response_model=AgenticChainScenarioListResponse)
 def list_agentic_chain_integrity_scenarios(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("simulations.view")),
 ):
     del ctx
     return AgenticChainScenarioListResponse(
@@ -381,7 +381,7 @@ def list_agentic_chain_integrity_scenarios(
 @router.post("/agentic-chain-integrity/run", response_model=AgenticChainRunResponse)
 def run_agentic_chain_integrity_validation(
     payload: AgenticChainRunRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("simulations.operate")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -405,7 +405,7 @@ def run_agentic_chain_integrity_validation(
 
 @router.get("/agentic-chain-integrity/metrics")
 def agentic_chain_integrity_metrics(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("simulations.view")),
 ):
     del ctx
     reports = run_scenario_library()
@@ -415,7 +415,7 @@ def agentic_chain_integrity_metrics(
 @router.post("/templates", response_model=SimulationTemplateResponse)
 def create_simulation_template(
     payload: SimulationTemplateCreate,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("simulations.manage")),
     db: Session = Depends(get_db),
 ):
     row = create_template(
@@ -451,7 +451,7 @@ def create_simulation_template(
 def generate_simulation_definitions(
     template_id: str,
     payload: SimulationTemplateGenerateRequest,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("simulations.manage")),
     db: Session = Depends(get_db),
 ):
     row = db.scalar(
@@ -499,7 +499,7 @@ def generate_simulation_definitions(
 @router.post("/catalog/bootstrap-rfp")
 def bootstrap_rfp_catalog(
     payload: SimulationCatalogBootstrapRequest,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("simulations.manage")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -532,7 +532,7 @@ def bootstrap_rfp_catalog(
 @router.post("/catalog/bootstrap-initial-real-seed-pack")
 def bootstrap_initial_real_seed_pack(
     payload: SimulationSeedPackBootstrapRequest,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("simulations.manage")),
     db: Session = Depends(get_db),
 ):
     summary = bootstrap_initial_real_seed_simulations(
@@ -563,7 +563,7 @@ def bootstrap_initial_real_seed_pack(
 def list_simulation_packs(
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("simulations.view")),
     db: Session = Depends(get_db),
 ):
     metadata_rows = {str(row["pack_id"]): row for row in list_pack_definitions()}
@@ -611,7 +611,7 @@ def list_simulation_packs(
 def run_simulation_pack(
     pack_id: str,
     payload: SimulationPackRunRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("simulations.operate")),
     db: Session = Depends(get_db),
 ):
     pack = get_pack_definition(pack_id)
@@ -663,7 +663,7 @@ def run_simulation_pack(
 
 @router.get("/coverage/summary")
 def simulation_coverage_summary(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("simulations.view")),
     db: Session = Depends(get_db),
 ):
     return get_simulation_coverage_summary(
@@ -674,7 +674,7 @@ def simulation_coverage_summary(
 
 @router.get("/coverage/heatmap")
 def simulation_coverage_heatmap(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("simulations.view")),
     db: Session = Depends(get_db),
 ):
     return get_simulation_heatmap(
@@ -686,7 +686,7 @@ def simulation_coverage_heatmap(
 @router.get("/coverage/trends")
 def simulation_coverage_trends(
     lookback_days: int = 14,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("simulations.view")),
     db: Session = Depends(get_db),
 ):
     return get_simulation_trends(
@@ -721,7 +721,7 @@ def _ensure_controls_exist(db: Session, *, tenant_id: str, control_ids: list[str
 def list_controls(
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("simulations.view")),
     db: Session = Depends(get_db),
 ):
     persist_tenant_canonical_controls(db, tenant_id=ctx.tenant.id)
@@ -739,7 +739,7 @@ def list_controls(
 @router.post("/controls", response_model=ControlResponse)
 def create_control(
     payload: ControlCreate,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("simulations.manage")),
     db: Session = Depends(get_db),
 ):
     if payload.is_global:
@@ -787,7 +787,7 @@ def control_traceability(
     ai_system_id: str,
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("simulations.view")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -811,7 +811,7 @@ def control_traceability(
 def list_definitions(
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("simulations.view")),
     db: Session = Depends(get_db),
 ):
     rows = db.scalars(select(SimulationDefinition).where(SimulationDefinition.tenant_id == ctx.tenant.id)).all()
@@ -828,7 +828,7 @@ def list_definitions(
 @router.post("/definitions", response_model=SimulationDefinitionResponse)
 def create_definition(
     payload: SimulationDefCreate,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("simulations.manage")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -881,7 +881,7 @@ def create_definition(
 def update_definition(
     simulation_id: str,
     payload: SimulationDefUpdate,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("simulations.manage")),
     db: Session = Depends(get_db),
 ):
     row = db.scalar(
@@ -959,7 +959,7 @@ def update_definition(
 def run_definition(
     simulation_id: str,
     payload: SimulationRunRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("simulations.operate")),
     db: Session = Depends(get_db),
 ):
     enforce_fail_secure_or_raise(
@@ -1032,7 +1032,7 @@ def run_definition(
 
 @router.get("/runs/stream")
 def stream_simulation_runs(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("simulations.view")),
 ):
     return _simulation_stream_response(tenant_id=ctx.tenant.id)
 
@@ -1041,7 +1041,7 @@ def stream_simulation_runs(
 def list_runs(
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("simulations.view")),
     db: Session = Depends(get_db),
 ):
     rows = db.scalars(select(SimulationRun).where(SimulationRun.tenant_id == ctx.tenant.id).order_by(SimulationRun.started_at.desc())).all()
@@ -1058,7 +1058,7 @@ def list_runs(
 @router.get("/runs/{run_id}/trace", response_model=SimulationRunTraceResponse)
 def get_run_trace(
     run_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("simulations.view")),
     db: Session = Depends(get_db),
 ):
     try:

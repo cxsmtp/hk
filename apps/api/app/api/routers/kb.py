@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from app.api.envelopes import ListEnvelope, paginate_rows
 from app.core.auth import get_current_user
 from app.core.observability import get_correlation_id
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.knowledge_base import KBControl, KBFramework
 from app.db.models.user import User
@@ -66,7 +66,7 @@ class KBSearchResponse(BaseModel):
 def list_frameworks(
     page: int = 1,
     page_size: int = 50,
-    _ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    _ctx: TenantContext = Depends(require_permission("assistant.use")),
     db: Session = Depends(get_db),
 ):
     rows = db.scalars(select(KBFramework).order_by(KBFramework.name.asc(), KBFramework.version.asc())).all()
@@ -80,7 +80,7 @@ def list_controls(
     framework: str | None = Query(default=None),
     page: int = 1,
     page_size: int = 50,
-    _ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    _ctx: TenantContext = Depends(require_permission("assistant.use")),
     db: Session = Depends(get_db),
 ):
     query = select(KBControl).order_by(KBControl.id.asc())
@@ -105,7 +105,7 @@ def list_controls(
 def kb_search(
     payload: KBSearchRequest,
     request: Request,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("assistant.use")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):

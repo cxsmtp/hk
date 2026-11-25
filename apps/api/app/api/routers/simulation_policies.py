@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.api.envelopes import ListEnvelope, paginate_rows
 from app.core.deps_control_plane import require_control_plane_healthy
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.simulation import SimulationExecutor, SimulationPolicy
 from app.db.session import get_db
@@ -126,7 +126,7 @@ def _raise_policy_validation(error_text: str) -> None:
 def list_policies(
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("simulations.view")),
     db: Session = Depends(get_db),
 ):
     rows = list_simulation_policies(db, tenant_id=ctx.tenant.id)
@@ -144,7 +144,7 @@ def list_policies(
 @router.post("", response_model=SimulationPolicyResponse)
 def create_policy(
     payload: SimulationPolicyPayload,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("simulations.manage")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -169,7 +169,7 @@ def create_policy(
 
 @router.get("/active", response_model=SimulationPolicyResponse)
 def get_active(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("simulations.view")),
     db: Session = Depends(get_db),
 ):
     row = get_active_policy(db, tenant_id=ctx.tenant.id)
@@ -182,7 +182,7 @@ def get_active(
 def get_executors(
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("simulations.view")),
     db: Session = Depends(get_db),
 ):
     rows = list_executors(db, tenant_id=ctx.tenant.id)
@@ -200,7 +200,7 @@ def get_executors(
 @router.get("/catalog/coverage")
 def get_catalog_state(
     sync: bool = True,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("simulations.view")),
     db: Session = Depends(get_db),
 ):
     if sync:
@@ -212,7 +212,7 @@ def get_catalog_state(
 
 @router.post("/catalog/sync")
 def sync_catalog_state(
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("simulations.operate")),
     db: Session = Depends(get_db),
 ):
     summary = sync_simulation_catalog(db, tenant_id=ctx.tenant.id)
@@ -233,7 +233,7 @@ def sync_catalog_state(
 @router.get("/{policy_id}", response_model=SimulationPolicyResponse)
 def get_policy(
     policy_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("simulations.view")),
     db: Session = Depends(get_db),
 ):
     row = get_simulation_policy(db, tenant_id=ctx.tenant.id, policy_id=policy_id)
@@ -246,7 +246,7 @@ def get_policy(
 def patch_policy(
     policy_id: str,
     payload: SimulationPolicyPatchPayload,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("simulations.manage")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -280,7 +280,7 @@ def patch_policy(
 @router.post("/{policy_id}/activate", response_model=SimulationPolicyResponse)
 def activate_policy(
     policy_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("simulations.manage")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -309,7 +309,7 @@ def activate_policy(
 # Ensure default policy exists for each tenant immediately when this router is hit.
 @router.post("/ensure-default", response_model=SimulationPolicyResponse)
 def ensure_default(
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("simulations.operate")),
     db: Session = Depends(get_db),
 ):
     row = ensure_default_policy(db, tenant_id=ctx.tenant.id)

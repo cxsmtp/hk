@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.session import get_db
 from app.services.audit_evidence_service import explain_evidence_node
@@ -45,7 +45,7 @@ class AuditEvidenceExplanationResponse(BaseModel):
 @router.get("/evidence/{evidence_id}", response_model=AuditEvidenceExplanationResponse)
 def audit_evidence_explanation(
     evidence_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("evidence.view")),
     db: Session = Depends(get_db),
 ):
     payload = explain_evidence_node(

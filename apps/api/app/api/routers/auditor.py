@@ -15,7 +15,7 @@ from app.api.envelopes import ListEnvelope, paginate_rows
 from app.core.deps_control_plane import require_control_plane_healthy
 from app.core.deps_governance import governance_payload_dependency
 from app.core.config import settings
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.audit import AuditLog
 from app.db.models.ai_system import AISystem
@@ -344,7 +344,7 @@ def _scope_hash(scope: dict) -> str:
 
 @router.get("/dashboard", response_model=AuditorDashboardResponse)
 def dashboard(
-    ctx: TenantContext = Depends(require_role(min_role="auditor")),
+    ctx: TenantContext = Depends(require_permission("evidence.export")),
     db: Session = Depends(get_db),
 ):
     maturities = db.scalars(select(ControlMaturity).where(ControlMaturity.tenant_id == ctx.tenant.id)).all()
@@ -439,7 +439,7 @@ def _canonical_framework_refs(remediation_type: str) -> list[dict]:
 @router.get("/data-flow-trace/{correlation_id}", response_model=DataFlowTraceResponse)
 def data_flow_trace(
     correlation_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="auditor")),
+    ctx: TenantContext = Depends(require_permission("evidence.export")),
     db: Session = Depends(get_db),
 ):
     normalized_correlation = str(correlation_id or "").strip()
@@ -755,7 +755,7 @@ def data_flow_trace(
 @router.get("/remediation-trace/{remediation_id}", response_model=RemediationTraceResponse)
 def remediation_trace(
     remediation_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="auditor")),
+    ctx: TenantContext = Depends(require_permission("evidence.export")),
     db: Session = Depends(get_db),
 ):
     remediation = db.scalar(
@@ -1271,7 +1271,7 @@ def remediation_trace(
 def snapshot(
     payload: SnapshotRequest,
     request: Request,
-    ctx: TenantContext = Depends(require_role(min_role="auditor")),
+    ctx: TenantContext = Depends(require_permission("evidence.export")),
     db: Session = Depends(get_db),
 ):
     snapshot_payload = dict(payload.payload or {})
@@ -1373,7 +1373,7 @@ def snapshot(
 @router.post("/export", response_model=AuditorExportResponse)
 def export(
     payload: ExportRequest,
-    ctx: TenantContext = Depends(require_role(min_role="auditor")),
+    ctx: TenantContext = Depends(require_permission("evidence.export")),
     db: Session = Depends(get_db),
 ):
     end = payload.period_end or datetime.now(timezone.utc).isoformat()
@@ -1425,7 +1425,7 @@ def export(
 @router.get("/snapshots/{snapshot_id}/download")
 def download_snapshot(
     snapshot_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="auditor")),
+    ctx: TenantContext = Depends(require_permission("evidence.export")),
     db: Session = Depends(get_db),
 ):
     snapshot = db.scalar(
@@ -1458,7 +1458,7 @@ def download_snapshot(
 def download_snapshot_artifact(
     snapshot_id: str,
     artifact_name: Literal["json", "csv", "evidence_pack", "pdf_ready_model", "pdf"],
-    ctx: TenantContext = Depends(require_role(min_role="auditor")),
+    ctx: TenantContext = Depends(require_permission("evidence.export")),
     db: Session = Depends(get_db),
 ):
     snapshot = db.scalar(
@@ -1516,7 +1516,7 @@ def list_conflicts(
     status_filter: str = "open",
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="auditor")),
+    ctx: TenantContext = Depends(require_permission("evidence.export")),
     db: Session = Depends(get_db),
 ):
     query = select(ControlConflict).where(ControlConflict.tenant_id == ctx.tenant.id)
@@ -1536,7 +1536,7 @@ def list_conflicts(
 @router.post("/challenge", response_model=ControlConflictResponse)
 def create_challenge(
     payload: AuditorChallengeRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin", "auditor"])),
+    ctx: TenantContext = Depends(require_permission("evidence.export")),
     db: Session = Depends(get_db),
 ):
     ai_system = db.scalar(
@@ -1651,7 +1651,7 @@ def create_challenge(
 def resolve_conflict(
     conflict_id: str,
     payload: ConflictResolveRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin", "auditor"])),
+    ctx: TenantContext = Depends(require_permission("evidence.export")),
     db: Session = Depends(get_db),
 ):
     conflict = db.scalar(
@@ -1752,7 +1752,7 @@ def resolve_conflict(
 def control_posture_view(
     group_by: Literal["framework", "domain", "ai_system"] = "framework",
     ai_system_id: str | None = None,
-    ctx: TenantContext = Depends(require_role(min_role="auditor")),
+    ctx: TenantContext = Depends(require_permission("evidence.export")),
     db: Session = Depends(get_db),
 ):
     if ai_system_id:

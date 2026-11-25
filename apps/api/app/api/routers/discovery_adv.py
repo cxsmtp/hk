@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.discovery_resolution import DiscoveryVerificationTask
 from app.db.models.discovery_verification import (
@@ -386,7 +386,7 @@ def _assertion_response(row: DiscoveryVerificationAssertion) -> AssertionRespons
 )
 def get_verification_projection(
     ecosystem_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> VerificationProjectionResponse:
     _require_adv()
@@ -407,7 +407,7 @@ def get_verification_projection(
 )
 def get_verification_history(
     ecosystem_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> VerificationHistoryResponse:
     _require_adv()
@@ -561,7 +561,7 @@ def get_verification_history(
 )
 def list_verification_episodes(
     ecosystem_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> list[EpisodeSummaryResponse]:
     _require_adv()
@@ -583,7 +583,7 @@ def list_verification_episodes(
 )
 def get_verification_episode(
     episode_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> EpisodeDetailResponse:
     _require_adv()
@@ -606,7 +606,7 @@ def get_verification_episode(
     "/verification/policies", response_model=list[VerificationPolicyResponse]
 )
 def list_verification_policies(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> list[VerificationPolicyResponse]:
     _require_adv()
@@ -626,7 +626,7 @@ def list_verification_policies(
 )
 def create_policy(
     request: VerificationPolicyRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("discovery.manage")),
     db: Session = Depends(get_db),
 ) -> VerificationPolicyResponse:
     _require_adv()
@@ -662,7 +662,7 @@ def create_policy(
 def start_verification(
     ecosystem_id: str,
     request: StartVerificationRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("discovery.manage")),
     db: Session = Depends(get_db),
 ) -> StartVerificationResponse:
     _require_adv()
@@ -700,7 +700,7 @@ def start_verification(
 def evaluate_verification(
     episode_id: str,
     request: EvaluateVerificationRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("discovery.manage")),
     db: Session = Depends(get_db),
 ) -> AssertionResponse:
     _require_adv()
@@ -741,7 +741,7 @@ def evaluate_verification(
 def retry_verification(
     episode_id: str,
     request: RetryVerificationRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("discovery.manage")),
     db: Session = Depends(get_db),
 ) -> StartVerificationResponse:
     _require_adv()
@@ -781,7 +781,7 @@ def retry_verification(
 def cancel_verification(
     episode_id: str,
     request: CancelVerificationRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("discovery.manage")),
     db: Session = Depends(get_db),
 ) -> CancelVerificationResponse:
     _require_adv()

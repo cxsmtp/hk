@@ -13,7 +13,7 @@ from app.core.config import settings
 from app.core.deps_control_plane import require_control_plane_healthy
 from app.core.deps_governance import governance_payload_dependency
 from app.core.observability import log_structured
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.session import SessionLocal, get_db
 from app.services.gateway_service import get_guardian_enforcement_matrix, llm_intercept, mcp_authorize
@@ -343,7 +343,7 @@ def _raise_fail_closed(
 def guardian_enforcement_matrix(
     ai_system_id: str,
     actor_type: str = "human",
-    ctx: TenantContext = Depends(require_role(min_role="auditor")),
+    ctx: TenantContext = Depends(require_permission("gateway.review")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -360,7 +360,7 @@ def guardian_enforcement_matrix(
 @router.post("/llm/intercept")
 def gateway_llm_intercept(
     payload: LLMInterceptRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("gateway.operate")),
     db: Session = Depends(get_db),
 ):
     req_id = payload.request_id or str(uuid4())
@@ -440,7 +440,7 @@ def gateway_llm_intercept(
 @router.post("/mcp/sessions/open", status_code=201)
 def gateway_open_mcp_session(
     payload: MCPSessionOpenRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("gateway.operate")),
     db: Session = Depends(get_db),
 ):
     if ctx.user is None:
@@ -496,7 +496,7 @@ def _raise_mcp_session_authority_denied(exc: MCPSessionAuthorityError) -> None:
 @router.get("/mcp/sessions/{session_id}")
 def gateway_get_mcp_session(
     session_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("gateway.inspect")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -537,7 +537,7 @@ def _transition_authenticated_mcp_session(
 @router.post("/mcp/sessions/{session_id}/close")
 def gateway_close_mcp_session(
     session_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("gateway.operate")),
     db: Session = Depends(get_db),
 ):
     return _transition_authenticated_mcp_session(
@@ -551,7 +551,7 @@ def gateway_close_mcp_session(
 @router.post("/mcp/sessions/{session_id}/revoke")
 def gateway_revoke_mcp_session(
     session_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("gateway.operate")),
     db: Session = Depends(get_db),
 ):
     return _transition_authenticated_mcp_session(
@@ -565,7 +565,7 @@ def gateway_revoke_mcp_session(
 @router.post("/mcp/authorize")
 def gateway_mcp_authorize(
     payload: MCPAuthorizeRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("gateway.operate")),
     db: Session = Depends(get_db),
 ):
     req_id = payload.request_id or str(uuid4())
@@ -646,7 +646,7 @@ def gateway_mcp_authorize(
 @router.post("/mcp/tools/scan")
 def gateway_mcp_tool_scan(
     payload: MCPToolScanRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("gateway.operate")),
     db: Session = Depends(get_db),
 ):
     metadata_bundle = payload.metadata_bundle.model_dump()
@@ -703,7 +703,7 @@ def gateway_mcp_tool_scan(
 def gateway_list_mcp_tool_fingerprints(
     trust_status: Literal["unknown", "approved", "changed", "blocked", "under_review"] | None = None,
     limit: int = 100,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("gateway.inspect")),
     db: Session = Depends(get_db),
 ):
     if limit < 1 or limit > 100:
@@ -720,7 +720,7 @@ def gateway_list_mcp_tool_fingerprints(
 def gateway_decide_mcp_tool_fingerprint(
     tool_fingerprint_id: str,
     payload: MCPToolFingerprintDecisionRequest,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("gateway.manage")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -791,7 +791,7 @@ def gateway_decide_mcp_tool_fingerprint(
 
 @router.get("/mcp/tools/exposure")
 def gateway_mcp_tool_exposure(
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("gateway.inspect")),
     db: Session = Depends(get_db),
 ):
     service = InstructionToolProvenanceService(
@@ -805,7 +805,7 @@ def gateway_mcp_tool_exposure(
 def gateway_remove_mcp_tool(
     tool_binding_id: str,
     payload: MCPToolRemovalRequest,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("gateway.manage")),
     db: Session = Depends(get_db),
 ):
     service = InstructionToolProvenanceService(

@@ -20,7 +20,7 @@ from app.core.control_engine.authorization import (
     AuthorizationRolloutOutcome,
     authorize_ai_action,
 )
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.evidence import DecisionReceipt, EvidenceNode, ExecutionReceipt
 from app.db.models.endpoint_identity import EndpointDeviceIdentity
@@ -2041,7 +2041,7 @@ class _DatabaseReplayStore(ReplayStore):
 
 @router.get("/native-controls/chatgpt-desktop/assets", dependencies=[FrameworkDependency])
 def list_chatgpt_desktop_assets(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
     """Return server-projected ChatGPT assets without trusting aggregate claims."""
@@ -2052,7 +2052,7 @@ def list_chatgpt_desktop_assets(
 @router.post("/native-controls/chatgpt-desktop/control-plan", dependencies=[FrameworkDependency])
 def get_chatgpt_desktop_control_plan(
     request: ChatGPTDesktopControlPlanRequest,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
     """Resolve an action-specific plan from tenant evidence, not client posture."""
@@ -2070,7 +2070,7 @@ def get_chatgpt_desktop_control_plan(
 
 @router.get("/native-controls/adapters", dependencies=[FrameworkDependency])
 def list_native_control_adapters(
-    _ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    _ctx: TenantContext = Depends(require_permission("deployments.view")),
 ) -> dict[str, object]:
     registry = _foundation_registry()
     items = [_adapter_catalog_item(adapter) for adapter in registry.adapters()]
@@ -2085,7 +2085,7 @@ def list_native_control_adapters(
 @router.get("/native-controls/adapters/{adapter_id}", dependencies=[FrameworkDependency])
 def get_native_control_adapter(
     adapter_id: str,
-    _ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    _ctx: TenantContext = Depends(require_permission("deployments.view")),
 ) -> dict[str, object]:
     registry = _foundation_registry()
     try:
@@ -2097,7 +2097,7 @@ def get_native_control_adapter(
 @router.get("/native-controls/adapters/{adapter_id}/capabilities", dependencies=[FrameworkDependency])
 def get_native_control_adapter_capabilities(
     adapter_id: str,
-    _ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    _ctx: TenantContext = Depends(require_permission("deployments.view")),
 ) -> dict[str, object]:
     registry = _foundation_registry()
     try:
@@ -2115,7 +2115,7 @@ def get_native_control_adapter_capabilities(
 
 @router.get("/control-capabilities/providers", dependencies=[FrameworkDependency])
 def list_provider_capabilities(
-    _ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    _ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
     if not settings.control_capability_matrix:
@@ -2130,7 +2130,7 @@ def list_provider_capabilities(
 @router.get("/control-capabilities/providers/{provider}", dependencies=[FrameworkDependency])
 def get_provider_capabilities(
     provider: str,
-    _ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    _ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
     if not settings.control_capability_matrix:
@@ -2149,7 +2149,7 @@ def get_provider_capabilities(
 @router.post("/native-controls/integrations", status_code=201, dependencies=[FrameworkDependency])
 def create_integration(
     request: IntegrationCreateRequest,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("deployments.manage")),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
     try:
@@ -2229,7 +2229,7 @@ def create_integration(
 
 @router.get("/control-points", dependencies=[FrameworkDependency])
 def list_control_points(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
     rows = db.scalars(
@@ -2243,7 +2243,7 @@ def list_control_points(
 @router.get("/control-points/{integration_id}", dependencies=[FrameworkDependency])
 def get_control_point(
     integration_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
     return _integration_response(db, _integration_or_404(db, ctx.tenant.id, integration_id))
@@ -2257,7 +2257,7 @@ def get_control_point(
 def register_workload_credential(
     integration_id: str,
     request: CredentialCreateRequest,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("deployments.manage")),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
     integration = db.scalar(
@@ -2323,7 +2323,7 @@ def revoke_workload_credential(
     integration_id: str,
     credential_id: str,
     request: CredentialRevokeRequest,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("deployments.manage")),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
     integration = _integration_or_404(db, ctx.tenant.id, integration_id)
@@ -3819,7 +3819,7 @@ def receive_native_callback(
 def validate_integration(
     integration_id: str,
     request: ValidationRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
     integration = _integration_or_404(db, ctx.tenant.id, integration_id)
@@ -4121,7 +4121,7 @@ def validate_integration(
 )
 def run_server_validation(
     integration_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
     """Run a side-effect-free server probe after a real signed callback was observed.
@@ -4617,7 +4617,7 @@ def _real_binary_acceptance_evidence(
 )
 def accept_real_binary(
     integration_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("deployments.manage")),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
     """Bind a real local native-control binary after recent signed callback proof.
@@ -4895,7 +4895,7 @@ def _transition(
 @router.post("/native-controls/integrations/{integration_id}/configure", dependencies=[FrameworkDependency])
 def configure_integration(
     integration_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("deployments.manage")),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
     integration = _integration_or_404(db, ctx.tenant.id, integration_id)
@@ -4910,7 +4910,7 @@ def configure_integration(
 @router.post("/native-controls/integrations/{integration_id}/monitor", dependencies=[FrameworkDependency])
 def enable_monitor(
     integration_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
     if not settings.native_control_monitor:
@@ -4921,7 +4921,7 @@ def enable_monitor(
 @router.post("/native-controls/integrations/{integration_id}/enforce", dependencies=[FrameworkDependency])
 def enable_enforce(
     integration_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("deployments.manage")),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
     if not settings.native_control_enforce:
@@ -4935,7 +4935,7 @@ def enable_enforce(
 @router.post("/native-controls/integrations/{integration_id}/disable", dependencies=[FrameworkDependency])
 def disable_integration(
     integration_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("deployments.manage")),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
     return _transition(db, _integration_or_404(db, ctx.tenant.id, integration_id), IntegrationState.DISABLED)
@@ -4944,7 +4944,7 @@ def disable_integration(
 @router.get("/control-points/{integration_id}/health", dependencies=[FrameworkDependency])
 def get_control_point_health(
     integration_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
     row = _integration_or_404(db, ctx.tenant.id, integration_id)
@@ -5030,7 +5030,7 @@ def get_control_point_health(
 @router.get("/native-controls/integrations/{integration_id}/coverage", dependencies=[FrameworkDependency])
 def get_native_coverage(
     integration_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
     row = _integration_or_404(db, ctx.tenant.id, integration_id)
@@ -5053,7 +5053,7 @@ def get_native_coverage(
 @router.get("/control-selections/{action_id}", dependencies=[FrameworkDependency])
 def get_control_selection(
     action_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
     row = db.scalar(

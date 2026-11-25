@@ -297,11 +297,15 @@ from app.db.models.simulation import (
 from app.db.models.snapshot import AuditorSnapshot
 from app.db.models.tenant import Tenant
 from app.db.models.user import RefreshToken, User, UserTenantRole
+from app.db.models.iam import IamJoinSettings, IamRole, IamTeam
 
 __all__ = [
     "Tenant",
     "User",
     "UserTenantRole",
+    "IamRole",
+    "IamTeam",
+    "IamJoinSettings",
     "AIReasoningTrace",
     "RefreshToken",
     "ActivationState",

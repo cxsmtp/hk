@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.runtime_intelligence import RuntimeEvent
 from app.db.session import get_db
@@ -63,7 +63,7 @@ def lineage_for_runtime_event(
     runtime_event_id: str,
     depth: int = Query(default=3, ge=0, le=6),
     limit: int = Query(default=100, ge=1, le=200),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     event_id = _bounded_path(runtime_event_id, name="runtime_event_id")
@@ -84,7 +84,7 @@ def lineage_for_action(
     action_id: str,
     depth: int = Query(default=3, ge=0, le=6),
     limit: int = Query(default=100, ge=1, le=200),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     action_ref = _bounded_path(action_id, name="action_id")
@@ -116,7 +116,7 @@ def lineage_for_action(
 def lineage_detail(
     lineage_id: str,
     limit: int = Query(default=100, ge=1, le=200),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     result = get_activity_lineage_projection(
@@ -134,7 +134,7 @@ def lineage_traversal(
     direction: str = Query(default="both", pattern="^(upstream|downstream|both)$"),
     depth: int = Query(default=3, ge=0, le=6),
     limit: int = Query(default=100, ge=1, le=200),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -176,7 +176,7 @@ def lineage_search(
     time_from: datetime | None = Query(default=None),
     time_to: datetime | None = Query(default=None),
     limit: int = Query(default=50, ge=1, le=200),
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -197,7 +197,7 @@ def lineage_search(
 @router.post("")
 def investigation_create(
     payload: InvestigationCreateRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("activity.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -220,7 +220,7 @@ def investigation_create(
 @router.get("/{investigation_id}")
 def investigation_detail(
     investigation_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     result = get_investigation(
@@ -236,7 +236,7 @@ def investigation_detail(
 def investigation_finding_create(
     investigation_id: str,
     payload: FindingCreateRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("activity.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:

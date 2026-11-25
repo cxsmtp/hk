@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 
 from app.api.routers.discovery_scans import SanitizedHmairRoute, require_hmair_core
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.session import get_db
 from app.services.audit_service import write_audit_log
@@ -39,7 +39,7 @@ router = APIRouter(
 @router.post("", response_model=SurfaceSourceRegistrationResponse, status_code=status.HTTP_201_CREATED)
 def register_h2_surface_source(
     payload: SurfaceSourceRegistrationInput,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("discovery.manage")),
     db: Session = Depends(get_db),
 ) -> SurfaceSourceRegistrationResponse:
     """Register a source prerequisite; evidence can only be proved by preflight."""

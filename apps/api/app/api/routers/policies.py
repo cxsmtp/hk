@@ -11,7 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.envelopes import ListEnvelope, paginate_rows
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.policy import (
     BusinessFunctionProfile,
@@ -473,7 +473,7 @@ def _extract_scoped_rules(row: PolicyVersion) -> list[dict[str, Any]]:
 
 @router.get("/business-purpose/sector-packs")
 def list_business_purpose_sector_packs(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
 ):
     return {
         "tenant_id": ctx.tenant.id,
@@ -485,7 +485,7 @@ def list_business_purpose_sector_packs(
 
 @router.get("/business-purpose/profile", response_model=BusinessPurposeProfileResponse)
 def get_business_purpose_profile(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ):
     row = db.scalar(
@@ -508,7 +508,7 @@ def get_business_purpose_profile(
 @router.put("/business-purpose/profile", response_model=BusinessPurposeProfileResponse)
 def upsert_business_purpose_profile(
     payload: BusinessPurposeProfilePayload,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("policies.manage")),
     db: Session = Depends(get_db),
 ):
     if payload.sector not in SUPPORTED_SECTORS:
@@ -542,7 +542,7 @@ def upsert_business_purpose_profile(
 def list_business_purpose_functions(
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ):
     rows = db.scalars(
@@ -558,7 +558,7 @@ def list_business_purpose_functions(
 @router.post("/business-purpose/functions", response_model=BusinessFunctionResponse)
 def upsert_business_purpose_function(
     payload: BusinessFunctionPayload,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("policies.manage")),
     db: Session = Depends(get_db),
 ):
     name = payload.name.strip().lower()
@@ -595,7 +595,7 @@ def upsert_business_purpose_function(
 def list_business_purpose_mappings(
     page: int = 1,
     page_size: int = 100,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ):
     rows = db.scalars(
@@ -611,7 +611,7 @@ def list_business_purpose_mappings(
 @router.post("/business-purpose/mappings", response_model=BusinessPurposeMappingResponse)
 def create_business_purpose_mapping(
     payload: BusinessPurposeMappingPayload,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("policies.manage")),
     db: Session = Depends(get_db),
 ):
     if not any([payload.user_id, payload.email, payload.group_name, payload.idp_group_id, payload.claim_name]):
@@ -637,7 +637,7 @@ def create_business_purpose_mapping(
 def update_business_purpose_mapping(
     mapping_id: str,
     payload: BusinessPurposeMappingPayload,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("policies.manage")),
     db: Session = Depends(get_db),
 ):
     row = db.scalar(
@@ -668,7 +668,7 @@ def update_business_purpose_mapping(
 @router.delete("/business-purpose/mappings/{mapping_id}")
 def delete_business_purpose_mapping(
     mapping_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("policies.manage")),
     db: Session = Depends(get_db),
 ):
     row = db.scalar(
@@ -697,7 +697,7 @@ def delete_business_purpose_mapping(
 @router.post("/business-purpose/mappings/test")
 def test_business_purpose_mapping(
     payload: BusinessPurposeMappingTestRequest,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ):
     return resolve_user_business_context(
@@ -713,7 +713,7 @@ def test_business_purpose_mapping(
 @router.post("/business-purpose/csv-import")
 def import_business_purpose_mappings_csv(
     payload: BusinessPurposeCsvImportRequest,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("policies.manage")),
     db: Session = Depends(get_db),
 ):
     reader = csv.DictReader(StringIO(payload.csv_text))
@@ -764,7 +764,7 @@ def import_business_purpose_mappings_csv(
 @router.post("/business-purpose/evaluate")
 def evaluate_business_purpose(
     payload: BusinessPurposeEvalRequest,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ):
     return evaluate_business_purpose_boundary(
@@ -785,7 +785,7 @@ def evaluate_business_purpose(
 @router.post("/business-purpose/exceptions")
 def create_business_purpose_exception(
     payload: PurposeExceptionPayload,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ):
     row = PurposeException(
@@ -819,7 +819,7 @@ def create_business_purpose_exception(
 def list_packs(
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ):
     rows = db.scalars(select(PolicyPack).where(PolicyPack.tenant_id == ctx.tenant.id)).all()
@@ -831,7 +831,7 @@ def list_packs(
 @router.post("/packs", response_model=PolicyPackCreateResponse)
 def create_pack(
     payload: PolicyPackCreate,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("policies.manage")),
     db: Session = Depends(get_db),
 ):
     row = PolicyPack(
@@ -882,7 +882,7 @@ def create_pack(
 def update_pack(
     pack_id: str,
     payload: PolicyPackUpdate,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("policies.manage")),
     db: Session = Depends(get_db),
 ):
     row = db.scalar(select(PolicyPack).where(PolicyPack.id == pack_id, PolicyPack.tenant_id == ctx.tenant.id))
@@ -914,7 +914,7 @@ def list_versions(
     pack_id: str,
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ):
     rows = db.scalars(
@@ -929,7 +929,7 @@ def list_versions(
 def create_version(
     pack_id: str,
     payload: PolicyVersionCreate,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("policies.manage")),
     db: Session = Depends(get_db),
 ):
     pack = db.scalar(select(PolicyPack).where(PolicyPack.id == pack_id, PolicyPack.tenant_id == ctx.tenant.id))
@@ -990,7 +990,7 @@ def create_version(
 @router.get("/versions/{policy_version_id}/scoped-rules", response_model=ScopedRulesResponse)
 def get_scoped_rules(
     policy_version_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ):
     row = db.scalar(
@@ -1014,7 +1014,7 @@ def get_scoped_rules(
 def update_scoped_rules(
     policy_version_id: str,
     payload: ScopedRulesUpdateRequest,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("policies.manage")),
     db: Session = Depends(get_db),
 ):
     row = db.scalar(
@@ -1067,7 +1067,7 @@ def update_scoped_rules(
 @router.post("/pilot-pack/ensure", response_model=PilotPolicyPackEnsureResponse)
 def ensure_pilot_pack(
     payload: PilotPolicyPackEnsureRequest,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("policies.manage")),
     db: Session = Depends(get_db),
 ):
     pack_name = "Pilot Safe Browser Extension Pack"
@@ -1196,7 +1196,7 @@ def _read_intent_aware_action_control_from_policy(row: PolicyVersion) -> dict[st
 )
 def get_browser_automation_control(
     policy_version_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ):
     row = db.scalar(
@@ -1224,7 +1224,7 @@ def get_browser_automation_control(
 def update_browser_automation_control(
     policy_version_id: str,
     payload: BrowserAutomationControlPolicy,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("policies.manage")),
     db: Session = Depends(get_db),
 ):
     row = db.scalar(
@@ -1276,7 +1276,7 @@ def update_browser_automation_control(
 )
 def get_intent_aware_action_control(
     policy_version_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ):
     row = db.scalar(
@@ -1303,7 +1303,7 @@ def get_intent_aware_action_control(
 def update_intent_aware_action_control(
     policy_version_id: str,
     payload: IntentAwareActionControlPolicy,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("policies.manage")),
     db: Session = Depends(get_db),
 ):
     row = db.scalar(
@@ -1354,7 +1354,7 @@ def guardian_matrix(
     policy_version_id: str | None = None,
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ):
     policy_version = None
@@ -1381,7 +1381,7 @@ def guardian_matrix(
 
 @router.get("/running", response_model=RunningPolicyStatusResponse)
 def running_policies(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("policies.view")),
     db: Session = Depends(get_db),
 ):
     active_packs = db.scalars(
@@ -1436,7 +1436,7 @@ def running_policies(
 @router.post("/approvals/scan")
 def scan_agentic_approval(
     payload: ApprovalScanRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("policies.operate")),
     db: Session = Depends(get_db),
 ):
     return scan_approval_request(
@@ -1454,7 +1454,7 @@ def scan_agentic_approval(
 @router.post("/approvals/bind")
 def bind_agentic_approval(
     payload: ApprovalBindRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("policies.operate")),
     db: Session = Depends(get_db),
 ):
     try:

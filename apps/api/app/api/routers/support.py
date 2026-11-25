@@ -14,7 +14,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.rbac import require_role
+from app.core.rbac import holds, require_permission
 from app.core.tenant import TenantContext, require_tenant
 from app.db.models.platform_records import SupportTicket
 from app.db.models.user import User, UserTenantRole
@@ -31,7 +31,7 @@ def _error(status_code: int, message: str, **extra: Any) -> JSONResponse:
 
 
 def _team(ctx: TenantContext) -> bool:
-    return ctx.role in support_desk.TEAM_ROLES
+    return holds(ctx, "support.manage")
 
 
 def _me(ctx: TenantContext) -> dict[str, str]:
@@ -151,12 +151,12 @@ def _audit(db: Session, ctx: TenantContext, action: str, t: SupportTicket, reaso
 
 
 @router.get("/support/settings")
-def get_support_settings(ctx: TenantContext = Depends(require_role(min_role="admin")), db: Session = Depends(get_db)):
+def get_support_settings(ctx: TenantContext = Depends(require_permission("support.manage")), db: Session = Depends(get_db)):
     return support_desk.channel(db, ctx.tenant.id)
 
 
 @router.put("/support/settings")
-def put_support_settings(body: dict[str, Any] | None = Body(default=None), ctx: TenantContext = Depends(require_role(min_role="admin")), db: Session = Depends(get_db)):
+def put_support_settings(body: dict[str, Any] | None = Body(default=None), ctx: TenantContext = Depends(require_permission("support.manage")), db: Session = Depends(get_db)):
     body = body or {}
     before = support_desk.channel(db, ctx.tenant.id)
     try:

@@ -13,7 +13,7 @@ from app.api.routers.discovery_scans import (
     _surface_enabled,
     require_hmair_core,
 )
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.discovery_canonical import DiscoveryCollector
 from app.db.session import get_db
@@ -98,7 +98,7 @@ def _collector_response(row: DiscoveryCollector) -> DiscoveryCollectorResponse:
 
 @router.get("", response_model=DiscoveryCollectorListResponse)
 def list_collectors(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> DiscoveryCollectorListResponse:
     rows = list(
@@ -125,7 +125,7 @@ def list_collectors(
 @router.get("/{collector_id}/health", response_model=DiscoveryCollectorResponse)
 def get_collector_health(
     collector_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> DiscoveryCollectorResponse:
     row = db.scalar(

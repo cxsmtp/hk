@@ -11,7 +11,7 @@ from app.api.routers.discovery_scans import (
     _bounded_safe_strings,
     require_hmair_core,
 )
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.discovery_canonical import DiscoveryTarget
 from app.db.session import get_db
@@ -78,7 +78,7 @@ def _target_response(row: DiscoveryTarget) -> DiscoveryTargetResponse:
 
 @router.get("", response_model=DiscoveryTargetListResponse)
 def list_targets(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ) -> DiscoveryTargetListResponse:
     rows = list(

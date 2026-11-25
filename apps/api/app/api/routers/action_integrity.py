@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.session import get_db
 from app.services.action_integrity.action_detail import materialize_action_detail
@@ -23,7 +23,7 @@ def validate_runtime_event_id(value: str) -> str:
 @router.get("/actions/{runtime_event_id}")
 def action_detail(
     runtime_event_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("activity.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, object]:
     try:

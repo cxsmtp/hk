@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.auth import get_current_user
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.ai_iam import AgentIdentity
 from app.db.models.ai_orchestration import AIReasoningTrace
@@ -519,7 +519,7 @@ def _shadow_entity_task(
 @router.post("/reason", response_model=OrchestrationResult)
 def orchestrate_generic_reasoning(
     payload: GenericGuidanceRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("assistant.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -538,7 +538,7 @@ def orchestrate_generic_reasoning(
 def generate_finding_guidance(
     finding_id: str,
     payload: GuidanceOverrides | None = None,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("assistant.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -568,7 +568,7 @@ def generate_finding_guidance(
 def generate_simulation_guidance(
     run_id: str,
     payload: GuidanceOverrides | None = None,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("assistant.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -604,7 +604,7 @@ def generate_simulation_guidance(
 def generate_drift_guidance(
     alert_id: str,
     payload: GuidanceOverrides | None = None,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("assistant.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -634,7 +634,7 @@ def generate_drift_guidance(
 def generate_pattern_guidance(
     pattern_id: str,
     payload: GuidanceOverrides | None = None,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("assistant.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -664,7 +664,7 @@ def generate_pattern_guidance(
 def generate_ai_system_guidance(
     ai_system_id: str,
     payload: GuidanceOverrides | None = None,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("assistant.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -700,7 +700,7 @@ def generate_ai_system_guidance(
 def generate_agent_guidance(
     agent_id: str,
     payload: GuidanceOverrides | None = None,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("assistant.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -736,7 +736,7 @@ def generate_agent_guidance(
 def generate_shadow_entity_guidance(
     entity_id: str,
     payload: GuidanceOverrides | None = None,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("assistant.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -765,7 +765,7 @@ def generate_shadow_entity_guidance(
 @router.get("/traces/{trace_id}", response_model=TraceResponse)
 def get_reasoning_trace(
     trace_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("assistant.use")),
     db: Session = Depends(get_db),
 ):
     row = db.scalar(
@@ -821,7 +821,7 @@ def get_reasoning_trace(
 def generate_reasoning_ticket_payload(
     trace_id: str,
     payload: TicketPayloadRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("assistant.operate")),
     db: Session = Depends(get_db),
 ):
     row = db.scalar(
@@ -841,7 +841,7 @@ def generate_reasoning_ticket_payload(
 def create_reasoning_ticket(
     trace_id: str,
     payload: TicketPayloadRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("assistant.operate")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):

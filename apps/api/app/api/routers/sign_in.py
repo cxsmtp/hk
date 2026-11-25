@@ -32,7 +32,7 @@ from sqlalchemy.orm import Session
 from app.api.routers.auth import audit_access, refused, signed_in_response
 from app.core.auth import get_current_user
 from app.core.config import settings
-from app.core.rbac import ROLE_ORDER, require_role
+from app.core.rbac import require_permission
 from app.core.security import get_password_hash, verify_password
 from app.core.tenant import TenantContext
 from app.db.models.tenant import Tenant
@@ -445,7 +445,7 @@ def password_reset_confirm(
 # ---------------------------------------------------------------------------------------------------------------------
 
 
-AdminContext = Annotated[TenantContext, Depends(require_role(min_role="admin"))]
+AdminContext = Annotated[TenantContext, Depends(require_permission("security.sso"))]
 
 
 def _audit_admin(db: Session, ctx: TenantContext, *, action: str, reason: str, payload: dict[str, Any] | None = None) -> None:
@@ -609,7 +609,9 @@ def _target(db: Session, ctx: TenantContext, user_id: str) -> tuple[User, UserTe
     if user is None or membership is None:
         return refused(404, "No such person in this workspace.")
     # Only for people whose role is not above one's own (CxMissionZero's canGrant).
-    if ROLE_ORDER.get(membership.role, 99) > ROLE_ORDER.get(ctx.role, -1):
+    from app.services import iam_service
+
+    if not iam_service.can_grant(ctx.permissions, ctx.role_key, iam_service.role(db, ctx.tenant.id, membership.role)):
         return refused(403, "You cannot change this person's sign-in: their role is above yours.")
     return user, membership
 

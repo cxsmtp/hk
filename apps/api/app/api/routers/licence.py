@@ -16,7 +16,7 @@ from fastapi import APIRouter, Body, Depends, Request, Response
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.session import get_db
 from app.services import activation_service, refusal_audit
@@ -193,7 +193,7 @@ def _applied(result: dict[str, Any]) -> str:
 
 
 @router.get("/activation")
-def activation(response: Response, db: Session = Depends(get_db), ctx: TenantContext = Depends(require_role(min_role="admin"))):
+def activation(response: Response, db: Session = Depends(get_db), ctx: TenantContext = Depends(require_permission("activation.manage"))):
     del ctx
     response.headers["Cache-Control"] = "no-store"
     view = _activation_view(activation_service.load_store(db))
@@ -205,7 +205,7 @@ def activation(response: Response, db: Session = Depends(get_db), ctx: TenantCon
 def apply_activation(
     body: dict[str, Any] | None = Body(default=None),
     db: Session = Depends(get_db),
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("activation.manage")),
 ):
     result = activation_service.check_code(_code_from(body))
     actor = ctx.user.email if ctx.user else ""

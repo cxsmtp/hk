@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import base64
 import hashlib
-import inspect
 import json
 import re
 from datetime import datetime, timedelta, timezone
@@ -22,7 +21,8 @@ from sqlalchemy.orm import sessionmaker
 from app.api.routers import sign_in as sign_in_routes
 from app.cli import reset_admin as reset_admin_cli
 from app.core.config import settings
-from app.core.rbac import READ_ONLY_ROLES, role_meets, roles_meeting
+from app.core.permissions import PERMISSION_BY_ID
+from app.core.rbac import READ_ONLY_ROLES, legacy_level, role_meets, roles_meeting
 from app.core.security import get_password_hash
 from app.db.models.audit import AuditLog
 from app.db.models.tenant import Tenant
@@ -872,13 +872,15 @@ def _min_role_routes(method: str, min_role: str) -> list[str]:
         # Routes with dependencies of their own (governance checks on the payload) answer before the role check.
         if method not in getattr(route, "methods", set()) or "{" in path or getattr(route, "dependencies", None):
             continue
+        # Routes name permissions now (app/core/rbac.py); the level a permission sits at is the old min_role check
+        # (app/core/permissions.py).
+        level = legacy_level(min_role, None, write=method not in ("GET", "HEAD", "OPTIONS"))
         stack = list(route.dependant.dependencies)
         while stack:
             dep = stack.pop()
-            call = dep.call
-            if getattr(call, "__qualname__", "") == "require_role.<locals>.checker":
-                if inspect.getclosurevars(call).nonlocals.get("min_role") == min_role and not inspect.getclosurevars(call).nonlocals.get("allow_list"):
-                    found.append(path)
+            held = getattr(dep.call, "permissions", None)
+            if held and all(PERMISSION_BY_ID[pid].level == level for pid in held):
+                found.append(path)
             stack.extend(dep.dependencies)
     return sorted(set(found))
 

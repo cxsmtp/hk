@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.session import get_db
 from app.services.account_boundary import AccountBoundaryAuthorityUnavailable, AccountBoundaryService
@@ -182,7 +182,7 @@ class RevalidateSessionRequest(BaseModel):
 
 @router.get("/providers")
 def provider_manifests(
-    _ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    _ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     return {"providers": _service(db).provider_capability_manifests()}
@@ -191,7 +191,7 @@ def provider_manifests(
 @router.get("/providers/{provider}/capabilities")
 def provider_capabilities(
     provider: str,
-    _ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    _ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     providers = _service(db).provider_capability_manifests()
@@ -201,20 +201,20 @@ def provider_capabilities(
 
 
 @router.post("/integrations")
-def create_integration(body: CreateIntegrationRequest, ctx: TenantContext = Depends(require_role(min_role="admin")), db: Session = Depends(get_db)) -> dict[str, Any]:
+def create_integration(body: CreateIntegrationRequest, ctx: TenantContext = Depends(require_permission("deployments.manage")), db: Session = Depends(get_db)) -> dict[str, Any]:
     row = _service(db).create_integration(db, tenant_id=ctx.tenant.id, **body.model_dump())
     db.commit()
     return {"integration_id": row.id, "lifecycle_state": row.lifecycle_state}
 
 
 @router.get("/integrations")
-def list_integrations(ctx: TenantContext = Depends(require_role(min_role="viewer")), db: Session = Depends(get_db)) -> dict[str, Any]:
+def list_integrations(ctx: TenantContext = Depends(require_permission("deployments.view")), db: Session = Depends(get_db)) -> dict[str, Any]:
     rows = _service(db).list_integrations(db, tenant_id=ctx.tenant.id)
     return {"integrations": [{"integration_id": row.id, "provider": row.provider, "product": row.product, "lifecycle_state": row.lifecycle_state, "route_health": row.route_health} for row in rows]}
 
 
 @router.get("/integrations/{integration_id}")
-def get_integration(integration_id: str, ctx: TenantContext = Depends(require_role(min_role="viewer")), db: Session = Depends(get_db)) -> dict[str, Any]:
+def get_integration(integration_id: str, ctx: TenantContext = Depends(require_permission("deployments.view")), db: Session = Depends(get_db)) -> dict[str, Any]:
     try:
         row = _service(db).get_integration(db, tenant_id=ctx.tenant.id, integration_id=integration_id)
     except LookupError as exc:
@@ -223,7 +223,7 @@ def get_integration(integration_id: str, ctx: TenantContext = Depends(require_ro
 
 
 @router.post("/integrations/{integration_id}/validate")
-def validate_integration(integration_id: str, body: ValidateIntegrationRequest, ctx: TenantContext = Depends(require_role(min_role="admin")), db: Session = Depends(get_db)) -> dict[str, Any]:
+def validate_integration(integration_id: str, body: ValidateIntegrationRequest, ctx: TenantContext = Depends(require_permission("deployments.manage")), db: Session = Depends(get_db)) -> dict[str, Any]:
     try:
         row = _service(db).validate_integration(db, tenant_id=ctx.tenant.id, integration_id=integration_id, checked_at=datetime.now(timezone.utc), **body.model_dump())
     except (LookupError, AccountBoundaryAuthorityUnavailable) as exc:
@@ -233,7 +233,7 @@ def validate_integration(integration_id: str, body: ValidateIntegrationRequest, 
 
 
 @router.post("/integrations/{integration_id}/lifecycle")
-def advance_lifecycle(integration_id: str, body: LifecycleRequest, ctx: TenantContext = Depends(require_role(min_role="admin")), db: Session = Depends(get_db)) -> dict[str, Any]:
+def advance_lifecycle(integration_id: str, body: LifecycleRequest, ctx: TenantContext = Depends(require_permission("deployments.manage")), db: Session = Depends(get_db)) -> dict[str, Any]:
     try:
         row = _service(db).advance_lifecycle(db, tenant_id=ctx.tenant.id, integration_id=integration_id, enforcement_enabled=settings.account_boundary_enforce, checked_at=datetime.now(timezone.utc), **body.model_dump())
     except LookupError as exc:
@@ -247,7 +247,7 @@ def advance_lifecycle(integration_id: str, body: LifecycleRequest, ctx: TenantCo
 @router.post("/auth-transactions/start")
 def start_auth_transaction(
     body: StartAuthTransactionRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     row = _service(db).start_auth_transaction(
@@ -268,7 +268,7 @@ def start_auth_transaction(
 @router.post("/auth-transactions/correlate")
 def correlate_auth_event(
     body: CorrelateAuthEventRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -289,7 +289,7 @@ def correlate_auth_event(
 @router.post("/identities/verify")
 def verify_identity(
     body: VerifyAccountIdentityRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     row = _service(db).record_server_verified_identity(
@@ -310,7 +310,7 @@ def verify_identity(
 @router.post("/sessions")
 def create_session(
     body: CreateAccountSessionRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -337,7 +337,7 @@ def create_session(
 @router.post("/control-plan/select")
 def select_control_plan(
     body: SelectBoundaryPlanRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     service = _service(db)
@@ -348,7 +348,7 @@ def select_control_plan(
 @router.post("/permits")
 def issue_permit(
     body: IssuePermitRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     _require_flag("account_session_permits")
@@ -373,7 +373,7 @@ def issue_permit(
 @router.post("/permits/verify")
 def verify_permit(
     body: VerifyPermitRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     _require_flag("account_session_permits")
@@ -388,7 +388,7 @@ def verify_permit(
 
 
 @router.post("/permits/{permit_id}/revoke")
-def revoke_permit(permit_id: str, ctx: TenantContext = Depends(require_role(min_role="operator")), db: Session = Depends(get_db)) -> dict[str, Any]:
+def revoke_permit(permit_id: str, ctx: TenantContext = Depends(require_permission("deployments.operate")), db: Session = Depends(get_db)) -> dict[str, Any]:
     try:
         row = _service(db).revoke_permit(db, tenant_id=ctx.tenant.id, permit_id=permit_id)
     except LookupError as exc:
@@ -398,7 +398,7 @@ def revoke_permit(permit_id: str, ctx: TenantContext = Depends(require_role(min_
 
 
 @router.get("/sessions/{session_id}")
-def get_session(session_id: str, ctx: TenantContext = Depends(require_role(min_role="viewer")), db: Session = Depends(get_db)) -> dict[str, Any]:
+def get_session(session_id: str, ctx: TenantContext = Depends(require_permission("deployments.view")), db: Session = Depends(get_db)) -> dict[str, Any]:
     from app.db.models.account_boundary import AIAccountSession
     row = db.get(AIAccountSession, session_id)
     if row is None or row.tenant_id != ctx.tenant.id:
@@ -407,7 +407,7 @@ def get_session(session_id: str, ctx: TenantContext = Depends(require_role(min_r
 
 
 @router.post("/sessions/{session_id}/revalidate")
-def revalidate_session(session_id: str, body: RevalidateSessionRequest, ctx: TenantContext = Depends(require_role(min_role="operator")), db: Session = Depends(get_db)) -> dict[str, Any]:
+def revalidate_session(session_id: str, body: RevalidateSessionRequest, ctx: TenantContext = Depends(require_permission("deployments.operate")), db: Session = Depends(get_db)) -> dict[str, Any]:
     try:
         row = _service(db).revalidate_session(db, tenant_id=ctx.tenant.id, session_id=session_id, checked_at=datetime.now(timezone.utc), **body.model_dump())
     except LookupError as exc:
@@ -417,7 +417,7 @@ def revalidate_session(session_id: str, body: RevalidateSessionRequest, ctx: Ten
 
 
 @router.post("/sessions/{session_id}/revoke")
-def revoke_session(session_id: str, ctx: TenantContext = Depends(require_role(min_role="operator")), db: Session = Depends(get_db)) -> dict[str, Any]:
+def revoke_session(session_id: str, ctx: TenantContext = Depends(require_permission("deployments.operate")), db: Session = Depends(get_db)) -> dict[str, Any]:
     try:
         row = _service(db).revoke_session(db, tenant_id=ctx.tenant.id, session_id=session_id)
     except LookupError as exc:
@@ -429,7 +429,7 @@ def revoke_session(session_id: str, ctx: TenantContext = Depends(require_role(mi
 @router.post("/decisions/account-access")
 def decide_account_access(
     body: DecideAccountAccessRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     _require_flag("account_boundary_enforce")
@@ -449,7 +449,7 @@ def decide_account_access(
 @router.post("/decisions/device-download")
 def decide_device_download(
     body: DecideDeviceDownloadRequest,
-    ctx: TenantContext = Depends(require_role(min_role="operator")),
+    ctx: TenantContext = Depends(require_permission("deployments.operate")),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     _require_flag("account_boundary_enforce")

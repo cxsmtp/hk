@@ -15,7 +15,7 @@ from app.core.auth import get_current_user
 from app.core.config import settings
 from app.core.control_engine.canonical_action import CanonicalProjectionError
 from app.core.observability import log_structured
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.user import User
 from app.db.models.monitoring import MonitoringSignal
@@ -699,7 +699,7 @@ def _extension_removal_governance_from_health(
 
 @router.get("/extension/policy-sync", response_model=ExtensionPolicySyncResponse)
 def extension_policy_sync(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -859,7 +859,7 @@ def _extension_health_summary_for_tenant(db: Session, *, tenant_id: str) -> Exte
 def ingest_browser_telemetry(
     request: Request,
     payload: BrowserTelemetryEventRequest,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -901,7 +901,7 @@ def ingest_browser_telemetry(
 def extension_removal_authorization(
     request: Request,
     payload: ExtensionRemovalAuthorizationRequest,
-    ctx: TenantContext = Depends(require_role(min_role="admin")),
+    ctx: TenantContext = Depends(require_permission("deployments.manage")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -929,7 +929,7 @@ def extension_removal_authorization(
 
 @router.get("/extension/health", response_model=ExtensionHealthSummaryResponse)
 def extension_health_summary(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     return _extension_health_summary_for_tenant(db, tenant_id=ctx.tenant.id)
@@ -937,7 +937,7 @@ def extension_health_summary(
 
 @router.get("/extension/governance/removal", response_model=ExtensionRemovalGovernanceResponse)
 def extension_removal_governance(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     db: Session = Depends(get_db),
 ):
     health = _extension_health_summary_for_tenant(db, tenant_id=ctx.tenant.id)
@@ -948,7 +948,7 @@ def extension_removal_governance(
 def extension_status_report(
     request: Request,
     payload: ExtensionStatusReportRequest,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -978,7 +978,7 @@ def extension_status_report(
 def browser_interaction_eval(
     request: Request,
     payload: BrowserInteractionEvalRequest,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -1034,7 +1034,7 @@ def browser_interaction_eval(
 def desktop_interaction_eval(
     request: Request,
     payload: DesktopInteractionEvalRequest,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("deployments.view")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):

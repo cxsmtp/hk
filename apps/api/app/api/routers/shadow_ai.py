@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.api.envelopes import ListEnvelope, paginate_rows
 from app.core.auth import get_current_user
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.finding import Finding
 from app.db.models.shadow_ai import ShadowAIEntity, ShadowAISignal, ShadowAIUsage
@@ -43,7 +43,7 @@ class TelemetryImportRequest(BaseModel):
 @router.post("/telemetry-import")
 def import_shadow_telemetry(
     payload: TelemetryImportRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin"])),
+    ctx: TenantContext = Depends(require_permission("discovery.manage")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -320,7 +320,7 @@ def list_shadow_ai_entities(
     source_surface: str | None = None,
     page: int = 1,
     page_size: int = 50,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     stmt = select(ShadowAIEntity).where(ShadowAIEntity.tenant_id == ctx.tenant.id)
@@ -415,7 +415,7 @@ def list_shadow_ai_entities(
 @router.get("/entities/{entity_id}", response_model=ShadowAIEntityDetailResponse)
 def get_shadow_ai_entity(
     entity_id: str,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     entity = _entity_or_404(db, tenant_id=ctx.tenant.id, entity_id=entity_id)
@@ -542,7 +542,7 @@ def get_shadow_ai_entity(
 def promote_shadow_ai_entity(
     entity_id: str,
     payload: ShadowAIPromoteRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin", "auditor"])),
+    ctx: TenantContext = Depends(require_permission("discovery.review")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -575,7 +575,7 @@ def promote_shadow_ai_entity(
 def link_shadow_entity(
     entity_id: str,
     payload: ShadowAILinkRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin", "auditor"])),
+    ctx: TenantContext = Depends(require_permission("discovery.review")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -598,7 +598,7 @@ def link_shadow_entity(
 def reject_entity(
     entity_id: str,
     payload: ShadowAIRejectRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin", "auditor"])),
+    ctx: TenantContext = Depends(require_permission("discovery.review")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -618,7 +618,7 @@ def reject_entity(
 def merge_entities(
     entity_id: str,
     payload: ShadowAIMergeRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin", "auditor"])),
+    ctx: TenantContext = Depends(require_permission("discovery.review")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -642,7 +642,7 @@ def merge_entities(
 def unresolved_shadow_signals(
     page: int = 1,
     page_size: int = 100,
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     rows = db.scalars(
@@ -678,7 +678,7 @@ def unresolved_shadow_signals(
 @router.post("/ingest/endpoint", response_model=ShadowAIIngestResponse)
 def ingest_shadow_ai_endpoint(
     payload: ShadowAIEndpointIngestRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin", "auditor"])),
+    ctx: TenantContext = Depends(require_permission("discovery.review")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -702,7 +702,7 @@ def ingest_shadow_ai_endpoint(
 @router.post("/ingest/dns", response_model=ShadowAIIngestResponse)
 def ingest_shadow_ai_dns(
     payload: ShadowAIDNSIngestRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin", "auditor"])),
+    ctx: TenantContext = Depends(require_permission("discovery.review")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -726,7 +726,7 @@ def ingest_shadow_ai_dns(
 @router.post("/ingest/proxy", response_model=ShadowAIIngestResponse)
 def ingest_shadow_ai_proxy(
     payload: ShadowAIProxyIngestRequest,
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin", "auditor"])),
+    ctx: TenantContext = Depends(require_permission("discovery.review")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -749,14 +749,14 @@ def ingest_shadow_ai_proxy(
 
 @router.get("/provider-catalog", response_model=list[dict[str, Any]])
 def get_provider_catalog(
-    _ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    _ctx: TenantContext = Depends(require_permission("discovery.view")),
 ):
     return list_catalog()
 
 
 @router.get("/coverage", response_model=ShadowAICoverageResponse)
 def get_shadow_ai_coverage(
-    ctx: TenantContext = Depends(require_role(min_role="viewer")),
+    ctx: TenantContext = Depends(require_permission("discovery.view")),
     db: Session = Depends(get_db),
 ):
     entities = db.scalars(

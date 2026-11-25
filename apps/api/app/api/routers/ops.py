@@ -15,7 +15,7 @@ from app.core.observability import (
     banking_runtime_metrics,
     latency_tracker,
 )
-from app.core.rbac import require_role
+from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.job_run import ScheduledJobRun
 from app.db.models.policy import ApprovalRequest
@@ -99,7 +99,7 @@ def list_job_status(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
     limit_per_job: int = Query(default=5, ge=1, le=50),
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin", "auditor"])),
+    ctx: TenantContext = Depends(require_permission("monitoring.review")),
     db: Session = Depends(get_db),
 ):
     rows = db.scalars(
@@ -134,7 +134,7 @@ def list_job_status(
 
 @router.get("/metrics", response_model=OpsMetricsResponse)
 def ops_metrics(
-    ctx: TenantContext = Depends(require_role(allow_list=["owner", "admin", "auditor"])),
+    ctx: TenantContext = Depends(require_permission("monitoring.review")),
     db: Session = Depends(get_db),
 ):
     pending_approvals = db.scalar(
