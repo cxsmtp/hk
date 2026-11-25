@@ -1,5 +1,6 @@
 import { clearSession, getSession, updateSessionTokens } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/api-url";
+import type { AcmeStatus, HttpsCertificateReport, HttpsMode, HttpsStatus, UploadFile } from "@/lib/https-settings";
 import { approvalStatusFilters, mergeApprovalStatusResults } from "@/lib/approval-workflow";
 import { demoFallbackRequest, isDemoFallbackEnabled } from "@/lib/demo-fallback";
 import { isDeactivatedAnswer, LICENCE_DEACTIVATED_EVENT } from "@/lib/licence";
@@ -723,6 +724,25 @@ export const api = {
   getActivation: () => request<ActivationView>("/activation"),
   applyActivation: (code: string) =>
     request<ActivationApplied>("/activation", { method: "POST", body: JSON.stringify({ code }) }),
+  // Settings → HTTPS (docs/https-and-hosting.md).
+  getHttps: () => request<HttpsStatus>("/https"),
+  setHttpsMode: (mode: HttpsMode, confirm = false) =>
+    request<HttpsStatus>("/https/mode", { method: "POST", body: JSON.stringify({ mode, confirm }) }),
+  setHttpsHardening: (body: { minVersion: string; hsts: { enabled: boolean; includeSubDomains: boolean; maxAge: number } }) =>
+    request<HttpsStatus>("/https/hardening", { method: "POST", body: JSON.stringify(body) }),
+  inspectHttpsCertificate: (files: UploadFile[], passphrase: string) =>
+    request<HttpsCertificateReport>("/https/inspect", { method: "POST", body: JSON.stringify({ files, passphrase }) }),
+  installHttpsCertificate: (files: UploadFile[], passphrase: string, confirm = false) =>
+    request<{ report: HttpsCertificateReport; status: HttpsStatus }>("/https/certificate", { method: "POST", body: JSON.stringify({ files, passphrase, confirm }) }),
+  restorePreviousHttpsCertificate: () => request<HttpsStatus>("/https/certificate/previous", { method: "POST", body: "{}" }),
+  createHttpsRequest: (names: string[], organization: string) =>
+    request<{ csr: string; status: HttpsStatus }>("/https/request", { method: "POST", body: JSON.stringify({ names, organization }) }),
+  downloadHttpsRequest: () => requestBlob("/https/request.csr"),
+  makeSelfSignedCertificate: (names: string[]) => request<HttpsStatus>("/https/self-signed", { method: "POST", body: JSON.stringify({ names }) }),
+  startLetsEncrypt: (body: { names: string[]; email: string; agree: boolean; staging: boolean }) =>
+    request<AcmeStatus>("/https/acme", { method: "POST", body: JSON.stringify(body) }),
+  renewLetsEncrypt: () => request<AcmeStatus>("/https/acme/renew", { method: "POST", body: "{}" }),
+  stopLetsEncrypt: () => request<AcmeStatus>("/https/acme", { method: "DELETE" }),
   getPlatformMode: () => request<PlatformModeResponse>("/system/platform-mode"),
   updatePlatformMode: (platformMode: PlatformMode) =>
     request<PlatformModeResponse>("/system/platform-mode", {
