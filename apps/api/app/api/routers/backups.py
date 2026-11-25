@@ -29,7 +29,7 @@ from app.db.models.audit import AuditLog
 from app.db.models.user import User, UserTenantRole
 from app.db.session import get_db
 from app.services import backup_archive as archive
-from app.services import backup_service, backup_mailer as mailer
+from app.services import backup_service, mailer
 from app.services.audit_service import write_audit_log
 from app.services.state_file import read_state, write_state
 
@@ -97,7 +97,7 @@ def _view(cfg: backup_service.BackupConfig) -> dict[str, Any]:
         "keep": cfg.keep,
         "encryption": encryption,
         "pendingRestore": (cfg.data_dir / archive.PENDING_RESTORE).exists(),
-        "mailbox": {"email": mailbox["email"], "mailReady": mailer.smtp_from_env() is not None},
+        "mailbox": {"email": mailbox["email"], "mailReady": mailer.smtp_settings() is not None},
     }
 
 
@@ -258,7 +258,7 @@ def readiness(facts: dict[str, Any], now: float | None = None) -> dict[str, Any]
         "It answers over plain http: turn HTTPS on." if mode == "http" else "It is self-signed: every browser warns, and pages are not kept between visits. Upload your own, or get one from Let’s Encrypt." if https.get("selfSigned") else "The certificate is not self-signed.",
         "/settings/https",
     )
-    add("email.ready", "Email is set up", "ok" if facts["mailReady"] else "todo", "Backups can be emailed and administrators told when Hawk AI stops." if facts["mailReady"] else "Without it the backup mailbox and the email when Hawk AI stops are not sent (SMTP_HOST).", "")
+    add("email.ready", "Email is set up", "ok" if facts["mailReady"] else "todo", "Backups can be emailed and administrators told when Hawk AI stops." if facts["mailReady"] else "Without it the backup mailbox and the email when Hawk AI stops are not sent (Settings → Email (SMTP)).", "/settings/email")
     if facts.get("disk"):
         d = facts["disk"]
         add("disk.free", "Room on the disk", "ok" if d["freeMB"] > 1024 else "todo", f"{d['freeMB']:,} MB free of {d['totalMB']:,} MB.", "/settings/backups")
@@ -299,7 +299,7 @@ def _facts(db: Session, ctx: TenantContext, cfg: backup_service.BackupConfig) ->
         "backupSealed": store.status()["encrypted"],
         "restores": int(restores or 0),
         "https": https,
-        "mailReady": mailer.smtp_from_env() is not None,
+        "mailReady": mailer.smtp_settings() is not None,
         "disk": backup_service.disk(cfg),
         "admins": int(admins or 0),
         "accepted": accepted if isinstance(accepted, dict) else {},

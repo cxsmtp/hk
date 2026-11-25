@@ -283,7 +283,7 @@ def mail_backup_copy(file: Path, summary: Mapping[str, Any], trigger: str, *, cf
     """A copy of a backup to the backup mailbox (BACKUP_EMAIL), so a new server can bring it back by itself. Encrypted
     backups only: never one that holds the passwords and keys in the clear, and never the key with it."""
 
-    from app.services import backup_mailer as mailer
+    from app.services import mailer
 
     mailbox = backup_mailbox()
     if not mailbox["email"]:
@@ -294,8 +294,8 @@ def mail_backup_copy(file: Path, summary: Mapping[str, Any], trigger: str, *, cf
     if int(summary.get("size") or 0) > MAX_ATTACHMENT_BYTES:
         audit("backup.email.skipped", f"{trigger} backup not emailed to {mailbox['email']}: {round(int(summary['size']) / 1048576)} MB is too large to attach.", outcome="failed")
         return False
-    if send is None and mailer.smtp_from_env() is None:
-        log.warning("! [backup] BACKUP_EMAIL is set, but no mail server is (SMTP_HOST): backups are not emailed.")
+    if send is None and mailer.smtp_settings() is None:
+        log.warning("! [backup] BACKUP_EMAIL is set, but no mail server is (Settings → Email (SMTP), or SMTP_HOST): backups are not emailed.")
         return False
     name = Path(file).name
     when = str(summary["createdAt"])[:16].replace("T", " ")
@@ -345,7 +345,7 @@ def last_words(
     encrypted; otherwise the email says where it is. The key is never in the email. At most one such email every
     LAST_WORDS_EVERY_HOURS (6). Never raises, and never waits past ``deadline`` (time.monotonic())."""
 
-    from app.services import backup_mailer as mailer
+    from app.services import mailer
 
     env = os.environ if env is None else env
     cfg = cfg or config()
@@ -372,7 +372,7 @@ def last_words(
     if then is not None and now() - then < every:
         result["throttled"] = True
         return result
-    if send is None and mailer.smtp_from_env(env) is None:
+    if send is None and mailer.smtp_settings(env) is None:
         return result
     try:
         write_state(cfg.data_dir / LAST_WORDS_FILE, {"at": dt.datetime.fromtimestamp(now(), dt.timezone.utc).isoformat().replace("+00:00", "Z"), "reason": reason}, keep_last=False)

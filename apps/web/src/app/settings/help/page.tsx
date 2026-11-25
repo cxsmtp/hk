@@ -121,7 +121,7 @@ export default function GetHelpSettingsPage() {
                     />
                   </label>
                   <p className="muted small">
-                    In the portal, each request and every answer is emailed through the email server (SMTP_* settings, tested under Settings → Sign-in); until it is set up and tested, requests are kept and the page says the email did not go. By email, nothing is stored in Hawk AI and the conversation carries on by email; requests raised in the portal before can still be read and answered. Until a valid address is entered, Get help stays on the portal. SUPPORT_MODE=email and SUPPORT_EMAIL set the default when the server starts; a choice made here wins over them.
+                    In the portal, each request and every answer is emailed through the email server (Settings → Email (SMTP), once tested); until it is set up and tested, requests are kept and the page says the email did not go. By email, nothing is stored in Hawk AI and the conversation carries on by email; requests raised in the portal before can still be read and answered. Until a valid address is entered, Get help stays on the portal. SUPPORT_MODE=email and SUPPORT_EMAIL set the default when the server starts; a choice made here wins over them.
                   </p>
                 </form>
                 <div className={`saved-foot${saved.bad ? " bad" : ""}`} id="supsaved" role="status">

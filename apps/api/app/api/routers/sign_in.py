@@ -75,7 +75,7 @@ def password_reset_ready(db: Session) -> dict[str, Any]:
     if row.password_reset == "off":
         missing.append("Turned off.")
     if not mailer.configured() or row.smtp_verified != mailer.fingerprint():
-        missing.append("The email server is not set up and tested (SMTP_* settings, then Send a test email).")
+        missing.append("The email server is not set up and tested (Settings → Email (SMTP)).")
     if not password_reset_service.link_base():
         missing.append("No https address for this server is set (PUBLIC_URL / WEB_ORIGIN).")
     return {"ready": not missing, "policy": row.password_reset, "missing": missing}
@@ -583,12 +583,12 @@ def put_sign_in_settings(ctx: AdminContext, body: Annotated[dict[str, Any] | Non
 
 @router.post("/sign-in-settings/test-email")
 def test_email(ctx: AdminContext, db: Session = Depends(get_db)):
-    """Send a test email to oneself with the SMTP_* settings: once it arrives, password reset links may be sent with
+    """Send a test email to oneself with the email server in force (Settings → Email (SMTP), else SMTP_*): once it arrives, password reset links may be sent with
     exactly these settings (CxMissionZero's isVerified)."""
 
     smtp = mailer.current()
     if not mailer.configured(smtp):
-        return refused(400, "Set SMTP_HOST and SMTP_FROM (or an SMTP_USER that is an email address) first.")
+        return refused(400, "Set up the email server first (Settings → Email (SMTP)): a mail server and a From address.")
     to = ctx.user.email if ctx.user else ""
     message = mailer.system_email(subject="Hawk AI — test message", lines=["This is a test message from Hawk AI. Email is working: password reset links can be sent."])
     try:
@@ -597,7 +597,7 @@ def test_email(ctx: AdminContext, db: Session = Depends(get_db)):
         _audit_admin(db, ctx, action="auth.email.test_failed", reason=f"Test email to {to} failed: {error}")
         db.commit()
         return refused(400, str(error))
-    account_security.policy(db).smtp_verified = mailer.fingerprint(smtp)
+    mailer.mark_verified(db, smtp)
     _audit_admin(db, ctx, action="auth.email.tested", reason=f"Test email sent to {to}; password reset links may use this email server.")
     db.commit()
     return _no_store({"message": f"A test message was sent to {to}.", **settings_view(db)})

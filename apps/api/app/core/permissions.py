@@ -121,7 +121,7 @@ PERMISSIONS: tuple[Permission, ...] = (
     _p("audit.view", "Administration", "See the audit log", "Who signed in, who changed what, the user activity log and the connector API activity.", REVIEW),
     _p("audit.export", "Administration", "Export the audit log", "Download the audit log, the activity log and the connector API activity (CSV, JSON Lines).", REVIEW),
     _p("support.manage", "Administration", "Answer support cases & enhancements", "See every support case of the tenant, answer them and move them on; the support settings. Everyone can raise their own and follow them.", MANAGE),
-    _p("settings.manage", "Administration", "Settings", "The platform mode. Admin only.", MANAGE, True),
+    _p("settings.manage", "Administration", "Settings", "General, Branding, the email server (SMTP), Hands-off and the self-check, where Get help sends requests, and the platform mode. Admin only.", MANAGE, True),
     _p("security.https", "Administration", "HTTPS and certificates", "Upload and replace the server certificate and move the server to HTTPS only. Admin only.", MANAGE, True),
     _p("security.sso", "Administration", "Sign-in and single sign-on", "Who may reset a forgotten password by email, two-step sign-in for everyone, single sign-on, the email server for links. Admin only.", MANAGE, True),
     _p("system.update", "Administration", "Updates and integrity", "Install new versions (checked against their checksums), roll back, and the software integrity check. Admin only.", MANAGE, True),

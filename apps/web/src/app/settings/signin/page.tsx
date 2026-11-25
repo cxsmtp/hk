@@ -182,7 +182,7 @@ export default function SignInSettingsPage() {
             <div className="grid g2 mt">
               <div className="panel">
                 <h2>
-                  Email for reset links <small>SMTP_* settings of the API</small>
+                  Email for reset links <small>Settings → Email (SMTP)</small>
                   {view.email.tested ? (
                     <span className="chip ok">
                       <i />
