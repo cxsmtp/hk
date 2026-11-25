@@ -1,0 +1,139 @@
+name: Promote to stable
+
+# Ported from CxMissionZero's .github/workflows/promote-stable.yml, for Hawk AI's images (api, web, proxy, updater).
+# Run by hand by the maintainer (Actions → Promote to stable → Run workflow). It marks a release that is already
+# published, and so already tested, as `stable`, without building anything:
+#   1. finds every published image for the version or commit given;
+#   2. checks each one's signature: the build attestation the "Release images" workflow of this repository made for
+#      it, from main (or master), on a GitHub-hosted runner. Nothing is published by that workflow unless the API
+#      tests, the console's checks and the image smoke test passed;
+#   3. only once every image checks out, points ghcr.io/<owner>/<repo>-<image>:stable at that same digest, and checks
+#      that it did.
+# `latest` is every merged release; `stable` is the one promoted here (docs/updating.md). Settings → Updates follows
+# either, as chosen there.
+#
+# It never runs on a push or a pull request, and checks out no code. To go back, run it again with the earlier
+# version: the summary of each run names the digest `stable` pointed at before.
+
+on:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: 'The release to mark stable: a version (0.2.0 or HK-00.02.00) or a commit (sha-1a2b3c4 or the commit SHA)'
+        required: true
+        type: string
+
+# Nothing by default; the one job asks for the one thing it needs.
+permissions: {}
+
+# One promotion at a time: two runs never race for the tag.
+concurrency:
+  group: promote-stable
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    # Only from the default branch, so the workflow that runs is the one that was merged there.
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      # Read the images and their signatures from the registry, and move the stable tag. Nothing else:
+      # no repository contents, no attestations to write, no id-token.
+      packages: write
+    env:
+      IMAGES: api web proxy updater
+    steps:
+      - name: Which release
+        id: image
+        env:
+          # Read from the environment, never pasted into the script.
+          RELEASE: ${{ inputs.release }}
+        run: |
+          set -euo pipefail
+          if [[ "$RELEASE" =~ ^HK-([0-9]{2})\.([0-9]{2})\.([0-9]{2})$ ]]; then
+            tag="$((10#${BASH_REMATCH[1]})).$((10#${BASH_REMATCH[2]})).$((10#${BASH_REMATCH[3]}))"
+          elif [[ "$RELEASE" =~ ^v?([0-9]{1,4}\.[0-9]{1,4}\.[0-9]{1,4})$ ]]; then
+            tag="${BASH_REMATCH[1]}"
+          elif [[ "$RELEASE" =~ ^sha-[0-9a-f]{7}$ ]]; then
+            tag="$RELEASE"
+          elif [[ "$RELEASE" =~ ^[0-9a-f]{7,40}$ ]]; then
+            tag="sha-${RELEASE:0:7}"
+          else
+            echo "::error::Give a version (0.2.0 or HK-00.02.00) or a commit (sha-1a2b3c4 or the commit SHA)."
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "prefix=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Every image is published
+        env:
+          PREFIX: ${{ steps.image.outputs.prefix }}
+          TAG: ${{ steps.image.outputs.tag }}
+        run: |
+          set -euo pipefail
+          : > digests.txt
+          for kind in $IMAGES; do
+            image="$PREFIX-$kind"
+            digest=$(docker buildx imagetools inspect "$image:$TAG" --format '{{json .Manifest}}' | jq -r '.digest') || digest=''
+            if [[ ! "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+              echo "::error::No published image $image:$TAG. Every release is published as its version (0.2.0) and as sha-<commit>."
+              exit 1
+            fi
+            # What stable points at now, for the summary (nothing the first time).
+            before=$(docker buildx imagetools inspect "$image:stable" --format '{{json .Manifest}}' 2> /dev/null | jq -r '.digest' 2> /dev/null) || before=''
+            echo "$kind $digest ${before:-none}" >> digests.txt
+            echo "$image:$TAG is $digest"
+          done
+      - name: Every signature verifies
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PREFIX: ${{ steps.image.outputs.prefix }}
+        run: |
+          set -euo pipefail
+          while read -r kind digest before; do
+            # The attestation the release workflow pushed to the registry beside the image (Sigstore, public log):
+            # made by this repository's release.yml, on a GitHub-hosted runner, for exactly this digest.
+            gh attestation verify "oci://$PREFIX-$kind@$digest" \
+              --repo "$GITHUB_REPOSITORY" \
+              --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/release.yml" \
+              --deny-self-hosted-runners \
+              --bundle-from-oci \
+              --format json > "verified-$kind.json"
+            # And built from what was merged: main (or master). Never a pull request, another branch or a tag: a tag
+            # can be pushed on a commit that was never merged, and its own copy of the workflow would build and sign it.
+            jq -e 'length > 0 and all(.[]; .verificationResult.signature.certificate.sourceRepositoryRef | test("^refs/heads/(main|master)$"))' "verified-$kind.json" > /dev/null || {
+              echo "::error::$kind is signed, but was not built from main: $(jq -c '[.[].verificationResult.signature.certificate.sourceRepositoryRef]' "verified-$kind.json")"
+              exit 1
+            }
+            echo "$kind: signed by $(jq -r '.[0].verificationResult.signature.certificate.buildSignerURI' "verified-$kind.json")"
+          done < digests.txt
+      - name: Point stable at them
+        env:
+          PREFIX: ${{ steps.image.outputs.prefix }}
+          TAG: ${{ steps.image.outputs.tag }}
+        run: |
+          set -euo pipefail
+          {
+            echo "### \`stable\` is now \`$TAG\`"
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+          while read -r kind digest before; do
+            image="$PREFIX-$kind"
+            # The same image index under one more tag: nothing is built, pulled apart or pushed again.
+            docker buildx imagetools create --tag "$image:stable" "$image@$digest"
+            now=$(docker buildx imagetools inspect "$image:stable" --format '{{json .Manifest}}' | jq -r '.digest')
+            if [ "$now" != "$digest" ]; then
+              echo "::error::$image:stable is $now, not $digest: the tag did not land on the same image."
+              exit 1
+            fi
+            {
+              echo "- \`$image:stable\` → \`$digest\` (the same as \`$image:$TAG\`; signature verified, made by this repository's Release images workflow)"
+              if [ "$before" != none ] && [ "$before" != "$digest" ]; then echo "  - Before: \`$before\`"; fi
+              if [ "$before" = "$digest" ]; then echo "  - It already was: nothing changed."; fi
+            } >> "$GITHUB_STEP_SUMMARY"
+          done < digests.txt

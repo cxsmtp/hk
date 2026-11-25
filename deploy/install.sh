@@ -5,7 +5,8 @@
 #
 # 1. checks Docker and its compose plugin;
 # 2. creates the data folder (0700) and, the first time only, its secrets (0600 files);
-# 3. builds the images and starts everything: docker compose up -d;
+# 3. builds the images from this checkout, or pulls the published ones (HAWK_RELEASE in deploy/.env: latest, stable or
+#    a version, with the updater that updates from Settings → Updates), and starts everything: docker compose up -d;
 # 4. waits until the API answers /health/ready;
 # 5. prints the first administrator's sign-in from the API's log (once: the first start only).
 #
@@ -24,7 +25,7 @@ fail() { printf '! %s\n' "$*" >&2; exit 1; }
 # Secrets are made readable by the uid of the container that uses them, which needs root.
 if [ "$(id -u)" -ne 0 ]; then
   if command -v sudo >/dev/null 2>&1; then
-    exec sudo --preserve-env=HAWK_DATA_DIR,HAWK_WAIT_SECONDS,HAWK_BUILD_CA_FILE bash "$0" "$@"
+    exec sudo --preserve-env=HAWK_DATA_DIR,HAWK_WAIT_SECONDS,HAWK_BUILD_CA_FILE,HAWK_RELEASE bash "$0" "$@"
   fi
   fail "Run this as root (sudo deploy/install.sh)."
 fi
@@ -73,6 +74,10 @@ esac
 mkdir -p "$BACKUP_DIR_HOST"
 chown 1000:1000 "$BACKUP_DIR_HOST"
 chmod 0700 "$BACKUP_DIR_HOST"
+# Updates (docs/updating.md): the folder the API and the worker (uid 1000) share with the updater (root, no capabilities).
+mkdir -p "$HAWK_DATA_DIR/updater"
+chown 0:1000 "$HAWK_DATA_DIR/updater"
+chmod 0770 "$HAWK_DATA_DIR/updater"
 
 random() { LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c "$1"; }
 
@@ -110,8 +115,40 @@ fi
 
 # --- 3. Start -----------------------------------------------------------------------------------------------------
 compose() { docker compose --project-directory "$DEPLOY_DIR" -f "$DEPLOY_DIR/compose.yaml" --env-file "$ENV_FILE" "$@"; }
-say "Building and starting Hawk AI (the first build takes several minutes)..."
-compose up -d --build --remove-orphans
+setting() { sed -n "s/^$1=//p" "$ENV_FILE" | tail -n 1; }
+release="$(setting HAWK_RELEASE)"
+release="${HAWK_RELEASE:-$release}"
+if [ -n "$release" ]; then
+  # The published images (docs/updating.md): <UPDATE_IMAGE>-api, -web, -proxy and -updater at HAWK_RELEASE, and the
+  # updater that updates and rolls back from Settings → Updates. After an update from that page the images it chose are
+  # kept (the page's choice wins, as for HTTPS): delete ${HAWK_DATA_DIR}/updater/images.env to go back to HAWK_RELEASE.
+  case "$release" in
+    latest|stable) ;;
+    *) printf '%s' "$release" | grep -Eq '^[0-9]{1,4}\.[0-9]{1,4}\.[0-9]{1,4}$' || fail "HAWK_RELEASE in $ENV_FILE is latest, stable or a version such as 0.2.0." ;;
+  esac
+  prefix="$(setting UPDATE_IMAGE)"
+  prefix="${prefix:-ghcr.io/cxsmtp/hk}"
+  export HAWK_API_IMAGE="$prefix-api:$release" HAWK_WEB_IMAGE="$prefix-web:$release" HAWK_PROXY_IMAGE="$prefix-proxy:$release" HAWK_UPDATER_IMAGE="$prefix-updater:$release"
+  pins="$HAWK_DATA_DIR/updater/images.env"
+  if [ -f "$pins" ]; then
+    for name in HAWK_API_IMAGE HAWK_WEB_IMAGE HAWK_PROXY_IMAGE; do
+      value="$(sed -n "s/^$name=//p" "$pins" | tail -n 1)"
+      if printf '%s' "$value" | grep -Eq "^${prefix//./\\.}-(api|web|proxy)@sha256:[0-9a-f]{64}$"; then
+        export "$name=$value"
+      fi
+    done
+    say "Keeping the version chosen under Settings → Updates ($(sed -n 's/^HAWK_RUNNING_VERSION=//p' "$pins" | tail -n 1)); delete $pins to use HAWK_RELEASE=$release."
+  fi
+  if [ "$(setting HAWK_UPDATER)" != "off" ]; then
+    export COMPOSE_PROFILES=updates
+  fi
+  say "Downloading and starting Hawk AI ($release)..."
+  compose pull --quiet
+  compose up -d --no-build --remove-orphans
+else
+  say "Building and starting Hawk AI (the first build takes several minutes)..."
+  compose up -d --build --remove-orphans
+fi
 
 # --- 4. Wait for the API ------------------------------------------------------------------------------------------
 say "Waiting for the API to be ready (/health/ready)..."
