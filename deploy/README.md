@@ -42,7 +42,7 @@ docker compose -f deploy/compose.yaml exec api python -m app.cli.reset_admin
 
 Add an email to reset that person instead. The server keeps running, the person chooses their own password at their next sign-in, and the reset is written to the audit log.
 
-**HTTPS is the default.** With no certificate given, the proxy makes its own, so the browser warns once ("Your connection is not private": **Advanced**, then continue).
+**HTTPS is the default.** With no certificate given, Hawk AI makes a self-signed one, so the browser warns once ("Your connection is not private": **Advanced**, then continue). Your own certificate, or a free one from Let's Encrypt: [HTTPS](#https) below.
 
 **From other machines:** in `deploy/.env` set `BIND_ADDRESS=0.0.0.0` and `HAWK_HOST` to the name or address people type, then run `sudo deploy/install.sh` again.
 
@@ -78,11 +78,83 @@ docker compose -f deploy/compose.yaml exec -T postgres pg_dump -U hawk -Fc hawk 
 
 The first administrator's password file is never in a backup.
 
+## HTTPS
+
+**No certificate from your organisation? One setting.** With a DNS name pointing at the server and ports 80 and 443 open to the internet, set these in `deploy/.env`, then run `sudo deploy/install.sh` again:
+
+```
+BIND_ADDRESS=0.0.0.0
+PORT=443
+HTTP_REDIRECT_PORT=80
+HAWK_HOST=hawk.company.com
+LETSENCRYPT_DOMAIN=hawk.company.com
+LETSENCRYPT_EMAIL=appsec@company.com
+```
+
+Hawk AI gets a free Let's Encrypt certificate, switches to HTTPS only, and renews it by itself. Setting `LETSENCRYPT_DOMAIN` means you accept the [Let's Encrypt Subscriber Agreement](https://letsencrypt.org/repository/). It is also one button under Settings → HTTPS. More: [docs/https-and-hosting.md](../docs/https-and-hosting.md#b-free-certificate-from-lets-encrypt-public-name).
+
+**From the Settings page (recommended with your organisation's certificate).** An owner or admin moves a running Hawk AI to HTTPS under **Settings → HTTPS**, with no new command and no restart:
+
+1. **Certificate.** Upload the files from IT (certificate, chain, key, or one `.pfx`). It is checked the way a browser would before anything changes: the key, the chain, the names people use, the dates. No certificate yet? **Create a request (CSR)** for IT there; the key stays on the server.
+2. **Turn on HTTPS next to http** (**HTTP and HTTPS**). HTTPS answers on `PORT`, plain http on `HTTP_REDIRECT_PORT`. Nobody is cut off.
+3. **Test it.** Open the https address, and check your browser accepts it.
+4. **Switch to HTTPS only,** from the page open over HTTPS. Plain http then redirects to https.
+5. **Harden:** HSTS (start with a day), and TLS 1.3 only if you want.
+
+**Replacing a certificate** (a renewal, or another one) works the same way: upload it, it is checked, and it goes into use at once. The previous one is kept, to put back in one click. **Locked out?** This brings http back next to HTTPS within 5 seconds (and turns HSTS off):
+
+```
+docker compose -f deploy/compose.yaml exec api python -m app.cli.https both
+```
+
+**From `deploy/.env`** instead: Hawk AI starts with `HTTPS=on` (HTTPS only, self-signed until a certificate is given). `HTTPS=off` starts with plain http, `HTTPS=both` with both. Once an owner or admin changes it on the Settings page, the page's choice is kept across restarts and updates. Ways to give the certificate (each time, run `sudo deploy/install.sh` again afterwards):
+
+In everything below, replace `hawk.company.com` with your server's name.
+
+**A. Your company's certificate.** Put `server.crt` (with its chain) and `server.key` in `/var/lib/hawk-ai/certs`, readable by the API only:
+
+```
+sudo cp server.crt server.key /var/lib/hawk-ai/certs/
+```
+
+```
+sudo chown 1000:1000 /var/lib/hawk-ai/certs/server.crt /var/lib/hawk-ai/certs/server.key && sudo chmod 0600 /var/lib/hawk-ai/certs/server.key
+```
+
+then in `deploy/.env`:
+
+```
+TLS_CERT_FILE=/certs/server.crt
+TLS_KEY_FILE=/certs/server.key
+HAWK_HOST=hawk.company.com
+BIND_ADDRESS=0.0.0.0
+PORT=443
+HTTP_REDIRECT_PORT=80
+```
+
+- **With a `.pfx` instead:** replace the two `TLS_CERT_FILE` / `TLS_KEY_FILE` lines with `TLS_PFX_FILE=/certs/server.pfx` and `TLS_PFX_PASSPHRASE=…` (an encrypted key: `TLS_KEY_PASSPHRASE=…`).
+- **Port 80** (`HTTP_REDIRECT_PORT`) only sends `http://` visitors to `https://` (or serves Hawk AI while http is on next to HTTPS).
+- **Renewals:** copy the renewed files over the old ones. It switches over within 5 minutes, with no restart.
+
+**B. Free certificate from Let's Encrypt** (public name): `LETSENCRYPT_DOMAIN`, above. `LETSENCRYPT_STAGING=1` tries Let's Encrypt's staging service first, `LETSENCRYPT_SKIP_CHECK=1` skips the check that the name reaches this server (when the server cannot reach its own public name although the internet can), and `ACME_DIRECTORY_URL` uses another ACME certificate authority.
+
+**C. Self-signed** (try it out): what Hawk AI does when no certificate is given. `TLS_HOSTNAMES` adds names to it:
+
+```
+TLS_HOSTNAMES=hawk.company.com
+```
+
+**Check it worked**
+- `docker compose -f deploy/compose.yaml logs api` shows `[https] HTTPS only…`, and the certificate's name and expiry date. Self-signed also logs a warning: fine to try it out, not for everyday use. A certificate that does not fit its key, or a wrong `.pfx` password, stops the start with the reason, and the proxy serves nothing: it never falls back to plain http.
+- The browser shows the padlock at `https://hawk.company.com`.
+
+**Behind a load balancer of yours** that sends `X-Forwarded-For` / `-Proto`: set `TRUST_PROXY` to its address or network (e.g. `TRUST_PROXY=10.20.0.15`), else those headers are not believed. All the options, and a checklist for hosting it safely: [docs/https-and-hosting.md](../docs/https-and-hosting.md).
+
 ## What runs, and how it is hardened
 
 | Service | Image | Notes |
 |---|---|---|
-| proxy | `infra/Dockerfile.proxy` (Caddy) | the only published port: `${BIND_ADDRESS:-127.0.0.1}:${PORT:-3000}`; `/` is the console, `/api/` the API |
+| proxy | `infra/Dockerfile.proxy` (Caddy) | the only published ports: `${BIND_ADDRESS:-127.0.0.1}:${PORT:-3000}` (HTTPS) and `:${HTTP_REDIRECT_PORT:-80}` (plain http); `/` is the console, `/api/` the API; its configuration is written by the API (Settings → HTTPS) |
 | web | `infra/Dockerfile.web` (target `runtime`) | Next.js, started with node (no npm in the image) |
 | api | `infra/Dockerfile.api` (target `runtime`) | makes the first administrator on an empty database |
 | worker, beat | the API image | Celery worker and scheduler |

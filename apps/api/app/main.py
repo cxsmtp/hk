@@ -13,7 +13,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.routers import account_boundary, action_integrity, activity_audit, agui, agents, ai_discovery, ai_iam, ai_orchestration, ai_systems, ai_tools_usage, audit, auditor, auth, banking_transaction_integrity, brain, checkmarx, continuous_assurance, control_coverage, coverage, dashboard, deployments, discovery, discovery_adv, discovery_assets, discovery_capabilities, discovery_collectors, discovery_ecosystems, discovery_erg, discovery_exposure, discovery_scans, discovery_source_connections, discovery_surface_sources, discovery_targets, endpoint_agent, enforcement, executive_mcp, executive_remote_mcp, extension, external_risk, findings, gateway, guardian_contracts_v2, investigations, kb, llm_gateway, maturity_curve, monitoring, native_controls, onprem, ops, policies, policy_pack_platform, runtime, runtime_control, runtime_intelligence, scans, shadow_ai, simulation_policies, simulations, surface_coverage, system, trust_center, user_visibility
-from app.api.routers import access, claude_enterprise, licence
+from app.api.routers import access, claude_enterprise, https, licence
 from app.core.access_gate import AccessRequired, access_required_response
 from app.core.config import configured_secret_sources, settings
 from app.core.licence_gate import licence_gate
@@ -36,7 +36,7 @@ from app.services.production_hardening import (
     validate_production_configuration,
 )
 from app.services.snapshot_service import ensure_artifact_storage_writable
-from app.services import first_run_service, terms_service
+from app.services import first_run_service, https_runtime, terms_service
 from app.version import APP_VERSION
 
 
@@ -50,8 +50,14 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     _assert_production_readiness_or_fail_startup()
     _assert_schema_integrity_or_fail_startup()
     _prepare_access_at_start()
+    # HTTPS (app/services/https_runtime.py): a certificate that cannot be used stops the start here, never falling
+    # back to plain http; the front proxy is handed what Settings → HTTPS chose.
+    https_runtime.start()
     print(f"Hawk AI {APP_VERSION} running", flush=True)
-    yield
+    try:
+        yield
+    finally:
+        https_runtime.stop()
 
 
 def _prepare_access_at_start() -> None:
@@ -525,6 +531,7 @@ def health_schema():
 
 app.include_router(auth.router)
 app.include_router(licence.router)
+app.include_router(https.router)
 app.include_router(access.router)
 app.include_router(account_boundary.router)
 app.include_router(action_integrity.router)

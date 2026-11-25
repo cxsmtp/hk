@@ -59,8 +59,10 @@ esac
 
 SECRETS="$HAWK_DATA_DIR/secrets"
 umask 077
-mkdir -p "$SECRETS"
-chmod 0700 "$HAWK_DATA_DIR" "$SECRETS"
+mkdir -p "$SECRETS" "$HAWK_DATA_DIR/certs"
+chmod 0700 "$HAWK_DATA_DIR" "$SECRETS" "$HAWK_DATA_DIR/certs"
+# Certificates given to the deployment (TLS_CERT_FILE…, docs/https-and-hosting.md): readable by the API (uid 1000) only.
+chown -R 1000:1000 "$HAWK_DATA_DIR/certs"
 
 random() { LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c "$1"; }
 
@@ -146,4 +148,7 @@ else
   say "  docker compose -f $DEPLOY_DIR/compose.yaml exec api python -m app.cli.reset_admin"
 fi
 say ""
-say "The browser warns once about the certificate (\"Your connection is not private\": Advanced, then continue)."
+if printf '%s\n' "$log" | grep -q 'Self-signed certificate'; then
+  say "The browser warns once about the certificate (\"Your connection is not private\": Advanced, then continue)."
+  say "Your own certificate, or a free one from Let's Encrypt: Settings → HTTPS, or deploy/README.md (HTTPS)."
+fi

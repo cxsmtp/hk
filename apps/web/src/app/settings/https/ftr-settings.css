@@ -1,0 +1,122 @@
+/* FTR Command Center's settings look (ftr-cc-dashboard CC-01.116.00: public/app.css, then public/standard.css, its
+   default "Standard" look), copied rule for rule for the Settings pages and scoped to .ftr-settings so the rest of the
+   console keeps its own styles. Tokens: standard.css's dark Standard tokens (light under [data-theme="light"]). */
+
+.ftr-settings {
+  --brand: #5cb8d0;
+  --on-brand: #06222b;
+  --bg: #0f1417;
+  --bg2: #141b20;
+  --panel: #161e24;
+  --panel-solid: #161e24;
+  --panel-hi: #1e2932;
+  --line: #25313a;
+  --line-hi: #36454f;
+  --text: #e6ecef;
+  --muted: #94a3af;
+  --faint: #6c7b87;
+  --cyan: var(--brand);
+  --violet: var(--brand);
+  --green: #4cc38a;
+  --amber: #e3b341;
+  --red: #f0716b;
+  --grad: linear-gradient(var(--brand), var(--brand));
+  --shadow: 0 1px 2px rgba(0, 0, 0, .35);
+  --radius: 10px;
+  --mono: "PlexMono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  color-scheme: dark;
+  font: 14px/1.5 "Plex", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+:root[data-theme="light"] .ftr-settings {
+  --brand: #0b6b86;
+  --on-brand: #ffffff;
+  --bg: #f4f6f7;
+  --bg2: #eceff1;
+  --panel: #ffffff;
+  --panel-solid: #ffffff;
+  --panel-hi: #f1f4f6;
+  --line: #e0e5e9;
+  --line-hi: #ccd4da;
+  --text: #17212a;
+  --muted: #566573;
+  --faint: #8794a0;
+  --green: #18794e;
+  --amber: #9a6700;
+  --red: #c4302b;
+  --shadow: 0 1px 2px rgba(16, 24, 32, .06);
+  color-scheme: light;
+}
+.ftr-settings *, .ftr-settings *::before, .ftr-settings *::after { box-sizing: border-box; }
+.ftr-settings a { color: var(--brand); text-decoration: none; }
+.ftr-settings a:hover { text-decoration: underline; }
+.ftr-settings h1, .ftr-settings h2, .ftr-settings h3 { margin: 0; font-weight: 600; letter-spacing: -.01em; }
+.ftr-settings .serif { font-family: "Plex", system-ui, -apple-system, "Segoe UI", sans-serif; font-weight: 600; letter-spacing: -.01em; }
+.ftr-settings code, .ftr-settings .mono { font-family: var(--mono); font-size: .92em; }
+.ftr-settings p, .ftr-settings dl { margin: 1em 0; } /* the browser's own, which FTR's pages keep (the console's reset takes it away) */
+
+/* Header (app.css .head, .head.compact; standard.css sizes) */
+.ftr-settings .head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.ftr-settings .head.compact { margin-bottom: 4px; align-items: center; }
+.ftr-settings .head.compact .ht { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.ftr-settings .head h1, .ftr-settings .ht h1 { font-size: 22px; line-height: 1.25; }
+.ftr-settings .crumbs { color: var(--muted); font-size: 13px; margin: 0; }
+
+/* Panels and grid (app.css .panel, .grid, .g2; standard.css plain panels) */
+.ftr-settings .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; min-width: 0; }
+.ftr-settings .panel h2 { font-size: 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.ftr-settings .panel h2 small { color: var(--muted); font-weight: 400; font-size: 12.5px; }
+.ftr-settings .panel h2 .chip { margin-left: auto; }
+.ftr-settings .panel h3 { font-size: 14px; margin: 18px 0 8px; }
+.ftr-settings .grid { display: grid; gap: 16px; }
+.ftr-settings .g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 860px) {
+  .ftr-settings .g2 { grid-template-columns: 1fr; }
+}
+
+/* Controls (app.css; standard.css: 34 px high, 8 px corners, one filled button) */
+.ftr-settings button { font: inherit; font-weight: 500; border-radius: 8px; min-height: 34px; padding: 6px 12px; border: 1px solid var(--line-hi); background: var(--panel); color: var(--text); cursor: pointer; display: inline-flex; align-items: center; gap: 7px; transition: background .12s, border-color .12s; text-decoration: none; white-space: nowrap; }
+.ftr-settings button:hover { border-color: var(--brand); background: var(--panel-hi); }
+.ftr-settings button:disabled { opacity: .5; cursor: not-allowed; }
+.ftr-settings button.primary, .ftr-settings .seg button.primary { background: var(--brand); color: var(--on-brand); border: 1px solid var(--brand); box-shadow: none; }
+.ftr-settings button.primary:hover { background: color-mix(in srgb, var(--brand) 88%, #000); border-color: transparent; }
+.ftr-settings button.ghost { background: transparent; }
+.ftr-settings button svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ftr-settings input, .ftr-settings select, .ftr-settings textarea { font: inherit; color: var(--text); background: var(--panel); border: 1px solid var(--line-hi); border-radius: 8px; padding: 6px 10px; width: 100%; outline: none; transition: border-color .15s, box-shadow .15s; }
+.ftr-settings input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), .ftr-settings select { min-height: 34px; }
+.ftr-settings input:focus, .ftr-settings select:focus, .ftr-settings textarea:focus { border-color: var(--brand); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 18%, transparent); }
+.ftr-settings :focus-visible { outline: 2px solid color-mix(in srgb, var(--brand) 70%, transparent); outline-offset: 2px; }
+.ftr-settings select { appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 16px) 55%, calc(100% - 11px) 55%; background-size: 5px 5px; background-repeat: no-repeat; padding-right: 30px; }
+.ftr-settings label.f { display: grid; gap: 6px; font-size: 12.5px; color: var(--muted); font-weight: 500; }
+.ftr-settings .form { display: grid; gap: 14px; }
+.ftr-settings .form .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.ftr-settings .check { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; font-size: 13px; }
+.ftr-settings .check input { width: auto; margin-top: 3px; }
+.ftr-settings .check small { display: block; color: var(--muted); }
+.ftr-settings .seg { display: inline-flex; gap: 4px; padding: 4px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-hi); flex-wrap: wrap; }
+.ftr-settings .seg button { border: 0; background: transparent; }
+
+/* Chips, facts, notes (app.css .chip, .kv, .callout, .err, .ok-t; standard.css 6 px chips) */
+.ftr-settings .chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px; border-radius: 6px; font-size: 12px; font-weight: 500; border: 1px solid var(--line-hi); color: var(--muted); white-space: nowrap; }
+.ftr-settings .chip i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.ftr-settings .chip.ok { color: var(--green); border-color: rgba(52, 211, 153, .35); background: rgba(52, 211, 153, .08); }
+.ftr-settings .chip.warn { color: var(--amber); border-color: rgba(251, 191, 36, .35); background: rgba(251, 191, 36, .08); }
+.ftr-settings .chip.bad { color: var(--red); border-color: rgba(248, 113, 113, .35); background: rgba(248, 113, 113, .08); }
+.ftr-settings .kv { display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; font-size: 13.5px; }
+.ftr-settings .kv dt { color: var(--muted); }
+.ftr-settings .kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.ftr-settings .callout { padding: 14px 16px; border-radius: 14px; border: 1px solid rgba(34, 211, 238, .3); background: rgba(34, 211, 238, .06); font-size: 13.5px; }
+.ftr-settings .callout.warn { border-color: rgba(251, 191, 36, .35); background: rgba(251, 191, 36, .07); }
+.ftr-settings .err { color: var(--red); font-size: 13px; min-height: 18px; }
+.ftr-settings .ok-t { color: var(--green); }
+.ftr-settings .muted { color: var(--muted); }
+.ftr-settings .small { font-size: 12.5px; }
+.ftr-settings .flex { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.ftr-settings .mt { margin-top: 12px; }
+.ftr-settings details > summary { cursor: pointer; }
+
+/* Saving as you type (app.css .saved-banner, .saved-foot; standard.css sizes) */
+.ftr-settings .saved-banner { margin-bottom: 10px; padding: 6px 12px; border-radius: 12px; font-weight: 600; font-size: 13px; color: var(--green); border: 1px solid color-mix(in srgb, var(--green) 30%, transparent); background: color-mix(in srgb, var(--green) 8%, transparent); }
+.ftr-settings .saved-foot { position: sticky; bottom: 12px; margin-top: 10px; padding: 7px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-solid); font-size: 13px; color: var(--muted); box-shadow: var(--shadow); }
+.ftr-settings .saved-foot.bad { color: var(--red); border-color: color-mix(in srgb, var(--red) 40%, transparent); }

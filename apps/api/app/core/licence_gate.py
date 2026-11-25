@@ -35,7 +35,8 @@ def deactivated_response() -> JSONResponse:
 
 
 async def licence_gate(request, call_next):
-    if request.url.path in LICENCE_OPEN:
+    # Let's Encrypt's check (app/api/routers/https.py) stays answered, so a renewal never fails on the licence.
+    if request.url.path in LICENCE_OPEN or request.url.path.startswith("/.well-known/acme-challenge/"):
         return await call_next(request)
     if await run_in_threadpool(activation_service.licence_active):
         return await call_next(request)

@@ -5,7 +5,11 @@
 #   docker compose logs api
 #
 # Services: proxy (one HTTPS address), web (console), api, worker and beat (Celery), migrate (once per start),
-# postgres and redis. Only the proxy is published, to ${BIND_ADDRESS:-127.0.0.1}:${PORT:-3000}.
+# postgres and redis. Only the proxy is published: HTTPS on ${BIND_ADDRESS:-127.0.0.1}:${PORT:-3000}, and plain http
+# on ${HTTP_REDIRECT_PORT:-80} (redirected to https while HTTPS only; Let's Encrypt's checks).
+#
+# HTTPS (docs/https-and-hosting.md): the API owns the certificate and the choices made under Settings → HTTPS and
+# writes the proxy's configuration into the hawk-proxy-config volume; the proxy reloads it by itself.
 #
 # Hardened as CxMissionZero's container: nothing in the images can be changed at run time (only the volumes and a
 # scratch /tmp are writable), no Linux capabilities, no privilege escalation, a non-root user, at most 512 processes,
@@ -113,10 +117,15 @@ services:
     # interface's address) and HAWK_HOST to the name or address people use (deploy/.env).
     ports:
       - "${BIND_ADDRESS:-127.0.0.1}:${PORT:-3000}:8443"
+      # Plain http: redirected to https while HTTPS only, Hawk AI itself while http is on next to HTTPS; Let's
+      # Encrypt checks the name here (it needs port 80).
+      - "${BIND_ADDRESS:-127.0.0.1}:${HTTP_REDIRECT_PORT:-80}:8080"
     environment:
       HAWK_HOST: ${HAWK_HOST:-localhost}
     volumes:
       - hawk-proxy:/data
+      # Written by the API only (app/services/https_proxy.py): the Caddyfile and the certificate in use.
+      - hawk-proxy-config:/hawk-proxy:ro
     tmpfs:
       - /tmp
       - /config
@@ -177,12 +186,34 @@ services:
       FIRST_ADMIN: ${FIRST_ADMIN:-}                 # setup-code: print a setup code instead of a password
       ACCEPT_TERMS: ${ACCEPT_TERMS:-}               # <email>: accept the terms of use for the organisation, on record
       ORGANISATION_NAME: ${ORGANISATION_NAME:-}     # the organisation's name (else given when the terms are accepted)
+      # HTTPS (docs/https-and-hosting.md). Once changed under Settings → HTTPS, the page's choice wins.
+      HTTPS: ${HTTPS:-on}                           # on (HTTPS only), off (plain http) or both
+      TLS_CERT_FILE: ${TLS_CERT_FILE:-}             # e.g. /certs/server.crt (the folder ${HAWK_DATA_DIR}/certs)
+      TLS_KEY_FILE: ${TLS_KEY_FILE:-}               # e.g. /certs/server.key
+      TLS_KEY_PASSPHRASE: ${TLS_KEY_PASSPHRASE:-}
+      TLS_PFX_FILE: ${TLS_PFX_FILE:-}               # or one .pfx, e.g. /certs/server.pfx
+      TLS_PFX_PASSPHRASE: ${TLS_PFX_PASSPHRASE:-}
+      TLS_HOSTNAMES: ${TLS_HOSTNAMES:-}             # extra names for the self-signed certificate
+      LETSENCRYPT_DOMAIN: ${LETSENCRYPT_DOMAIN:-}   # a free certificate from Let's Encrypt for this public name
+      LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL:-}
+      LETSENCRYPT_STAGING: ${LETSENCRYPT_STAGING:-}
+      LETSENCRYPT_SKIP_CHECK: ${LETSENCRYPT_SKIP_CHECK:-}
+      ACME_DIRECTORY_URL: ${ACME_DIRECTORY_URL:-}
+      TRUST_PROXY: ${TRUST_PROXY:-}                 # whose X-Forwarded-* to believe, at the proxy
+      HAWK_HOST: ${HAWK_HOST:-localhost}
+      PUBLIC_URL: ${PUBLIC_URL:-}
+      HTTPS_PUBLIC_PORT: ${PORT:-3000}
+      HTTP_REDIRECT_PORT: ${HTTP_REDIRECT_PORT:-80}
+      HAWK_PROXY_DIR: /hawk-proxy
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips", "*"]
     secrets: *hawk-secrets
     volumes:
       - hawk-data:/data
       - hawk-artifacts:/artifacts
       - hawk-runtime:/run/hawk
+      - hawk-proxy-config:/hawk-proxy
+      # Certificates given to the deployment (TLS_CERT_FILE…): read-only, from the data folder.
+      - ${HAWK_DATA_DIR}/certs:/certs:ro
     healthcheck:
       <<: *hawk-healthcheck
       test: ["CMD", "python", "-m", "app.cli.healthcheck"]
@@ -318,7 +349,8 @@ volumes:
   hawk-data:          # the API's /data: the first administrator's one-time password file, never in a backup
   hawk-artifacts:
   hawk-runtime:
-  hawk-proxy:         # the proxy's local certificate authority and certificates
+  hawk-proxy:         # the proxy's own data folder
+  hawk-proxy-config:  # the proxy's configuration and the certificate in use, written by the API (Settings → HTTPS)
 
 secrets:
   # Building behind a company proxy that inspects TLS: its CA certificate (HAWK_BUILD_CA_FILE), else nothing.
