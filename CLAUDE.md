@@ -1,0 +1,11 @@
+# Working on Hawk AI
+
+- **Version log.** Every change merged to main bumps the version in `VERSION` (shown as HK-xx.xx.xx) and adds an entry to the top of CHANGELOG.md, in the same pull request:
+  - heading: `## HK-xx.xx.xx — YYYY-MM-DD HH:MM UTC · [#NN](https://github.com/cxsmtp/hk/pull/NN)`;
+  - 2–8 bullets: a bold lead-in, then one plain sentence on what changed for the people using it, ending with a **Status.** bullet.
+  The release workflow (.github/workflows/release.yml) publishes every image as that version: Settings → Updates lists and installs versions by it.
+- **Tests:** the API from `apps/api`: `TEST_PROFILE=unit DATABASE_URL=sqlite+pysqlite:///:memory: TEST_DATABASE_URL=sqlite+pysqlite:///:memory: PYTHONPATH=. python -m pytest -q -n 4 -m "not integration"`; the console from `apps/web`: `npm run test:ui`, `npm run lint`, `npx tsc --noEmit -p tsconfig.json` and `npm run build`.
+- **Load test every change that touches a measured path, before and after.** Run the load test of the path changed (`make load-telemetry`, `make load-gateway`, `make load-findings`: infra/scripts/load_*.py) on main before the change and on the branch after it, against the same stack on the same machine, and say in the pull request and the CHANGELOG's **Status.** bullet: failed requests, requests per second, and p50 and p95. A run with failed requests or a slower tail is explained, or fixed, before merging. The gateway benchmark's method is docs/benchmarks/methodology.md.
+- **Publish the status every release.** The CHANGELOG entry's **Status.** bullet gives the tests run and their result, the load test comparison when one applies, and anything known to be open.
+- **Docs to keep in step:** README.md, deploy/README.md, and the docs/ page for the area changed (for example docs/updating.md, docs/integrity.md, docs/https-and-hosting.md, docs/sign-in.md). Commands are written for Linux with Docker, one line each.
+- **Ported features stay ported.** Platform features come from the maintainer's CxMissionZero (behaviour, numbers and wording) and the console's Settings pages from FTR Command Center (layout, wording and controls); a deviation is said where it is made and in the pull request.
