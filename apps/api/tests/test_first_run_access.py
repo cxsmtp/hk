@@ -265,6 +265,63 @@ def test_setup_code_creates_the_first_administrator_once(env):
     assert "First administrator [email] created with the setup code." in reasons
 
 
+def _require_two_step_for_everyone(env):
+    from app.services import account_security
+
+    with env["db"]() as db:
+        account_security.policy(db).two_step_required = True
+        db.commit()
+
+
+def test_setup_code_with_required_two_step_gives_no_tokens_until_it_is_set_up(env):
+    from app.db.models.user import RefreshToken
+    from app.services import mfa_service
+
+    code = prepare(env, FIRST_ADMIN="setup-code").setup_code
+    _require_two_step_for_everyone(env)
+    client = env["client"]
+    body = {"code": code, "email": "first@example.com", "name": "First Admin", "password": NEW_PASSWORD}
+    created = client.post("/setup", json=body)
+    assert created.status_code == 201, created.text
+    challenge = created.json()
+    assert challenge["two_step"] is True
+    assert "access_token" not in challenge and "refresh_token" not in challenge
+    assert created.headers["cache-control"] == "no-store"
+    with env["db"]() as db:
+        admin = db.scalar(select(User).where(User.email == "first@example.com"))
+        assert admin is not None and not admin.mfa_secret
+        assert db.scalar(select(RefreshToken).where(RefreshToken.user_id == admin.id)) is None
+    # The setup code is used up all the same: the administrator exists and signs in with two-step from here.
+    assert client.post("/setup", json=body).status_code == 409
+
+    secret = challenge["setup"]["secret"]
+    done = client.post("/auth/two-step", json={"ticket": challenge["ticket"], "code": mfa_service.totp(secret)})
+    assert done.status_code == 200, done.text
+    assert len(done.json()["recovery_codes"]) == 10
+    assert done.json()["access_token"]
+
+
+def test_setup_code_stays_usable_when_no_two_step_ticket_can_be_made(env, monkeypatch):
+    from app.services import mfa_service, sign_in_store
+
+    code = prepare(env, FIRST_ADMIN="setup-code").setup_code
+    _require_two_step_for_everyone(env)
+
+    def unavailable(*_args, **_kwargs):
+        raise sign_in_store.StoreUnavailable("down")
+
+    body = {"code": code, "email": "first@example.com", "name": "First Admin", "password": NEW_PASSWORD}
+    with monkeypatch.context() as patched:
+        patched.setattr(mfa_service, "issue_ticket", unavailable)
+        refused = env["client"].post("/setup", json=body)
+    assert refused.status_code == 503
+    assert "access_token" not in refused.json()
+    with env["db"]() as db:
+        assert db.scalar(select(func.count()).select_from(User)) == 0
+    assert env["client"].get("/setup").json() == {"setup": True}
+    assert env["client"].post("/setup", json=body).status_code == 201
+
+
 def test_a_new_start_replaces_the_setup_code(env):
     first = prepare(env, FIRST_ADMIN="setup-code").setup_code
     second = prepare(env, FIRST_ADMIN="setup-code").setup_code

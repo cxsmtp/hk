@@ -750,7 +750,7 @@ export const api = {
     request<{ terms: TermsState }>("/terms/accept", { method: "POST", body: JSON.stringify(payload) }),
   setupStatus: () => request<{ setup: boolean }>("/setup", undefined, false),
   setup: (payload: { code: string; email: string; name: string; password: string }) =>
-    request<LoginResponse>("/setup", { method: "POST", body: JSON.stringify(payload) }, false),
+    request<LoginResponse | TwoStepChallenge>("/setup", { method: "POST", body: JSON.stringify(payload) }, false),
   // The product licence and activation codes (docs/activation-codes.md).
   getLicence: () => request<LicenceStatus>("/licence", undefined, false),
   activateLicence: (code: string) =>

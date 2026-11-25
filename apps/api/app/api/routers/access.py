@@ -19,12 +19,13 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.api.routers.auth import SIGN_IN_UNAVAILABLE, two_step_challenge
 from app.core.auth import get_current_user
 from app.core.security import decode_token
 from app.db.models.tenant import Tenant
 from app.db.models.user import User, UserTenantRole
 from app.db.session import get_db
-from app.services import first_run_service, refusal_audit, terms_service
+from app.services import account_security, first_run_service, refusal_audit, sign_in_store, terms_service
 from app.services.audit_service import write_audit_log
 from app.services.auth_service import issue_tokens
 
@@ -119,6 +120,17 @@ def setup(request: Request, body: dict[str, Any] | None = Body(default=None), db
             )
             db.commit()
         return _error(refused.status_code, refused.message)
+    if account_security.needs_two_step(db, admin):
+        # Two-step sign-in is required for everyone (a sign-in policy kept from before, say): no tokens yet. As at the
+        # password sign-in, the administrator sets it up first and POST /auth/two-step gives the tokens. Without a
+        # ticket nothing is kept: the setup code stays usable.
+        try:
+            challenge = two_step_challenge(admin)
+        except sign_in_store.StoreUnavailable:
+            db.rollback()
+            return _error(503, SIGN_IN_UNAVAILABLE)
+        db.commit()
+        return JSONResponse(status_code=201, headers={"Cache-Control": "no-store"}, content=challenge.model_dump())
     db.commit()
     tenants = _tenants_of(db, admin)
     tokens = issue_tokens(db, user=admin, tenant_id=tenants[0]["id"], role=tenants[0]["role"])
