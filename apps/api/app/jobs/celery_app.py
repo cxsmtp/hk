@@ -8,6 +8,7 @@ from celery.schedules import crontab
 from celery.signals import beat_init, heartbeat_sent, task_failure, worker_ready
 
 from app.core.config import settings
+from app.jobs import backup_schedule
 from app.jobs.licence_task import LicensedTask
 from app.services.control_plane_health_service import write_beat_heartbeat, write_worker_heartbeat
 from app.services.job_run_service import write_dead_letter_job_run
@@ -170,9 +171,22 @@ def _worker_heartbeat_loop() -> None:
         time.sleep(interval)
 
 
+def _hold_instance_lock(name: str) -> None:
+    """A running worker or beat holds its share of Hawk AI's instance lock, so a restore refuses while it runs
+    (app/services/pg_tools.py)."""
+
+    from app.services.pg_tools import InstanceLock
+
+    try:
+        InstanceLock(settings.database_url, name=name).acquire()
+    except Exception as error:  # noqa: BLE001 - said in the log; the process runs as before
+        print(f"! [backup] Could not take Hawk AI's instance lock: {error}", flush=True)
+
+
 @worker_ready.connect
 def _on_worker_ready(**kwargs) -> None:  # pragma: no cover - exercised in running worker process
     del kwargs
+    _hold_instance_lock("worker")
     write_worker_heartbeat()
     global _worker_heartbeat_thread_started
     with _worker_heartbeat_lock:
@@ -192,6 +206,7 @@ def _on_worker_heartbeat(**kwargs) -> None:  # pragma: no cover - exercised in r
 @beat_init.connect
 def _on_beat_init(**kwargs) -> None:  # pragma: no cover - exercised in running beat process
     del kwargs
+    _hold_instance_lock("beat")
     write_beat_heartbeat()
     global _beat_heartbeat_thread_started
     with _beat_heartbeat_lock:
@@ -238,6 +253,7 @@ def _on_task_failure_record_dead_letter(
 # Ensure task modules are imported and registered.
 from app.jobs import (  # noqa: E402,F401
     auditor_jobs,
+    backup_jobs,
     control_coverage_jobs,
     discovery_verification_jobs,
     enforcement_jobs,
@@ -248,3 +264,8 @@ from app.jobs import (  # noqa: E402,F401
     native_control_jobs,
     risk_jobs,
 )
+
+# Backups (app/jobs/backup_jobs.py): one minute after beat starts, then every BACKUP_INTERVAL_HOURS (default 24).
+_backup_entry = backup_schedule.beat_entry()
+if _backup_entry:
+    celery_app.conf.beat_schedule["scheduled-backup"] = _backup_entry

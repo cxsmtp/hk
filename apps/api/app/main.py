@@ -13,7 +13,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.routers import account_boundary, action_integrity, activity_audit, agui, agents, ai_discovery, ai_iam, ai_orchestration, ai_systems, ai_tools_usage, audit, auditor, auth, banking_transaction_integrity, brain, checkmarx, continuous_assurance, control_coverage, coverage, dashboard, deployments, discovery, discovery_adv, discovery_assets, discovery_capabilities, discovery_collectors, discovery_ecosystems, discovery_erg, discovery_exposure, discovery_scans, discovery_source_connections, discovery_surface_sources, discovery_targets, endpoint_agent, enforcement, executive_mcp, executive_remote_mcp, extension, external_risk, findings, gateway, guardian_contracts_v2, investigations, kb, llm_gateway, maturity_curve, monitoring, native_controls, onprem, ops, policies, policy_pack_platform, runtime, runtime_control, runtime_intelligence, scans, shadow_ai, simulation_policies, simulations, surface_coverage, system, trust_center, user_visibility
-from app.api.routers import access, claude_enterprise, https, licence
+from app.api.routers import access, backups, claude_enterprise, https, licence
 from app.core.access_gate import AccessRequired, access_required_response
 from app.core.config import configured_secret_sources, settings
 from app.core.licence_gate import licence_gate
@@ -36,7 +36,8 @@ from app.services.production_hardening import (
     validate_production_configuration,
 )
 from app.services.snapshot_service import ensure_artifact_storage_writable
-from app.services import first_run_service, https_runtime, terms_service
+from app.services import backup_service, first_run_service, https_runtime, terms_service
+from app.services.pg_tools import InstanceLock, is_postgres
 from app.version import APP_VERSION
 
 
@@ -49,6 +50,12 @@ def _safe_internal_error_message(exc: Exception) -> str:
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     _assert_production_readiness_or_fail_startup()
     _assert_schema_integrity_or_fail_startup()
+    # Backups (app/services/backup_service.py): new or existing installation is decided once, before anything of this
+    # start is written (app/cli/prestart.py has normally done it already), and this process holds its share of the
+    # instance lock, so a restore refuses while it runs.
+    if is_postgres(settings.database_url):
+        backup_service.decide_once()
+    instance_lock = InstanceLock(settings.database_url, name="api").acquire()
     _prepare_access_at_start()
     # HTTPS (app/services/https_runtime.py): a certificate that cannot be used stops the start here, never falling
     # back to plain http; the front proxy is handed what Settings → HTTPS chose.
@@ -58,6 +65,35 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         yield
     finally:
         https_runtime.stop()
+        _last_words()
+        instance_lock.release()
+
+
+#: The whole stop fits in the 15 s deploy/compose.yaml gives (stop_grace_period) before the container is killed.
+STOP_BUDGET_SECONDS = 12.0
+
+
+def _last_words() -> None:
+    """Before the API stops (SIGTERM from `docker compose stop` or `down`, or Ctrl+C): a backup, and an email to the
+    administrators at most every LAST_WORDS_EVERY_HOURS (CxMissionZero's "last words", src/server.js)."""
+
+    import os
+    import time
+
+    # Only a deployed Hawk AI (PostgreSQL): not a test run or a laptop on SQLite.
+    if not is_postgres(settings.database_url):
+        return
+    try:
+        budget = float(os.environ.get("SHUTDOWN_BUDGET_SECONDS") or STOP_BUDGET_SECONDS)
+    except ValueError:
+        budget = STOP_BUDGET_SECONDS
+    try:
+        outcome = backup_service.last_words("the service was stopped", time.monotonic() + budget)
+        backup = outcome.get("backup") or {}
+        if backup.get("ok"):
+            print(f"[backup] Before stopping: {backup.get('file')}", flush=True)
+    except Exception as error:  # noqa: BLE001 - a stop is never held up by its backup
+        print(f"! [backup] Before stopping: {error}", flush=True)
 
 
 def _prepare_access_at_start() -> None:
@@ -432,6 +468,13 @@ async def correlation_and_request_logging_middleware(request, call_next):
 @app.middleware("http")
 async def production_security_headers_and_size_middleware(request, call_next):
     maximum_bytes = int(settings.max_request_body_bytes)
+    # A backup restored from Settings → Backups & health: up to 200 MB (app/api/routers/backups.py), as CxMissionZero.
+    restore_upload = request.method == "POST" and request.url.path == "/backups/restore"
+    if restore_upload:
+        maximum_bytes = backups.MAX_RESTORE_UPLOAD_BYTES
+    too_large = (
+        {"error": backups.TOO_LARGE, "detail": backups.TOO_LARGE} if restore_upload else {"detail": "Request body exceeds configured limit."}
+    )
     content_length = request.headers.get("content-length")
     if content_length:
         try:
@@ -439,12 +482,12 @@ async def production_security_headers_and_size_middleware(request, call_next):
         except ValueError:
             return JSONResponse(status_code=400, content={"detail": "Invalid Content-Length header."})
         if length < 0 or length > maximum_bytes:
-            return JSONResponse(status_code=413, content={"detail": "Request body exceeds configured limit."})
+            return JSONResponse(status_code=413, content=too_large)
     if request.method in {"POST", "PUT", "PATCH", "DELETE"}:
         bounded_body = bytearray()
         async for chunk in request.stream():
             if len(bounded_body) + len(chunk) > maximum_bytes:
-                return JSONResponse(status_code=413, content={"detail": "Request body exceeds configured limit."})
+                return JSONResponse(status_code=413, content=too_large)
             bounded_body.extend(chunk)
         request._body = bytes(bounded_body)
     response = await call_next(request)
@@ -532,6 +575,7 @@ def health_schema():
 app.include_router(auth.router)
 app.include_router(licence.router)
 app.include_router(https.router)
+app.include_router(backups.router)
 app.include_router(access.router)
 app.include_router(account_boundary.router)
 app.include_router(action_integrity.router)

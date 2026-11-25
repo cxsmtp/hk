@@ -15,6 +15,14 @@ WORKDIR /workspace/apps/api
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
+# pg_dump and pg_restore, for backups and restores (app/services/pg_tools.py; deploy/README.md: Backups). PostgreSQL 17's
+# client (Debian 13's), which dumps and restores the PostgreSQL 16 of deploy/compose.yaml; pinned to the version tested,
+# as the base image is pinned by its digest and the Python packages by their hashes.
+# TODO(owner): pin through snapshot.debian.org, so the build still finds this exact version after a security update.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends postgresql-client-17=17.12-0+deb13u1 \
+  && rm -rf /var/lib/apt/lists/*
+
 COPY apps/api/requirements.txt /tmp/requirements.txt
 COPY --from=builder /wheels /wheels
 RUN pip install --no-cache-dir --no-index --find-links=/wheels -r /tmp/requirements.txt \
