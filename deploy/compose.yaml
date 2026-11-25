@@ -137,6 +137,11 @@ x-hawk-environment: &hawk-environment
   INTEGRITY_CHECK_HOURS: ${INTEGRITY_CHECK_HOURS:-6}
   INTEGRITY_OFFLINE: ${INTEGRITY_OFFLINE:-}
   GITHUB_TOKEN: ${INTEGRITY_GITHUB_TOKEN:-}
+  # The self-check and hands-off (docs/hands-off.md): how often it checks itself and reads replies, and where its
+  # automatic support cases are to be forwarded (by an administrator: Hawk AI never sends outside by itself).
+  WATCHDOG_EVERY_SECONDS: ${WATCHDOG_EVERY_SECONDS:-300}
+  INBOX_EVERY_SECONDS: ${INBOX_EVERY_SECONDS:-120}
+  MAINTAINER_EMAIL: ${MAINTAINER_EMAIL:-}
 
 x-hawk-secrets: &hawk-secrets
   - database_url

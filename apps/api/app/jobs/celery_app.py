@@ -8,7 +8,7 @@ from celery.schedules import crontab
 from celery.signals import beat_init, heartbeat_sent, task_failure, worker_init, worker_process_init, worker_ready
 
 from app.core.config import settings
-from app.jobs import backup_schedule, update_schedule
+from app.jobs import backup_schedule, update_schedule, watchdog_schedule
 from app.jobs.licence_task import LicensedTask
 from app.services.control_plane_health_service import write_beat_heartbeat, write_worker_heartbeat
 from app.services.job_run_service import write_dead_letter_job_run
@@ -254,6 +254,13 @@ def _on_task_failure_record_dead_letter(
     **extras,
 ) -> None:  # pragma: no cover - exercised in running worker process
     del traceback, einfo, extras
+    # Counted with the API's errors, for the self-check's "more than 30 errors in 15 minutes" (app/services/error_counter.py).
+    try:
+        from app.services import error_counter
+
+        error_counter.note()
+    except Exception:
+        pass
     task_name = getattr(sender, "name", None) or "unknown_task"
     tenant_id = _task_tenant_id(args, kwargs)
     reason = f"task_id={task_id} error={exception!r}" if exception is not None else f"task_id={task_id} error=unknown"
@@ -277,6 +284,7 @@ from app.jobs import (  # noqa: E402,F401
     native_control_jobs,
     risk_jobs,
     update_jobs,
+    watchdog_jobs,
 )
 
 # Backups (app/jobs/backup_jobs.py): one minute after beat starts, then every BACKUP_INTERVAL_HOURS (default 24).
@@ -286,3 +294,7 @@ if _backup_entry:
 
 # Auto-update (off until an owner or admin turns it on) and the software integrity check (app/jobs/update_jobs.py).
 celery_app.conf.beat_schedule.update(update_schedule.beat_entries())
+
+# The self-check and hands-off (app/jobs/watchdog_jobs.py): every WATCHDOG_EVERY_SECONDS (300), the replies every
+# INBOX_EVERY_SECONDS (120), the weekly status's turn every 5 minutes.
+celery_app.conf.beat_schedule.update(watchdog_schedule.beat_entries())

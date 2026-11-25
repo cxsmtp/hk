@@ -1958,5 +1958,43 @@
     "notes": "Settings → Network & proxy: CxMissionZero's page (public/index.html #set-network, docs/network.md) in FTR Command Center's settings look, with the trusted certificates and Trust and connect. Covered by apps/web/tests/records-pages.test.mjs and apps/api/tests/test_platform_records.py; not yet observed in a browser.",
     "desktop": "not-observed",
     "mobile": "not-observed"
+  },
+  {
+    "route": "/settings/hands-off",
+    "file": "apps/web/src/app/settings/hands-off/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Settings → Hands-off (docs/hands-off.md): CxMissionZero's page (public/index.html #set-handsoff) in FTR Command Center's settings look, without MZ's Checkmarx reminder questions: the weekly status (who, day, hour), the email buttons and replies, and the self-check box. Covered by apps/web/tests/hands-off-settings.test.mjs (pure view logic and source checks) and apps/api/tests/test_watchdog.py; not yet observed in a browser.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
+  },
+  {
+    "route": "/hands-off/confirm",
+    "file": "apps/web/src/app/hands-off/confirm/page.tsx",
+    "owner": "W1",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "The \"Yes, do it\" page an emailed hands-off button opens (CxMissionZero's /a/:token): says what the signed link would do and acts only on the button. No sign-in. Covered by apps/web/tests/hands-off-settings.test.mjs and apps/api/tests/test_watchdog.py; not yet observed in a browser.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
   }
 ]

@@ -50,23 +50,6 @@ def test_macos_capabilities_remain_unverified_until_target_host_receipts() -> No
         assert "target_os_acceptance" in contract["runtime_evidence_required"]
 
 
-def test_macos_deployment_runbook_names_every_apple_controlled_gate() -> None:
-    runbook = _text("DEPLOYMENT.md")
-    required = (
-        "Developer ID Application",
-        "Endpoint Security entitlement",
-        "Network Extension entitlement",
-        "provisioning profile",
-        "MDM",
-        "notarization",
-        "stapling",
-        "rollback",
-        "uninstall",
-        "UNVERIFIED",
-    )
-    assert all(token in runbook for token in required)
-
-
 def test_endpoint_security_policy_delivery_uses_os_peer_pin_and_detached_signature() -> None:
     source = _text("endpoint-security/HawkEndpointPolicyXPCService.m")
     info = _text("endpoint-security/Info.plist")

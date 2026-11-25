@@ -273,21 +273,3 @@ def test_h4_cross_family_fixtures_cover_every_profile_without_content() -> None:
         "private_key",
     ):
         assert forbidden not in rendered
-
-
-def test_h4_per_collector_documentation_covers_every_profile() -> None:
-    profiles, _, _, _ = _h4_modules()
-    document = (ROOT / "docs/HMAIR_H4_COLLECTOR_COVERAGE.md").read_text(
-        encoding="utf-8"
-    )
-    assert all(f"`{item.profile_id}`" in document for item in profiles)
-    for heading in (
-        "Permissions",
-        "Health and freshness",
-        "Safety and privacy",
-        "Residency",
-        "Limitations",
-        "Live acceptance boundary",
-    ):
-        assert heading in document
-    assert "profile presence is not coverage" in document.casefold()

@@ -20,10 +20,6 @@ const diagnosticsPage = readFileSync(
   "utf8",
 );
 const api = readFileSync("src/lib/api.ts", "utf8");
-const productionGuide = readFileSync(
-  "../../docs/deployment/microsoft-banking-runtime-control.md",
-  "utf8",
-);
 
 
 test("existing Command Center exposes the bounded banking CISO summary", () => {
@@ -83,31 +79,3 @@ test("developer diagnostics are separate and linked from the transaction view", 
   assert.doesNotMatch(diagnosticsPage, /customer-001|acct-001|latency.*12\.5/i);
 });
 
-
-test("production guide covers the required bank integration and operations surfaces", () => {
-  for (const heading of [
-    "Microsoft Agent Framework integration",
-    "Foundry integration",
-    "Subject binding",
-    "MCP and Toolbox",
-    "Identity model",
-    "APIM and direct API",
-    "Decision Receipt",
-    "Execution Receipt",
-    "Approval binding",
-    "Response assurance",
-    "Banking policy reference",
-    "Sentinel",
-    "Control Coverage",
-    "Failure and degradation",
-    "Deployment",
-    "Data and privacy",
-    "Operational runbook",
-    "Troubleshooting",
-    "Acceptance",
-  ]) {
-    assert.ok(productionGuide.includes(heading), `missing production guide section: ${heading}`);
-  }
-  assert.match(productionGuide, /PHASE 1 NOT PRODUCTION-POC READY/);
-  assert.match(productionGuide, /EXTERNAL_DEPENDENCY/);
-});

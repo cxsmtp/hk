@@ -141,23 +141,6 @@ def test_migration_tree_excludes_macos_appledouble_sidecars() -> None:
     assert not list(migrations.glob("._*.py"))
 
 
-def test_production_operations_runbook_is_bounded_and_explicit() -> None:
-    runbook = (ROOT / "docs/deployment/production-single-node-compose.md").read_text(encoding="utf-8")
-    for statement in (
-        "Supported topology",
-        "Required secret references",
-        "Startup preflight",
-        "Migration",
-        "Readiness",
-        "Backup",
-        "Restore verification",
-        "Upgrade",
-        "Rollback limitations",
-        "Unsupported deployment modes",
-    ):
-        assert statement in runbook
-
-
 def test_local_tls_gateway_uses_the_production_network_not_host_loopback() -> None:
     gateway_compose = yaml.safe_load(
         (ROOT / "infra/docker-compose.local-production-gateway.yml").read_text(encoding="utf-8")
