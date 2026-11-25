@@ -32,7 +32,7 @@ const ledger = JSON.parse(readFileSync(ledgerPath, "utf8"));
 test("route ledger exactly covers registered page routes", () => {
   const actualRoutes = pageRoutes(appRootPath);
   const ledgerRoutes = ledger.map((entry) => entry.route).sort();
-  assert.equal(actualRoutes.length, 65, "the registered page route count changed");
+  assert.equal(actualRoutes.length, 66, "the registered page route count changed");
   assert.deepEqual(ledgerRoutes, actualRoutes);
   assert.equal(new Set(ledgerRoutes).size, ledgerRoutes.length, "route ledger contains duplicates");
 });
