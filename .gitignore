@@ -40,3 +40,7 @@ dist/
 *.tsbuildinfo
 apps/api/artifacts/
 /evidence/
+
+# Browser end-to-end test output (apps/web/e2e)
+apps/web/test-results/
+apps/web/playwright-report/

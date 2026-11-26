@@ -10,6 +10,11 @@ infra/artifacts
 infra/artifacts/**
 apps/web/node_modules
 apps/web/.next*
+# The browser end-to-end tests and their output (.github/workflows/e2e.yml): never in the image.
+apps/web/e2e
+apps/web/playwright.config.ts
+apps/web/playwright-report
+apps/web/test-results
 apps/api/.venv
 apps/api/.runtime
 **/__pycache__

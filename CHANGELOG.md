@@ -10,6 +10,7 @@ Every release, newest first: the version shown bottom-left in the console (HK-xx
 - **Ticketing only over https.** Jira and ServiceNow addresses must be https (or this machine); a file: or cloud metadata address is refused.
 - **Every change is checked for security.** A new check on every pull request, on main and weekly: no secret in new commits, no known-vulnerable Python or JavaScript component that ships, and no medium or high finding in the API code.
 - **Faster, cheaper checks.** Tests run once per change instead of twice, and the API tests run in parallel.
+- **The console is tested in a real browser.** On every change to the console or the API, and before anything is published, Chromium signs in to a fresh installation behind one address, as deployed: the first sign-in (new password, terms of use), a wrong password, staying signed in across a reload, Sign out, the CSRF check, every Settings page, adding a person, Roles & permissions, Branding, two-step setup, Activation codes, and what a Viewer is offered.
 - **Status.** Not merged yet.
 
 ## HK-00.02.00 — 2026-11-25 22:36 UTC · [#5](https://github.com/cxsmtp/hk/pull/5), [#7](https://github.com/cxsmtp/hk/pull/7), [#8](https://github.com/cxsmtp/hk/pull/8)
