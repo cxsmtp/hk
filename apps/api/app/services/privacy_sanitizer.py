@@ -92,6 +92,11 @@ def _is_chatgpt_desktop_version_path(path: tuple[str, ...]) -> bool:
 
 EMAIL_RE = re.compile(r"(?i)\b[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}\b")
 PHONE_RE = re.compile(r"(?<!\d)(?:\+?\d[\d\-\s().]{7,}\d)(?!\d)")
+# Record ids (UUIDs) and hex digests: a digit run inside one is not a phone or card number, and masking it would make
+# the id stop matching its record.
+IDENTIFIER_RE = re.compile(
+    r"(?<![0-9A-Fa-f])(?:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}|[0-9a-fA-F]{32,})(?![0-9A-Fa-f])"
+)
 CC_RE = re.compile(r"\b(?:\d[ -]*?){13,19}\b")
 # A date, or a date and time, as the system writes them (ISO 8601, also inside a file name such as
 # backup-2026-11-25T10-00-00Z): kept as they are, never taken for a phone number. Only real calendar dates (years
@@ -122,6 +127,7 @@ def _preserve_iso_datetimes(text: str) -> tuple[str, dict[str, str]]:
         preserved[token] = match.group(0)
         return token
 
+    text = IDENTIFIER_RE.sub(replace, text)
     text = ISO_DATETIME_RE.sub(replace, text)
     return IPV4_RE.sub(replace, text), preserved
 

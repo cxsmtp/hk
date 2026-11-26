@@ -60,6 +60,10 @@ DEPLOYMENT_ENDPOINT_SHORT_FIELD_MAX_LENGTH = 64
 
 EMAIL_RE = re.compile(r"(?i)\b[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}\b")
 PHONE_RE = re.compile(r"(?<!\d)(?:\+?\d[\d\-\s().]{7,}\d)(?!\d)")
+# Record ids and hex digests are kept as they are (a UUID's digit run is not a phone number).
+IDENTIFIER_RE = re.compile(
+    r"(?<![0-9A-Fa-f])(?:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}|[0-9a-fA-F]{32,})(?![0-9A-Fa-f])"
+)
 ISO_DATETIME_RE = re.compile(
     r"\b\d{4}-\d{2}-\d{2}"
     r"(?:[T ][0-2]\d:[0-5]\d(?::[0-5]\d(?:\.\d{1,6})?)?(?:Z|[+-][0-2]\d:?[0-5]\d)?)?\b"
@@ -346,6 +350,7 @@ def _redact_prompt(value: str) -> str:
         preserved[token] = match.group(0)
         return token
 
+    text = IDENTIFIER_RE.sub(preserve_datetime, text)
     text = ISO_DATETIME_RE.sub(preserve_datetime, text)
     text = EMAIL_RE.sub("[email]", text)
     text = PHONE_RE.sub("[phone]", text)

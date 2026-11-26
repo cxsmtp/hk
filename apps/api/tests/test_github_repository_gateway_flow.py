@@ -172,7 +172,7 @@ def test_held_push_becomes_an_approval_whose_binding_authorizes_exactly_one_retr
         assert request is not None
         assert request.request_payload["github_repository_action"]["paths"] == ["src/app.py"]
         assert "print('hi')" not in str(request.request_payload)
-        assert db.get(EvidenceNode, guard["evidence_ref"]) is not None
+        assert db.get(EvidenceNode, guard["evidence_ref"]) is not None, (guard["evidence_ref"], [n.id for n in db.scalars(select(EvidenceNode)).all()])
 
     # Binding before approval is refused.
     early = client.post("/control-coverage/source-control/github-repositories/mutation-approvals", headers=headers, json={"approval_request_id": approval_request_id})
