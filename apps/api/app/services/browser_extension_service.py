@@ -54,6 +54,7 @@ from app.services.enforcement_routing_service import (
     record_routing_failure,
     route_enforcement,
 )
+from app.services.guardians.threat_detectors import evaluate_threat_detectors
 from app.services.guardian_policy_engine import (
     canonical_guardian_policy,
     evaluate_browser_interaction_policy,
@@ -3380,6 +3381,38 @@ def evaluate_browser_interaction_and_record(
             tier = "clear_positive"
             reason_codes = [*reason_codes, "prompt_risk_forced_block"]
             input_signal_types = sorted({*input_signal_types, "prompt_risk_forced_block"})
+
+    # Parity with the LLM gateway (gateway_service._apply_threat_detectors): the same high-precision detector library
+    # runs on the prompt typed in the browser. Before, a jailbreak persona, a system-prompt extraction or a spoofed
+    # system/role delimiter that the gateway blocks was only warned about here (found by the attack-simulation
+    # catalogue, SIM-PROMPT browser scenarios). A blocking finding blocks in enforce mode and warns in discovery mode.
+    browser_threats = evaluate_threat_detectors(prompt=prompt_text_for_policy, surface="browser")
+    if browser_threats:
+        threat_reason_codes = [
+            str((row.get("actions_taken") or {}).get("reason_code") or "").strip()
+            for row in browser_threats
+            if str((row.get("actions_taken") or {}).get("reason_code") or "").strip()
+        ]
+        reason_codes = [*reason_codes, *[code for code in threat_reason_codes if code not in reason_codes]]
+        input_signal_types = sorted(
+            {
+                *input_signal_types,
+                *[str(threat) for row in browser_threats for threat in (row.get("threat_types") or []) if str(threat).strip()],
+            }
+        )
+        threat_blocks = any(str(row.get("decision") or "").strip().lower() == "block" for row in browser_threats)
+        if threat_blocks and decision != "block":
+            if platform_mode != PLATFORM_MODE_DISCOVERY:
+                decision = "block"
+                tier = "clear_positive"
+                reason_codes = [*reason_codes, "prompt_risk_forced_block"]
+                input_signal_types = sorted({*input_signal_types, "prompt_risk_forced_block"})
+            elif _decision_rank("warn") > _decision_rank(decision):
+                decision = "warn"
+                tier = "ambiguous" if tier == "clear_negative" else tier
+        elif not threat_blocks and _decision_rank("warn") > _decision_rank(decision):
+            decision = "warn"
+            tier = "ambiguous" if tier == "clear_negative" else tier
 
     scoped_policy = resolve_scoped_policy_decision(
         db,

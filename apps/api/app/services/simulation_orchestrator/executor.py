@@ -55,6 +55,25 @@ _STEP_PROFILE_CATALOG: dict[str, dict[str, str]] = {
         "support_status": "executable_now",
         "support_reason": "Auditor snapshot creation is available in-process.",
     },
+    "agent_action_intercept": {
+        "step_type": "policy_eval",
+        "title": "Agent Action Intercept",
+        "actor": "ai_iam",
+        "target_surface": "agent",
+        "support_status": "executable_now",
+        "support_reason": "Runtime agent-action control is wired and callable in-process.",
+    },
+    "browser_interaction_eval": {
+        "step_type": "intercept",
+        "title": "Browser Control Evaluation",
+        "actor": "browser_extension",
+        "target_surface": "browser",
+        "support_status": "executable_now",
+        "support_reason": (
+            "Server-side browser control (the evaluation the Hawk extension calls) runs in-process; "
+            "the live Chromium capture leg needs the Playwright browser executor."
+        ),
+    },
     "browser_navigate": {
         "step_type": "navigate",
         "title": "Browser Navigate",

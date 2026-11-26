@@ -23,6 +23,15 @@ API_KEY_PATTERN = re.compile(
     r"(?i)\b(?:api[_-]?key|secret|private[_ -]?key|token)\b[\s:=]{0,3}[A-Za-z0-9_\-]{6,}"
 )
 LONG_SECRET_PATTERN = re.compile(r"\b(?:sk|pk|ghp|xoxb|xoxp|AIza)[A-Za-z0-9_\-]{10,}\b")
+# Credentials the two patterns above miss: an AWS access key id carries no keyword at all, and in
+# ``AWS_SECRET_ACCESS_KEY=...`` or ``password: ...`` the keyword sits inside an identifier (``_`` is a word character,
+# so ``\bsecret\b`` never matches there) or is not one of the keywords above. Found by the attack-simulation catalogue
+# (SIM-DATA secret_harvesting).
+AWS_ACCESS_KEY_ID_PATTERN = re.compile(r"\b(?:AKIA|ASIA)[0-9A-Z]{16}\b")
+CREDENTIAL_ASSIGNMENT_PATTERN = re.compile(
+    r"(?i)(?<![A-Za-z0-9])(?:[A-Za-z0-9]+_)*(?:secret_access_key|secret_key|access_key|client_secret|password|passwd)"
+    r"\s*[:=]\s*[\"']?([^\s\"',;]{6,})"
+)
 EMIRATES_ID_STRICT_PATTERN = re.compile(r"(?<!\d)784-?\d{4}-?\d{7}-?\d(?!\d)")
 EMIRATES_ID_CONTEXT_PATTERN = re.compile(
     r"(?i)\b(?:emirates\s*id|uae\s*(?:id|national\s*id)|eid)\b[^\n\r]{0,24}\b\d{12,18}\b"
@@ -127,6 +136,10 @@ def _regex_entities(text: str) -> list[dict[str, Any]]:
         rows.append(_entity_row(entity_type="api_key", value=match, confidence=0.94, source="regex"))
     for match in LONG_SECRET_PATTERN.findall(text):
         rows.append(_entity_row(entity_type="api_key", value=match, confidence=0.92, source="regex"))
+    for match in AWS_ACCESS_KEY_ID_PATTERN.findall(text):
+        rows.append(_entity_row(entity_type="api_key", value=match, confidence=0.95, source="regex"))
+    for match in CREDENTIAL_ASSIGNMENT_PATTERN.finditer(text):
+        rows.append(_entity_row(entity_type="api_key", value=match.group(1), confidence=0.9, source="regex"))
     for match in EMIRATES_ID_STRICT_PATTERN.findall(text):
         rows.append(_entity_row(entity_type="emirates_id", value=match, confidence=0.99, source="regex"))
     for match in EMIRATES_ID_CONTEXT_PATTERN.findall(text):
@@ -166,6 +179,8 @@ def private_sensitive_spans(text: str) -> list[tuple[int, int, str]]:
         (EMIRATES_ID_STRICT_PATTERN, "emirates_id", 1, 0),
         (EMAIL_PATTERN, "email", 1, 0),
         (LONG_SECRET_PATTERN, "api_key", 1, 0),
+        (AWS_ACCESS_KEY_ID_PATTERN, "api_key", 1, 0),
+        (CREDENTIAL_ASSIGNMENT_PATTERN, "api_key", 2, 1),
         (API_KEY_PATTERN, "api_key", 2, 0),
         (CC_PATTERN, "credit_card", 3, 0),
         (PHONE_PATTERN, "phone", 4, 0),

@@ -63,7 +63,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -132,7 +132,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -199,7 +199,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -266,7 +266,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -335,7 +335,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -402,7 +402,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -471,7 +471,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -484,7 +484,7 @@
     "adversarial_intent": "abuse drifted permissions",
     "target_surface": "agent",
     "required_executor": "agent_executor",
-    "executable_status": "executable_now",
+    "executable_status": "expected_gap",
     "preconditions": [
       "identity_registry_active",
       "scope_policies_loaded"
@@ -538,7 +538,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -605,7 +605,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -674,7 +674,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -741,7 +741,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -754,7 +754,7 @@
     "adversarial_intent": "reuse token beyond scope",
     "target_surface": "agent",
     "required_executor": "agent_executor",
-    "executable_status": "executable_now",
+    "executable_status": "expected_gap",
     "preconditions": [
       "identity_registry_active",
       "scope_policies_loaded"
@@ -810,7 +810,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -877,7 +877,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -944,7 +944,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1013,7 +1013,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1026,7 +1026,7 @@
     "adversarial_intent": "impersonate trusted identity",
     "target_surface": "agent",
     "required_executor": "agent_executor",
-    "executable_status": "executable_now",
+    "executable_status": "expected_gap",
     "preconditions": [
       "identity_registry_active",
       "scope_policies_loaded"
@@ -1080,7 +1080,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1149,7 +1149,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1216,7 +1216,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1229,7 +1229,7 @@
     "adversarial_intent": "operate under unowned identity",
     "target_surface": "agent",
     "required_executor": "agent_executor",
-    "executable_status": "partially_executable",
+    "executable_status": "executable_now",
     "preconditions": [
       "identity_registry_active",
       "scope_policies_loaded"
@@ -1283,7 +1283,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1296,7 +1296,7 @@
     "adversarial_intent": "abuse delegated privileges",
     "target_surface": "agent",
     "required_executor": "agent_executor",
-    "executable_status": "partially_executable",
+    "executable_status": "expected_gap",
     "preconditions": [
       "identity_registry_active",
       "scope_policies_loaded"
@@ -1352,7 +1352,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1365,7 +1365,7 @@
     "adversarial_intent": "impersonate trusted identity",
     "target_surface": "agent",
     "required_executor": "agent_executor",
-    "executable_status": "partially_executable",
+    "executable_status": "executable_now",
     "preconditions": [
       "identity_registry_active",
       "scope_policies_loaded"
@@ -1419,7 +1419,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1432,7 +1432,7 @@
     "adversarial_intent": "reuse token beyond scope",
     "target_surface": "agent",
     "required_executor": "agent_executor",
-    "executable_status": "partially_executable",
+    "executable_status": "executable_now",
     "preconditions": [
       "identity_registry_active",
       "scope_policies_loaded"
@@ -1488,7 +1488,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1500,8 +1500,8 @@
     "description": "Use stale over-broad grants to perform restricted actions.",
     "adversarial_intent": "abuse drifted permissions",
     "target_surface": "gateway",
-    "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
     "preconditions": [
       "identity_registry_active",
       "scope_policies_loaded"
@@ -1555,7 +1555,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1567,8 +1567,8 @@
     "description": "Trigger actions from orphaned/non-owned AI identities.",
     "adversarial_intent": "operate under unowned identity",
     "target_surface": "gateway",
-    "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "required_executor": "agent_executor",
+    "executable_status": "expected_gap",
     "preconditions": [
       "identity_registry_active",
       "scope_policies_loaded"
@@ -1622,7 +1622,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1634,8 +1634,8 @@
     "description": "Exploit delegated rights after context changes.",
     "adversarial_intent": "abuse delegated privileges",
     "target_surface": "gateway",
-    "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
     "preconditions": [
       "identity_registry_active",
       "scope_policies_loaded"
@@ -1691,7 +1691,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1703,8 +1703,8 @@
     "description": "Use mismatched identity claims to gain elevated access.",
     "adversarial_intent": "impersonate trusted identity",
     "target_surface": "gateway",
-    "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
     "preconditions": [
       "identity_registry_active",
       "scope_policies_loaded"
@@ -1758,7 +1758,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1770,8 +1770,8 @@
     "description": "Replay access tokens across unauthorized scopes.",
     "adversarial_intent": "reuse token beyond scope",
     "target_surface": "gateway",
-    "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
     "preconditions": [
       "identity_registry_active",
       "scope_policies_loaded"
@@ -1827,7 +1827,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1839,8 +1839,8 @@
     "description": "Use stale over-broad grants to perform restricted actions.",
     "adversarial_intent": "abuse drifted permissions",
     "target_surface": "gateway",
-    "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "required_executor": "agent_executor",
+    "executable_status": "expected_gap",
     "preconditions": [
       "identity_registry_active",
       "scope_policies_loaded"
@@ -1894,7 +1894,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1906,8 +1906,8 @@
     "description": "Trigger actions from orphaned/non-owned AI identities.",
     "adversarial_intent": "operate under unowned identity",
     "target_surface": "gateway",
-    "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
     "preconditions": [
       "identity_registry_active",
       "scope_policies_loaded"
@@ -1961,7 +1961,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1973,8 +1973,8 @@
     "description": "Exploit delegated rights after context changes.",
     "adversarial_intent": "abuse delegated privileges",
     "target_surface": "gateway",
-    "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
     "preconditions": [
       "identity_registry_active",
       "scope_policies_loaded"
@@ -2030,7 +2030,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -2042,8 +2042,8 @@
     "description": "Use mismatched identity claims to gain elevated access.",
     "adversarial_intent": "impersonate trusted identity",
     "target_surface": "gateway",
-    "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
     "preconditions": [
       "identity_registry_active",
       "scope_policies_loaded"
@@ -2097,7 +2097,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -2109,8 +2109,8 @@
     "description": "Replay access tokens across unauthorized scopes.",
     "adversarial_intent": "reuse token beyond scope",
     "target_surface": "gateway",
-    "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "required_executor": "agent_executor",
+    "executable_status": "expected_gap",
     "preconditions": [
       "identity_registry_active",
       "scope_policies_loaded"
@@ -2166,7 +2166,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -2178,8 +2178,8 @@
     "description": "Use stale over-broad grants to perform restricted actions.",
     "adversarial_intent": "abuse drifted permissions",
     "target_surface": "gateway",
-    "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
     "preconditions": [
       "identity_registry_active",
       "scope_policies_loaded"
@@ -2233,7 +2233,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -2245,8 +2245,8 @@
     "description": "Trigger actions from orphaned/non-owned AI identities.",
     "adversarial_intent": "operate under unowned identity",
     "target_surface": "gateway",
-    "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
     "preconditions": [
       "identity_registry_active",
       "scope_policies_loaded"
@@ -2300,7 +2300,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -2312,8 +2312,8 @@
     "description": "Exploit delegated rights after context changes.",
     "adversarial_intent": "abuse delegated privileges",
     "target_surface": "gateway",
-    "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "required_executor": "agent_executor",
+    "executable_status": "executable_now",
     "preconditions": [
       "identity_registry_active",
       "scope_policies_loaded"
@@ -2369,7 +2369,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -2447,7 +2447,7 @@
       "tmpl_scope_rotation"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   }
 ]

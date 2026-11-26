@@ -73,7 +73,13 @@ def test_catalog_files_cover_required_taxonomy_and_mapping() -> None:
 
         assert str(entry.get("simulation_id") or "").strip()
         assert str(entry.get("required_executor") or "").strip()
-        assert str(entry.get("executable_status") or "").strip() in {"executable_now", "partially_executable", "not_yet_executable"}
+        assert str(entry.get("executable_status") or "").strip() in {
+            "executable_now",
+            "partially_executable",
+            "not_yet_executable",
+            "expected_gap",
+            "requires_environment",
+        }
         assert isinstance(entry.get("control_ids"), list) and len(entry.get("control_ids") or []) > 0
         assert isinstance(entry.get("framework_mappings"), list) and len(entry.get("framework_mappings") or []) > 0
 

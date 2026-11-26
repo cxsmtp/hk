@@ -4164,6 +4164,10 @@ export type SimulationCatalogCoverage = {
   executable_now: number;
   partially_executable: number;
   not_yet_executable: number;
+  /** Runner executes but Hawk AI does not meet the catalogue's expected outcome: never counted as executable. */
+  expected_gap?: number;
+  /** Needs a system outside Hawk AI (model registry, OCR engine...): never counted as executable. */
+  requires_environment?: number;
   coverage_ratio: number;
   required_by_category: Record<string, number>;
   by_executable_status: Record<string, number>;
@@ -4175,6 +4179,8 @@ export type SimulationCatalogCoverage = {
       executable_now: number;
       partially_executable: number;
       not_yet_executable: number;
+      expected_gap?: number;
+      requires_environment?: number;
     }
   >;
   coverage_by_framework: Record<
@@ -4185,6 +4191,8 @@ export type SimulationCatalogCoverage = {
       executable_now: number;
       partially_executable: number;
       not_yet_executable: number;
+      expected_gap?: number;
+      requires_environment?: number;
     }
   >;
   coverage_by_control: Record<
@@ -4195,6 +4203,8 @@ export type SimulationCatalogCoverage = {
       executable_now: number;
       partially_executable: number;
       not_yet_executable: number;
+      expected_gap?: number;
+      requires_environment?: number;
     }
   >;
   by_category: Record<
@@ -4205,8 +4215,16 @@ export type SimulationCatalogCoverage = {
       executable_now: number;
       partially_executable: number;
       not_yet_executable: number;
+      expected_gap?: number;
+      requires_environment?: number;
     }
   >;
+  execution_truth?: {
+    principle: string;
+    report: string;
+    expected_gaps: Array<{ simulation_id: string; expected_decision: string; observed_decision: string; reason: string }>;
+    requires_environment: Array<{ simulation_id: string; requirements: string[] }>;
+  };
 };
 
 export type SimulationCoverageSummary = {

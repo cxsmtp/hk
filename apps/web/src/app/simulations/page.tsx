@@ -44,7 +44,7 @@ function toneForResult(result?: string) {
 function toneForExecutionStatus(status?: string) {
   const value = String(status || "").toLowerCase();
   if (value === "executable_now") return "success" as const;
-  if (value === "partially_executable") return "warning" as const;
+  if (value === "partially_executable" || value === "expected_gap" || value === "requires_environment") return "warning" as const;
   return "critical" as const;
 }
 
@@ -728,7 +728,22 @@ export default function SimulationsPage() {
         String(row.executable_now),
         String(row.partially_executable),
         String(row.not_yet_executable),
+        String(asNumber(row.expected_gap, 0)),
+        String(asNumber(row.requires_environment, 0)),
       ]);
+  }, [catalogCoverage]);
+
+  const catalogTruthRows = useMemo(() => {
+    const truth = catalogCoverage?.execution_truth;
+    if (!truth) return [] as Array<Array<string>>;
+    return [
+      ...truth.expected_gaps.map((row) => [
+        row.simulation_id,
+        `Expected gap (expects ${row.expected_decision}, observes ${row.observed_decision})`,
+        row.reason,
+      ]),
+      ...truth.requires_environment.map((row) => [row.simulation_id, "Needs environment", row.requirements.join(" ")]),
+    ];
   }, [catalogCoverage]);
 
   const executionReadinessPercent = useMemo(() => {
@@ -749,6 +764,8 @@ export default function SimulationsPage() {
         String(asNumber(row?.executable_now, 0)),
         String(asNumber(row?.partially_executable, 0)),
         String(asNumber(row?.not_yet_executable, 0)),
+        String(asNumber(row?.expected_gap, 0)),
+        String(asNumber(row?.requires_environment, 0)),
       ]);
   }, [catalogCoverage]);
 
@@ -764,6 +781,8 @@ export default function SimulationsPage() {
         String(asNumber(row?.executable_now, 0)),
         String(asNumber(row?.partially_executable, 0)),
         String(asNumber(row?.not_yet_executable, 0)),
+        String(asNumber(row?.expected_gap, 0)),
+        String(asNumber(row?.requires_environment, 0)),
       ]);
   }, [catalogCoverage]);
 
@@ -1010,6 +1029,12 @@ export default function SimulationsPage() {
                 </div>
                 <div className="rounded-md border border-[#2a3348] bg-[#101524] px-2 py-1">
                   Implemented: {sourceStates.catalogCoverage === "error" ? "Unavailable" : catalogCoverage?.total_implemented ?? 0}
+                </div>
+                <div className="rounded-md border border-[#2a3348] bg-[#101524] px-2 py-1" title="The runner executes, but Hawk AI does not produce the outcome the catalogue expects. Not counted as executable.">
+                  Expected gap: {sourceStates.catalogCoverage === "error" ? "Unavailable" : catalogCoverage?.expected_gap ?? 0}
+                </div>
+                <div className="rounded-md border border-[#2a3348] bg-[#101524] px-2 py-1" title="Needs a system outside Hawk AI, such as a model registry or an OCR engine. Not counted as executable.">
+                  Needs environment: {sourceStates.catalogCoverage === "error" ? "Unavailable" : catalogCoverage?.requires_environment ?? 0}
                 </div>
               </div>
               <p className="mt-3 text-xs text-slate-400">Execution readiness: {sourceStates.catalogCoverage === "error" ? "Unavailable" : `${executionReadinessPercent}% executable now`}</p>
@@ -1264,11 +1289,16 @@ export default function SimulationsPage() {
               emptyLabel={sourceStates.executors === "error" ? "Unavailable: executor registry did not respond." : "No executors are currently reported."}
             />
           </PageSection>
-          <PageSection title="Catalog Coverage View" description="Defined vs implemented and executor-backed coverage by category.">
+          <PageSection title="Catalog Coverage View" description="Defined vs implemented and executor-backed coverage by category. Expected gaps and scenarios that need an outside environment are never counted as executable.">
             <SimpleTable
-              columns={["Category", "Defined", "Implemented", "Executable", "Partial", "Not Yet"]}
+              columns={["Category", "Defined", "Implemented", "Executable", "Partial", "Not Yet", "Expected gap", "Needs environment"]}
               rows={catalogCategoryRows}
               emptyLabel={sourceStates.catalogCoverage === "error" ? "Unavailable: catalog coverage did not respond." : "No catalog coverage is available."}
+            />
+            <SimpleTable
+              columns={["Scenario", "Status", "Why it is not executable"]}
+              rows={catalogTruthRows}
+              emptyLabel={sourceStates.catalogCoverage === "error" ? "Unavailable: catalog coverage did not respond." : "Every catalogued scenario is executable."}
             />
           </PageSection>
         </div>
@@ -1276,14 +1306,14 @@ export default function SimulationsPage() {
         <div className="grid gap-4 xl:grid-cols-2">
           <PageSection title="Framework Coverage" description="How many adversarial simulations are mapped per framework and readiness status.">
             <SimpleTable
-              columns={["Framework", "Mapped Sims", "Implemented", "Executable", "Partial", "Not Yet"]}
+              columns={["Framework", "Mapped Sims", "Implemented", "Executable", "Partial", "Not Yet", "Expected gap", "Needs environment"]}
               rows={frameworkCoverageRows}
               emptyLabel={sourceStates.definitions === "error" ? "Unavailable: definition catalog did not respond." : "No framework coverage is available."}
             />
           </PageSection>
           <PageSection title="Control Coverage" description="Top control_ids exercised by the persisted adversarial catalog.">
             <SimpleTable
-              columns={["Control ID", "Mapped Sims", "Implemented", "Executable", "Partial", "Not Yet"]}
+              columns={["Control ID", "Mapped Sims", "Implemented", "Executable", "Partial", "Not Yet", "Expected gap", "Needs environment"]}
               rows={controlCoverageRows}
               emptyLabel={sourceStates.definitions === "error" ? "Unavailable: definition catalog did not respond." : "No control coverage is available."}
             />

@@ -45,6 +45,17 @@ BASE_EXECUTOR_TEMPLATES: tuple[ExecutorTemplate, ...] = (
         requires=("playwright_runner", "browser_execution_enabled"),
     ),
     ExecutorTemplate(
+        # The server-side browser control: the evaluation the Hawk extension asks the API for, run in-process with
+        # the payload the extension sends. The live Chromium capture leg stays with browser_executor (Playwright).
+        name="browser_control_executor",
+        supported_surfaces=("browser",),
+        supported_categories=("injection", "leakage", "output_safety"),
+        supported_simulation_ids=(),
+        status="active",
+        evidence_types=("runtime_event", "policy_decision", "simulation_result"),
+        requires=("browser_interaction_eval",),
+    ),
+    ExecutorTemplate(
         name="gateway_executor",
         supported_surfaces=("gateway", "api"),
         supported_categories=ALL_CATEGORIES,
@@ -67,7 +78,9 @@ BASE_EXECUTOR_TEMPLATES: tuple[ExecutorTemplate, ...] = (
         supported_surfaces=("gateway", "browser"),
         supported_categories=("rag_poisoning",),
         supported_simulation_ids=(),
-        status="experimental",
+        # Retrieved context is inspected at the gateway (llm_intercept context); every catalogue RAG scenario has a
+        # runner in the unit suite (app/services/simulation_catalog_runners.py), so the executor is no longer partial.
+        status="active",
         evidence_types=("runtime_event", "policy_decision", "simulation_result"),
         requires=("retrieval_context_signal",),
     ),
