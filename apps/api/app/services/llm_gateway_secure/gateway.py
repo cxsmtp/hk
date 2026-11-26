@@ -31,6 +31,7 @@ from app.services.llm_gateway_secure.schemas import (
 from app.services.llm_gateway_secure.transport_security import validate_transport_security
 from app.services.runtime_intelligence.decision_impact_scoring import score_runtime_recommendation_impact
 from app.services.sensitive_data_detection_service import detect_sensitive_data
+from app.services.detection.injection_engine import assess as assess_prompt_injection
 from app.services.privacy_sanitizer import redact_sensitive_text
 
 if TYPE_CHECKING:
@@ -416,6 +417,17 @@ def _pre_call_guard(
     for pattern in _PROMPT_INJECTION_PATTERNS:
         if pattern.search(text):
             matches.append(pattern.pattern)
+    # The layered engine (normalisation, rules, classifier) on the user's prompt; the system prompt is the operator's.
+    injection: dict[str, Any] | None = None
+    try:
+        verdict = assess_prompt_injection(user_prompt, scope="direct")
+        injection = verdict.to_dict()
+        if verdict.action in {"block", "hold"}:
+            matches.extend(code for code in verdict.reason_codes if code.startswith("pi.rule.") or code == "pi.classifier")
+            if not any(code.startswith("pi.") for code in matches):
+                matches.append("pi.engine")
+    except Exception:  # noqa: BLE001 - the patterns above still apply
+        injection = None
 
     violations: list[str] = []
     actions: list[str] = []
@@ -439,6 +451,7 @@ def _pre_call_guard(
                 "violations": violations,
                 "actions": actions,
                 "prompt_injection_matches": matches,
+                "prompt_injection": injection,
                 "sensitive_detected": contains_sensitive,
                 "sensitive_entities": list(detection.get("entities") or []),
             },
@@ -451,6 +464,7 @@ def _pre_call_guard(
             "violations": [],
             "actions": actions,
             "prompt_injection_matches": matches,
+            "prompt_injection": injection,
             "sensitive_detected": contains_sensitive,
             "sensitive_entities": list(detection.get("entities") or []),
         },

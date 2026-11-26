@@ -1,0 +1,248 @@
+{"id": "dlp-0001", "text": "Customer paid with card number 4620 9665 4287 0724 yesterday.", "labels": ["credit_card"], "note": "card"}
+{"id": "dlp-0002", "text": "Refund the transaction on 4971-0282-2512-3932 please", "labels": ["credit_card"], "note": "card"}
+{"id": "dlp-0003", "text": "Customer paid with card number 4045052855966545 yesterday.", "labels": ["credit_card"], "note": "card"}
+{"id": "dlp-0004", "text": "Refund the transaction on 5159 8747 1742 9241 please", "labels": ["credit_card"], "note": "card"}
+{"id": "dlp-0005", "text": "Refund the transaction on 5141-1667-7373-1979 please", "labels": ["credit_card"], "note": "card"}
+{"id": "dlp-0006", "text": "Please charge my Mastercard card 5186335386140839, expiry 09/28.", "labels": ["credit_card"], "note": "card"}
+{"id": "dlp-0007", "text": "Refund the transaction on 3760 0869 9346 739 please", "labels": ["credit_card"], "note": "card"}
+{"id": "dlp-0008", "text": "Refund the transaction on 3753-2680-8617-936 please", "labels": ["credit_card"], "note": "card"}
+{"id": "dlp-0009", "text": "Customer paid with card number 375418820020874 yesterday.", "labels": ["credit_card"], "note": "card"}
+{"id": "dlp-0010", "text": "Please charge my Discover card 6011 3355 2513 7794, expiry 09/28.", "labels": ["credit_card"], "note": "card"}
+{"id": "dlp-0011", "text": "Please charge my Discover card 6011-4435-1292-2127, expiry 09/28.", "labels": ["credit_card"], "note": "card"}
+{"id": "dlp-0012", "text": "Customer paid with card number 6011951072463829 yesterday.", "labels": ["credit_card"], "note": "card"}
+{"id": "dlp-0013", "text": "card: 3589 7627 1134 8605", "labels": ["credit_card"], "note": "card"}
+{"id": "dlp-0014", "text": "Customer paid with card number 3569-6242-0705-7864 yesterday.", "labels": ["credit_card"], "note": "card"}
+{"id": "dlp-0015", "text": "card: 3522563357148337", "labels": ["credit_card"], "note": "card"}
+{"id": "dlp-0016", "text": "Customer paid with card number 2221 4027 1762 5112 yesterday.", "labels": ["credit_card"], "note": "card"}
+{"id": "dlp-0017", "text": "Refund the transaction on 2221-1332-9059-9701 please", "labels": ["credit_card"], "note": "card"}
+{"id": "dlp-0018", "text": "Please charge my Mastercard card 2221628480978714, expiry 09/28.", "labels": ["credit_card"], "note": "card"}
+{"id": "dlp-0019", "text": "Card ４２７３４４４３６６４８０３４３", "labels": ["credit_card"], "note": "fullwidth digits"}
+{"id": "dlp-0020", "text": "my card is 5 6 1 9 7 7 0 5 0 4 4 3 5 7 7 7", "labels": ["credit_card"], "note": "spaced digits"}
+{"id": "dlp-0021", "text": "Pay with 4057​5752​2149​4706", "labels": ["credit_card"], "note": "zero width separators"}
+{"id": "dlp-0022", "text": "Order reference 4049161248292118 has shipped.", "labels": [], "note": "luhn invalid"}
+{"id": "dlp-0023", "text": "Order reference 4248401877180336 has shipped.", "labels": [], "note": "luhn invalid"}
+{"id": "dlp-0024", "text": "Order reference 4738746418381372 has shipped.", "labels": [], "note": "luhn invalid"}
+{"id": "dlp-0025", "text": "Order reference 4325355094327722 has shipped.", "labels": [], "note": "luhn invalid"}
+{"id": "dlp-0026", "text": "Order reference 4595138071710950 has shipped.", "labels": [], "note": "luhn invalid"}
+{"id": "dlp-0027", "text": "Order reference 4658073554637194 has shipped.", "labels": [], "note": "luhn invalid"}
+{"id": "dlp-0028", "text": "Tracking number 1Z999AA10123456784 is in transit.", "labels": [], "note": "ups tracking"}
+{"id": "dlp-0029", "text": "Invoice 2024-0001-5523-9981 was paid on time.", "labels": [], "note": "invoice number"}
+{"id": "dlp-0030", "text": "Our phone conference ID is 1234 5678 9012 3456.", "labels": [], "note": "luhn invalid id"}
+{"id": "dlp-0031", "text": "ISBN 978-0-306-40615-7 is the reference edition.", "labels": [], "note": "isbn"}
+{"id": "dlp-0032", "text": "The build number is 20241126153045 for this release.", "labels": [], "note": "timestamp-ish"}
+{"id": "dlp-0033", "text": "Please wire the deposit to IBAN DE89370400440532013000.", "labels": ["iban"], "note": "iban"}
+{"id": "dlp-0034", "text": "Beneficiary account: GB29 NWBK 6016 1331 9268 19", "labels": ["iban"], "note": "iban"}
+{"id": "dlp-0035", "text": "Beneficiary account: FR1420041010050500013M02606", "labels": ["iban"], "note": "iban"}
+{"id": "dlp-0036", "text": "Beneficiary account: AE07 0331 2345 6789 0123 456", "labels": ["iban"], "note": "iban"}
+{"id": "dlp-0037", "text": "Beneficiary account: NL91ABNA0417164300", "labels": ["iban"], "note": "iban"}
+{"id": "dlp-0038", "text": "Beneficiary account: ES91 2100 0418 4502 0005 1332", "labels": ["iban"], "note": "iban"}
+{"id": "dlp-0039", "text": "Our bank details changed, new IBAN is SA0380000000608010167519", "labels": ["iban"], "note": "iban"}
+{"id": "dlp-0040", "text": "Our bank details changed, new IBAN is CH93 0076 2011 6238 5295 7", "labels": ["iban"], "note": "iban"}
+{"id": "dlp-0041", "text": "Beneficiary account: IT60X0542811101000000123456", "labels": ["iban"], "note": "iban"}
+{"id": "dlp-0042", "text": "Beneficiary account: QA58 DOHB 0000 1234 5678 90AB CDEF G", "labels": ["iban"], "note": "iban"}
+{"id": "dlp-0043", "text": "Reference code DE89170400440532013000 for the shipment.", "labels": [], "note": "iban bad checksum"}
+{"id": "dlp-0044", "text": "Reference code GB291WBK60161331926819 for the shipment.", "labels": [], "note": "iban bad checksum"}
+{"id": "dlp-0045", "text": "Reference code FR1410041010050500013M02606 for the shipment.", "labels": [], "note": "iban bad checksum"}
+{"id": "dlp-0046", "text": "Reference code AE071331234567890123456 for the shipment.", "labels": [], "note": "iban bad checksum"}
+{"id": "dlp-0047", "text": "Reference code NL911BNA0417164300 for the shipment.", "labels": [], "note": "iban bad checksum"}
+{"id": "dlp-0048", "text": "Use promo code DE12SUMMERSALE2024 at checkout.", "labels": [], "note": "promo code"}
+{"id": "dlp-0049", "text": "Her ID number is 784196441276845.", "labels": ["emirates_id"], "note": "eid"}
+{"id": "dlp-0050", "text": "Her ID number is 784-1963-5912573-7.", "labels": ["emirates_id"], "note": "eid"}
+{"id": "dlp-0051", "text": "Applicant Emirates ID: 784-1988-4671914-8", "labels": ["emirates_id"], "note": "eid"}
+{"id": "dlp-0052", "text": "EID 784197986644587 for the visa renewal", "labels": ["emirates_id"], "note": "eid"}
+{"id": "dlp-0053", "text": "Her ID number is 784-1972-8710601-3.", "labels": ["emirates_id"], "note": "eid"}
+{"id": "dlp-0054", "text": "Applicant Emirates ID: 784-1998-0735326-5", "labels": ["emirates_id"], "note": "eid"}
+{"id": "dlp-0055", "text": "Her ID number is 784197502564855.", "labels": ["emirates_id"], "note": "eid"}
+{"id": "dlp-0056", "text": "Her ID number is 784-1992-1473860-3.", "labels": ["emirates_id"], "note": "eid"}
+{"id": "dlp-0057", "text": "Applicant Emirates ID: 784-1966-2955441-9", "labels": ["emirates_id"], "note": "eid"}
+{"id": "dlp-0058", "text": "Applicant Emirates ID: 784198328562503", "labels": ["emirates_id"], "note": "eid"}
+{"id": "dlp-0059", "text": "هوية: ٧٨٤٢٠٠٨٦٣٣٧٤١٧٧", "labels": ["emirates_id"], "note": "arabic-indic digits"}
+{"id": "dlp-0060", "text": "Ticket 784200502917205 logged by support.", "labels": [], "note": "eid bad check digit"}
+{"id": "dlp-0061", "text": "Ticket 784199660896104 logged by support.", "labels": [], "note": "eid bad check digit"}
+{"id": "dlp-0062", "text": "Ticket 784198885414925 logged by support.", "labels": [], "note": "eid bad check digit"}
+{"id": "dlp-0063", "text": "Ticket 784197865760752 logged by support.", "labels": [], "note": "eid bad check digit"}
+{"id": "dlp-0064", "text": "Employee SSN: 635-65-0018", "labels": ["us_ssn"], "note": "ssn"}
+{"id": "dlp-0065", "text": "Employee SSN: 107-01-0188", "labels": ["us_ssn"], "note": "ssn"}
+{"id": "dlp-0066", "text": "Social security number 278-15-4116 on the W-2.", "labels": ["us_ssn"], "note": "ssn"}
+{"id": "dlp-0067", "text": "Social security number 120-54-7528 on the W-2.", "labels": ["us_ssn"], "note": "ssn"}
+{"id": "dlp-0068", "text": "Taxpayer 242-94-1700 filed late.", "labels": ["us_ssn"], "note": "ssn"}
+{"id": "dlp-0069", "text": "Taxpayer 706-50-5573 filed late.", "labels": ["us_ssn"], "note": "ssn"}
+{"id": "dlp-0070", "text": "Her SSN is 005-70-3128, please verify.", "labels": ["us_ssn"], "note": "ssn"}
+{"id": "dlp-0071", "text": "Social security number 017-38-3677 on the W-2.", "labels": ["us_ssn"], "note": "ssn"}
+{"id": "dlp-0072", "text": "Taxpayer 640-71-5630 filed late.", "labels": ["us_ssn"], "note": "ssn"}
+{"id": "dlp-0073", "text": "Social security number 832-67-5424 on the W-2.", "labels": ["us_ssn"], "note": "ssn"}
+{"id": "dlp-0074", "text": "SSN 123456780 (no dashes) for the background check", "labels": ["us_ssn"], "note": "unformatted with context"}
+{"id": "dlp-0075", "text": "Part number 000-12-3456 is out of stock.", "labels": [], "note": "invalid ssn"}
+{"id": "dlp-0076", "text": "Part number 666-45-1234 is out of stock.", "labels": [], "note": "invalid ssn"}
+{"id": "dlp-0077", "text": "Part number 912-34-5678 is out of stock.", "labels": [], "note": "invalid ssn"}
+{"id": "dlp-0078", "text": "Part number 123-00-4567 is out of stock.", "labels": [], "note": "invalid ssn"}
+{"id": "dlp-0079", "text": "Part number 078-05-1120 is out of stock.", "labels": [], "note": "invalid ssn"}
+{"id": "dlp-0080", "text": "Call extension 555-01-2345 for facilities.", "labels": [], "note": ""}
+{"id": "dlp-0081", "text": "NI number: ME 10 24 42 D", "labels": ["uk_nino"], "note": "nino"}
+{"id": "dlp-0082", "text": "Payroll record NINO MB 27 02 47 C", "labels": ["uk_nino"], "note": "nino"}
+{"id": "dlp-0083", "text": "NI number: EP 25 97 04 D", "labels": ["uk_nino"], "note": "nino"}
+{"id": "dlp-0084", "text": "National Insurance number XS 70 51 78 A", "labels": ["uk_nino"], "note": "nino"}
+{"id": "dlp-0085", "text": "National Insurance number AH 98 15 95 A", "labels": ["uk_nino"], "note": "nino"}
+{"id": "dlp-0086", "text": "Payroll record NINO BH 12 75 13 C", "labels": ["uk_nino"], "note": "nino"}
+{"id": "dlp-0087", "text": "National Insurance number JN 56 79 14 A", "labels": ["uk_nino"], "note": "nino"}
+{"id": "dlp-0088", "text": "NI number: NM 28 94 40 D", "labels": ["uk_nino"], "note": "nino"}
+{"id": "dlp-0089", "text": "Product code QQ 12 34 56 A discontinued.", "labels": [], "note": "invalid nino"}
+{"id": "dlp-0090", "text": "Product code BG 12 34 56 C discontinued.", "labels": [], "note": "invalid nino"}
+{"id": "dlp-0091", "text": "Product code AB 12 34 56 E discontinued.", "labels": [], "note": "invalid nino"}
+{"id": "dlp-0092", "text": "Product code DA 12 34 56 A discontinued.", "labels": [], "note": "invalid nino"}
+{"id": "dlp-0093", "text": "Scanned passport page:\nP<GBRHADDAD<<LAYLA<<<<<<<<<<<<<<<<<<<<<<<<<<\nW953359484GBR9608188M2805209<<<<<<<<<<<<<<06", "labels": ["passport"], "note": "mrz"}
+{"id": "dlp-0094", "text": "Scanned passport page:\nP<GBRBECKER<<TOM<<<<<<<<<<<<<<<<<<<<<<<<<<<<\nL769665947GBR6401207M2810261<<<<<<<<<<<<<<08", "labels": ["passport"], "note": "mrz"}
+{"id": "dlp-0095", "text": "Scanned passport page:\nP<GBRNAIR<<PRIYA<<<<<<<<<<<<<<<<<<<<<<<<<<<<\nH816108072GBR6003014M2909015<<<<<<<<<<<<<<04", "labels": ["passport"], "note": "mrz"}
+{"id": "dlp-0096", "text": "Scanned passport page:\nP<GBROKAFOR<<AMARA<<<<<<<<<<<<<<<<<<<<<<<<<<\nG447063060GBR7907223M3405101<<<<<<<<<<<<<<00", "labels": ["passport"], "note": "mrz"}
+{"id": "dlp-0097", "text": "Passport number: X1234567, issued in London.", "labels": ["passport"], "note": "passport context"}
+{"id": "dlp-0098", "text": "Passport number: P98765432, issued in London.", "labels": ["passport"], "note": "passport context"}
+{"id": "dlp-0099", "text": "Passport number: AB1234567, issued in London.", "labels": ["passport"], "note": "passport context"}
+{"id": "dlp-0100", "text": "Passport number: K7654321, issued in London.", "labels": ["passport"], "note": "passport context"}
+{"id": "dlp-0101", "text": "The passport office opens at 9am on Sundays.", "labels": [], "note": "passport word only"}
+{"id": "dlp-0102", "text": "email: layla.haddad@mail.example.net", "labels": ["email"], "note": "email"}
+{"id": "dlp-0103", "text": "Send it to omar.rahman@corp.example.org", "labels": ["email"], "note": "email"}
+{"id": "dlp-0104", "text": "Send it to priya.nair@corp.example.org", "labels": ["email"], "note": "email"}
+{"id": "dlp-0105", "text": "email: tom.becker@mail.example.net", "labels": ["email"], "note": "email"}
+{"id": "dlp-0106", "text": "email: sofia.rossi@mail.example.net", "labels": ["email"], "note": "email"}
+{"id": "dlp-0107", "text": "email: chen.wei@mail.example.net", "labels": ["email"], "note": "email"}
+{"id": "dlp-0108", "text": "Contact amara.okafor@example.com about the invoice.", "labels": ["email"], "note": "email"}
+{"id": "dlp-0109", "text": "Contact lucas.martin@example.com about the invoice.", "labels": ["email"], "note": "email"}
+{"id": "dlp-0110", "text": "Reach me at layla [at] example [dot] com", "labels": ["email"], "note": "obfuscated email"}
+{"id": "dlp-0111", "text": "Write to o​mar@exam​ple.com", "labels": ["email"], "note": "zero width email"}
+{"id": "dlp-0112", "text": "Use the @mention feature to notify teammates.", "labels": [], "note": ""}
+{"id": "dlp-0113", "text": "The logo is at assets/logo@2x.png in the repo.", "labels": [], "note": "retina asset"}
+{"id": "dlp-0114", "text": "Call me on +971 50 123 4567", "labels": ["phone"], "note": "phone"}
+{"id": "dlp-0115", "text": "WhatsApp +44 20 7946 0958 after 5pm", "labels": ["phone"], "note": "phone"}
+{"id": "dlp-0116", "text": "Mobile: +1 (415) 555-0132", "labels": ["phone"], "note": "phone"}
+{"id": "dlp-0117", "text": "Call me on +91 98765 43210", "labels": ["phone"], "note": "phone"}
+{"id": "dlp-0118", "text": "Mobile: +49 30 901820", "labels": ["phone"], "note": "phone"}
+{"id": "dlp-0119", "text": "Mobile: +33 1 42 68 53 00", "labels": ["phone"], "note": "phone"}
+{"id": "dlp-0120", "text": "Phone: (212) 555-0147", "labels": ["phone"], "note": "nanp"}
+{"id": "dlp-0121", "text": "tel 050 123 4567", "labels": ["phone"], "note": "uae national with context"}
+{"id": "dlp-0122", "text": "The meeting is on 2024-11-26 at 10:30.", "labels": [], "note": "date"}
+{"id": "dlp-0123", "text": "Version 10.4.2.1 fixes the bug.", "labels": [], "note": "version"}
+{"id": "dlp-0124", "text": "The server IP address is 203.0.113.45, please whitelist it.", "labels": ["ip_address"], "note": "ip"}
+{"id": "dlp-0125", "text": "The server IP address is 198.51.100.23, please whitelist it.", "labels": ["ip_address"], "note": "ip"}
+{"id": "dlp-0126", "text": "The server IP address is 8.8.4.4, please whitelist it.", "labels": ["ip_address"], "note": "ip"}
+{"id": "dlp-0127", "text": "The server IP address is 2001:db8:85a3::8a2e:370:7334, please whitelist it.", "labels": ["ip_address"], "note": "ip"}
+{"id": "dlp-0128", "text": "The server IP address is 10.20.30.40, please whitelist it.", "labels": ["ip_address"], "note": "ip"}
+{"id": "dlp-0129", "text": "Upgrade to release 1.2.3.4 tonight.", "labels": [], "note": "release version"}
+{"id": "dlp-0130", "text": "Section 3.1.4.1 of the spec covers this.", "labels": [], "note": "section number"}
+{"id": "dlp-0131", "text": "use AKIAPJ4C4P9DJJUNE8M6 for the deploy job", "labels": ["api_key", "credentials"], "note": "known prefix"}
+{"id": "dlp-0132", "text": "Here's the key: ghp_7f2uTYKstLLYpoafmMleWVFe48x25f9hVvbV", "labels": ["api_key", "credentials"], "note": "known prefix"}
+{"id": "dlp-0133", "text": "export TOKEN=github_pat_cl1A2ufeV13dNNtMbe_7ozHhNNbIA3kGzLtr9MWixrZ19ksQv80sjCoOwwCY", "labels": ["api_key", "credentials"], "note": "known prefix"}
+{"id": "dlp-0134", "text": "use xoxb-439661889719-Y0DXIGyPTUHNEEiO8RmSVdNl for the deploy job", "labels": ["api_key", "credentials"], "note": "known prefix"}
+{"id": "dlp-0135", "text": "Here's the key: sk_live_2NKGi4idaYZk2aLzkxEqIpPh", "labels": ["api_key", "credentials"], "note": "known prefix"}
+{"id": "dlp-0136", "text": "Here's the key: sk-proj-nJeAE7bItukAGoXgjpHvUY5ku9molUzLcLpwPv0T", "labels": ["api_key", "credentials"], "note": "known prefix"}
+{"id": "dlp-0137", "text": "use sk-ant-api03-xnRvacr6srEtL15PpQHvyVW89NfoMVvqCwFJESFN for the deploy job", "labels": ["api_key", "credentials"], "note": "known prefix"}
+{"id": "dlp-0138", "text": "export TOKEN=AIzagXdnSUtG4PpuLQrtsxaoI2eGjGHP4lkY6FY", "labels": ["api_key", "credentials"], "note": "known prefix"}
+{"id": "dlp-0139", "text": "use glpat-IQWvOz1MxbcgMweeV1Bk for the deploy job", "labels": ["api_key", "credentials"], "note": "known prefix"}
+{"id": "dlp-0140", "text": "use npm_UFmg7OqqNHeYmr61vzxX8qJQlbyqLcRhGEI8 for the deploy job", "labels": ["api_key", "credentials"], "note": "known prefix"}
+{"id": "dlp-0141", "text": "export TOKEN=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", "labels": ["api_key", "credentials"], "note": "known prefix"}
+{"id": "dlp-0142", "text": "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEAWo2aTgALwg1fRqWU4UIQb872WClStSEoOffPj6Z4tVgoMiKdD6m2tCT89z90\n-----END RSA PRIVATE KEY-----", "labels": ["api_key", "credentials"], "note": "private key"}
+{"id": "dlp-0143", "text": "-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAAXlyHFiF2t4Hm7yOIB1zVgb0L4PZSrCPuBtaqA0yly77K4o1AlA\n-----END OPENSSH PRIVATE KEY-----", "labels": ["api_key", "credentials"], "note": "ssh key"}
+{"id": "dlp-0144", "text": "DATABASE_URL=postgres://admin:S3cr3tPa55@db.internal.example:5432/prod", "labels": ["api_key", "credentials"], "note": "connection string"}
+{"id": "dlp-0145", "text": "password = \"Tr0ub4dor&3xample\"", "labels": ["api_key", "credentials"], "note": "password assignment"}
+{"id": "dlp-0146", "text": "client_secret: Fbn31g16h1KSRtmEeRg8MVMUNCbngQl3", "labels": ["api_key", "credentials"], "note": "assignment with entropy"}
+{"id": "dlp-0147", "text": "Authorization token is eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U", "labels": ["api_key", "credentials"], "note": "jwt"}
+{"id": "dlp-0148", "text": "password = os.environ[\"DB_PASSWORD\"]", "labels": [], "note": "env lookup"}
+{"id": "dlp-0149", "text": "api_key: <YOUR_API_KEY_HERE>", "labels": [], "note": "placeholder"}
+{"id": "dlp-0150", "text": "Set token=${GITHUB_TOKEN} in the workflow.", "labels": [], "note": "variable reference"}
+{"id": "dlp-0151", "text": "Commit 3f786850e387550fdab836ed7e6dc881de23001b fixed the bug.", "labels": [], "note": "git sha"}
+{"id": "dlp-0152", "text": "Request id 550e8400-e29b-41d4-a716-446655440000 failed.", "labels": [], "note": "uuid"}
+{"id": "dlp-0153", "text": "The file is at /usr/local/lib/python3.11/site-packages/requests/adapters.py", "labels": [], "note": "path"}
+{"id": "dlp-0154", "text": "Reset your password from the account settings page.", "labels": [], "note": "password word"}
+{"id": "dlp-0155", "text": "sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "labels": [], "note": "hash"}
+{"id": "dlp-0156", "text": "Encoded record: U1NOIDIxOS0yOS0yNTM5IGZvciBwYXlyb2xs", "labels": ["us_ssn"], "note": "base64 ssn"}
+{"id": "dlp-0157", "text": "blob Y2FyZCBudW1iZXIgNDgwNSAyODU5IDg3NjMgNjgyMg==", "labels": ["credit_card"], "note": "base64 card"}
+{"id": "dlp-0158", "text": "hex: 656d61696c206f6d6172406578616d706c652e636f6d", "labels": ["email"], "note": "hex email"}
+{"id": "dlp-0159", "text": "Emirates ID: 7​8​4-1969-9972026-1", "labels": ["emirates_id"], "note": "zero width eid (context)"}
+{"id": "dlp-0160", "text": "Can you find the bug in this?\ndef calculate_risk(account):\n    score = 0\n    for txn in account.transactions:\n        if txn.amount > 10000:\n            score += 5\n    return score\n", "labels": ["source_code"], "note": "code"}
+{"id": "dlp-0161", "text": "Can you find the bug in this?\nimport os\nimport sys\n\nclass Loader:\n    def __init__(self, path):\n        self.path = path\n\n    def load(self):\n        with open(self.path) as fh:\n            return fh.read()\n", "labels": ["source_code"], "note": "code"}
+{"id": "dlp-0162", "text": "Can you find the bug in this?\npublic class PaymentService {\n    private final Gateway gateway;\n    public PaymentService(Gateway gateway) {\n        this.gateway = gateway;\n    }\n    public Receipt charge(Order order) {\n        return gateway.charge(order.total());\n    }\n}\n", "labels": ["source_code"], "note": "code"}
+{"id": "dlp-0163", "text": "Can you find the bug in this?\nconst express = require('express');\nconst app = express();\napp.get('/health', (req, res) => {\n  res.json({ ok: true });\n});\napp.listen(3000);\n", "labels": ["source_code"], "note": "code"}
+{"id": "dlp-0164", "text": "Can you find the bug in this?\nSELECT c.id, c.name, SUM(o.total)\nFROM customers c\nJOIN orders o ON o.customer_id = c.id\nWHERE o.created_at > '2024-01-01'\nGROUP BY c.id, c.name;\n", "labels": ["source_code"], "note": "code"}
+{"id": "dlp-0165", "text": "Can you find the bug in this?\n// Copyright (c) 2024 Example Corp. All rights reserved. Proprietary and confidential.\nfunc HandleLogin(w http.ResponseWriter, r *http.Request) {\n\tuser := r.FormValue(\"user\")\n\tif user == \"\" {\n\t\thttp.Error(w, \"missing\", 400)\n\t\treturn\n\t}\n}\n", "labels": ["source_code"], "note": "code"}
+{"id": "dlp-0166", "text": "Can you find the bug in this?\n#include <stdio.h>\nint main(void) {\n    int total = 0;\n    for (int i = 0; i < 10; i++) {\n        total += i;\n    }\n    printf(\"%d\\n\", total);\n    return 0;\n}\n", "labels": ["source_code"], "note": "code"}
+{"id": "dlp-0167", "text": "Can you find the bug in this?\nfn parse(input: &str) -> Result<Config, Error> {\n    let mut cfg = Config::default();\n    for line in input.lines() {\n        cfg.apply(line)?;\n    }\n    Ok(cfg)\n}\n", "labels": ["source_code"], "note": "code"}
+{"id": "dlp-0168", "text": "How do I write a for loop in Python?", "labels": [], "note": "code question"}
+{"id": "dlp-0169", "text": "What does the SELECT statement do in SQL?", "labels": [], "note": "code question"}
+{"id": "dlp-0170", "text": "Our engineers write code in Python and Go.", "labels": [], "note": "talk about code"}
+{"id": "dlp-0171", "text": "Unaudited results Q3 FY2025. Total revenue $48.2m (+12% year-over-year). Gross margin 61.4%. EBITDA $9.1m. Net income $4.3m. Accounts receivable $12.7m; accounts payable $8.9m. Free cash flow $3.2m.", "labels": ["financial_statements"], "note": "financials"}
+{"id": "dlp-0172", "text": "Consolidated balance sheet as at 30 June: total assets AED 412,500,000; total liabilities AED 233,100,000; retained earnings AED 98,400,000; working capital AED 41,000,000.", "labels": ["financial_statements"], "note": "financials"}
+{"id": "dlp-0173", "text": "Income statement draft: revenue 125.4, cost of goods sold 71.2, gross profit 54.2, operating expenses 31.8, operating income 22.4, net profit 16.9 (all in GBP millions).", "labels": ["financial_statements"], "note": "financials"}
+{"id": "dlp-0174", "text": "Management accounts for October: opex 2.1m vs budget 1.9m, budget variance -0.2m, capex 0.8m, EBITDA 3.4m, cash 14.6m.", "labels": ["financial_statements"], "note": "financials"}
+{"id": "dlp-0175", "text": "Cash flow statement FY24: operating cash flow 18.2m, capex (6.1m), free cash flow 12.1m, dividends (4.0m), net change in cash 8.1m.", "labels": ["financial_statements"], "note": "financials"}
+{"id": "dlp-0176", "text": "Board financial pack: earnings per share 1.42 (prior year 1.18), net income 71.0m, total revenue 540.3m, operating margin 18.7%.", "labels": ["financial_statements"], "note": "financials"}
+{"id": "dlp-0177", "text": "What is the difference between a balance sheet and an income statement?", "labels": [], "note": "finance question"}
+{"id": "dlp-0178", "text": "Explain EBITDA to a new analyst with an example.", "labels": [], "note": "finance education"}
+{"id": "dlp-0179", "text": "Our revenue grew last year and the team did great work.", "labels": [], "note": "casual finance"}
+{"id": "dlp-0180", "text": "Project Falcon: draft term sheet for the acquisition of the target company at an enterprise value of $320m. Due diligence in the data room closes Friday; exclusivity period of 45 days.", "labels": ["mna"], "note": "mna"}
+{"id": "dlp-0181", "text": "Strictly confidential - MNPI. The board approved a non-binding offer to acquire Northwind at 9.5x EBITDA. Break fee 3%. Insider list attached.", "labels": ["mna"], "note": "mna"}
+{"id": "dlp-0182", "text": "Letter of intent: the buyer proposes a purchase price of AED 1.2bn with an earn-out tied to 2026 revenue. Definitive agreement targeted for Q2.", "labels": ["mna"], "note": "mna"}
+{"id": "dlp-0183", "text": "Merger agreement mark-up from counsel: closing date, tender offer mechanics, and the fairness opinion from the investment bank.", "labels": ["mna"], "note": "mna"}
+{"id": "dlp-0184", "text": "Deal team update: heads of terms agreed with the seller; synergy case shows $40m savings; announcement date pending board approval.", "labels": ["mna"], "note": "mna"}
+{"id": "dlp-0185", "text": "How do I merge two branches in git?", "labels": [], "note": "git merge"}
+{"id": "dlp-0186", "text": "What is due diligence in general terms?", "labels": [], "note": "education"}
+{"id": "dlp-0187", "text": "We acquired three new customers this week.", "labels": [], "note": "casual"}
+{"id": "dlp-0188", "text": "Performance improvement plan for employee ID 44821: underperformance in Q3, final written warning issued, disciplinary hearing on 3 Dec.", "labels": ["hr_medical"], "note": "hr/medical"}
+{"id": "dlp-0189", "text": "Patient record: diagnosed with type 2 diabetes, prescription metformin 500mg twice daily, blood test results attached, next of kin listed.", "labels": ["hr_medical"], "note": "hr/medical"}
+{"id": "dlp-0190", "text": "Salary review: proposed compensation package with base salary 340,000 AED and bonus 15%. Confidential HR case.", "labels": ["hr_medical"], "note": "hr/medical"}
+{"id": "dlp-0191", "text": "Medical leave request: employee on sick leave following surgery; occupational health referral and fit note from the clinic.", "labels": ["hr_medical"], "note": "hr/medical"}
+{"id": "dlp-0192", "text": "Grievance filed by an employee alleging harassment; HR case opened, investigation meeting scheduled, termination letter drafted.", "labels": ["hr_medical"], "note": "hr/medical"}
+{"id": "dlp-0193", "text": "Treatment plan: mental health therapy weekly, medication dosage adjusted, symptoms improving per the psychiatric assessment.", "labels": ["hr_medical"], "note": "hr/medical"}
+{"id": "dlp-0194", "text": "What are the common symptoms of the flu?", "labels": [], "note": "health question"}
+{"id": "dlp-0195", "text": "How do I prepare for my performance review?", "labels": [], "note": "hr question"}
+{"id": "dlp-0196", "text": "The hospital opened a new parking lot.", "labels": [], "note": "casual"}
+{"id": "dlp-0197", "text": "PRIVILEGED & CONFIDENTIAL - ATTORNEY-CLIENT PRIVILEGE. Outside counsel advises that our litigation exposure in the plaintiff's breach of contract claim is moderate.", "labels": ["legal_privilege"], "note": "legal"}
+{"id": "dlp-0198", "text": "Attorney work product, prepared at the request of counsel: summary of deposition testimony and settlement options.", "labels": ["legal_privilege"], "note": "legal"}
+{"id": "dlp-0199", "text": "Without prejudice: our client proposes a settlement agreement to resolve the arbitration; the subpoena response is due Monday.", "labels": ["legal_privilege"], "note": "legal"}
+{"id": "dlp-0200", "text": "Litigation hold notice: preserve all documents relating to the lawsuit. General counsel will coordinate the legal hold.", "labels": ["legal_privilege"], "note": "legal"}
+{"id": "dlp-0201", "text": "Legally privileged: advice from the law firm on indemnity and damages under the master agreement; regulator inquiry ongoing.", "labels": ["legal_privilege"], "note": "legal"}
+{"id": "dlp-0202", "text": "What does attorney-client privilege mean?", "labels": [], "note": "legal question"}
+{"id": "dlp-0203", "text": "Our office is next to the court.", "labels": [], "note": "casual"}
+{"id": "dlp-0204", "text": "Here is my password for the VPN: Blue-Falcon-2291, username omar.r", "labels": ["api_key", "credentials"], "note": "credential doc"}
+{"id": "dlp-0205", "text": "The root password for the staging box is Qz8!mR2#vL. Login as admin.", "labels": ["api_key", "credentials"], "note": "credential doc"}
+{"id": "dlp-0206", "text": "Login credentials for the shared mailbox: user finance-team, password Spr1ng-Ledger-44", "labels": ["api_key", "credentials"], "note": "credential doc"}
+{"id": "dlp-0207", "text": "How do I reset my password?", "labels": [], "note": "password question"}
+{"id": "dlp-0208", "text": "What is an API key and why should I rotate it?", "labels": [], "note": "education"}
+{"id": "dlp-0209", "text": "Summarize this article about electric vehicles in three bullets.", "labels": [], "note": "benign"}
+{"id": "dlp-0210", "text": "Write a haiku about autumn.", "labels": [], "note": "benign"}
+{"id": "dlp-0211", "text": "Plan a team lunch for 12 people near Dubai Marina.", "labels": [], "note": "benign"}
+{"id": "dlp-0212", "text": "Translate 'good morning' into Japanese.", "labels": [], "note": "benign"}
+{"id": "dlp-0213", "text": "What is the boiling point of water at altitude?", "labels": [], "note": "benign"}
+{"id": "dlp-0214", "text": "Draft an agenda for Monday's stand-up.", "labels": [], "note": "benign"}
+{"id": "dlp-0215", "text": "Give me five tips to improve my sleep.", "labels": [], "note": "benign"}
+{"id": "dlp-0216", "text": "Explain Kubernetes pods to a beginner.", "labels": [], "note": "benign"}
+{"id": "dlp-0217", "text": "Recommend a good sci-fi novel.", "labels": [], "note": "benign"}
+{"id": "dlp-0218", "text": "Rewrite this paragraph to be more concise: The meeting, which was long, was boring.", "labels": [], "note": "benign"}
+{"id": "dlp-0219", "text": "The quarterly all-hands is on 12/03 at 3pm in room 4.", "labels": [], "note": "benign"}
+{"id": "dlp-0220", "text": "Our product roadmap has three themes: speed, trust and scale.", "labels": [], "note": "benign"}
+{"id": "dlp-0221", "text": "Room 101 is booked from 10:00 to 11:30.", "labels": [], "note": "benign"}
+{"id": "dlp-0222", "text": "We shipped version 2.14.0 with 37 bug fixes.", "labels": [], "note": "benign"}
+{"id": "dlp-0223", "text": "Population of the city grew to 3,600,000 in 2023.", "labels": [], "note": "benign"}
+{"id": "dlp-0224", "text": "Wire 2,400 EUR to IBAN FR76 3000 6000 0112 3456 7890 189 by Friday", "labels": ["iban"], "note": "set b"}
+{"id": "dlp-0225", "text": "cc 5555-5555-5555-4444 exp 11/27 cvv 123", "labels": ["credit_card"], "note": "set b"}
+{"id": "dlp-0226", "text": "amex 3782 822463 10005", "labels": ["credit_card"], "note": "set b"}
+{"id": "dlp-0227", "text": "Applicant EID 784-1987-3456781-5", "labels": ["emirates_id"], "note": "set b"}
+{"id": "dlp-0228", "text": "Her national insurance no. is QQ123456C", "labels": [], "note": "set b"}
+{"id": "dlp-0229", "text": "NINO: JG 10 37 59 A for payroll", "labels": ["uk_nino"], "note": "set b"}
+{"id": "dlp-0230", "text": "SSN#: 219-09-9999", "labels": [], "note": "set b"}
+{"id": "dlp-0231", "text": "ssn 536-90-4399 on file", "labels": ["us_ssn"], "note": "set b"}
+{"id": "dlp-0232", "text": "mobile +971 4 555 0199 or +1-202-555-0181", "labels": ["phone"], "note": "set b"}
+{"id": "dlp-0233", "text": "reach me: priya.nair@example.co.uk", "labels": ["email"], "note": "set b"}
+{"id": "dlp-0234", "text": "deploy key: ghs_Ab3dE5gH7jK9mN1pQ3sT5vX7zB9dF1hJ3lM5", "labels": ["api_key", "credentials"], "note": "set b"}
+{"id": "dlp-0235", "text": "export OPENAI_API_KEY=sk-q8Wn2Lr5Tz9Xc3Vb7Nm1Kp4Hs6Jd0Fg2Ya8", "labels": ["api_key", "credentials"], "note": "set b"}
+{"id": "dlp-0236", "text": "Server list: 192.0.2.15, 198.51.100.200", "labels": ["ip_address"], "note": "set b"}
+{"id": "dlp-0237", "text": "version 4.2.1.7 released", "labels": [], "note": "set b"}
+{"id": "dlp-0238", "text": "Order #4539 1488 0343 6467 confirmed", "labels": ["credit_card"], "note": "set b"}
+{"id": "dlp-0239", "text": "Invoice 1234-5678-9012-3456 overdue", "labels": [], "note": "set b"}
+{"id": "dlp-0240", "text": "The meeting code is 845 221 907", "labels": [], "note": "set b"}
+{"id": "dlp-0241", "text": "DOB: 14/02/1988, born in Sharjah", "labels": [], "note": "set b"}
+{"id": "dlp-0242", "text": "P<UTOERIKSSON<<ANNA<MARIA<<<<<<<<<<<<<<<<<<<\nL898902C36UTO7408122F1204159ZE184226B<<<<<10", "labels": ["passport"], "note": "set b"}
+{"id": "dlp-0243", "text": "Use password: hunter2hunter2", "labels": ["api_key", "credentials"], "note": "set b"}
+{"id": "dlp-0244", "text": "password manager rollout plan for Q3", "labels": [], "note": "set b"}
+{"id": "dlp-0245", "text": "uuid 123e4567-e89b-12d3-a456-426614174000 not found", "labels": [], "note": "set b"}
+{"id": "dlp-0246", "text": "Call 800-555-0100 for support", "labels": ["phone"], "note": "set b"}
+{"id": "dlp-0247", "text": "Phone extension 4412", "labels": [], "note": "set b"}
+{"id": "dlp-0248", "text": "IBAN check: GB29 NWBK 6016 1331 9268 19", "labels": ["iban"], "note": "set b"}

@@ -62,6 +62,7 @@ from app.services.guardians.confidence_tiering import (
     run_ambiguous_arbiter,
 )
 from app.services.guardians.threat_detectors import evaluate_threat_detectors
+from app.services.detection.profile import with_tenant_profile
 from app.services.guardians.threat_registry import (
     get_threat_registry,
     guardian_contract_to_threat_types,
@@ -1638,6 +1639,7 @@ def _build_gateway_action_control_envelope(
     }
 
 
+@with_tenant_profile
 def llm_intercept(
     db: Session,
     *,
@@ -2724,6 +2726,7 @@ def llm_intercept(
     }
 
 
+@with_tenant_profile
 def mcp_authorize(
     db: Session,
     *,
