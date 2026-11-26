@@ -16,6 +16,20 @@ import type { SelfCheckHealth } from "@/lib/hands-off-settings";
 import { errorMessageFrom } from "@/lib/licence";
 
 const message = (error: unknown) => errorMessageFrom(error instanceof Error ? error.message : String(error ?? ""), "Something went wrong.");
+
+/** The same troubleshooting report as Settings → Updates (versions, health, settings in force, recent errors; no secrets). */
+async function downloadReport() {
+  try {
+    const blob = await api.downloadUpdateReport();
+    const link = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: `hawk-ai-report-${new Date().toISOString().slice(0, 10)}.json` });
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(link.href), 10_000);
+  } catch (error) {
+    toast.error(message(error));
+  }
+}
 const date = (iso?: string | null) => (iso ? new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "—");
 const dateTime = (iso?: string | null) => (iso ? new Date(iso).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "—");
 
@@ -41,7 +55,7 @@ const noticeChanged = (encryption: BackupEncryption) => window.dispatchEvent(new
 /**
  * Settings → Backups & health, laid out and worded as FTR Command Center's (public/js/settings.js `backups()`): the
  * backups (now, each to download, a restore) and the health of the data, then "Ready for production?". What happens
- * behind it is CxMissionZero's (docs/audit-and-backup.md), and so is the backup key box, which stands where FTR's
+ * behind it is CxMissionZero's (/settings/guide/audit-and-evidence), and so is the backup key box, which stands where FTR's
  * passphrase form stands. Owners and admins only.
  */
 export default function BackupsSettingsPage() {
@@ -405,7 +419,7 @@ export default function BackupsSettingsPage() {
                   )}
                   <p className="muted small">The troubleshooting report has versions, health, settings in force, update events, backups and recent errors, and no secrets, keys or customer data.</p>
                   <div className="flex">
-                    <button id="diag" type="button" disabled title="Not in Hawk AI yet">
+                    <button id="diag" type="button" onClick={downloadReport}>
                       <Icon name="download" />
                       Download troubleshooting report
                     </button>

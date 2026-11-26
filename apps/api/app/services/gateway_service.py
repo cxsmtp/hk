@@ -62,6 +62,7 @@ from app.services.guardians.confidence_tiering import (
     run_ambiguous_arbiter,
 )
 from app.services.guardians.threat_detectors import evaluate_threat_detectors
+from app.services.detection.profile import with_tenant_profile
 from app.services.guardians.threat_registry import (
     get_threat_registry,
     guardian_contract_to_threat_types,
@@ -1066,6 +1067,47 @@ def _aggregate_guardian_decisions(decisions: list[str]) -> str:
     return "allow"
 
 
+def _context_budget_guardian(
+    *,
+    prompt: Any = None,
+    context_summary: Any = None,
+    tool_output: Any = None,
+    response_text: Any = None,
+) -> dict[str, Any] | None:
+    """Block a payload larger than the API accepts in one request (``max_request_body_bytes``, 2 MiB by default).
+
+    The HTTP layer already refuses such a body with 413, but in-process callers (SDK adapters, workers, simulations)
+    reach ``llm_intercept`` directly and were unbounded: a context-bloat payload was evaluated and allowed. Found by
+    the attack-simulation catalogue (SIM-RESOURCE context_bloat).
+    """
+    limit = max(1, int(getattr(settings, "max_request_body_bytes", 2_097_152) or 2_097_152))
+    sizes = {
+        "prompt": len(_as_text(prompt)),
+        "context": len(_as_text(context_summary)),
+        "tool_output": len(_as_text(tool_output)),
+        "response": len(_as_text(response_text)),
+    }
+    total = sum(sizes.values())
+    if total <= limit:
+        return None
+    return {
+        "guardian_contract_id": "gateway.context_budget",
+        "guardian_id": "context_budget_guard",
+        "decision": "block",
+        "confidence": 1.0,
+        "confidence_tier": "clear_positive",
+        "arbiter_invoked": False,
+        "matched_conditions": ["payload_characters_over_limit"],
+        "threat_types": ["resource_exhaustion"],
+        "actions_taken": {
+            "reason_code": "context_budget_exceeded",
+            "limit_characters": limit,
+            "total_characters": total,
+            "characters_by_field": sizes,
+        },
+    }
+
+
 def _apply_threat_detectors(
     *,
     final_decision: str,
@@ -1084,6 +1126,17 @@ def _apply_threat_detectors(
     never changes an existing decision; a detected threat escalates via the same
     ``_aggregate_guardian_decisions`` precedence used everywhere else.
     """
+    budget_guardian = _context_budget_guardian(
+        prompt=prompt,
+        context_summary=context_summary,
+        tool_output=tool_output,
+        response_text=response_text,
+    )
+    if budget_guardian is not None:
+        # An oversized payload is blocked before the detectors spend time scanning it.
+        guardian_results.append(budget_guardian)
+        final_actions["context_budget"] = dict(budget_guardian.get("actions_taken") or {})
+        return _aggregate_guardian_decisions([final_decision, "block"])
     try:
         detector_guardians = evaluate_threat_detectors(
             prompt=prompt,
@@ -1638,6 +1691,7 @@ def _build_gateway_action_control_envelope(
     }
 
 
+@with_tenant_profile
 def llm_intercept(
     db: Session,
     *,
@@ -2724,6 +2778,7 @@ def llm_intercept(
     }
 
 
+@with_tenant_profile
 def mcp_authorize(
     db: Session,
     *,
@@ -3671,15 +3726,24 @@ def mcp_authorize(
         evidence_node_ids.append(str(mcp_integrity["evidence_bundle_id"]))
     mcp_final_actions["mcp_integrity"] = mcp_integrity
     trace_payload["mcp_integrity"] = mcp_integrity
+    repository_guard: dict[str, Any] | None = None
     if str(action or "").upper().startswith("REPOSITORY_"):
         repository_parameters = _extract_tool_usage_field(tool_usage_meta, "parameters")
         repository_parameters = repository_parameters if isinstance(repository_parameters, dict) else {}
+        # Declared by the Hawk MCP proxy (branch, paths, diff stats, approval
+        # reference); declared stats can only tighten the decision.
+        repository_change_context = _extract_tool_usage_field(tool_usage_meta, "github_change_context")
+        repository_change_context = repository_change_context if isinstance(repository_change_context, dict) else {}
         repository_guard = evaluate_github_repository_mutation(
             db,
             tenant_id=tenant_id,
             action=action,
             resource=resource,
-            branch=_normalized_optional(repository_parameters.get("branch")),
+            branch=_normalized_optional(
+                repository_parameters.get("branch")
+                or repository_parameters.get("head")
+                or repository_change_context.get("branch")
+            ),
             actor_id=actor_id,
             ai_system_id=ai_system_id,
             provider=provider,
@@ -3687,12 +3751,14 @@ def mcp_authorize(
             agent_id=resolved_agent_identity_id or actor_id,
             tool_fingerprint_id=_normalized_optional(_extract_tool_usage_field(tool_usage_meta, "tool_fingerprint_id")),
             tool_schema_fingerprint=_normalized_optional(_extract_tool_usage_field(tool_usage_meta, "tool_schema_fingerprint")),
-            change_digest=_normalized_optional(repository_parameters.get("change_digest")),
-            approval_binding_id=_normalized_optional(repository_parameters.get("approval_binding_id")),
+            change_digest=_normalized_optional(repository_parameters.get("change_digest") or repository_change_context.get("content_sha256")),
+            approval_binding_id=_normalized_optional(
+                repository_parameters.get("approval_binding_id") or repository_change_context.get("approval_binding_id")
+            ),
+            change_parameters=repository_parameters,
+            change_context=repository_change_context,
         )
         repository_guard_decision = str(repository_guard["decision"]).lower()
-        if repository_guard_decision == "hold_for_approval":
-            repository_guard_decision = "hold_for_approval"
         decision = _aggregate_guardian_decisions([decision, repository_guard_decision])
         mcp_guardian_results.append(
             {
@@ -3700,10 +3766,15 @@ def mcp_authorize(
                 "decision": repository_guard_decision,
                 "confidence": 1.0,
                 "matched_conditions": [str(repository_guard.get("reason") or "repository_guard")],
-                "actions_taken": {"repository_id": repository_guard.get("repository_id")},
+                "actions_taken": {
+                    "repository_id": repository_guard.get("repository_id"),
+                    "evidence_ref": repository_guard.get("evidence_ref"),
+                },
                 "threat_types": ["repository_authorization"],
             }
         )
+        if repository_guard.get("evidence_ref"):
+            evidence_node_ids.append(str(repository_guard["evidence_ref"]))
         mcp_final_actions["github_repository_guard"] = repository_guard
         trace_payload["github_repository_guard"] = repository_guard
     tool_provenance_path: dict[str, Any] = {}
@@ -4499,6 +4570,36 @@ def mcp_authorize(
             error=str(exc),
         )
 
+    if (
+        decision == "hold_for_approval"
+        and repository_guard is not None
+        and str(repository_guard.get("decision")) == "HOLD_FOR_APPROVAL"
+        and isinstance(repository_guard.get("canonical_action"), dict)
+    ):
+        # A held repository mutation becomes an approval request whose payload
+        # is the exact canonical action; an approver then issues a MAC-bound,
+        # single-use binding for it (POST .../github-repositories/mutation-approvals).
+        repository_approval = ApprovalRequest(
+            tenant_id=tenant_id,
+            enforcement_event_id=event.id,
+            ai_system_id=ai_system_id,
+            request_payload={
+                "request_id": request_id,
+                "guardian_id": "github_repository_identity_guard",
+                "reason": repository_guard.get("reason"),
+                "github_repository_action": repository_guard["canonical_action"],
+            },
+            required_roles=["owner", "admin"],
+            sla_minutes=60,
+            default_if_timeout="block",
+            status="pending",
+        )
+        db.add(repository_approval)
+        db.flush()
+        repository_guard["approval_request_id"] = repository_approval.id
+        traced_guard = trace_payload.get("github_repository_guard")
+        if isinstance(traced_guard, dict):
+            traced_guard["approval_request_id"] = repository_approval.id
     decision_receipt_id = str(
         pre_action_governance_check.get("decision_receipt_id") or ""
     ).strip()

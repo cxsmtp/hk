@@ -35,6 +35,7 @@ from app.core.permissions import (
     default_permissions,
     legacy_floor,
 )
+from app.db import xact_lock
 from app.db.models.iam import IamRole, IamTeam
 from app.db.models.user import User, UserTenantRole
 
@@ -420,7 +421,11 @@ def keep_an_owner(db: Session, membership: UserTenantRole, user: User, *, new_ro
     if membership.role != "owner" or not user.is_active:
         return
     losing = remove or deactivate or (new_role is not None and new_role != "owner")
-    if losing and active_owners(db, membership.tenant_id, except_user=user.id) == 0:
+    if not losing:
+        return
+    # Two owners taking each other's role away at the same moment are counted one after the other.
+    xact_lock.hold(db, "tenant-people", membership.tenant_id)
+    if active_owners(db, membership.tenant_id, except_user=user.id) == 0:
         raise Refused(409, "There must always be at least one active Owner.")
 
 

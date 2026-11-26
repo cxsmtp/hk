@@ -132,7 +132,7 @@ def start() -> None:
         if described["selfSigned"]:
             print(
                 "! [https] Self-signed: traffic is encrypted, but browsers warn. For production upload your certificate under Settings → HTTPS "
-                "(or give TLS_CERT_FILE and TLS_KEY_FILE), or set LETSENCRYPT_DOMAIN. See docs/https-and-hosting.md.",
+                "(or give TLS_CERT_FILE and TLS_KEY_FILE), or set LETSENCRYPT_DOMAIN. See /settings/guide/https.",
                 flush=True,
             )
     m.watch()

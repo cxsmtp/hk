@@ -7,4 +7,16 @@ useDefault = true
 description = "Made-up secrets in redaction tests"
 paths = [
   '''apps/desktop-guard/tests/test_redaction\.py$''',
+  '''apps/api/tests/test_structured_logging\.py$''',
+]
+
+[[allowlists]]
+description = "Made-up keys the detectors must catch: the DLP benchmark, detector and gateway tests, and the attack-simulation payloads (AWS's published example keys, random strings with real prefixes, truncated private keys)"
+paths = [
+  '''apps/api/tests/fixtures/detection_benchmark/.*\.jsonl$''',
+  '''apps/api/tests/test_detection_engine\.py$''',
+  '''apps/api/tests/test_sensitive_data_detection_service_extended\.py$''',
+  '''apps/api/tests/test_simulation_catalog_runners\.py$''',
+  '''apps/api/tests/test_llm_gateway_integration\.py$''',
+  '''apps/api/app/services/simulation_catalog_runners\.py$''',
 ]

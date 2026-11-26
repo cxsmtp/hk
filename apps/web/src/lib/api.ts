@@ -1,11 +1,11 @@
-import { clearSession, getSession, updateSessionTokens } from "@/lib/auth";
+import { clearSession, getSession, sessionHeaders } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/api-url";
 import type { AcmeStatus, HttpsCertificateReport, HttpsMode, HttpsStatus, UploadFile } from "@/lib/https-settings";
 import type { BackupEncryption, BackupFile, BackupInfo, BackupKeyShown, BackupNotice, BackupsStatus, Readiness } from "@/lib/backups-settings";
 import type { Integrity, IntegrityState, UpdateSettings, UpdatesStatus } from "@/lib/updates-settings";
 import type { HandsOffSettings, HandsOffView, LinkAnswer, SelfCheckHealth } from "@/lib/hands-off-settings";
 import type { AboutView, BrandingPatch, BrandingView, GeneralView, SmtpSettings, SmtpView } from "@/lib/settings-console";
-import type { AuditPage, AuditVerify, ConnectorActivity, Emailed, NetworkCheck, NetworkInfo, SupportChannel, SupportKind, SupportList, SupportRequest, TrustDiagnosis, TrustedCertificate } from "@/lib/records";
+import type { AuditPage, AuditVerify, ConnectorActivity, EvidenceSigning, Emailed, NetworkCheck, NetworkInfo, SupportChannel, SupportKind, SupportList, SupportRequest, TrustDiagnosis, TrustedCertificate } from "@/lib/records";
 import { approvalStatusFilters, mergeApprovalStatusResults } from "@/lib/approval-workflow";
 import { demoFallbackRequest, isDemoFallbackEnabled } from "@/lib/demo-fallback";
 import { isDeactivatedAnswer, LICENCE_DEACTIVATED_EVENT } from "@/lib/licence";
@@ -244,12 +244,12 @@ const DEFAULT_GET_TIMEOUT_MS = 20000;
 const REFRESH_TIMEOUT_MS = 8000;
 const TRANSIENT_HTTP_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
 
-type RefreshResponse = {
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
-  expires_in: number;
-};
+// The tokens never reach this code: the API keeps them in HttpOnly cookies (apps/api/app/core/session_cookies.py), sent
+// with every request (same origin behind the front proxy; credentials "include" for a developer's API on another
+// port), and every request carries the CSRF token (sessionHeaders, @/lib/auth).
+const CREDENTIALS: RequestCredentials = "include";
+// Before trying a refresh again after a refusal: another tab may have rotated the refresh cookie at that moment.
+const REFRESH_RACE_PAUSE_MS = 250;
 
 type RequestBehavior = {
   timeoutMs?: number;
@@ -259,7 +259,7 @@ let refreshTokenInFlight: Promise<boolean> | null = null;
 const inflightGetRequests = new Map<string, Promise<unknown>>();
 
 /**
- * The licence gate's answer (docs/activation-codes.md): Hawk AI has been deactivated. Tells the page, which then
+ * The licence gate's answer (/settings/guide/licence): Hawk AI has been deactivated. Tells the page, which then
  * shows the deactivation screen, and says whether it was that answer (so it is not retried).
  */
 function reportDeactivated(status: number, text: string): boolean {
@@ -332,19 +332,19 @@ function isTerminalRefreshFailureStatus(statusCode: number): boolean {
 
 async function performRefreshToken(): Promise<boolean> {
   for (let refreshAttempt = 0; refreshAttempt < 2; refreshAttempt += 1) {
-    const session = getSession();
-    const refreshToken = String(session?.refreshToken || "").trim();
-    if (!refreshToken) return false;
+    if (!getSession()) return false;
 
     let res: Response;
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), REFRESH_TIMEOUT_MS);
       try {
+        // No token in the body: the refresh cookie is sent to this path only.
         res = await fetch(`${API_URL}/auth/refresh`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ refresh_token: refreshToken }),
+          headers: sessionHeaders(new Headers({ "Content-Type": "application/json" })),
+          body: "{}",
+          credentials: CREDENTIALS,
           cache: "no-store",
           signal: controller.signal,
         });
@@ -358,14 +358,10 @@ async function performRefreshToken(): Promise<boolean> {
 
     if (!res.ok) {
       if (isTerminalRefreshFailureStatus(res.status)) {
-        const latest = getSession();
-        const latestRefreshToken = String(latest?.refreshToken || "").trim();
-        const tokenRotatedInAnotherTab =
-          latestRefreshToken.length > 0 &&
-          latestRefreshToken !== refreshToken;
-
-        // Multi-tab rotation race: another tab likely refreshed and rotated token already.
-        if (tokenRotatedInAnotherTab && refreshAttempt === 0) {
+        // Multi-tab rotation race: another tab may have refreshed with the same cookie a moment before, and the
+        // browser now holds the new one. One more try tells; a second refusal signs out.
+        if (refreshAttempt === 0) {
+          await sleep(REFRESH_RACE_PAUSE_MS);
           continue;
         }
         clearSession();
@@ -374,17 +370,8 @@ async function performRefreshToken(): Promise<boolean> {
       }
       return false;
     }
-
-    let payload: RefreshResponse;
-    try {
-      payload = (await res.json()) as RefreshResponse;
-    } catch {
-      return false;
-    }
-    if (!payload.access_token || !payload.refresh_token) {
-      return false;
-    }
-    updateSessionTokens(payload.access_token, payload.refresh_token);
+    // The new tokens came as cookies; the body has none.
+    await res.text().catch(() => "");
     return true;
   }
   return false;
@@ -422,24 +409,12 @@ async function request<T>(
   allowRefresh = true,
   behavior?: RequestBehavior,
 ): Promise<T> {
-  const headers = new Headers(init?.headers || {});
+  const headers = sessionHeaders(new Headers(init?.headers || {}));
   headers.set("Content-Type", "application/json");
-  let session = useAuth ? getSession() : null;
+  const session = useAuth ? getSession() : null;
 
   if (useAuth) {
     if (!session?.tenantId) throw new Error("No tenant selected");
-    if (!session?.accessToken) {
-      const canAttemptRefresh = allowRefresh && !!String(session?.refreshToken || "").trim();
-      if (canAttemptRefresh) {
-        const refreshed = await tryRefreshToken();
-        if (refreshed) {
-          return request<T>(path, init, useAuth, false, behavior);
-        }
-        session = getSession();
-      }
-    }
-    if (!session?.accessToken) throw new Error("No session");
-    headers.set("Authorization", `Bearer ${session.accessToken}`);
     headers.set("X-Tenant-ID", session.tenantId);
   }
 
@@ -451,8 +426,9 @@ async function request<T>(
   const effectiveTimeoutMs = behavior?.timeoutMs ?? ((method === "GET" || method === "HEAD") ? DEFAULT_GET_TIMEOUT_MS : 0);
   const timeoutMs = Math.max(0, Math.floor(Number(effectiveTimeoutMs || 0)));
   const dedupeEligible = method === "GET" && !init?.body;
+  // The try after a refresh has a key of its own: it runs inside the first try, which would otherwise wait on itself.
   const dedupeKey = dedupeEligible
-    ? `${useAuth ? `${session?.tenantId || ""}:${session?.accessToken || ""}` : "public"}|${path}`
+    ? `${useAuth ? `${session?.tenantId || ""}:${session?.user?.id || ""}` : "public"}|${allowRefresh ? "" : "refreshed|"}${path}`
     : "";
   if (dedupeEligible) {
     const inflight = inflightGetRequests.get(dedupeKey);
@@ -482,18 +458,14 @@ async function request<T>(
       const res = await fetch(`${API_URL}${path}`, {
         ...init,
         headers,
+        credentials: CREDENTIALS,
         cache: "no-store",
         signal,
       });
 
       if (res.status === 401 && useAuth && allowRefresh) {
-        const accessTokenUsed = String(session?.accessToken || "");
         const refreshed = await tryRefreshToken();
         if (refreshed) {
-          return request<T>(path, init, useAuth, false, behavior);
-        }
-        const latestSession = getSession();
-        if (latestSession?.accessToken && latestSession.accessToken !== accessTokenUsed) {
           return request<T>(path, init, useAuth, false, behavior);
         }
       }
@@ -586,37 +558,22 @@ async function request<T>(
   }
 }
 
-async function requestBlob(path: string, init?: RequestInit, allowRefresh = true): Promise<Blob> {
-  const headers = new Headers(init?.headers || {});
-  let session = getSession();
+async function requestBlob(path: string, init?: RequestInit, allowRefresh = true, onResponse?: (res: Response) => void): Promise<Blob> {
+  const headers = sessionHeaders(new Headers(init?.headers || {}));
+  const session = getSession();
 
   if (!session?.tenantId) throw new Error("No tenant selected");
-  if (!session?.accessToken) {
-    const canAttemptRefresh = allowRefresh && !!String(session?.refreshToken || "").trim();
-    if (canAttemptRefresh) {
-      const refreshed = await tryRefreshToken();
-      if (refreshed) return requestBlob(path, init, false);
-      session = getSession();
-    }
-  }
-  if (!session?.accessToken) throw new Error("No session");
-  headers.set("Authorization", `Bearer ${session.accessToken}`);
   headers.set("X-Tenant-ID", session.tenantId);
 
   const res = await fetch(`${API_URL}${path}`, {
     ...init,
     headers,
+    credentials: CREDENTIALS,
     cache: "no-store",
   });
 
   if (res.status === 401 && allowRefresh) {
-    const accessTokenUsed = String(session.accessToken || "");
-    const refreshed = await tryRefreshToken();
-    if (refreshed) return requestBlob(path, init, false);
-    const latestSession = getSession();
-    if (latestSession?.accessToken && latestSession.accessToken !== accessTokenUsed) {
-      return requestBlob(path, init, false);
-    }
+    if (await tryRefreshToken()) return requestBlob(path, init, false, onResponse);
   }
 
   if (!res.ok) {
@@ -626,36 +583,26 @@ async function requestBlob(path: string, init?: RequestInit, allowRefresh = true
     throw new Error(text || `API ${res.status}`);
   }
 
+  onResponse?.(res);
   return res.blob();
 }
 
 async function requestMultipart<T>(path: string, form: FormData, allowRefresh = true): Promise<T> {
-  let session = getSession();
+  const session = getSession();
   if (!session?.tenantId) throw new Error("No tenant selected");
-  if (!session.accessToken) {
-    const canAttemptRefresh = allowRefresh && !!String(session.refreshToken || "").trim();
-    if (canAttemptRefresh && await tryRefreshToken()) return requestMultipart<T>(path, form, false);
-    session = getSession();
-  }
-  if (!session?.accessToken) throw new Error("No session");
   if (!form.has("tenant_id")) form.set("tenant_id", session.tenantId);
 
+  const headers = sessionHeaders();
+  headers.set("X-Tenant-ID", session.tenantId);
   const res = await fetch(`${API_URL}${path}`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${session.accessToken}`,
-      "X-Tenant-ID": session.tenantId,
-    },
+    headers,
     body: form,
+    credentials: CREDENTIALS,
     cache: "no-store",
   });
   if (res.status === 401 && allowRefresh) {
-    const accessTokenUsed = session.accessToken;
     if (await tryRefreshToken()) return requestMultipart<T>(path, form, false);
-    const latestSession = getSession();
-    if (latestSession?.accessToken && latestSession.accessToken !== accessTokenUsed) {
-      return requestMultipart<T>(path, form, false);
-    }
   }
   if (!res.ok) {
     let message = `API ${res.status}`;
@@ -672,6 +619,19 @@ async function requestMultipart<T>(path: string, form: FormData, allowRefresh = 
     throw new Error(message);
   }
   return await res.json() as T;
+}
+
+/**
+ * Sign out: the API revokes this sign-in's refresh token and clears the session cookies (only it can: they are
+ * HttpOnly). What the console remembers goes in any case, even when the API cannot be reached.
+ */
+export async function signOut(): Promise<void> {
+  try {
+    await api.signOut();
+  } catch {
+    // Signed out here all the same; the refresh token ends by itself.
+  }
+  clearSession();
 }
 
 function boundedQuery<T extends object>(params: T): string {
@@ -692,11 +652,11 @@ export type CurrentUser = {
   full_name: string;
   tenants: { id: string; name: string; role: string }[];
   licence?: AdminLicence | null;
-  // A temporary password to change, and the terms of use, first (deploy/README.md).
+  // A temporary password to change, and the terms of use, first (/settings/guide/install).
   must_change_password?: boolean;
   terms?: TermsState | null;
   version?: string;
-  // Two-step sign-in for this person (docs/sign-in.md).
+  // Two-step sign-in for this person (/settings/guide/people-and-access).
   two_step?: TwoStepState | null;
 };
 
@@ -706,7 +666,7 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ email, password }),
     }, false),
-  // Sign-in (docs/sign-in.md): the second step, "Forgot your password?", one's own two-step sign-in, and the
+  // Sign-in (/settings/guide/people-and-access): the second step, "Forgot your password?", one's own two-step sign-in, and the
   // administrator's sign-in rules.
   signInOptions: () => request<{ passwordReset: boolean; ssoPasswordAdminsOnly: boolean }>("/auth/sign-in-options", undefined, false),
   twoStep: (ticket: string, code: string) =>
@@ -770,27 +730,26 @@ export const api = {
   oidcComplete: (ticket: string) =>
     request<LoginResponse>("/auth/oidc/complete", { method: "POST", body: JSON.stringify({ ticket }) }, false),
   me: () => request<CurrentUser>("/auth/me"),
-  // First sign-in (deploy/README.md): a new password, the terms of use, and the first administrator's setup code.
+  // Sign out: the API revokes this sign-in's refresh token and clears the session cookies.
+  signOut: () => request<{ ok: boolean }>("/auth/refresh/sign-out", { method: "POST", body: "{}" }, false),
+  // First sign-in (/settings/guide/install): a new password, the terms of use, and the first administrator's setup code.
   changePassword: (current: string, next: string) =>
     request<LoginResponse>("/auth/me/password", { method: "POST", body: JSON.stringify({ current, next }) }),
-  getTerms: () => {
-    const session = getSession();
-    const headers: Record<string, string> = session?.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {};
-    return request<TermsView>("/terms", { headers }, false);
-  },
+  // Before or after signing in: the session cookie, when there is one, says whose acceptance to show.
+  getTerms: () => request<TermsView>("/terms", undefined, false),
   acceptTerms: (payload: { version: string; forOrganisation?: boolean; organisationName?: string }) =>
     request<{ terms: TermsState }>("/terms/accept", { method: "POST", body: JSON.stringify(payload) }),
   setupStatus: () => request<{ setup: boolean }>("/setup", undefined, false),
   setup: (payload: { code: string; email: string; name: string; password: string }) =>
     request<LoginResponse | TwoStepChallenge>("/setup", { method: "POST", body: JSON.stringify(payload) }, false),
-  // The product licence and activation codes (docs/activation-codes.md).
+  // The product licence and activation codes (/settings/guide/licence).
   getLicence: () => request<LicenceStatus>("/licence", undefined, false),
   activateLicence: (code: string) =>
     request<{ active: boolean; until: string }>("/licence/activate", { method: "POST", body: JSON.stringify({ code }) }, false),
   getActivation: () => request<ActivationView>("/activation"),
   applyActivation: (code: string) =>
     request<ActivationApplied>("/activation", { method: "POST", body: JSON.stringify({ code }) }),
-  // Settings → HTTPS (docs/https-and-hosting.md).
+  // Settings → HTTPS (/settings/guide/https).
   getHttps: () => request<HttpsStatus>("/https"),
   setHttpsMode: (mode: HttpsMode, confirm = false) =>
     request<HttpsStatus>("/https/mode", { method: "POST", body: JSON.stringify({ mode, confirm }) }),
@@ -832,6 +791,17 @@ export const api = {
   getAuditLog: (query: string) => request<AuditPage>(`/audit/log${query ? `?${query}` : ""}`),
   verifyAuditLog: () => request<AuditVerify>("/audit/log/verify"),
   exportAuditLog: (format: "csv" | "jsonl", query: string) => requestBlob(`/audit/log/export.${format}${query ? `?${query}` : ""}`),
+  /** The export and its detached evidence signature (the X-Hawk-Evidence-Signature header, '' when none). */
+  exportAuditLogSigned: async (format: "csv" | "jsonl", query: string) => {
+    let signature = "";
+    const blob = await requestBlob(`/audit/log/export.${format}${query ? `?${query}` : ""}`, undefined, true, (res) => {
+      signature = res.headers.get("X-Hawk-Evidence-Signature") ?? "";
+    });
+    return { blob, signature };
+  },
+  // Evidence signing (app/api/routers/evidence_signing.py)
+  getEvidenceSigning: () => request<EvidenceSigning>("/evidence-signing"),
+  rotateEvidenceSigning: () => request<{ rotated: boolean; active: string; previous: string | null; status: EvidenceSigning }>("/evidence-signing/rotate", { method: "POST" }),
   getConnectorActivity: (query: string) => request<ConnectorActivity>(`/connector-activity${query ? `?${query}` : ""}`),
   exportConnectorActivity: () => requestBlob("/connector-activity/export.csv"),
   exportUserActivity: () => requestBlob("/activity/log/export.csv"),

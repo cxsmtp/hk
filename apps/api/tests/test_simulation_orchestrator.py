@@ -175,3 +175,46 @@ def test_browser_step_is_not_executable_when_runner_does_not_load_extension(monk
 
     assert result["execution_status"] == "not_yet_executable"
     assert "extension" in result["reason"].lower()
+
+
+def test_browser_upload_step_only_hands_chromium_a_file_from_the_simulation_evidence_folder(monkeypatch, tmp_path) -> None:
+    """Checkmarx Path Traversal (simulation_service browser steps): the operator-written step payload's file_path was
+    read on the server and uploaded by Chromium to the step's URL, so any server file could leave the machine."""
+
+    import json
+
+    from app.services.simulation_orchestrator import executor
+
+    evidence = tmp_path / "evidence"
+    evidence.mkdir()
+    allowed = evidence / "upload.csv"
+    allowed.write_text("name\n", encoding="utf-8")
+    outside = tmp_path / "secret.txt"
+    outside.write_text("server-only", encoding="utf-8")
+    monkeypatch.setattr(settings, "simulation_evidence_dir", str(evidence))
+    monkeypatch.setattr(executor, "step_execution_profile", lambda kind, step_id: {"support_status": "executable_now"})
+    monkeypatch.setenv("SIMULATION_NODE_BINARY", "node")
+    requests: list[dict] = []
+
+    def fake_run(args, **kwargs):  # noqa: ANN001, ARG001
+        with open(args[-1], encoding="utf-8") as handle:
+            requests.append(json.load(handle))
+
+        class Completed:
+            returncode = 0
+            stderr = ""
+            stdout = json.dumps({"status": "ok", "extension_loaded": True, "upload_status": "uploaded"})
+
+        return Completed()
+
+    monkeypatch.setattr(executor.subprocess, "run", fake_run)
+
+    def step(file_path: str) -> dict:
+        return run_browser_step(kind="browser_upload_file", payload={"url": "https://x.test/", "file_path": file_path}, tenant_id="t", simulation_run_id="r", step_id="s", iteration_index=0)
+
+    for refused in (str(outside), "../secret.txt", "/proc/self/environ", ""):
+        result = step(refused)
+        assert result["execution_status"] == "not_yet_executable" and "evidence folder" in result["reason"]
+    assert requests == []
+    assert step("upload.csv")["execution_status"] == "executed"
+    assert requests[0]["payload"]["file_path"] == str(allowed.resolve())

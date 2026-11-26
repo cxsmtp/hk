@@ -316,6 +316,13 @@ class IntegrityService:
                 result = {**base, "state": "not-genuine", "summary": f"The files match their list, but the list is not signed by {self.repository}'s release workflow: {origin.get('reason')}."}
         before = (self.last or {}).get("state")
         result = {**result, "reason": reason, "repository": self.repository}
+        fields = {"state": result["state"], "check_reason": reason, "previous_state": before or None, "version": result.get("version") or None}
+        if result["state"] in ALERT_STATES:
+            log.error("Software integrity check: %s", result["state"], extra=fields)
+        elif result["state"] == "genuine":
+            log.info("Software integrity check: genuine", extra=fields)
+        else:
+            log.warning("Software integrity check: %s", result["state"], extra=fields)
         _write_json(self.data_dir / LAST_FILE, result)
         if result["state"] != before and result["state"] in ALERT_STATES:
             self.record(outcome="failure", reason=f"Software integrity: {result['summary']}", details={"state": result["state"], "digest": result.get("digest"), "files": result.get("files")})

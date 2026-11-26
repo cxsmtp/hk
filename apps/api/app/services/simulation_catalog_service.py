@@ -106,6 +106,9 @@ DEFAULT_SEVERITY = {
 
 
 _ALLOWED_EXEC_STATUS = {"executable_now", "partially_executable", "not_yet_executable"}
+# Honest non-executable statuses from the catalogue runners: kept as they are, never counted as executable.
+_TRUTH_STATUSES = ("expected_gap", "requires_environment")
+_ALL_CATALOG_STATUSES = (*sorted(_ALLOWED_EXEC_STATUS), *_TRUTH_STATUSES)
 _SEVERITY_MAP = {"low": "low", "medium": "med", "med": "med", "high": "high", "critical": "critical"}
 
 
@@ -208,6 +211,8 @@ def _resolve_catalog_executor_status(
         category=EXECUTOR_CATEGORY_HINT.get(category, category),
     )
     desired = str(desired_status or "not_yet_executable").strip().lower()
+    if desired in _TRUTH_STATUSES:
+        return required, desired
     if desired not in _ALLOWED_EXEC_STATUS:
         desired = "not_yet_executable"
 
@@ -249,6 +254,7 @@ def sync_simulation_catalog(db: Session, *, tenant_id: str) -> dict[str, Any]:
     ).all()
 
     by_simulation_id = {str(row.simulation_id): row for row in existing_rows}
+    catalog_ids = {str(entry.get("simulation_id") or "").strip() for entry in source_entries}
     touched_ids: set[str] = set()
     executors_by_name = _executor_map(db, tenant_id=tenant_id)
 
@@ -289,10 +295,13 @@ def sync_simulation_catalog(db: Session, *, tenant_id: str) -> dict[str, Any]:
         row.version = str(entry.get("version") or "v1")
         touched_ids.add(simulation_id)
 
-    # 2) Overlay real simulation definitions as implemented entries.
+    # 2) Overlay real simulation definitions as implemented entries. A definition carrying a catalogue id (the seed pack,
+    # or a catalogue runner's compiled DSL) does not overrule the catalogue's executability truth set in step 1.
     for definition in definitions:
         dsl = dict(definition.dsl_json or {})
         simulation_id = _simulation_key(definition)
+        if simulation_id in catalog_ids:
+            continue
         category = _normalized_category(str(dsl.get("category") or definition.category))
         required_executor, executable_status = _resolved_executor_and_status(
             db,
@@ -340,6 +349,56 @@ def list_catalog_entries(db: Session, *, tenant_id: str) -> list[SimulationCatal
     return rows
 
 
+def _status_bucket() -> dict[str, int]:
+    return {
+        "simulations": 0,
+        "implemented": 0,
+        "executable_now": 0,
+        "partially_executable": 0,
+        "not_yet_executable": 0,
+        "expected_gap": 0,
+        "requires_environment": 0,
+    }
+
+
+def _bucket_status(status: str) -> str:
+    return status if status in {"executable_now", "partially_executable", "expected_gap", "requires_environment"} else "not_yet_executable"
+
+
+def _execution_truth(rows: list[SimulationCatalogEntry]) -> dict[str, Any]:
+    """Why a catalogue scenario is not executable: the gap or the environment it needs (coverage truth, never overclaim)."""
+
+    from app.services.simulation_catalog_runners import catalog_runners
+
+    by_id = {runner.simulation_id: runner for runner in catalog_runners()}
+    expected_gaps: list[dict[str, Any]] = []
+    requires_environment: list[dict[str, Any]] = []
+    for row in rows:
+        status = str(row.executable_status or "").strip().lower()
+        runner = by_id.get(str(row.simulation_id))
+        if runner is None:
+            continue
+        if status == "expected_gap":
+            expected_gaps.append(
+                {
+                    "simulation_id": runner.simulation_id,
+                    "expected_decision": runner.expected_decision,
+                    "observed_decision": runner.observed_decision,
+                    "reason": runner.gap_reason,
+                }
+            )
+        elif status == "requires_environment":
+            requires_environment.append(
+                {"simulation_id": runner.simulation_id, "requirements": list(runner.environment_requirements)}
+            )
+    return {
+        "principle": "Only scenarios whose runner passes in the unit suite count as executable; gaps and environment-bound scenarios are listed, never counted.",
+        "report": "simulation_catalog/executability_report.json",
+        "expected_gaps": expected_gaps,
+        "requires_environment": requires_environment,
+    }
+
+
 def get_catalog_coverage(db: Session, *, tenant_id: str) -> dict[str, Any]:
     rows = list_catalog_entries(db, tenant_id=tenant_id)
 
@@ -350,6 +409,8 @@ def get_catalog_coverage(db: Session, *, tenant_id: str) -> dict[str, Any]:
     executable_now = 0
     partially_executable = 0
     not_yet_executable = 0
+    expected_gap = 0
+    requires_environment = 0
     implemented = 0
 
     for row in rows:
@@ -365,6 +426,8 @@ def get_catalog_coverage(db: Session, *, tenant_id: str) -> dict[str, Any]:
                 "executable_now": 0,
                 "partially_executable": 0,
                 "not_yet_executable": 0,
+                "expected_gap": 0,
+                "requires_environment": 0,
             },
         )
         bucket["defined"] += 1
@@ -379,6 +442,12 @@ def get_catalog_coverage(db: Session, *, tenant_id: str) -> dict[str, Any]:
         elif status == "partially_executable":
             partially_executable += 1
             bucket["partially_executable"] += 1
+        elif status == "expected_gap":
+            expected_gap += 1
+            bucket["expected_gap"] += 1
+        elif status == "requires_environment":
+            requires_environment += 1
+            bucket["requires_environment"] += 1
         else:
             not_yet_executable += 1
             bucket["not_yet_executable"] += 1
@@ -389,38 +458,22 @@ def get_catalog_coverage(db: Session, *, tenant_id: str) -> dict[str, Any]:
             if not framework or framework in frameworks_seen:
                 continue
             frameworks_seen.add(framework)
-            framework_bucket = by_framework.setdefault(
-                framework,
-                {"simulations": 0, "implemented": 0, "executable_now": 0, "partially_executable": 0, "not_yet_executable": 0},
-            )
+            framework_bucket = by_framework.setdefault(framework, _status_bucket())
             framework_bucket["simulations"] += 1
             if row.implemented:
                 framework_bucket["implemented"] += 1
-            if status == "executable_now":
-                framework_bucket["executable_now"] += 1
-            elif status == "partially_executable":
-                framework_bucket["partially_executable"] += 1
-            else:
-                framework_bucket["not_yet_executable"] += 1
+            framework_bucket[_bucket_status(status)] += 1
 
         controls_seen: set[str] = set()
         for control_id in _clean_unique(list(row.control_ids or [])):
             if control_id in controls_seen:
                 continue
             controls_seen.add(control_id)
-            control_bucket = by_control.setdefault(
-                control_id,
-                {"simulations": 0, "implemented": 0, "executable_now": 0, "partially_executable": 0, "not_yet_executable": 0},
-            )
+            control_bucket = by_control.setdefault(control_id, _status_bucket())
             control_bucket["simulations"] += 1
             if row.implemented:
                 control_bucket["implemented"] += 1
-            if status == "executable_now":
-                control_bucket["executable_now"] += 1
-            elif status == "partially_executable":
-                control_bucket["partially_executable"] += 1
-            else:
-                control_bucket["not_yet_executable"] += 1
+            control_bucket[_bucket_status(status)] += 1
 
     total_defined = len(rows)
     planned_only = max(0, total_defined - implemented)
@@ -435,6 +488,8 @@ def get_catalog_coverage(db: Session, *, tenant_id: str) -> dict[str, Any]:
         "executable_now": executable_now,
         "partially_executable": partially_executable,
         "not_yet_executable": not_yet_executable,
+        "expected_gap": expected_gap,
+        "requires_environment": requires_environment,
         "coverage_ratio": round(coverage_ratio, 6),
         "required_by_category": dict(CATEGORY_TARGET_COUNTS),
         "by_executable_status": by_status,
@@ -442,5 +497,6 @@ def get_catalog_coverage(db: Session, *, tenant_id: str) -> dict[str, Any]:
         "coverage_by_category": by_category,
         "coverage_by_framework": dict(sorted(by_framework.items(), key=lambda item: item[0].lower())),
         "coverage_by_control": dict(sorted(by_control.items(), key=lambda item: item[0].lower())),
+        "execution_truth": _execution_truth(rows),
     }
 

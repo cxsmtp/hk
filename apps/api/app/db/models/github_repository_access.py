@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, JSON, String, UniqueConstraint
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, ForeignKeyConstraint, Index, JSON, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.models.base import TimestampMixin, UUIDPrimaryKeyMixin
@@ -66,6 +66,11 @@ class GitHubRepository(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         nullable=False,
         default=lambda: {"READ": "BLOCK", "EDIT": "BLOCK", "COMMIT": "BLOCK", "PULL": "BLOCK", "PUSH": "BLOCK"},
     )
+    # Owner/admin-set AI agent write posture (write mode, extra protected
+    # branches/paths, change-size and rate limits). Empty means the safe
+    # defaults in github_repository_access_service: every write needs a bound
+    # approval. Discovery never writes this column.
+    agent_policy_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
 
 
 class GitHubRepositoryAccess(Base, UUIDPrimaryKeyMixin, TimestampMixin):
@@ -146,8 +151,48 @@ class GitHubRepositoryRuntimeBinding(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     actor_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True)
 
 
+class GitHubRepositoryMutationApproval(Base, UUIDPrimaryKeyMixin, TimestampMixin):
+    """One approved, MAC-bound, expiring and single-use AI agent repository mutation.
+
+    ``action_mac`` is an HMAC (CANONICAL_ACTION_BINDING_KEY, tenant and purpose
+    separated) over the exact canonical action the approver saw: repository,
+    host, action, branch, actor, executing principal, AI system, provider,
+    model, tool fingerprints, target, change digests, governance version,
+    nonce and expiry. The fields are not stored here; the verifier recomputes
+    the MAC from the live request, so a row edited in the database cannot widen
+    what it authorizes.
+    """
+
+    __tablename__ = "github_repository_mutation_approvals"
+    __table_args__ = (
+        ForeignKeyConstraint(["tenant_id", "approval_request_id"], ["approval_requests.tenant_id", "approval_requests.id"], name="fk_github_repo_mutation_approval_request", ondelete="CASCADE"),
+        UniqueConstraint("tenant_id", "approval_request_id", name="uq_github_repo_mutation_approval_request"),
+        UniqueConstraint("tenant_id", "nonce", name="uq_github_repo_mutation_approval_nonce"),
+        CheckConstraint("state IN ('ACTIVE','CONSUMED','REVOKED')", name="ck_github_repo_mutation_approval_state"),
+        CheckConstraint("use_limit = 1", name="ck_github_repo_mutation_approval_single_use"),
+        CheckConstraint("uses_consumed >= 0 AND uses_consumed <= use_limit", name="ck_github_repo_mutation_approval_uses"),
+        Index("idx_github_repo_mutation_approval_repository", "tenant_id", "repository_id"),
+    )
+
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    approval_request_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    repository_id: Mapped[str] = mapped_column(ForeignKey("github_repositories.id", ondelete="CASCADE"), nullable=False)
+    action: Mapped[str] = mapped_column(String(64), nullable=False)
+    action_mac: Mapped[str] = mapped_column(String(64), nullable=False)
+    mac_version: Mapped[str] = mapped_column(String(16), nullable=False)
+    nonce: Mapped[str] = mapped_column(String(64), nullable=False)
+    governance_version: Mapped[int] = mapped_column(nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    use_limit: Mapped[int] = mapped_column(nullable=False, default=1)
+    uses_consumed: Mapped[int] = mapped_column(nullable=False, default=0)
+    state: Mapped[str] = mapped_column(String(16), nullable=False, default="ACTIVE")
+    issued_by: Mapped[Optional[str]] = mapped_column(String(36), nullable=True)
+    consumed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
 __all__ = [
     "GitHubRepository",
+    "GitHubRepositoryMutationApproval",
     "GitHubRepositoryAIConnection",
     "GitHubRepositoryAccess",
     "GitHubRepositoryRuntimeBinding",

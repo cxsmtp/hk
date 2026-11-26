@@ -1,4 +1,4 @@
-"""First run, reset_admin, the forced password change and the terms of use (deploy/README.md), ported from
+"""First run, reset_admin, the forced password change and the terms of use (/settings/guide/install), ported from
 CxMissionZero's prepareAccess, scripts/reset-admin.mjs, requireSession and src/terms.js."""
 
 from __future__ import annotations

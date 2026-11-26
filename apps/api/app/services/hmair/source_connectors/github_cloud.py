@@ -224,19 +224,29 @@ def _repository_inventory_records(
         if not repository_external_id or not repository_id or not full_name:
             continue
         identifiers = {**base_identifiers, "repository_hash": repository_id}
+        # Branch protection awareness for AI agent pushes: the names of the
+        # protected branches (no rule contents). Missing permission is a
+        # limitation, not a failure: the default branch is always protected
+        # for agents regardless.
+        try:
+            protected_rows, _protected_complete = _paged_rows(http, f"{GITHUB_API_ORIGIN}/repos/{full_name}/branches", params={"protected": "true"})
+            protected_branches = sorted({str(row.get("name") or "").strip() for row in protected_rows if isinstance(row, Mapping) and row.get("protected") is True and str(row.get("name") or "").strip()})[:256]
+        except SafeSourceHTTPError:
+            protected_branches = []
+            limitations.append("branch_protection_permission_missing")
         metadata = {
             "full_name": full_name,
             "visibility": "PRIVATE" if bool(item.get("private")) else "PUBLIC",
             "lifecycle_state": "ARCHIVED" if bool(item.get("archived")) else "ACTIVE",
             "default_branch": str(item.get("default_branch") or ""),
             "evidence_state": "CONFIRMED",
-            "protection": {"account_scope_kind": account_scope_kind},
+            "protection": {"account_scope_kind": account_scope_kind, "protected_branches": protected_branches},
         }
         node_hash = _hash_identifier(item.get("node_id"), salt=identifier_salt)
         if node_hash:
             metadata["github_node_hash"] = node_hash
         records.append(HMAIRNormalizedRecord(record_id=f"ghc-repository-{_record_ref(repository_id)}", record_kind="github_repository", observed_at=observed_at, candidate_asset_type="repository", observation_type=ObservationType.PACKAGE_REFERENCE, source_surface=SourceSurface.SOURCE_CODE, identifiers=identifiers, metadata=metadata))
-        records.append(HMAIRNormalizedRecord(record_id=f"ghc-protection-{_record_ref(repository_id)}", record_kind="github_repository_protection", observed_at=observed_at, candidate_asset_type="repository", observation_type=ObservationType.API_CALL, source_surface=SourceSurface.SOURCE_CODE, identifiers=identifiers, metadata={**metadata, "protection": {"default_branch": metadata["default_branch"], "source": "repository_metadata", "account_scope_kind": account_scope_kind}}))
+        records.append(HMAIRNormalizedRecord(record_id=f"ghc-protection-{_record_ref(repository_id)}", record_kind="github_repository_protection", observed_at=observed_at, candidate_asset_type="repository", observation_type=ObservationType.API_CALL, source_surface=SourceSurface.SOURCE_CODE, identifiers=identifiers, metadata={**metadata, "protection": {"default_branch": metadata["default_branch"], "source": "repository_metadata", "account_scope_kind": account_scope_kind, "protected_branches": protected_branches}}))
         owner = item.get("owner") if isinstance(item.get("owner"), Mapping) else {}
         owner_id = _hash_identifier(str(owner.get("id") or "").strip(), salt=identifier_salt)
         if account_scope_kind == "PERSONAL" and owner_id:

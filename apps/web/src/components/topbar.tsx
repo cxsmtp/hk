@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bell, ChevronDown, ExternalLink, LogOut, Settings2, UserRound } from "lucide-react";
 
-import { clearSession, getSession, SESSION_CHANGE_EVENT } from "@/lib/auth";
-import { api } from "@/lib/api";
+import { getSession, SESSION_CHANGE_EVENT } from "@/lib/auth";
+import { api, signOut } from "@/lib/api";
 import type { DashboardNotificationItem } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { JumpTo } from "@/components/jump-to";
@@ -452,8 +452,7 @@ export function Topbar() {
                 <button
                   type="button"
                   onClick={() => {
-                    clearSession();
-                    router.push("/login");
+                    void signOut().finally(() => router.push("/login"));
                   }}
                   className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-xs font-semibold text-slate-300 transition hover:bg-red-500/10 hover:text-red-200"
                 >

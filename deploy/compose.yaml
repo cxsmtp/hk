@@ -1,4 +1,4 @@
-# Hawk AI on one Linux machine, with one command (deploy/README.md):
+# Hawk AI on one Linux machine, with one command (/settings/guide/install):
 #   sudo deploy/install.sh
 # which creates the data folder and its secrets, then runs `docker compose up -d` from this folder.
 # The first start prints the administrator's sign-in in the API's log:
@@ -6,10 +6,10 @@
 #
 # Services: proxy (one HTTPS address), web (console), api, worker and beat (Celery), migrate (once per start),
 # postgres and redis; and, when Hawk AI runs the published images (HAWK_RELEASE in .env), the updater that updates and
-# rolls back the whole stack from Settings → Updates (docs/updating.md). Only the proxy is published: HTTPS on ${BIND_ADDRESS:-127.0.0.1}:${PORT:-3000}, and plain http
+# rolls back the whole stack from Settings → Updates (/settings/guide/updates). Only the proxy is published: HTTPS on ${BIND_ADDRESS:-127.0.0.1}:${PORT:-3000}, and plain http
 # on ${HTTP_REDIRECT_PORT:-80} (redirected to https while HTTPS only; Let's Encrypt's checks).
 #
-# HTTPS (docs/https-and-hosting.md): the API owns the certificate and the choices made under Settings → HTTPS and
+# HTTPS (/settings/guide/https): the API owns the certificate and the choices made under Settings → HTTPS and
 # writes the proxy's configuration into the hawk-proxy-config volume; the proxy reloads it by itself.
 #
 # Hardened as CxMissionZero's container: nothing in the images can be changed at run time (only the volumes and a
@@ -18,8 +18,17 @@
 
 name: hawk
 
+# Logs: Docker keeps each container's output in rotated files (5 of 20 MB at most), never filling the disk.
+# The API, worker and beat write one JSON object a line (LOG_FORMAT, app/core/log_config.py): docker compose logs api.
+x-hawk-logging: &hawk-logging
+  driver: json-file
+  options:
+    max-size: "20m"
+    max-file: "5"
+
 x-hawk-hardening: &hawk-hardening
   restart: unless-stopped
+  logging: *hawk-logging
   read_only: true
   tmpfs:
     - /tmp
@@ -57,6 +66,9 @@ x-hawk-api-image: &hawk-api-image
 x-hawk-environment: &hawk-environment
   ENV: production
   PYTHONPATH: /workspace/apps/api
+  # One JSON object a line on stdout, with the request id, tenant and task on each (app/core/log_config.py).
+  LOG_FORMAT: ${LOG_FORMAT:-json}
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
   TZ: ${TZ:-UTC}
   DEMO_MODE: "false"
   PILOT_MODE: "false"
@@ -82,10 +94,10 @@ x-hawk-environment: &hawk-environment
   GATEWAY_INTERCEPT_MINIMAL_MODE: "false"
   ARTIFACT_DIR: /artifacts
   HAWK_DATA_DIR: /data
-  # Get help (docs/support.md): SUPPORT_MODE=email with SUPPORT_EMAIL opens an email instead of the portal.
+  # Get help (/settings/guide/self-check-and-help): SUPPORT_MODE=email with SUPPORT_EMAIL opens an email instead of the portal.
   SUPPORT_MODE: ${SUPPORT_MODE:-}
   SUPPORT_EMAIL: ${SUPPORT_EMAIL:-}
-  # A company web proxy (docs/network.md). Settings → Network & proxy is the usual place; these are the alternative.
+  # A company web proxy (/settings/guide/network). Settings → Network & proxy is the usual place; these are the alternative.
   HTTPS_PROXY: ${HTTPS_PROXY:-}
   NO_PROXY: ${NO_PROXY:-}
   SECRET_KEY_LOCK_ENABLED: "true"
@@ -100,7 +112,7 @@ x-hawk-environment: &hawk-environment
   CONNECTOR_SECRETS_KDF_SALT_FILE: /run/secrets/connector_secrets_kdf_salt
   ENFORCEMENT_PAYLOADS_KEY_FILE: /run/secrets/enforcement_payloads_key
   ONPREM_BUNDLE_SIGNING_SECRET_FILE: /run/secrets/onprem_bundle_signing_secret
-  # Backups (deploy/README.md: Backups). Written to BACKUP_DIR on this machine (default ${HAWK_DATA_DIR}/backups),
+  # Backups (/settings/guide/backups). Written to BACKUP_DIR on this machine (default ${HAWK_DATA_DIR}/backups),
   # which the containers see as /backups; the newest BACKUP_KEEP kept, one a minute after start, then every
   # BACKUP_INTERVAL_HOURS. Encrypted with BACKUP_PASSPHRASE, else the server's own backup key (Settings → Backups &
   # health); BACKUP_ENCRYPTION=off keeps them plain.
@@ -116,6 +128,19 @@ x-hawk-environment: &hawk-environment
   BACKUP_EMAIL_IMAP_HOST: ${BACKUP_EMAIL_IMAP_HOST:-}
   BACKUP_EMAIL_IMAP_PORT: ${BACKUP_EMAIL_IMAP_PORT:-993}
   BACKUP_EMAIL_USER: ${BACKUP_EMAIL_USER:-}
+  # Evidence signing (app/services/evidence_signing.py): local (an Ed25519 key made in the data folder, the default),
+  # aws_kms, azure_kv or gcp_kms. Settings → Audit log shows the key; public keys at /.well-known/hawk-evidence-keys.json.
+  EVIDENCE_SIGNING_BACKEND: ${EVIDENCE_SIGNING_BACKEND:-local}
+  EVIDENCE_SIGNING_AWS_KMS_KEY_ID: ${EVIDENCE_SIGNING_AWS_KMS_KEY_ID:-}
+  EVIDENCE_SIGNING_AWS_REGION: ${EVIDENCE_SIGNING_AWS_REGION:-}
+  EVIDENCE_SIGNING_AWS_ACCESS_KEY_ID: ${EVIDENCE_SIGNING_AWS_ACCESS_KEY_ID:-}
+  EVIDENCE_SIGNING_AWS_SECRET_ACCESS_KEY: ${EVIDENCE_SIGNING_AWS_SECRET_ACCESS_KEY:-}
+  EVIDENCE_SIGNING_AZURE_KEY_ID: ${EVIDENCE_SIGNING_AZURE_KEY_ID:-}
+  EVIDENCE_SIGNING_AZURE_TENANT_ID: ${EVIDENCE_SIGNING_AZURE_TENANT_ID:-}
+  EVIDENCE_SIGNING_AZURE_CLIENT_ID: ${EVIDENCE_SIGNING_AZURE_CLIENT_ID:-}
+  EVIDENCE_SIGNING_AZURE_CLIENT_SECRET: ${EVIDENCE_SIGNING_AZURE_CLIENT_SECRET:-}
+  EVIDENCE_SIGNING_GCP_KEY_VERSION: ${EVIDENCE_SIGNING_GCP_KEY_VERSION:-}
+  EVIDENCE_SIGNING_GCP_CREDENTIALS_JSON: ${EVIDENCE_SIGNING_GCP_CREDENTIALS_JSON:-}
   # At most one "Hawk AI stopped" email to the administrators in this many hours.
   LAST_WORDS_EVERY_HOURS: ${LAST_WORDS_EVERY_HOURS:-6}
   # The mail server that sends them (app/services/mailer.py).
@@ -128,7 +153,7 @@ x-hawk-environment: &hawk-environment
   SMTP_FROM_NAME: ${SMTP_FROM_NAME:-}
   SMTP_REQUIRE_AUTH: ${SMTP_REQUIRE_AUTH:-}
   SMTP_REJECT_UNAUTHORIZED: ${SMTP_REJECT_UNAUTHORIZED:-}
-  # Updates and software integrity (docs/updating.md, docs/integrity.md). Images come from <UPDATE_IMAGE>-api, -web and
+  # Updates and software integrity (/settings/guide/updates, /settings/guide/updates). Images come from <UPDATE_IMAGE>-api, -web and
   # -proxy; a private copy needs UPDATE_REGISTRY_TOKEN (read-only). The updater shares UPDATER_DIR with api and worker.
   UPDATE_IMAGE: ${UPDATE_IMAGE:-ghcr.io/cxsmtp/hk}
   UPDATE_REGISTRY_TOKEN: ${UPDATE_REGISTRY_TOKEN:-}
@@ -137,7 +162,7 @@ x-hawk-environment: &hawk-environment
   INTEGRITY_CHECK_HOURS: ${INTEGRITY_CHECK_HOURS:-6}
   INTEGRITY_OFFLINE: ${INTEGRITY_OFFLINE:-}
   GITHUB_TOKEN: ${INTEGRITY_GITHUB_TOKEN:-}
-  # The self-check and hands-off (docs/hands-off.md): how often it checks itself and reads replies, and where its
+  # The self-check and hands-off (/settings/guide/self-check-and-help): how often it checks itself and reads replies, and where its
   # automatic support cases are to be forwarded (by an administrator: Hawk AI never sends outside by itself).
   WATCHDOG_EVERY_SECONDS: ${WATCHDOG_EVERY_SECONDS:-300}
   INBOX_EVERY_SECONDS: ${INBOX_EVERY_SECONDS:-120}
@@ -232,14 +257,24 @@ services:
     environment:
       <<: *hawk-environment
       COMPONENT_TYPE: api
-      # First run (deploy/README.md): on an empty database the first administrator is made and printed once.
+      # First run (/settings/guide/install): on an empty database the first administrator is made and printed once.
       FIRST_RUN_ACCESS: "true"
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}                 # the first administrator's email (default admin@hawk.local)
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}           # with ADMIN_EMAIL: their first password (changed at first sign-in)
       FIRST_ADMIN: ${FIRST_ADMIN:-}                 # setup-code: print a setup code instead of a password
       ACCEPT_TERMS: ${ACCEPT_TERMS:-}               # <email>: accept the terms of use for the organisation, on record
       ORGANISATION_NAME: ${ORGANISATION_NAME:-}     # the organisation's name (else given when the terms are accepted)
-      # HTTPS (docs/https-and-hosting.md). Once changed under Settings → HTTPS, the page's choice wins.
+      # Sign-in (/settings/guide/people-and-access): how long an unused sign-in lasts, and a one-off two-step reset.
+      SESSION_IDLE_MINUTES: ${SESSION_IDLE_MINUTES:-480}
+      RESET_TWO_STEP: ${RESET_TWO_STEP:-}           # <email>: take that person's two-step sign-in off at the next start
+      # Single sign-on with OpenID Connect (Settings → Single sign-on shows what is in force).
+      COMPANY_SSO_ENABLED: ${COMPANY_SSO_ENABLED:-false}
+      OIDC_PROVIDERS_JSON: ${OIDC_PROVIDERS_JSON:-[]}
+      OIDC_PROVIDER_SECRETS_JSON: ${OIDC_PROVIDER_SECRETS_JSON:-}
+      OIDC_BINDINGS_JSON: ${OIDC_BINDINGS_JSON:-[]}
+      OIDC_CALLBACK_URL: ${OIDC_CALLBACK_URL:-}
+      OIDC_FRONTEND_URL: ${OIDC_FRONTEND_URL:-}
+      # HTTPS (/settings/guide/https). Once changed under Settings → HTTPS, the page's choice wins.
       HTTPS: ${HTTPS:-on}                           # on (HTTPS only), off (plain http) or both
       TLS_CERT_FILE: ${TLS_CERT_FILE:-}             # e.g. /certs/server.crt (the folder ${HAWK_DATA_DIR}/certs)
       TLS_KEY_FILE: ${TLS_KEY_FILE:-}               # e.g. /certs/server.key
@@ -258,7 +293,7 @@ services:
       HTTPS_PUBLIC_PORT: ${PORT:-3000}
       HTTP_REDIRECT_PORT: ${HTTP_REDIRECT_PORT:-80}
       HAWK_PROXY_DIR: /hawk-proxy
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips", "*"]
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips", "*", "--no-access-log"]
     secrets: *hawk-secrets
     volumes:
       - hawk-data:/data
@@ -268,7 +303,7 @@ services:
       # Certificates given to the deployment (TLS_CERT_FILE…): read-only, from the data folder.
       - ${HAWK_DATA_DIR}/certs:/certs:ro
       - ${BACKUP_DIR:-${HAWK_DATA_DIR}/backups}:/backups
-      # Shared with the updater (docs/updating.md): requests to it, its heartbeat and status, and this API's ack.
+      # Shared with the updater (/settings/guide/updates): requests to it, its heartbeat and status, and this API's ack.
       - ${HAWK_DATA_DIR}/updater:/updater
     healthcheck:
       <<: *hawk-healthcheck
@@ -315,7 +350,7 @@ services:
     volumes:
       - hawk-artifacts:/artifacts
       - hawk-runtime:/run/hawk
-      # The proxy and trusted certificates set under Settings → Network & proxy (docs/network.md) live here.
+      # The proxy and trusted certificates set under Settings → Network & proxy (/settings/guide/network) live here.
       - hawk-data:/data
     healthcheck:
       <<: *hawk-healthcheck
@@ -326,7 +361,7 @@ services:
       migrate:
         condition: service_completed_successfully
 
-  # The updater (apps/updater, docs/updating.md): CxMissionZero's update companion for the whole stack. Exception: it is
+  # The updater (apps/updater, /settings/guide/updates): CxMissionZero's update companion for the whole stack. Exception: it is
   # the only container with the Docker socket, and runs as root for it (with no capabilities and no privilege
   # escalation). It opens no port and acts only on ${HAWK_DATA_DIR}/updater/request.json: it replaces migrate, api,
   # worker, beat, web and proxy with the same services on the images asked for (only <UPDATE_IMAGE>-…, which they must
@@ -341,6 +376,7 @@ services:
       target: runtime
     profiles: ["updates"]
     restart: unless-stopped
+    logging: *hawk-logging
     user: "0:0"
     read_only: true
     tmpfs:
@@ -378,6 +414,7 @@ services:
   postgres:
     image: postgres:16
     restart: unless-stopped
+    logging: *hawk-logging
     environment:
       POSTGRES_USER: hawk
       POSTGRES_DB: hawk
@@ -418,6 +455,7 @@ services:
   redis:
     image: redis:7
     restart: unless-stopped
+    logging: *hawk-logging
     user: "999:999"
     command:
       - sh

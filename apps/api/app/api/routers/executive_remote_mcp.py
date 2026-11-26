@@ -269,7 +269,7 @@ def executive_remote_mcp_authorize_page(
 
 
 def _password_sign_in(db: Session, request: Request, form: dict[str, str]) -> User | str:
-    """The connector forms' email and password, with the console's rules (docs/sign-in.md): 30 attempts per 10
+    """The connector forms' email and password, with the console's rules (/settings/guide/people-and-access): 30 attempts per 10
     minutes from one address, the lock after 5 wrong passwords, passwords kept for Admins when single sign-on says so,
     and the two-step code for whoever has it on. Returns the user, or the sentence to show."""
 

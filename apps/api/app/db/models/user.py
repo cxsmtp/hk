@@ -22,7 +22,7 @@ class User(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     # choose their own password, every signed-in route but /auth/me and /auth/me/password answers 403.
     must_change_password: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false(), nullable=False)
 
-    # Sign-in (docs/sign-in.md, ported from CxMissionZero's src/iam.js and src/mfa.js).
+    # Sign-in (/settings/guide/people-and-access, ported from CxMissionZero's src/iam.js and src/mfa.js).
     # Wrong passwords (and wrong two-step codes) in a row: 5 lock the account for 15 minutes.
     failed_logins: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"), nullable=False)
     locked_until: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)

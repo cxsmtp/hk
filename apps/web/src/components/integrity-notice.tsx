@@ -12,7 +12,7 @@ export const INTEGRITY_NOTICE_CHANGED_EVENT = "hawk:integrity-notice-changed";
 type Notice = { state: IntegrityState; summary: string } | null;
 
 /**
- * Software integrity (docs/integrity.md): while the running files differ from what the release workflow built, or their
+ * Software integrity (/settings/guide/updates): while the running files differ from what the release workflow built, or their
  * list is not signed by it, owners and admins are told at the top of every page, as CxMissionZero alerts them when
  * they sign in. Everyone else is told nothing (the API answers them with no notice).
  */

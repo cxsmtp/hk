@@ -13,7 +13,7 @@ import { idleHours, refusalFrom, RESET_POLICY_OPTIONS } from "@/lib/sign-in";
 import type { SignInPerson, SignInSettings } from "@/lib/sign-in";
 
 /**
- * Settings → Sign-in, for owners and admins (docs/sign-in.md). The page is FTR Command Center's People → Sign-in
+ * Settings → Sign-in, for owners and admins (/settings/guide/people-and-access). The page is FTR Command Center's People → Sign-in
  * (ftr-cc-dashboard public/js/people.js `signInTab`): "Forgotten passwords" and "How people sign in", in FTR's
  * panels, wording and autosave. Two panels FTR does not have come from CxMissionZero's People & roles → Sign-in, in
  * the same look: "Two-step sign-in" (require it for everyone) and the people whose two-step sign-in or single sign-on

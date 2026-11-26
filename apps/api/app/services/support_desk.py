@@ -1,4 +1,4 @@
-"""Get help: support cases and enhancement requests (CxMissionZero's src/support.js and docs/support.md), each with a
+"""Get help: support cases and enhancement requests (CxMissionZero's src/support.js and /settings/guide/self-check-and-help), each with a
 number (SUP-0001, ENH-0001), a status, and a conversation between the person who raised it and the support team.
 
 Hawk's support team for a request is the owners and admins of the tenant it was raised in (MZ's ``support.manage``,
@@ -69,10 +69,13 @@ def iso(moment: Any) -> str:
     return str(moment or "")
 
 
-def get(db: Session, ticket_id: str) -> Any:
+def get(db: Session, ticket_id: str, *, lock: bool = False) -> Any:
+    """A request by its number. ``lock``: held until the caller commits (``SELECT … FOR UPDATE``), for a change to its
+    conversation or status, so two at the same moment are made one after the other and neither is lost."""
+
     from app.db.models.platform_records import SupportTicket
 
-    return db.get(SupportTicket, str(ticket_id or "").upper())
+    return db.get(SupportTicket, str(ticket_id or "").upper(), with_for_update=True if lock else None)
 
 
 def raised_since(db: Session, requester_id: str, since: dt.datetime) -> int:
@@ -184,7 +187,7 @@ def set_status(db: Session, ticket: Any, status: str, *, by: dict[str, Any], now
 
 def channel(db: Session, tenant_id: str | None) -> dict[str, str]:
     """{mode: portal|email (in force), email, chosen (what was chosen)}: the page's choice wins over SUPPORT_MODE / SUPPORT_EMAIL; email mode needs a valid
-    address, else Get help stays on the portal (docs/support.md)."""
+    address, else Get help stays on the portal (/settings/guide/self-check-and-help)."""
 
     import os
 
@@ -206,7 +209,7 @@ def save_channel(db: Session, tenant_id: str, *, mode: Any, email: Any, by: str,
     new_mode = before["chosen"] if mode is None else ("email" if mode == "email" else "portal")
     new_email = before["email"] if email is None else str(email).strip().lower()
     # An address that is not one yet is refused; email mode without one is kept, and Get help stays on the portal
-    # until a valid address is entered (docs/support.md).
+    # until a valid address is entered (/settings/guide/self-check-and-help).
     if new_email and not EMAIL_RE.match(new_email):
         raise SupportError(400, "Give the email address requests go to.")
     row = db.get(SupportSettings, tenant_id)
@@ -277,7 +280,7 @@ def support_email(ticket: Any, *, event: str, to: str, app_name: str = "Hawk AI"
 
 
 def mailto(kind: str, *, to: str, user: str, version: str, tenant: str, server: str) -> str:
-    """The email-mode link (docs/support.md): a subject and a short template, ending in who is asking, the version,
+    """The email-mode link (/settings/guide/self-check-and-help): a subject and a short template, ending in who is asking, the version,
     the tenant and the server address."""
 
     from urllib.parse import quote

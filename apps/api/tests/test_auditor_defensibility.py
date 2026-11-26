@@ -694,6 +694,7 @@ def test_export_named_artifacts_download_with_hashes_and_relative_paths(test_env
         "evidence_pack": "application/json",
         "pdf_ready_model": "application/json",
         "pdf": "application/pdf",
+        "signature_manifest": "application/json",
     }
     for name, url in body["download_urls"].items():
         downloaded = client.get(url, headers=headers)

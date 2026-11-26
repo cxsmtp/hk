@@ -2148,5 +2148,43 @@
     "notes": "Settings → About: FTR Command Center's page (public/js/about.js aboutHtml(), public/js/settings.js) in its settings look, inside the Settings menu (apps/web/src/lib/settings-menu.mjs). Covered by apps/web/tests/settings-shell.test.mjs (source checks and the menu's logic) and apps/api/tests/test_settings_console.py; not yet observed in a browser.",
     "desktop": "not-observed",
     "mobile": "not-observed"
+  },
+  {
+    "route": "/settings/guide",
+    "file": "apps/web/src/app/settings/guide/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Settings → Guide: the administrator's guide inside the console (apps/web/src/lib/guide), its first page with every topic, in the Settings look (ftr-settings.css). Covered by apps/web/tests/guide.test.mjs (every topic renders; every setting, command and page it names exists); not yet observed in a browser.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
+  },
+  {
+    "route": "/settings/guide/[topic]",
+    "file": "apps/web/src/app/settings/guide/[topic]/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Settings → Guide → one topic: one page per topic of apps/web/src/lib/guide/topics, made at build time, with its contents on the left (above the page below 1101 px). Covered by apps/web/tests/guide.test.mjs; not yet observed in a browser.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
   }
 ]

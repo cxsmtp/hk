@@ -11,7 +11,7 @@ export const BACKUP_NOTICE_CHANGED_EVENT = "hawk:backup-notice-changed";
 
 /**
  * Backups are encrypted with the server's own key and nobody has confirmed saving it, or backups are not encrypted
- * (docs: deploy/README.md, Backups): owners and admins are told at the top of every page until they act, as in
+ * (docs: /settings/guide/backups): owners and admins are told at the top of every page until they act, as in
  * CxMissionZero. Everyone else is told nothing (the API answers them with no notice).
  */
 export function BackupNotice() {

@@ -34,7 +34,14 @@ REQUIRED_CATEGORY_COUNTS: OrderedDict[str, int] = OrderedDict(
 )
 
 
-ALLOWED_EXECUTION_STATUS = {"executable_now", "partially_executable", "not_yet_executable"}
+# expected_gap and requires_environment are never executable (app/services/simulation_catalog_runners.py says why).
+ALLOWED_EXECUTION_STATUS = {
+    "executable_now",
+    "partially_executable",
+    "not_yet_executable",
+    "expected_gap",
+    "requires_environment",
+}
 
 
 def _catalog_dir() -> Path:

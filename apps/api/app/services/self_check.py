@@ -38,6 +38,7 @@ from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.log_config import recent_error_lines
 from app.services import action_links, error_counter, hands_off, mailer, support_desk
 from app.services.connection_guard import ConnectionGuard
 from app.services.state_file import read_state, write_state
@@ -274,7 +275,7 @@ class SelfCheck:
 
     @staticmethod
     def mail_ready(db: Session) -> bool:
-        """Email goes out only once the email server is set up and tested (docs/sign-in.md)."""
+        """Email goes out only once the email server is set up and tested (/settings/guide/people-and-access)."""
 
         from app.services import account_security
 
@@ -750,6 +751,8 @@ class SelfCheck:
                 "open": [{k: p.get(k) for k in ("key", "title", "since", "checks")} for p in self.watchdog.problems()],
                 "events": [{k: v for k, v in e.items() if k != "tenant"} for e in self.watchdog.events(30)],
             },
+            # The last error lines of this process (app/core/log_config.py), emails and phone numbers taken out.
+            "recentErrors": recent_error_lines(20),
         }
 
     def raise_case(self, db: Session, problem: dict[str, Any]) -> Any:

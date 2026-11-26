@@ -43,7 +43,7 @@ const hardeningOf = (h: HttpsStatus): Hardening => ({ minVersion: h.minVersion, 
 /**
  * Settings → HTTPS, laid out and worded as FTR Command Center's (public/js/settings.js `https()`): how the server is
  * reached (the three modes) and its hardening, the certificate in use with its upload and the request (CSR) for IT,
- * and a free certificate from Let's Encrypt. What happens behind it is CxMissionZero's (docs/https-and-hosting.md).
+ * and a free certificate from Let's Encrypt. What happens behind it is CxMissionZero's (/settings/guide/https).
  * Owners and admins only.
  */
 export default function HttpsSettingsPage() {

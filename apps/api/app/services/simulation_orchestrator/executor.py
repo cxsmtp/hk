@@ -55,6 +55,25 @@ _STEP_PROFILE_CATALOG: dict[str, dict[str, str]] = {
         "support_status": "executable_now",
         "support_reason": "Auditor snapshot creation is available in-process.",
     },
+    "agent_action_intercept": {
+        "step_type": "policy_eval",
+        "title": "Agent Action Intercept",
+        "actor": "ai_iam",
+        "target_surface": "agent",
+        "support_status": "executable_now",
+        "support_reason": "Runtime agent-action control is wired and callable in-process.",
+    },
+    "browser_interaction_eval": {
+        "step_type": "intercept",
+        "title": "Browser Control Evaluation",
+        "actor": "browser_extension",
+        "target_surface": "browser",
+        "support_status": "executable_now",
+        "support_reason": (
+            "Server-side browser control (the evaluation the Hawk extension calls) runs in-process; "
+            "the live Chromium capture leg needs the Playwright browser executor."
+        ),
+    },
     "browser_navigate": {
         "step_type": "navigate",
         "title": "Browser Navigate",
@@ -250,6 +269,28 @@ def _simulation_artifacts_root() -> Path:
     return root
 
 
+def contained_upload_file(value: Any) -> Path | None:
+    """The server file a simulation upload step names, only when it is a regular file inside the simulation evidence
+    folder (SIMULATION_EVIDENCE_DIR), symlinks resolved; None otherwise. A step's payload is written by a tenant
+    operator, and the file is read on the server and handed to Chromium to upload to the step's URL, so a path
+    anywhere else (``/run/secrets/...``, ``/proc/self/environ``, ``../``) must never be read."""
+
+    text = str(value or "").strip()
+    if not text:
+        return None
+    try:
+        root = _simulation_artifacts_root().resolve()
+        candidate = Path(text)
+        if not candidate.is_absolute():
+            candidate = root / candidate
+        resolved = candidate.resolve(strict=True)
+    except (OSError, RuntimeError, ValueError):
+        return None
+    if not resolved.is_relative_to(root) or not resolved.is_file():
+        return None
+    return resolved
+
+
 def _safe_slug(value: str, *, fallback: str) -> str:
     cleaned = "".join(ch if ch.isalnum() or ch in {"-", "_"} else "_" for ch in str(value or "").strip())
     cleaned = cleaned.strip("_")
@@ -272,6 +313,17 @@ def run_browser_step(
             "reason": profile["support_reason"],
             "step_kind": kind,
         }
+
+    payload = dict(payload or {})
+    if kind == "browser_upload_file":
+        upload = contained_upload_file(payload.get("file_path"))
+        if upload is None:
+            return {
+                "execution_status": "not_yet_executable",
+                "reason": "The upload step's file_path must name a file inside the simulation evidence folder.",
+                "step_kind": kind,
+            }
+        payload["file_path"] = str(upload)
 
     artifacts_dir = (
         _simulation_artifacts_root()

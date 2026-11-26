@@ -26,7 +26,7 @@ const formFrom = (view: HandsOffView): Form => ({
 });
 
 /**
- * Settings → Hands-off: CxMissionZero's page (public/index.html #set-handsoff, docs/hands-off.md) in FTR Command
+ * Settings → Hands-off: CxMissionZero's page (public/index.html #set-handsoff, /settings/guide/self-check-and-help) in FTR Command
  * Center's settings look. Set it up once, then leave it: the weekly status, who gets it and when, the email buttons and
  * replies, and the self-check. MZ's developer reminders (its questions 2 and the reminder parts of 1, 3 and 4) are
  * Checkmarx domain and are not in Hawk AI. Owners and admins only.

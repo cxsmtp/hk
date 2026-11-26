@@ -18,6 +18,7 @@ from urllib.parse import urlencode, urlsplit
 import httpx
 
 from app.services.integrity.service import outbound_url_problem
+from app.services.outbound_url import blocked_host
 
 #: Where Hawk AI's images come from: <UPDATE_IMAGE>-api, -web and -proxy.
 DEFAULT_IMAGE = "ghcr.io/cxsmtp/hk"
@@ -71,6 +72,15 @@ def machine_arch() -> str:
     return PLATFORM_ARCH.get(platform.machine().lower(), platform.machine().lower())
 
 
+def refuse_metadata_hop(request: httpx.Request) -> None:
+    """Every request the registry client sends, redirects included: never to a link-local or cloud metadata address
+    (a registry, or something in between, cannot send the server there with a redirect)."""
+
+    host = (request.url.host or "").lower()
+    if blocked_host(host):
+        raise UpdateError(f"{host} is a link-local or cloud metadata address, never a registry.", 400)
+
+
 class ImageRegistry:
     """A registry reader for one image. ``client`` is injectable for tests; ``token`` is only for a private copy."""
 
@@ -93,7 +103,8 @@ class ImageRegistry:
     def _send(self, url: str, headers: dict[str, str]) -> httpx.Response:
         if self._client is not None:
             return self._client.get(url, headers=headers, timeout=self.timeout, follow_redirects=True)
-        with httpx.Client(timeout=self.timeout, follow_redirects=True) as client:
+        # Redirects are followed (image files live on another host), but each hop is checked as the first address was.
+        with httpx.Client(timeout=self.timeout, follow_redirects=True, event_hooks={"request": [refuse_metadata_hop]}) as client:
             return client.get(url, headers=headers)
 
     def _get(self, path: str, *, accept: str = "", retried: bool = False) -> httpx.Response:

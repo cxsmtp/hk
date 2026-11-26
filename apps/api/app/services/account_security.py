@@ -1,5 +1,5 @@
 """Signing in with a password, ported from CxMissionZero's src/iam.js (signIn, checkTwoStep, recordSignIn) and
-src/routes/session.js (the limit per address, the sign-in policy). docs/sign-in.md.
+src/routes/session.js (the limit per address, the sign-in policy). /settings/guide/people-and-access.
 
 - Five wrong passwords in a row lock the account for 15 minutes. While it is locked, only someone who typed the right
   password learns it (423); to anyone else it looks like any wrong password (401), so nothing gives it away.
@@ -13,6 +13,7 @@ src/routes/session.js (the limit per address, the sign-in policy). docs/sign-in.
 from __future__ import annotations
 
 import json
+import logging
 import re
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -27,6 +28,8 @@ from app.db.models.user import RefreshToken, User, UserTenantRole
 from app.services import mfa_service, sign_in_store
 from app.services.sign_in_store import StoreUnavailable
 
+
+logger = logging.getLogger(__name__)
 
 MAX_FAILED = 5
 LOCK_SECONDS = 15 * 60
@@ -97,6 +100,7 @@ def too_many_sign_ins(request: Request | None) -> bool:
     try:
         recent = sign_in_store.store().hit(f"signin-ip:{client_ip(request)}", SIGN_IN_WINDOW_SECONDS, sign_in_store.now())
     except StoreUnavailable:
+        logger.warning("Sign-in limit per address unavailable (Redis unreachable): the attempt is let through", extra={"reason_code": "store_unavailable"})
         return False
     return recent > SIGN_IN_LIMIT
 
@@ -185,11 +189,25 @@ def find_by_email(db: Session, email: str) -> User | None:
     return db.scalar(select(User).where(func.lower(User.email) == text.lower()))
 
 
+def _lock_user(db: Session, user: User) -> None:
+    """Hold the person's row until the caller commits (PostgreSQL ``SELECT … FOR UPDATE``), reading it afresh: two
+    sign-in attempts at the same moment are then checked one after the other, so neither the wrong-attempt count (and
+    so the lock), nor a two-step code's step, nor a recovery code can be used twice by racing requests."""
+
+    db.flush()
+    db.refresh(user, with_for_update=True)
+
+
 def _count_wrong(user: User, now: datetime) -> None:
     user.failed_logins = int(user.failed_logins or 0) + 1
     if user.failed_logins >= MAX_FAILED:
         user.locked_until = now + timedelta(seconds=LOCK_SECONDS)
         user.failed_logins = 0
+        logger.warning(
+            "Account locked after %d failed sign-in attempts",
+            MAX_FAILED,
+            extra={"user_id": user.id, "locked_seconds": LOCK_SECONDS, "reason_code": "account_locked"},
+        )
 
 
 def check_password(db: Session, email: str, password: str, *, more: bool | None = None) -> User:
@@ -201,6 +219,8 @@ def check_password(db: Session, email: str, password: str, *, more: bool | None 
 
     now = utcnow()
     user = find_by_email(db, email)
+    if user is not None:
+        _lock_user(db, user)
     ok = verify_password(str(password or ""), user.hashed_password if user else _DUMMY_BCRYPT_HASH)
     if user is None:
         raise SignInRefused(401, WRONG)
@@ -230,6 +250,7 @@ def check_two_step(db: Session, user: User, typed: Any, *, recovery: bool = True
     Returns {kind: 'code' | 'recovery', left}. A wrong one raises SignInRefused 401 and counts as a wrong password
     does: five in a row lock the account for 15 minutes (423 while it is locked). The caller commits."""
 
+    _lock_user(db, user)
     secret = mfa_service.open_secret(user.mfa_secret)
     if not secret:
         raise SignInRefused(400, "Two-step sign-in is not on.", user=user)

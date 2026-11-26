@@ -1,5 +1,5 @@
 /**
- * First sign-in in the console (deploy/README.md), ported from CxMissionZero's public/app/session.js: a temporary
+ * First sign-in in the console (/settings/guide/install), ported from CxMissionZero's public/app/session.js: a temporary
  * password is changed before anything else, then the terms of use (TERMS.md) are accepted, by an owner or admin for
  * the organisation first and then by each person. The API answers 403 with one of two codes until then
  * (apps/api/app/core/access_gate.py), and the console turns them into those two pages.

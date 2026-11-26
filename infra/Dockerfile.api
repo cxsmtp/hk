@@ -8,6 +8,18 @@ RUN --mount=type=secret,id=ca,required=false \
     if [ -s /run/secrets/ca ]; then cat /etc/ssl/certs/ca-certificates.crt /run/secrets/ca > /tmp/ca.pem && export PIP_CERT=/tmp/ca.pem; fi && \
     pip wheel --require-hashes --no-cache-dir --wheel-dir /wheels -r /tmp/requirements.lock && rm -f /tmp/ca.pem
 
+# Optional named-entity model for DLP (people, places, organisations): off by default, so the standard image has none and
+# /health and /detection/coverage say so. `--build-arg HAWK_NER_MODEL=en_core_web_sm` builds it in from its pinned hash
+# (apps/api/requirements-ner.lock); nothing is downloaded at run time either way.
+ARG HAWK_NER_MODEL=""
+COPY apps/api/requirements-ner.lock /tmp/requirements-ner.lock
+RUN --mount=type=secret,id=ca,required=false \
+    mkdir -p /wheels-ner && \
+    if [ "$HAWK_NER_MODEL" = "en_core_web_sm" ]; then \
+      if [ -s /run/secrets/ca ]; then cat /etc/ssl/certs/ca-certificates.crt /run/secrets/ca > /tmp/ca.pem && export PIP_CERT=/tmp/ca.pem; fi && \
+      pip wheel --require-hashes --no-deps --no-cache-dir --wheel-dir /wheels-ner -r /tmp/requirements-ner.lock && rm -f /tmp/ca.pem; \
+    elif [ -n "$HAWK_NER_MODEL" ]; then echo "HAWK_NER_MODEL: only en_core_web_sm is pinned" >&2; exit 1; fi
+
 FROM python:3.11-slim@sha256:9c900dea9e8fb7e16277c179b555cc72d29a352dbc33cff48ad5a0412fd5bfc7 AS api-base
 
 WORKDIR /workspace/apps/api
@@ -15,7 +27,7 @@ WORKDIR /workspace/apps/api
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# pg_dump and pg_restore, for backups and restores (app/services/pg_tools.py; deploy/README.md: Backups). PostgreSQL 17's
+# pg_dump and pg_restore, for backups and restores (app/services/pg_tools.py; /settings/guide/backups). PostgreSQL 17's
 # client (Debian 13's), which dumps and restores the PostgreSQL 16 of deploy/compose.yaml; pinned to the version tested,
 # as the base image is pinned by its digest and the Python packages by their hashes.
 # TODO(owner): pin through snapshot.debian.org, so the build still finds this exact version after a security update.
@@ -27,12 +39,15 @@ COPY apps/api/requirements.txt /tmp/requirements.txt
 COPY --from=builder /wheels /wheels
 RUN pip install --no-cache-dir --no-index --find-links=/wheels -r /tmp/requirements.txt \
   && rm -rf /wheels /tmp/requirements.txt
+COPY --from=builder /wheels-ner /wheels-ner
+RUN if ls /wheels-ner/*.whl >/dev/null 2>&1; then pip install --no-cache-dir --no-index --no-deps /wheels-ner/*.whl; fi \
+  && rm -rf /wheels-ner
 
 COPY apps/api /workspace/apps/api
 COPY packages /workspace/packages
 COPY docs/evidence /workspace/docs/evidence
 COPY infra/scripts /workspace/infra/scripts
-# The version shown in the console and on /health, the terms of use people accept (deploy/README.md), the licence and
+# The version shown in the console and on /health, the terms of use people accept (/settings/guide/install), the licence and
 # the version log.
 COPY VERSION TERMS.md LICENSE CHANGELOG.md /workspace/
 
@@ -53,7 +68,7 @@ USER root
 RUN mkdir -p /test-results && chown 1000:1000 /test-results
 USER 1000
 
-# ---- The file list: every file the image ships, with its SHA-256 (docs/integrity.md) ----------------------------------
+# ---- The file list: every file the image ships, with its SHA-256 (/settings/guide/updates) ----------------------------------
 # The release workflow signs this exact file (a GitHub build attestation, logged by Sigstore), and the API checks its own
 # files and that signature (Settings → Updates → Software integrity), as CxMissionZero's Dockerfile integrity stage.
 FROM api-base AS integrity

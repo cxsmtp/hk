@@ -35,6 +35,8 @@ from app.services.tls_service import Pem
 
 CADDYFILE = "Caddyfile"
 CHALLENGE_PREFIX = "/.well-known/acme-challenge/"
+#: The evidence signing public keys (app/services/evidence_signing.py WELL_KNOWN_PATH), answered by the API.
+EVIDENCE_KEYS_PATH = "/.well-known/hawk-evidence-keys.json"
 
 _RANGES = {
     "loopback": ["127.0.0.0/8", "::1/128"],
@@ -130,8 +132,15 @@ def render_caddyfile(
         "",
         "(hawk) {",
         "\timport acme_challenge",
-        "\thandle_path /api/* {",
+        "\t# The public keys evidence is signed with (app/services/evidence_signing.py), for auditors without an account.",
+        f"\thandle {EVIDENCE_KEYS_PATH} {{",
         "\t\treverse_proxy api:8000",
+        "\t}",
+        "\thandle_path /api/* {",
+        "\t\treverse_proxy api:8000 {",
+        "\t\t\t# Where the browser reaches the API: the console's refresh cookie is scoped to it (app/core/session_cookies.py).",
+        "\t\t\theader_up X-Forwarded-Prefix /api",
+        "\t\t}",
         "\t}",
         "\thandle {",
         "\t\treverse_proxy web:3000",

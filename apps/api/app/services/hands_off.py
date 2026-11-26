@@ -16,6 +16,7 @@ from typing import Any
 
 from app.core.config import settings
 from app.services import mailer
+from app.services.outbound_url import blocked_host
 from app.services.state_file import read_state, write_state
 
 FILE_NAME = "hands-off.json"
@@ -86,6 +87,9 @@ def merge_hands_off(current: dict[str, Any] | None, incoming: dict[str, Any] | N
         host = str(incoming["imapHost"] or "").strip()
         if host and not re.fullmatch(r"[A-Za-z0-9.-]{1,253}", host):
             raise HandsOffError("Hands-off: the mailbox server must be a host name, such as imap.company.com.")
+        # Never a link-local or cloud metadata address: the server connects to it with the mailbox's password.
+        if host and blocked_host(host):
+            raise HandsOffError("Hands-off: the mailbox server cannot be a link-local or cloud metadata address.")
         out["imapHost"] = host
     if "imapPort" in incoming:
         port = incoming["imapPort"]

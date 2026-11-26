@@ -370,7 +370,7 @@ def reset_admin(db: Session, wanted: str | None = None, *, env: Mapping[str, str
         user.hashed_password = get_password_hash(password)
         user.must_change_password = True
         # A locked administrator could not use it otherwise; two-step sign-in goes with the password: whoever needs
-        # this command may have lost the phone as well (docs/sign-in.md).
+        # this command may have lost the phone as well (/settings/guide/people-and-access).
         user.failed_logins = 0
         user.locked_until = None
         from app.services import account_security

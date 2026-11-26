@@ -1,7 +1,7 @@
 /**
  * Settings → Updates: what the page shows, laid out and worded as FTR Command Center's Updates page
- * (public/js/settings.js `updates()`), with what happens behind it from CxMissionZero (docs/updating.md,
- * docs/integrity.md): the versions published as image tags, newest 3 then "Load 10 more", auto-update off by default
+ * (public/js/settings.js `updates()`), with what happens behind it from CxMissionZero (/settings/guide/updates,
+ * /settings/guide/updates): the versions published as image tags, newest 3 then "Load 10 more", auto-update off by default
  * with an install hour, the latest and stable channels, and software integrity's five states.
  * The API is app/api/routers/updates.py.
  */
@@ -72,7 +72,7 @@ export function cmpVer(a: string, b: string): number {
   return 0;
 }
 
-/** Software integrity's chip: FTR's INTEG, with CxMissionZero's five states (docs/integrity.md). */
+/** Software integrity's chip: FTR's INTEG, with CxMissionZero's five states (/settings/guide/updates). */
 export const INTEG: Record<IntegrityState, [string, string]> = {
   genuine: ["ok", "Genuine"],
   tampered: ["bad", "Files changed"],

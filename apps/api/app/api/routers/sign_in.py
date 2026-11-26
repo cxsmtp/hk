@@ -1,5 +1,5 @@
 """Two-step sign-in, forgotten passwords and the administrator's sign-in rules, ported from CxMissionZero's
-src/routes/session.js (docs/sign-in.md).
+src/routes/session.js (/settings/guide/people-and-access).
 
 Before signing in:
 - GET  /auth/sign-in-options           what the sign-in page offers ("Forgot your password?")
@@ -19,7 +19,7 @@ An owner or admin (for the whole installation; Settings → Sign-in):
 from __future__ import annotations
 
 import json
-import sys
+import logging
 from datetime import datetime, timezone
 from time import perf_counter, sleep
 from typing import Annotated, Any
@@ -30,8 +30,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.routers.auth import audit_access, refused, signed_in_response
+from app.core import session_cookies
 from app.core.auth import get_current_user
 from app.core.config import settings
+from app.core.log_config import mask_email
 from app.core.rbac import require_permission
 from app.core.security import get_password_hash, verify_password
 from app.core.tenant import TenantContext
@@ -51,6 +53,9 @@ TICKET_OVER = "That sign-in is over: it lasts five minutes and takes a few tries
 WRONG_CODE = "That code is not right. Use the newest code in your authenticator app, and check that the phone's clock is right."
 UNAVAILABLE = "Sign-in is unavailable for a moment. Try again shortly."
 _RESET_MIN_RESPONSE_SECONDS = 0.25
+
+
+logger = logging.getLogger(__name__)
 
 
 def _no_store(content: Any, status_code: int = 200) -> JSONResponse:
@@ -162,7 +167,8 @@ def two_step(request: Request, body: Annotated[dict[str, Any] | None, Body()] = 
     content = json.loads(response.model_dump_json())
     if recovery_codes:
         content["recovery_codes"] = recovery_codes
-    return _no_store(content, 200)
+    # The console's session: the tokens as cookies (app/core/session_cookies.py).
+    return session_cookies.answer(request, content, 200)
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -288,7 +294,7 @@ def _send_in_background(message, to: str, user_id: str) -> None:  # type: ignore
             password_reset_service.revoke_user(user_id)
         except StoreUnavailable:
             pass
-        print(f"[password reset] The link for {to} could not be sent: {error}", file=sys.stderr, flush=True)
+        logger.warning("[password reset] The link for %s could not be sent: %s", mask_email(to), error, extra={"user_id": user_id})
 
 
 @router.post("/password-reset")

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+import logging
 import time
 from uuid import uuid4
 
@@ -14,12 +15,21 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.routers import account_boundary, action_integrity, activity_audit, agui, agents, ai_discovery, ai_iam, ai_orchestration, ai_systems, ai_tools_usage, audit, auditor, auth, banking_transaction_integrity, brain, checkmarx, continuous_assurance, control_coverage, coverage, dashboard, deployments, discovery, discovery_adv, discovery_assets, discovery_capabilities, discovery_collectors, discovery_ecosystems, discovery_erg, discovery_exposure, discovery_scans, discovery_source_connections, discovery_surface_sources, discovery_targets, endpoint_agent, enforcement, executive_mcp, executive_remote_mcp, extension, external_risk, findings, gateway, guardian_contracts_v2, investigations, kb, llm_gateway, maturity_curve, monitoring, native_controls, onprem, ops, policies, policy_pack_platform, runtime, runtime_control, runtime_intelligence, scans, shadow_ai, simulation_policies, simulations, surface_coverage, system, trust_center, user_visibility
-from app.api.routers import access, backups, claude_enterprise, hands_off, https, iam, licence, network, records, settings_console, sign_in, support, updates
+from app.api.routers import access, backups, claude_enterprise, evidence_signing, hands_off, https, iam, licence, network, records, settings_console, sign_in, support, updates
+from app.api.routers import detection
 from app.core.access_gate import AccessRequired, access_required_response
 from app.core.config import configured_secret_sources, settings
 from app.core.licence_gate import licence_gate
+from app.core.log_config import (
+    bind_log_context,
+    configure_logging,
+    get_log_context,
+    reset_log_context,
+    safe_id,
+)
 from app.core.observability import (
     gateway_latency_paths,
+    get_correlation_id,
     latency_tracker,
     log_structured,
     reset_correlation_id,
@@ -42,6 +52,10 @@ from app.services.pg_tools import InstanceLock, is_postgres
 from app.services.integrity import service as integrity_service
 from app.services.updates.companion import acknowledge_start
 from app.version import APP_VERSION, PACKAGE_VERSION
+
+# Logs (app/core/log_config.py): JSON lines on stdout (LOG_FORMAT, LOG_LEVEL), uvicorn's own access line off.
+configure_logging()
+logger = logging.getLogger(__name__)
 
 
 def _safe_internal_error_message(exc: Exception) -> str:
@@ -141,7 +155,7 @@ def _prepare_access_at_start() -> None:
             db.commit()
     if settings.first_run_access:
         first_run_service.prepare_access(SessionLocal)
-    # RESET_TWO_STEP=<email>: two-step sign-in taken off once for that person (docs/sign-in.md).
+    # RESET_TWO_STEP=<email>: two-step sign-in taken off once for that person (/settings/guide/people-and-access).
     reset_two_step = os.environ.get("RESET_TWO_STEP")
     try:
         with SessionLocal() as db:
@@ -282,6 +296,8 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    # The detached evidence signature of an export (app/services/evidence_signing.py), for a console on another origin.
+    expose_headers=["X-Hawk-Evidence-Signature", "X-Hawk-Evidence-Signature-Status"],
 )
 app.add_middleware(
     TrustedHostMiddleware,
@@ -404,8 +420,16 @@ def _assert_production_readiness_or_fail_startup() -> None:
 
 @app.middleware("http")
 async def correlation_and_request_logging_middleware(request, call_next):
-    correlation_id = request.headers.get("x-correlation-id") or str(uuid4())
+    # The request id (app/core/log_config.py): the caller's X-Request-ID or X-Correlation-Id when it is a plain,
+    # short identifier, otherwise a new one. It is the correlation id written with the audit records, comes back in
+    # X-Request-ID and X-Correlation-Id, and is on every log line of this request.
+    correlation_id = (
+        safe_id(request.headers.get("x-request-id"))
+        or safe_id(request.headers.get("x-correlation-id"))
+        or str(uuid4())
+    )
     token = set_correlation_id(correlation_id)
+    log_token = bind_log_context(request_id=correlation_id)
     request.state.correlation_id = correlation_id
     started = time.perf_counter()
     status_code = 500
@@ -427,6 +451,7 @@ async def correlation_and_request_logging_middleware(request, call_next):
                     error_type=exc.__class__.__name__,
                     error_message=_safe_internal_error_message(exc),
                     tenant_id=request.headers.get("x-tenant-id"),
+                    exc_info=exc,
                 )
                 response = JSONResponse(
                     status_code=500,
@@ -440,10 +465,15 @@ async def correlation_and_request_logging_middleware(request, call_next):
                 )
                 status_code = response.status_code
                 response.headers["X-Correlation-Id"] = correlation_id
+                response.headers["X-Request-ID"] = correlation_id
                 return response
 
             status_code = 503
             tenant_id = request.headers.get("x-tenant-id")
+            access_logger.warning(
+                "Gateway request blocked (fail closed): the database is unavailable",
+                extra={"error_type": exc.__class__.__name__},
+            )
             audit_id = None
             if tenant_id:
                 try:
@@ -502,6 +532,7 @@ async def correlation_and_request_logging_middleware(request, call_next):
                 error_type=exc.__class__.__name__,
                 **({"error_message": error_message} if error_message else {}),
                 tenant_id=request.headers.get("x-tenant-id"),
+                exc_info=exc,
             )
             response = JSONResponse(
                 status_code=500,
@@ -515,26 +546,59 @@ async def correlation_and_request_logging_middleware(request, call_next):
             )
             status_code = response.status_code
             response.headers["X-Correlation-Id"] = correlation_id
+            response.headers["X-Request-ID"] = correlation_id
             return response
         if response is not None:
             status_code = response.status_code
             response.headers["X-Correlation-Id"] = correlation_id
+            response.headers["X-Request-ID"] = correlation_id
     finally:
         latency_ms = (time.perf_counter() - started) * 1000.0
         path = request.url.path
         if path in gateway_latency_paths:
             latency_tracker.observe(path, latency_ms)
-        log_structured(
-            "http_request",
-            correlation_id=correlation_id,
-            method=request.method,
-            path=path,
-            status_code=status_code,
-            latency_ms=round(latency_ms, 4),
-            tenant_id=request.headers.get("x-tenant-id"),
-        )
+        _log_access(request, status_code=status_code, latency_ms=latency_ms)
+        reset_log_context(log_token)
         reset_correlation_id(token)
     return response
+
+
+access_logger = logging.getLogger("app.access")
+
+
+def _log_access(request, *, status_code: int, latency_ms: float) -> None:
+    """One line per request: the route as declared (/ai-systems/{ai_system_id}, never the ids in the path), the
+    status, how long it took, the tenant and person when known, and the client's address (uvicorn's --proxy-headers
+    already put the front proxy's X-Forwarded-For there). Never a header, query string or body."""
+
+    try:
+        route = getattr(request.scope.get("route"), "path", None)
+        actor = getattr(request.state, "activity_actor", None) or {}
+        context = get_log_context()
+        fields = {
+            "method": request.method,
+            "route": route or None,
+            "status": status_code,
+            "duration_ms": round(latency_ms, 2),
+            "client_ip": request.client.host if request.client else None,
+            "tenant_id": actor.get("tenant_id") or context.get("tenant_id") or safe_id(request.headers.get("x-tenant-id")),
+            "user_id": actor.get("user_id") or context.get("user_id"),
+        }
+        if not route:
+            # No route matched (404s, scans): the path, without its query string, shortened.
+            fields["path"] = request.url.path[:200]
+        level = logging.ERROR if status_code >= 500 else logging.INFO
+        access_logger.log(
+            level,
+            "%s %s %s %.1fms",
+            request.method,
+            route or fields["path"],
+            status_code,
+            latency_ms,
+            extra={key: value for key, value in fields.items() if value is not None},
+        )
+    except Exception:  # noqa: BLE001 - the access line never fails a request
+        pass
 
 
 @app.middleware("http")
@@ -581,6 +645,15 @@ def health_ready():
     return JSONResponse(status_code=200 if report.ready else 503, content=report.to_dict())
 
 
+def _health_failure(exc: Exception) -> str:
+    """What an unauthenticated health answer says about a failure: its kind and the request id, never the database's
+    own message (it can name the host, the user and the statement). The whole error is in the server log."""
+
+    request_id = get_correlation_id() or ""
+    logger.warning("Schema health check failed", exc_info=exc, extra={"request_id": request_id, "reason_code": "schema_health_failed"})
+    return f"schema_health_failed:{exc.__class__.__name__}" + (f" (request id {request_id})" if request_id else "")
+
+
 @app.get("/health")
 def health():
     strict_schema = _strict_schema_mode_enabled()
@@ -595,7 +668,7 @@ def health():
                 "service": "api",
                 "strict_schema": strict_schema,
                 "schema_healthy": False,
-                "error": f"schema_health_failed:{exc}",
+                "error": _health_failure(exc),
             },
         )
 
@@ -616,7 +689,21 @@ def health():
         "version": APP_VERSION,
         "strict_schema": strict_schema,
         "schema_healthy": schema_report.healthy,
+        "detection": _detection_health(),
     }
+
+
+def _detection_health() -> dict:
+    """DLP / injection detection coverage, without loading a model: named entities run only when a spaCy model is
+    installed in the image; without one they degrade to patterns, and this says so."""
+    try:
+        from app.services.detection.injection_rules import RULESET_VERSION
+        from app.services.sensitive_data_detection_service import ner_status
+
+        ner = ner_status()
+        return {"offline": True, "ner_available": ner["available"], "ner_model": ner["model"], "injection_rules": RULESET_VERSION}
+    except Exception as exc:  # noqa: BLE001 - health must answer
+        return {"offline": True, "error": type(exc).__name__}
 
 
 @app.get("/health/schema")
@@ -634,7 +721,7 @@ def health_schema():
                 "pending_migrations": [],
                 "missing_tables": [],
                 "missing_columns": [],
-                "notes": [f"schema_health_failed:{exc}"],
+                "notes": [_health_failure(exc)],
             },
         )
 
@@ -652,7 +739,9 @@ app.include_router(https.router)
 app.include_router(backups.router)
 app.include_router(updates.router)
 app.include_router(records.router)
+app.include_router(evidence_signing.router)
 app.include_router(support.router)
+app.include_router(detection.router)
 app.include_router(network.router)
 app.include_router(hands_off.router)
 app.include_router(settings_console.router)

@@ -426,7 +426,80 @@ def evaluate_threat_detectors(
                             hits.append((f"{field_name}:decoded", match.group(0)[:80]))
         if len(hits) >= sig.min_hits:
             results.append(_to_guardian_result(sig, hits))
+    results.extend(_injection_engine_results(fields, surface=surface))
     return results
+
+
+# The layered prompt-injection engine (app/services/detection/injection_engine.py): normalisation, the versioned rule
+# set and the offline classifier, with the tenant's thresholds. One guardian result per scanned field group.
+INJECTION_ENGINE_CONTRACT_ID = "threat.detector.prompt_injection_engine"
+_ENGINE_FIELDS = (("prompt", "direct"), ("context", "indirect"), ("tool_output", "indirect"), ("rag", "indirect"))
+
+
+def _injection_engine_results(fields: dict[str, str], *, surface: str) -> list[dict[str, Any]]:
+    try:
+        from app.services.detection.injection_engine import assess
+    except Exception:  # noqa: BLE001 - the signature catalogue above still applies
+        return []
+    verdicts: list[tuple[str, Any]] = []
+    seen: set[str] = set()
+    for field_name, scope in _ENGINE_FIELDS:
+        text = fields.get(field_name, "")
+        if not text or text in seen:
+            continue
+        seen.add(text)
+        try:
+            verdict = assess(text, scope=scope)
+        except Exception:  # noqa: BLE001 - detectors must never break the gateway
+            continue
+        if verdict.detected:
+            verdicts.append((field_name, verdict))
+    if not verdicts:
+        return []
+    decision = "allow"
+    for _field, verdict in verdicts:
+        decision = _max_decision(decision, verdict.gateway_decision)
+    top = max((v for _f, v in verdicts), key=lambda v: v.risk_score)
+    reason_codes: list[str] = []
+    threat_types: list[str] = []
+    for _field, verdict in verdicts:
+        reason_codes.extend(code for code in verdict.reason_codes if code not in reason_codes)
+        threat_types.extend(t for t in verdict.threat_types if t not in threat_types)
+    matched_fields = sorted({field_name for field_name, _ in verdicts})
+    if decision in {"allow", "warn"}:
+        # "log" is the engine's record-only level. Any guardian result from this contract reads as a detected
+        # injection to the central control engine, which escalates it to a block, so a suspicion adds none.
+        return []
+    return [
+        {
+            "guardian_contract_id": INJECTION_ENGINE_CONTRACT_ID,
+            "guardian_id": "prompt_injection_engine_guard",
+            "decision": decision,
+            "confidence": round(max(0.5, top.risk_score), 4),
+            "confidence_tier": "clear_positive" if decision == "block" else "ambiguous",
+            "arbiter_invoked": False,
+            "matched_conditions": matched_fields,
+            "threat_types": threat_types or ["prompt_injection"],
+            "actions_taken": {
+                "reason_code": "threat_detector:prompt_injection_engine",
+                "title": "Prompt injection / jailbreak (rules + classifier)",
+                "severity": "high" if decision in {"block", "hold_for_approval"} else "medium",
+                "matched_fields": matched_fields,
+                "reason_codes": reason_codes,
+                "risk_score": top.risk_score,
+                "classifier_score": top.classifier_score,
+                "action": top.action,
+                "ruleset_version": top.ruleset_version,
+                "model_version": top.model_version,
+                "surface": surface,
+            },
+            "framework_refs": {
+                "owasp_llm": "LLM01:2025 Prompt Injection",
+                "owasp_agentic": "ASI-T06 Intent Breaking & Goal Manipulation",
+                "mitre_atlas": "AML.T0051 LLM Prompt Injection",
+            },
+        }
+    ]
 
 
 _STRUCTURAL_OBFUSCATION_SIG = ThreatSignature(
@@ -585,7 +658,19 @@ def _max_decision(a: str, b: str) -> str:
 # ---------------------------------------------------------------------------
 
 def coverage_matrix() -> list[dict[str, Any]]:
-    rows: list[dict[str, Any]] = []
+    rows: list[dict[str, Any]] = [
+        {
+            "detector_id": "prompt_injection_engine",
+            "title": "Prompt injection / jailbreak (rules + classifier)",
+            "threat_type": "prompt_injection",
+            "severity": "high",
+            "decision": "per tenant thresholds (block / hold / redact / log)",
+            "applies_to": ["prompt", "context", "tool_output", "rag"],
+            "owasp_llm": "LLM01:2025 Prompt Injection",
+            "owasp_agentic": "ASI-T06 Intent Breaking & Goal Manipulation",
+            "mitre_atlas": "AML.T0051 LLM Prompt Injection",
+        }
+    ]
     for sig in (_STRUCTURAL_OBFUSCATION_SIG, *THREAT_SIGNATURES):
         rows.append(
             {

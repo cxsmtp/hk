@@ -23,6 +23,7 @@ from app.services.control_validator import evaluate_final_outcome, evaluate_iter
 from app.services.crq_service import compute_simulation_crq
 from app.services.evidence_service import create_evidence_node
 from app.services.gateway_service import llm_intercept, mcp_authorize
+from app.services.runtime_control_agent_action_service import evaluate_agent_action_and_record
 from app.services.governance_guard import enforce as enforce_governance
 from app.services.maturity_service import recalculate_control_maturity
 from app.services.monitoring_service import ingest_monitoring_signal, ingest_shadow_event
@@ -355,6 +356,7 @@ def _decision_rank(decision: str | None) -> int:
         "modify": 80,
         "redact": 80,
         "hold_for_approval": 75,
+        "require_approval": 75,
         "step_up": 70,
         "warn": 55,
         "allow_with_warning": 55,
@@ -383,7 +385,7 @@ def _decision_matches_expected(*, expected: str | None, actual: str | None) -> b
     if exp in {"allow_with_warning", "warn"}:
         return act in {"warn", "allow_with_warning"}
     if exp in {"step_up"}:
-        return act in {"step_up", "hold_for_approval"}
+        return act in {"step_up", "hold_for_approval", "require_approval"}
     if exp in {"defer"}:
         return act in {"defer"}
     if exp in {"allow"}:
@@ -1118,6 +1120,62 @@ def _apply_control_success_criteria(
         )
 
 
+_LLM_INTERCEPT_OPTIONAL_FIELDS = (
+    "response_text",
+    "provider",
+    "model_name",
+    "model_version",
+    "tool_name",
+    "tool_category",
+    "api_endpoint",
+    "data_source",
+    "chain_depth",
+    "parent_agent_id",
+)
+_MCP_AUTHORIZE_OPTIONAL_FIELDS = (
+    "tool_name",
+    "tool_category",
+    "api_endpoint",
+    "provider",
+    "model_name",
+    "session_id",
+    "session_context",
+    "initiating_user_id",
+    "parent_agent_id",
+    "chain_id",
+)
+_AGENT_ACTION_PAYLOAD_FIELDS = {
+    "agent_id",
+    "capability_token",
+    "action_type",
+    "tool_name",
+    "target_resource",
+    "input_context",
+    "chain_depth",
+    "chain_id",
+    "parent_agent_id",
+    "platform_mode",
+    "ai_system_id",
+}
+
+
+def _optional_step_fields(payload: dict[str, Any], names: tuple[str, ...]) -> dict[str, Any]:
+    """Optional gateway arguments a step may carry (provider, endpoint, session...); absent or empty ones are left out."""
+
+    out: dict[str, Any] = {}
+    for name in names:
+        value = (payload or {}).get(name)
+        if value is None or value == "" or value == {} or value == []:
+            continue
+        if name == "chain_depth":
+            try:
+                value = int(value)
+            except (TypeError, ValueError):
+                continue
+        out[name] = value
+    return out
+
+
 def _execute_simulation_iteration(
     db: Session,
     *,
@@ -1255,6 +1313,7 @@ def _execute_simulation_iteration(
                     attachments_meta=payload.get("attachments_meta", []),
                     tool_output=payload.get("tool_output", inputs_used.get("tool_output")),
                     audit_actor_user_id=actor_user_id,
+                    **_optional_step_fields(payload, _LLM_INTERCEPT_OPTIONAL_FIELDS),
                 )
                 step_output = res
                 evidence_nodes.extend(res.get("evidence_nodes_created", []))
@@ -1275,10 +1334,74 @@ def _execute_simulation_iteration(
                     chain_depth=int(payload.get("chain_depth", 0)),
                     request_id=req_id,
                     audit_actor_user_id=actor_user_id,
+                    **_optional_step_fields(payload, _MCP_AUTHORIZE_OPTIONAL_FIELDS),
                 )
                 step_output = res
                 evidence_nodes.extend(res.get("evidence_nodes_created", []))
                 linked_events.append(res.get("event_id"))
+
+            elif kind == "agent_action_intercept":
+                agent_payload = {
+                    key: value
+                    for key, value in dict(payload or {}).items()
+                    if key in _AGENT_ACTION_PAYLOAD_FIELDS and value not in (None, "")
+                }
+                agent_payload.setdefault("ai_system_id", ai_system_id)
+                agent_payload["correlation_id"] = _simulation_request_id(
+                    run_id=run_id,
+                    step_id=step_id,
+                    base_request_id=str(payload.get("request_id") or step_id),
+                    iteration=iteration_index + 1,
+                )
+                res = evaluate_agent_action_and_record(
+                    db,
+                    tenant_id=tenant_id,
+                    actor_user_id=actor_user_id,
+                    payload=agent_payload,
+                )
+                step_output = dict(res)
+                step_output["final_decision"] = str(res.get("decision") or "").strip().lower() or None
+                step_output["reason"] = res.get("reason_code")
+                evidence_id = str(res.get("evidence_node_id") or "").strip()
+                if evidence_id:
+                    evidence_nodes.append(evidence_id)
+                runtime_event_id = str(res.get("runtime_event_id") or "").strip()
+                if runtime_event_id:
+                    linked_events.append(runtime_event_id)
+
+            elif kind == "browser_interaction_eval":
+                # The decision the Hawk extension asks the API for, evaluated in-process with the payload the
+                # extension sends. It proves the server-side browser control, not the live Chromium capture leg.
+                browser_payload = _build_browser_interaction_payload_for_step(
+                    step_kind="browser_prompt_inject",
+                    step_payload=dict(payload or {}),
+                    step_output={},
+                    ai_system_id=ai_system_id,
+                    run_id=run_id,
+                    step_id=step_id,
+                    iteration_index=iteration_index,
+                )
+                file_meta = [item for item in (payload.get("file_meta") or []) if isinstance(item, dict)]
+                if file_meta:
+                    browser_payload["file_meta"] = file_meta
+                    if not str(payload.get("prompt") or "").strip():
+                        browser_payload["prompt_preview_redacted"] = "simulation-upload-evaluation"
+                res = evaluate_browser_interaction_and_record(
+                    db,
+                    tenant_id=tenant_id,
+                    actor_user_id=actor_user_id,
+                    payload=browser_payload,
+                )
+                step_output = dict(res)
+                step_output["final_decision"] = str(res.get("decision") or "").strip().lower() or None
+                reason_codes = res.get("reason_codes")
+                step_output["reason"] = (reason_codes[0] if isinstance(reason_codes, list) and reason_codes else None)
+                evidence_id = str(res.get("evidence_node_id") or "").strip()
+                if evidence_id:
+                    evidence_nodes.append(evidence_id)
+                runtime_event_id = str(res.get("runtime_event_id") or "").strip()
+                if runtime_event_id:
+                    linked_events.append(runtime_event_id)
 
             elif kind == "shadow_event_ingest":
                 signal = ingest_shadow_event(

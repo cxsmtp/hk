@@ -185,12 +185,16 @@ class Settings(BaseSettings):
     deployment_data_location: str = "local-development"
     deployment_topology: str = "development"
     component_type: str = "api"
+    # Logs (app/core/log_config.py): one line per event on stdout. LOG_FORMAT=json (one JSON object a line, as
+    # deploy/compose.yaml sets it) or text (easier to read on a laptop); LOG_LEVEL=DEBUG|INFO|WARNING|ERROR.
+    log_format: str = "text"
+    log_level: str = "INFO"
     component_version: str = "0.1.0"
     component_protocol_version: str = "1.0"
     minimum_component_versions_json: str = (
         '{"api":"0.1.0","worker":"0.1.0","celery_beat":"0.1.0","web":"0.1.0"}'
     )
-    # First run (deploy/README.md, app/services/first_run_service.py): the API's own data folder (0700) holds the
+    # First run (/settings/guide/install, app/services/first_run_service.py): the API's own data folder (0700) holds the
     # generated first administrator's password (0600) until they choose their own; it is never in a backup.
     hawk_data_dir: str = ".runtime/data"
     # Make the first administrator when the API starts on an empty database (deploy/compose.yaml turns it on).
@@ -210,7 +214,7 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     refresh_token_expire_minutes: int = 60 * 24 * 7
-    # Sign-in (docs/sign-in.md, ported from CxMissionZero): a sign-in that is not used for this long ends. Hawk's
+    # Sign-in (/settings/guide/people-and-access, ported from CxMissionZero): a sign-in that is not used for this long ends. Hawk's
     # console keeps a 30-minute access token and a rotating refresh token; a refresh token that was not used (rotated)
     # for SESSION_IDLE_MINUTES is refused, so the person signs in again.
     session_idle_minutes: int = 480
@@ -289,6 +293,18 @@ class Settings(BaseSettings):
         if value is not None and value != "none":
             raise ValueError("OPENAI_REASONING_EFFORT supports only 'none'.")
         return value
+
+    @field_validator("log_format", mode="before")
+    @classmethod
+    def _normalize_log_format(cls, value: object) -> str:
+        # A typo never stops the start: anything but "text" is the JSON a deployment reads.
+        return "text" if str(value or "").strip().lower() == "text" else "json"
+
+    @field_validator("log_level", mode="before")
+    @classmethod
+    def _normalize_log_level(cls, value: object) -> str:
+        text = str(value or "").strip().upper()
+        return text if text in {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"} else "INFO"
     enforcement_contract_mode: str = "v1"
     llm_intercept_qps_per_tenant: int = 10
     mcp_authorize_qps_per_tenant: int = 20
@@ -306,6 +322,22 @@ class Settings(BaseSettings):
     authorization_kernel_v2_enforce: bool = False
     authorization_kernel_v2_enforce_rollout: str = "{}"
     decision_execution_receipts_enabled: bool = False
+    # Evidence signing (app/services/evidence_signing.py): what signs the evidence handed to auditors. local (an
+    # Ed25519 key in the data folder), aws_kms, azure_kv or gcp_kms; the cloud keys' secrets also as *_FILE.
+    evidence_signing_backend: str = "local"
+    evidence_signing_aws_kms_key_id: str = ""
+    evidence_signing_aws_region: str = ""
+    evidence_signing_aws_endpoint: str = ""
+    evidence_signing_aws_access_key_id: str = ""
+    evidence_signing_aws_secret_access_key: str = ""
+    evidence_signing_aws_session_token: str = ""
+    evidence_signing_azure_key_id: str = ""
+    evidence_signing_azure_tenant_id: str = ""
+    evidence_signing_azure_client_id: str = ""
+    evidence_signing_azure_client_secret: str = ""
+    evidence_signing_azure_authority_host: str = "https://login.microsoftonline.com"
+    evidence_signing_gcp_key_version: str = ""
+    evidence_signing_gcp_credentials_json: str = ""
     receipt_signing_active_key_id: str = ""
     receipt_signing_keys_json: str = "{}"
     banking_transaction_integrity_enabled: bool = False
@@ -436,6 +468,14 @@ class Settings(BaseSettings):
             raise ValueError("Required secret/config value must be set via environment and cannot be empty.")
         return token
 
+    @field_validator("evidence_signing_backend")
+    @classmethod
+    def _validate_evidence_signing_backend(cls, value: str) -> str:
+        backend = str(value or "").strip().lower() or "local"
+        if backend not in ("local", "aws_kms", "azure_kv", "gcp_kms"):
+            raise ValueError("EVIDENCE_SIGNING_BACKEND must be local, aws_kms, azure_kv or gcp_kms.")
+        return backend
+
     @field_validator("connector_secrets_kdf_iterations")
     @classmethod
     def _validate_kdf_iterations(cls, value: int) -> int:
@@ -506,7 +546,7 @@ class Settings(BaseSettings):
                     raise ValueError("OIDC issuers must be exact HTTPS origins.")
                 if row["kind"].lower() == "entra" and any(part.lower() in {"common", "organizations", "consumers"} for part in issuer.path.split("/")):
                     raise ValueError("Entra OIDC authority must be tenant-specific.")
-            # Bindings are optional since accounts link by (issuer, subject) at the first sign-in (docs/sign-in.md);
+            # Bindings are optional since accounts link by (issuer, subject) at the first sign-in (/settings/guide/people-and-access);
             # those listed must still be well formed.
             if not isinstance(bindings, list) or any(not isinstance(row, dict) for row in bindings):
                 raise ValueError("OIDC bindings must be a list of objects.")

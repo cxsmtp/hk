@@ -1,5 +1,5 @@
 """Forgotten passwords: a one-time link sent to the account's own email address, ported from CxMissionZero's
-src/password-reset.js (docs/sign-in.md).
+src/password-reset.js (/settings/guide/people-and-access).
 
 - The link carries 32 random bytes after ``#``. Only their SHA-256 is kept, in the sign-in store (Redis, with its time
   to live), so neither a copy of the database nor the audit log gives anyone a working link.

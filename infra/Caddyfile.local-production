@@ -18,6 +18,7 @@
 		reverse_proxy api:8000 {
 			header_up X-Forwarded-Host {http.request.host}
 			header_up X-Forwarded-Proto https
+			header_up X-Forwarded-Prefix /api
 		}
 	}
 

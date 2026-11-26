@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import time
-from typing import Any, Literal
+from typing import Any, Callable, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, File, Form, UploadFile
+from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, Field, ValidationError, field_validator
 from starlette.responses import JSONResponse
 from sqlalchemy import desc, select
@@ -36,6 +37,12 @@ from app.services.llm_gateway_service import (
 from app.services.llm_gateway_secure import ProviderStageError
 from app.services.llm_gateway_secure.data_minimizer import MaskingError
 from app.services.llm_gateway_secure.document_codec import DocumentCodecError
+from app.services.llm_gateway_streaming import (
+    STREAM_MAX_OUTPUT_CHARS,
+    STREAM_WINDOW_CHARS,
+    GatewayChatStream,
+    GatewaySSEResponse,
+)
 
 
 router = APIRouter(
@@ -424,20 +431,111 @@ def _openai_response_or_block(result: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _stream_gateway_chat(
+    db: Session,
+    gateway_kwargs: dict[str, Any],
+    *,
+    finish_unstreamed: Callable[[dict[str, Any]], Any],
+    map_error: Callable[[Exception], Any],
+) -> Any:
+    """Run the governed call and answer as SSE once upstream text arrives.
+
+    Everything decided before the first upstream chunk (request guards,
+    pre-request blocks, provider connect errors) is answered exactly as the
+    buffered route answers it.
+    """
+    stream = GatewayChatStream(
+        db=db,
+        run=lambda relay: gateway_chat_complete(db, _stream_relay=relay, **gateway_kwargs),
+        envelope=lambda result: jsonable_encoder(_hawk_envelope(result)),
+        model_hint=gateway_kwargs.get("model"),
+    )
+    stream.start()
+    if stream.wait_until_streaming_or_done():
+        return GatewaySSEResponse(stream)
+    try:
+        result = stream.unstreamed_result()
+        db.commit()
+        return finish_unstreamed(result)
+    except Exception as exc:
+        return map_error(exc)
+
+
+def _map_openai_chat_error(exc: Exception, db: Session) -> JSONResponse:
+    """Error contract of the OpenAI-compatible route, shared by both modes."""
+    if isinstance(exc, HTTPException):
+        db.commit()
+        raise exc
+    if isinstance(exc, ProviderStageError):
+        db.rollback()
+        return JSONResponse(
+            status_code=502,
+            content={
+                "error": {
+                    "message": "Model provider execution failed.",
+                    "type": "provider_error",
+                    "param": None,
+                    "code": "provider_execution_failed",
+                }
+            },
+            headers={"X-Hawk-Response-Control-Coverage": "unknown"},
+        )
+    return _raise_chat_error(exc, db)
+
+
+def _raise_chat_error(exc: Exception, db: Session) -> Any:
+    """Error contract of the native chat route, shared by both modes."""
+    if isinstance(exc, ValueError):
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if isinstance(exc, ProviderStageError):
+        db.rollback()
+        raise HTTPException(
+            status_code=502,
+            detail={
+                "code": "provider_execution_failed",
+                "message": "Model provider execution failed.",
+            },
+            headers={"X-Hawk-Response-Control-Coverage": "unknown"},
+        ) from None
+    if isinstance(exc, RuntimeError):
+        db.rollback()
+        raise HTTPException(
+            status_code=502,
+            detail=str(exc),
+            headers={"X-Hawk-Response-Control-Coverage": "unknown"},
+        ) from exc
+    if isinstance(exc, GovernanceViolationError):
+        db.rollback()
+        raise HTTPException(
+            status_code=exc.status_code,
+            detail={"code": "governance_context_blocked", "reason_code": exc.reason_code, "message": exc.message},
+        ) from exc
+    if isinstance(exc, GovernanceFailSecureError):
+        db.rollback()
+        raise HTTPException(
+            status_code=503,
+            detail={"code": "governance_fail_secure", "reason_code": exc.reason_code, "message": exc.message},
+        ) from exc
+    if isinstance(exc, SQLAlchemyError):
+        db.rollback()
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "code": "enforcement_fail_closed",
+                "message": "Enforcement dependency unavailable. Request blocked by fail-closed policy.",
+                "error": str(exc),
+            },
+        ) from exc
+    raise exc
+
+
 def _handle_openai_compatible_chat(
     *,
     payload: OpenAICompatibleChatCompletionPayload,
     ctx: TenantContext,
     db: Session,
-) -> dict[str, Any] | JSONResponse:
-    if payload.stream:
-        raise HTTPException(
-            status_code=400,
-            detail={
-                "code": "streaming_not_executable",
-                "message": "Streaming is not exposed on this pilot endpoint; use non-streaming for inline enforcement evidence.",
-            },
-        )
+) -> Any:
     hawk_payload = _openai_to_hawk_payload(payload, ctx)
     _assert_payload_tenant(hawk_payload.tenant_id, ctx)
     request_id = hawk_payload.request_id or ""
@@ -450,26 +548,33 @@ def _handle_openai_compatible_chat(
         governance_route="/llm-gateway/chat/complete",
         governance_action="llm_gateway.chat.complete",
     )
-    try:
-        result = gateway_chat_complete(
+    gateway_kwargs: dict[str, Any] = dict(
+        tenant_id=ctx.tenant.id,
+        ai_system_id=hawk_payload.ai_system_id,
+        policy_version_id=hawk_payload.policy_version_id,
+        provider=hawk_payload.provider,
+        model=hawk_payload.model,
+        actor_type=hawk_payload.actor_type,
+        actor_id=hawk_payload.actor_id,
+        trusted_actor_user_id=(ctx.user.id if ctx.user is not None else None),
+        client_request_id=hawk_payload.request_id,
+        chain_id=hawk_payload.chain_id,
+        parent_action_id=hawk_payload.parent_action_id,
+        system_prompt=hawk_payload.system_prompt,
+        messages=[item.model_dump() for item in hawk_payload.messages],
+        context_summary=hawk_payload.context_summary,
+        attachments_meta=hawk_payload.attachments_meta,
+        tool_context=hawk_payload.tool_context,
+    )
+    if payload.stream:
+        return _stream_gateway_chat(
             db,
-            tenant_id=ctx.tenant.id,
-            ai_system_id=hawk_payload.ai_system_id,
-            policy_version_id=hawk_payload.policy_version_id,
-            provider=hawk_payload.provider,
-            model=hawk_payload.model,
-            actor_type=hawk_payload.actor_type,
-            actor_id=hawk_payload.actor_id,
-            trusted_actor_user_id=(ctx.user.id if ctx.user is not None else None),
-            client_request_id=hawk_payload.request_id,
-            chain_id=hawk_payload.chain_id,
-            parent_action_id=hawk_payload.parent_action_id,
-            system_prompt=hawk_payload.system_prompt,
-            messages=[item.model_dump() for item in hawk_payload.messages],
-            context_summary=hawk_payload.context_summary,
-            attachments_meta=hawk_payload.attachments_meta,
-            tool_context=hawk_payload.tool_context,
+            gateway_kwargs,
+            finish_unstreamed=_openai_response_or_block,
+            map_error=lambda exc: _map_openai_chat_error(exc, db),
         )
+    try:
+        result = gateway_chat_complete(db, **gateway_kwargs)
         db.commit()
         return _openai_response_or_block(result)
     except HTTPException:
@@ -560,7 +665,18 @@ def llm_gateway_config_route(ctx: TenantContext = Depends(require_permission("ga
         ],
         "evidence": "policy_snapshot, decision_explanation, gateway_trace, evidence_bundle",
         "response_control_coverage": list(RESPONSE_CONTROL_COVERAGE_ORDER),
-        "streaming": {"supported": False, "control_mode": "incomplete"},
+        "streaming": {
+            "supported": True,
+            "routes": [
+                "/llm-gateway/chat/complete",
+                "/llm-gateway/v1/chat/completions",
+                "/openai-compatible/v1/chat/completions",
+            ],
+            "format": "openai_sse",
+            "response_enforcement": "sliding_window_buffer_and_scan",
+            "window_chars": STREAM_WINDOW_CHARS,
+            "max_output_chars": STREAM_MAX_OUTPUT_CHARS,
+        },
         "documents": {"formats": ["pdf", "docx"], "modes": ["draft", "transform"], "max_bytes": 10485760, "max_pages": 100, "max_text_chars": 100000, "streaming": False, "scanned_or_encrypted_supported": False, "layout": "text_reflow"},
     }
 
@@ -862,14 +978,6 @@ def llm_gateway_chat_complete_route(
     db: Session = Depends(get_db),
 ):
     _assert_payload_tenant(payload.tenant_id, ctx)
-    if payload.stream:
-        raise HTTPException(
-            status_code=400,
-            detail={
-                "code": "streaming_not_executable",
-                "message": "Streaming is not exposed on this pilot endpoint; use non-streaming for inline enforcement evidence.",
-            },
-        )
     request_id = payload.request_id or ""
     enforce_gateway_fail_secure_or_raise(
         db,
@@ -880,26 +988,35 @@ def llm_gateway_chat_complete_route(
         governance_route="/llm-gateway/chat/complete",
         governance_action="llm_gateway.chat.complete",
     )
-    try:
-        result = gateway_chat_complete(
+    gateway_kwargs: dict[str, Any] = dict(
+        tenant_id=ctx.tenant.id,
+        ai_system_id=payload.ai_system_id,
+        policy_version_id=payload.policy_version_id,
+        provider=payload.provider,
+        model=payload.model,
+        actor_type=payload.actor_type,
+        actor_id=payload.actor_id,
+        trusted_actor_user_id=(ctx.user.id if ctx.user is not None else None),
+        client_request_id=payload.request_id,
+        chain_id=payload.chain_id,
+        parent_action_id=payload.parent_action_id,
+        system_prompt=payload.system_prompt,
+        messages=[item.model_dump() for item in payload.messages],
+        context_summary=payload.context_summary,
+        attachments_meta=payload.attachments_meta,
+        tool_context=payload.tool_context,
+    )
+    if payload.stream:
+        return _stream_gateway_chat(
             db,
-            tenant_id=ctx.tenant.id,
-            ai_system_id=payload.ai_system_id,
-            policy_version_id=payload.policy_version_id,
-            provider=payload.provider,
-            model=payload.model,
-            actor_type=payload.actor_type,
-            actor_id=payload.actor_id,
-            trusted_actor_user_id=(ctx.user.id if ctx.user is not None else None),
-            client_request_id=payload.request_id,
-            chain_id=payload.chain_id,
-            parent_action_id=payload.parent_action_id,
-            system_prompt=payload.system_prompt,
-            messages=[item.model_dump() for item in payload.messages],
-            context_summary=payload.context_summary,
-            attachments_meta=payload.attachments_meta,
-            tool_context=payload.tool_context,
+            gateway_kwargs,
+            # A pre-stream outcome is serialized by the route's response model,
+            # exactly like the buffered answer.
+            finish_unstreamed=lambda result: result,
+            map_error=lambda exc: _raise_chat_error(exc, db),
         )
+    try:
+        result = gateway_chat_complete(db, **gateway_kwargs)
         db.commit()
         return result
     except ValueError as exc:

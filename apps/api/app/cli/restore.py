@@ -4,16 +4,16 @@
 
 Without --yes it only checks the backup and shows what it holds (it can run next to a running Hawk AI):
 
-    docker compose -f deploy/compose.yaml exec api python -m app.cli.restore /data/backups/<file>.hkbackup
+    docker compose -f deploy/compose.yaml exec api python -m app.cli.restore /backups/<file>.hkbackup
 
 With --yes it restores. The database as it is now and every file of the data folder are moved to
 replaced-<time>/ in the data folder first, never deleted. A running api, worker or beat would keep writing over
 what is restored, so the restore takes Hawk AI's instance lock alone first and refuses while any of them runs (they
 each hold a share of it, app/services/pg_tools.py); PostgreSQL itself stays up. Stop them, restore from a one-off
-container of the same image, and start again (deploy/README.md: Restore):
+container of the same image, and start again (/settings/guide/backups):
 
     docker compose -f deploy/compose.yaml stop api worker beat
-    docker compose -f deploy/compose.yaml run --rm --no-deps api python -m app.cli.restore /data/backups/<file>.hkbackup --yes
+    docker compose -f deploy/compose.yaml run --rm --no-deps api python -m app.cli.restore /backups/<file>.hkbackup --yes
     docker compose -f deploy/compose.yaml up -d
 
 --force restores without looking at the lock: only when Hawk AI is certainly not running.
@@ -100,7 +100,7 @@ def main(
     print(f"  database: {'yes (' + str(round(info['databaseBytes'] / 1024)) + ' KB)' if info['hasDatabase'] else 'no'}; data folder files: {info['dataFiles']}; application keys: {'yes' if info['hasSecrets'] else 'no'}")
     print(f"  target data folder: {cfg.data_dir}")
     if "--yes" not in flags:
-        print(f"\nNothing written. Stop Hawk AI ({STOP}), then run again with --yes to restore (deploy/README.md: Restore).")
+        print(f"\nNothing written. Stop Hawk AI ({STOP}), then run again with --yes to restore (/settings/guide/backups).")
         return 0
 
     lock = None

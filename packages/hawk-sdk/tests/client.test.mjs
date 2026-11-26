@@ -335,7 +335,7 @@ test("withMcpAuthorization executes the tool callback when Hawk allows", async (
       actor_id: "agent-1",
       capability_token: "capability-token",
       action: "read_file",
-      resource: "repo://docs/readme.md",
+      resource: "repo:///settings/guide",
       tool_name: "read_file",
     },
     async () => ({ content: "safe read-only result" }),

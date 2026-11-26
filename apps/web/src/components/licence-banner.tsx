@@ -7,7 +7,7 @@ import { LICENCE_CHANGED_EVENT, licenceBannerText } from "@/lib/licence";
 import type { AdminLicence } from "@/lib/licence";
 
 /**
- * The product licence ends within 30 days (docs/activation-codes.md): owners and admins are told, with the date,
+ * The product licence ends within 30 days (/settings/guide/licence): owners and admins are told, with the date,
  * at the top of every page, until a product activation code moves it (Settings → Activation codes).
  */
 export function LicenceBanner() {

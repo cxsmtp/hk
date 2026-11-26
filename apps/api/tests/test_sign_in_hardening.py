@@ -1,4 +1,4 @@
-"""Sign-in hardening (docs/sign-in.md), ported from CxMissionZero's src/iam.js, src/mfa.js, src/password-reset.js,
+"""Sign-in hardening (/settings/guide/people-and-access), ported from CxMissionZero's src/iam.js, src/mfa.js, src/password-reset.js,
 src/oidc.js and src/routes/session.js: the lock after wrong passwords, the limit per address, idle sign-ins, two-step
 sign-in, forgotten passwords, single sign-on's rules, the Executive MCP OAuth fix and the read-only auditor."""
 

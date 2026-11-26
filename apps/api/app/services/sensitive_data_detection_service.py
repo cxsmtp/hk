@@ -8,12 +8,20 @@ import re
 from typing import Any
 
 from app.core.config import settings
+from app.services.detection import dlp_engine
+from app.services.detection.profile import REPORT_MIN_CONFIDENCE, DetectionProfile, current_profile
 
 
 MAX_OCR_FILE_BYTES = 10 * 1024 * 1024
 
 EMAIL_PATTERN = re.compile(r"(?i)\b[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}\b")
 PHONE_PATTERN = re.compile(r"(?<!\d)(?:\+?\d[\d\-\s().]{7,}\d)(?!\d)")
+# Record ids (UUIDs) and long hex digests are identifiers, not personal data: a digit run inside one (about one random
+# UUID in four has a phone-shaped run) must never be masked, or the ids in a response stop matching their records.
+IDENTIFIER_PATTERN = re.compile(
+    r"(?<![0-9A-Fa-f])(?:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}|[0-9a-fA-F]{32,})(?![0-9A-Fa-f])"
+)
+_NUMERIC_KINDS = frozenset({"phone", "credit_card", "emirates_id", "us_ssn", "uk_nino", "ip_address", "bank_account", "iban", "date_of_birth"})
 ISO_DATETIME_PATTERN = re.compile(
     r"\b\d{4}-\d{2}-\d{2}"
     r"(?:[T ][0-2]\d:[0-5]\d(?::[0-5]\d(?:\.\d{1,6})?)?(?:Z|[+-][0-2]\d:?[0-5]\d)?)?\b"
@@ -23,6 +31,15 @@ API_KEY_PATTERN = re.compile(
     r"(?i)\b(?:api[_-]?key|secret|private[_ -]?key|token)\b[\s:=]{0,3}[A-Za-z0-9_\-]{6,}"
 )
 LONG_SECRET_PATTERN = re.compile(r"\b(?:sk|pk|ghp|xoxb|xoxp|AIza)[A-Za-z0-9_\-]{10,}\b")
+# Credentials the two patterns above miss: an AWS access key id carries no keyword at all, and in
+# ``AWS_SECRET_ACCESS_KEY=...`` or ``password: ...`` the keyword sits inside an identifier (``_`` is a word character,
+# so ``\bsecret\b`` never matches there) or is not one of the keywords above. Found by the attack-simulation catalogue
+# (SIM-DATA secret_harvesting).
+AWS_ACCESS_KEY_ID_PATTERN = re.compile(r"\b(?:AKIA|ASIA)[0-9A-Z]{16}\b")
+CREDENTIAL_ASSIGNMENT_PATTERN = re.compile(
+    r"(?i)(?<![A-Za-z0-9])(?:[A-Za-z0-9]+_)*(?:secret_access_key|secret_key|access_key|client_secret|password|passwd)"
+    r"\s*[:=]\s*[\"']?([^\s\"',;]{6,})"
+)
 EMIRATES_ID_STRICT_PATTERN = re.compile(r"(?<!\d)784-?\d{4}-?\d{7}-?\d(?!\d)")
 EMIRATES_ID_CONTEXT_PATTERN = re.compile(
     r"(?i)\b(?:emirates\s*id|uae\s*(?:id|national\s*id)|eid)\b[^\n\r]{0,24}\b\d{12,18}\b"
@@ -57,6 +74,19 @@ _SENSITIVE_ENTITY_TYPES = {
     "address",
     "organization",
 }
+# Types the validated detectors (app/services/detection) add. Sensitive unless a tenant's profile says otherwise;
+# ``ip_address`` is reported but not sensitive by default.
+_VALIDATED_SENSITIVE_TYPES = {
+    "iban",
+    "us_ssn",
+    "uk_nino",
+    "passport",
+    "private_key",
+    "credential",
+    "date_of_birth",
+    "exact_data_match",
+}
+_NER_MODELS = ("en_core_web_lg", "en_core_web_md", "en_core_web_sm")
 
 
 def _normalize_text(value: Any) -> str:
@@ -127,6 +157,10 @@ def _regex_entities(text: str) -> list[dict[str, Any]]:
         rows.append(_entity_row(entity_type="api_key", value=match, confidence=0.94, source="regex"))
     for match in LONG_SECRET_PATTERN.findall(text):
         rows.append(_entity_row(entity_type="api_key", value=match, confidence=0.92, source="regex"))
+    for match in AWS_ACCESS_KEY_ID_PATTERN.findall(text):
+        rows.append(_entity_row(entity_type="api_key", value=match, confidence=0.95, source="regex"))
+    for match in CREDENTIAL_ASSIGNMENT_PATTERN.finditer(text):
+        rows.append(_entity_row(entity_type="api_key", value=match.group(1), confidence=0.9, source="regex"))
     for match in EMIRATES_ID_STRICT_PATTERN.findall(text):
         rows.append(_entity_row(entity_type="emirates_id", value=match, confidence=0.99, source="regex"))
     for match in EMIRATES_ID_CONTEXT_PATTERN.findall(text):
@@ -166,6 +200,8 @@ def private_sensitive_spans(text: str) -> list[tuple[int, int, str]]:
         (EMIRATES_ID_STRICT_PATTERN, "emirates_id", 1, 0),
         (EMAIL_PATTERN, "email", 1, 0),
         (LONG_SECRET_PATTERN, "api_key", 1, 0),
+        (AWS_ACCESS_KEY_ID_PATTERN, "api_key", 1, 0),
+        (CREDENTIAL_ASSIGNMENT_PATTERN, "api_key", 2, 1),
         (API_KEY_PATTERN, "api_key", 2, 0),
         (CC_PATTERN, "credit_card", 3, 0),
         (PHONE_PATTERN, "phone", 4, 0),
@@ -176,6 +212,26 @@ def private_sensitive_spans(text: str) -> list[tuple[int, int, str]]:
             if start == end or (kind == "credit_card" and not _luhn_valid(match.group(group))):
                 continue
             candidates.append((start, end, kind, priority))
+    profile = current_profile()
+    try:
+        scan = dlp_engine.scan(text, profile=profile)
+        for finding in scan.reportable():
+            if finding.entity_type not in profile.sensitive_types:
+                continue
+            span = scan.original_span(finding)
+            if span is None or span[0] >= span[1]:
+                continue
+            candidates.append((span[0], span[1], finding.entity_type, 5))
+    except Exception:  # noqa: BLE001 - masking keeps the long-standing patterns if the engine fails
+        pass
+    identifiers = [match.span() for match in IDENTIFIER_PATTERN.finditer(text)]
+    if identifiers:
+        candidates = [
+            row
+            for row in candidates
+            if row[2] not in _NUMERIC_KINDS
+            or not any(id_start <= row[0] and row[1] <= id_end for id_start, id_end in identifiers)
+        ]
     candidates.sort(key=lambda row: (row[3], -(row[1] - row[0]), row[0]))
     selected: list[tuple[int, int, str]] = []
     for start, end, kind, _priority in candidates:
@@ -190,15 +246,60 @@ def _get_presidio_analyzer() -> Any | None:
         return _PRESIDIO_ANALYZER
     _PRESIDIO_ATTEMPTED = True
     try:
-        if importlib.util.find_spec("en_core_web_lg") is None:
+        # Only a model already installed in the image: Presidio would otherwise try to download one, and nothing
+        # here may reach the network.
+        model = _installed_ner_model()
+        if model is None:
             _PRESIDIO_ANALYZER = None
             return None
         from presidio_analyzer import AnalyzerEngine  # type: ignore
 
-        _PRESIDIO_ANALYZER = AnalyzerEngine()
+        if model == "en_core_web_lg":
+            _PRESIDIO_ANALYZER = AnalyzerEngine()
+        else:
+            from presidio_analyzer.nlp_engine import NlpEngineProvider  # type: ignore
+
+            provider = NlpEngineProvider(
+                nlp_configuration={"nlp_engine_name": "spacy", "models": [{"lang_code": "en", "model_name": model}]}
+            )
+            _PRESIDIO_ANALYZER = AnalyzerEngine(nlp_engine=provider.create_engine(), supported_languages=["en"])
     except (Exception, SystemExit):
         _PRESIDIO_ANALYZER = None
     return _PRESIDIO_ANALYZER
+
+
+def _installed_ner_model() -> str | None:
+    preferred = str(os.environ.get("HAWK_NER_MODEL") or "").strip()
+    for name in ((preferred,) if preferred else ()) + _NER_MODELS:
+        try:
+            if name and importlib.util.find_spec(name) is not None:
+                return name
+        except (ImportError, ValueError):
+            continue
+    return None
+
+
+def ner_status() -> dict[str, Any]:
+    """Whether the named-entity layer (people, places, organisations) can run, without loading a model."""
+    model = _installed_ner_model()
+    engines = {
+        "presidio": importlib.util.find_spec("presidio_analyzer") is not None,
+        "spacy": importlib.util.find_spec("spacy") is not None,
+    }
+    if model is None:
+        reason = "no spaCy model is installed in this image; names, places and organisations fall back to patterns"
+    elif not any(engines.values()):
+        reason = "neither Presidio nor spaCy is installed"
+    else:
+        reason = "ready"
+    return {
+        "available": model is not None and any(engines.values()),
+        "model": model,
+        "engines": engines,
+        "loaded": _PRESIDIO_ANALYZER is not None or _SPACY_NLP is not None,
+        "degraded_to": None if model else "patterns",
+        "reason": reason,
+    }
 
 
 def _presidio_entities(text: str) -> list[dict[str, Any]]:
@@ -251,7 +352,7 @@ def _get_spacy_model() -> Any | None:
         import spacy  # type: ignore
 
         try:
-            _SPACY_NLP = spacy.load("en_core_web_sm")
+            _SPACY_NLP = spacy.load(_installed_ner_model() or "en_core_web_sm")
         except Exception:
             _SPACY_NLP = None
     except Exception:
@@ -321,12 +422,19 @@ def _decode_file_bytes(file_meta: dict[str, Any]) -> bytes | None:
         or file_meta.get("local_path")
         or file_meta.get("tmp_path")
     )
-    if isinstance(file_path, str) and file_path.strip() and os.path.exists(file_path):
+    if isinstance(file_path, str) and file_path.strip():
+        # file_meta arrives from the browser extension, the gateway and agent-action requests: a path is read only
+        # when it is a file a simulation put in its evidence folder, never anywhere else on the server.
+        from app.services.simulation_orchestrator.executor import contained_upload_file
+
+        local = contained_upload_file(file_path)
+        if local is None:
+            return None
         try:
-            if os.path.getsize(file_path) > MAX_OCR_FILE_BYTES:
+            if local.stat().st_size > MAX_OCR_FILE_BYTES:
                 return None
-            with open(file_path, "rb") as handle:
-                return handle.read()
+            with open(local, "rb") as handle:
+                return handle.read(MAX_OCR_FILE_BYTES)
         except Exception:
             return None
     return None
@@ -464,12 +572,44 @@ def _dedupe_entities(entities: list[dict[str, Any]]) -> list[dict[str, Any]]:
     for row in entities:
         entity_type = _normalize_text(row.get("entity_type")).lower()
         value_preview = _normalize_text(row.get("value_preview")).lower()
-        key = (entity_type, value_preview)
+        key = (entity_type, re.sub(r"[\s\-.\u200b]", "", value_preview))
         if not entity_type or not value_preview or key in seen:
             continue
         seen.add(key)
         out.append(row)
     return out
+
+
+def _validated_entities(scan: dlp_engine.DLPScan) -> list[dict[str, Any]]:
+    """Entity rows for the validated detectors' findings at or above the reporting confidence (no raw values)."""
+    rows: list[dict[str, Any]] = []
+    for finding in scan.reportable(REPORT_MIN_CONFIDENCE):
+        if finding.encoded:
+            value = finding.entity_type
+        else:
+            start, end = scan.normalized.original_span(finding.start, finding.end)
+            value = scan.normalized.original[start:end] or finding.entity_type
+        context: dict[str, Any] = {"detector": finding.detector, "reasons": list(finding.reasons)}
+        if finding.subtype:
+            context["subtype"] = finding.subtype
+        if finding.context_hit:
+            context["context_word"] = True
+        if finding.encoded:
+            context["encoded"] = finding.encoded
+        rows.append(
+            _entity_row(entity_type=finding.entity_type, value=value, confidence=finding.confidence, source="validated", context=context)
+        )
+    for hit in scan.edm_matches:
+        rows.append(
+            _entity_row(
+                entity_type="exact_data_match",
+                value=f"edm:{hit['set_id']}",
+                confidence=0.99,
+                source="exact_data_match",
+                context={"set_id": hit["set_id"], "set_name": hit["name"], "category": hit["category"], "matches": hit["matches"]},
+            )
+        )
+    return rows
 
 
 def _score_entities(entities: list[dict[str, Any]], *, has_ocr: bool) -> float:
@@ -493,7 +633,9 @@ def detect_sensitive_data(
     agent_id: str | None = None,
     user_id: str | None = None,
     correlation_id: str | None = None,
+    profile: DetectionProfile | None = None,
 ) -> dict[str, Any]:
+    profile = profile or current_profile()
     text_chunks = [_normalize_text(item) for item in (text_inputs or []) if _normalize_text(item)]
     ocr_details: list[dict[str, Any]] = []
     file_text_chunks: list[str] = []
@@ -524,14 +666,40 @@ def detect_sensitive_data(
     entities: list[dict[str, Any]] = []
     # Inputs are separate trust/content fields. Scan them independently so a
     # trailing keyword in one field cannot consume a value from the next.
+    categories: dict[str, dict[str, Any]] = {}
+    obfuscation: set[str] = set()
+    engine_error: str | None = None
     for chunk in bounded_chunks:
         entities.extend(_regex_entities(chunk))
-        entities.extend(_presidio_entities(chunk))
-        entities.extend(_spacy_entities(chunk))
+        if profile.ner_enabled:
+            entities.extend(_presidio_entities(chunk))
+            entities.extend(_spacy_entities(chunk))
+        try:
+            scan = dlp_engine.scan(chunk, profile=profile)
+        except Exception as exc:  # noqa: BLE001 - the long-standing patterns above still apply
+            engine_error = type(exc).__name__
+            continue
+        entities.extend(_validated_entities(scan))
+        for name, result in scan.detected_categories(profile).items():
+            row = result.to_dict()
+            if name not in categories or row["score"] > categories[name]["score"]:
+                categories[name] = row
+        obfuscation.update(scan.obfuscation)
     entities = _dedupe_entities(entities)
+    entities = [row for row in entities if profile.enabled(str(row.get("entity_type")))]
 
-    contains_sensitive = any(str(row.get("entity_type")) in _SENSITIVE_ENTITY_TYPES for row in entities)
+    sensitive_types = _SENSITIVE_ENTITY_TYPES | (_VALIDATED_SENSITIVE_TYPES & profile.sensitive_types) | (
+        {"ip_address"} & profile.sensitive_types
+    )
+    sensitive_categories = [
+        name
+        for name in categories
+        if name in profile.sensitive_categories or name.startswith(("custom:", "edm:"))
+    ]
+    contains_sensitive = any(str(row.get("entity_type")) in sensitive_types for row in entities) or bool(sensitive_categories)
     confidence_score = _score_entities(entities, has_ocr=bool(file_text_chunks))
+    if sensitive_categories:
+        confidence_score = max(confidence_score, max(float(categories[name]["score"]) for name in sensitive_categories))
 
     return {
         "contains_sensitive": contains_sensitive,
@@ -550,6 +718,15 @@ def detect_sensitive_data(
             "files_processed": len(file_meta or []),
             "files_with_text": len(file_text_chunks),
             "details": ocr_details,
+        },
+        "document_categories": sorted(categories.values(), key=lambda row: (-float(row["score"]), str(row["category"]))),
+        "sensitive_categories": sorted(sensitive_categories),
+        "obfuscation": sorted(obfuscation),
+        "detection": {
+            **dlp_engine.versions(),
+            "profile_revision": profile.revision,
+            "ner_available": bool(_installed_ner_model()) and profile.ner_enabled,
+            **({"engine_error": engine_error} if engine_error else {}),
         },
     }
 
@@ -580,6 +757,10 @@ def detection_signal_types(detection_result: dict[str, Any]) -> list[str]:
         entity_type = _normalize_text((entity or {}).get("entity_type")).lower()
         if entity_type:
             signals.add(f"sensitive_entity:{entity_type}")
+    for category in detection_result.get("document_categories") or []:
+        name = _normalize_text((category or {}).get("category")).lower()
+        if name:
+            signals.add(f"sensitive_category:{name}")
     if detection_result.get("contains_sensitive"):
         signals.add("sensitive_data_detected")
     if (detection_result.get("ocr") or {}).get("files_with_text"):

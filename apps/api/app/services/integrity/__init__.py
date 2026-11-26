@@ -1,1 +1,1 @@
-"""Software integrity (docs/integrity.md): the file list of each release image, its signature, and the checks."""
+"""Software integrity (/settings/guide/updates): the file list of each release image, its signature, and the checks."""

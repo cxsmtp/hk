@@ -52,7 +52,7 @@ function save(blob: Blob, name: string) {
  * Settings → Updates, laid out and worded as FTR Command Center's Updates page (public/js/settings.js `updates()`): the
  * running version, the newest published one with Update now, auto-update, what this installation follows and its hour,
  * software integrity with Check now, Check for updates, the versions with Update now / Roll back to this, and the
- * recent events. What happens behind it is CxMissionZero's (docs/updating.md, docs/integrity.md): the updater takes a
+ * recent events. What happens behind it is CxMissionZero's (/settings/guide/updates, /settings/guide/updates): the updater takes a
  * backup, installs every image, and puts the previous version back by itself if the new one does not come up.
  * Owners and admins only.
  */

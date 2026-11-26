@@ -1,5 +1,5 @@
 """Single sign-on with OpenID Connect, aligned with CxMissionZero's src/oidc.js and src/routes/session.js
-(docs/sign-in.md).
+(/settings/guide/people-and-access).
 
 - The authorization code flow with PKCE (S256), a ``state`` and a ``nonce``, kept in Redis for ten minutes
   (OIDC_STATE_TTL_SECONDS), used once, and tied to the browser that started by an HttpOnly, SameSite=Lax cookie made

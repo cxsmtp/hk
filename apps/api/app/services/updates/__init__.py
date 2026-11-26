@@ -1,1 +1,1 @@
-"""Updates and rollback from Settings → Updates (docs/updating.md): the registry, the service and the updater's files."""
+"""Updates and rollback from Settings → Updates (/settings/guide/updates): the registry, the service and the updater's files."""

@@ -1,14 +1,14 @@
 name: Release images
 
 # Ported from CxMissionZero's .github/workflows/container.yml, for Hawk AI's several images. On every push to main (or
-# master) and every version tag, once the API tests, the console's checks and the image smoke test have passed, it
-# builds every image deploy/compose.yaml runs, for linux/amd64 and linux/arm64, and publishes them to the GitHub
-# container registry:
+# master) and every version tag, once the API tests, the console's checks, the browser tests and the image smoke test
+# have passed, it builds every image deploy/compose.yaml runs, for linux/amd64 and linux/arm64, and publishes them to
+# the GitHub container registry:
 #   ghcr.io/<owner>/<repo>-api, -web, -proxy, -updater   :latest and :<version> (from main), :sha-<commit>, :<semver> (tags)
 # Each image carries the list of the files it ships, with their SHA-256 (integrity.json, written by its Dockerfile's
 # integrity stage). The list is read from the amd64 and the arm64 image and must be the same; then the list and the
 # image are signed with a GitHub build attestation (Sigstore, public log). Hawk AI checks its own files and that
-# signature, and the updater checks a new version's before installing it (docs/integrity.md, docs/updating.md).
+# signature, and the updater checks a new version's before installing it (/settings/guide/updates, /settings/guide/updates).
 # `stable` is moved by hand only, with promote-stable.yml.
 
 on:
@@ -27,14 +27,17 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # Every API test and the console's checks: nothing is published unless they pass.
-  # On a pull request these already run from api-tests.yml and component-tests.yml themselves.
+  # Every API test, the console's checks and its browser tests: nothing is published unless they pass.
+  # On a pull request these already run from api-tests.yml, component-tests.yml and e2e.yml themselves.
   api-tests:
     if: github.event_name != 'pull_request'
     uses: ./.github/workflows/api-tests.yml
   component-tests:
     if: github.event_name != 'pull_request'
     uses: ./.github/workflows/component-tests.yml
+  e2e-tests:
+    if: github.event_name != 'pull_request'
+    uses: ./.github/workflows/e2e.yml
 
   # Each image builds, and its file list matches what is in it (as CxMissionZero's smoke test checks its list).
   smoke-test:
@@ -70,7 +73,7 @@ jobs:
           if [ -n "$CHECK" ]; then docker run --rm --read-only --cap-drop ALL --security-opt no-new-privileges:true --entrypoint sh "$IMAGE" -c "$CHECK"; fi
 
   publish:
-    needs: [api-tests, component-tests, smoke-test]
+    needs: [api-tests, component-tests, e2e-tests, smoke-test]
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 120

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import re
 from datetime import datetime, timezone
 from time import perf_counter, sleep
@@ -12,9 +13,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.envelopes import ListEnvelope, paginate_rows
+from app.core import session_cookies
 from app.core.auth import get_current_user, oauth2_scheme
 from app.core.config import settings
-from app.core.security import decode_token, get_password_hash, verify_password
+from app.core.security import decode_token, get_password_hash, token_hash, verify_password
 from app.db.models.tenant import Tenant
 from app.db.models.user import RefreshToken, User, UserTenantRole
 from app.db.session import get_db
@@ -28,6 +30,7 @@ from app.version import APP_VERSION
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+logger = logging.getLogger(__name__)
 _AUTH_MIN_RESPONSE_SECONDS = 0.25
 _REGISTRATION_FAILURE_DETAIL = "Unable to process registration request"
 
@@ -72,7 +75,8 @@ class ChangePasswordRequest(BaseModel):
 
 
 class RefreshRequest(BaseModel):
-    refresh_token: str
+    # Left out by the console, whose refresh token is in its cookie (app/core/session_cookies.py).
+    refresh_token: str = ""
 
 
 class SelectTenantRequest(BaseModel):
@@ -92,8 +96,9 @@ class AuthUserResponse(BaseModel):
 
 
 class AuthTokensResponse(BaseModel):
-    access_token: str
-    refresh_token: str
+    # Empty for the console, which gets them as HttpOnly cookies instead (app/core/session_cookies.py).
+    access_token: str = ""
+    refresh_token: str = ""
     token_type: str
     expires_in: int
 
@@ -112,7 +117,7 @@ class LoginResponse(AuthTokensResponse):
 
 
 class TwoStepChallenge(BaseModel):
-    """The password was right and a second step follows (docs/sign-in.md): no tokens yet, only a ticket for the code.
+    """The password was right and a second step follows (/settings/guide/people-and-access): no tokens yet, only a ticket for the code.
     ``setup``: an administrator requires two-step sign-in and this person has none yet; the page shows the key and its
     QR code, and the first right code turns it on."""
 
@@ -127,7 +132,7 @@ class MeResponse(BaseModel):
     email: str
     full_name: str
     tenants: list[TenantMembershipResponse]
-    # The product licence's end, for the admins' banner in its last 30 days (docs/activation-codes.md): only for
+    # The product licence's end, for the admins' banner in its last 30 days (/settings/guide/licence): only for
     # someone who is an owner or admin of a tenant, as they may enter activation codes.
     licence: dict[str, Any] | None = None
     # Choose a new password first (app/core/access_gate.py).
@@ -137,7 +142,7 @@ class MeResponse(BaseModel):
     terms: dict[str, Any] | None = None
     # This build's version, shown bottom-left in the console (VERSION).
     version: str = APP_VERSION
-    # Two-step sign-in for this person (docs/sign-in.md): {available, on, since, recoveryLeft, required}.
+    # Two-step sign-in for this person (/settings/guide/people-and-access): {available, on, since, recoveryLeft, required}.
     two_step: dict[str, Any] | None = None
 
 
@@ -181,7 +186,7 @@ def _sso_refused(db: Session, exc: oidc_auth_service.OIDCError, provider_key: st
         db.commit()
     except Exception:  # noqa: BLE001 - the refusal is still answered
         db.rollback()
-    print(f"! [single sign-on] Not signed in ({exc.code}): {exc}.", flush=True)
+    logger.warning("[single sign-on] Not signed in (%s): %s.", exc.code, exc, extra={"sso_provider": provider_key or None, "reason_code": exc.code})
     if not settings.oidc_frontend_url:
         raise _oidc_failure(exc)
     base = settings.oidc_frontend_url.split("#", 1)[0]
@@ -226,7 +231,10 @@ def oidc_callback(
 
 
 @router.post("/oidc/complete", response_model=LoginResponse)
-def oidc_complete(payload: OIDCCompleteRequest, response: Response, db: Session = Depends(get_db), browser: str | None = Cookie(default=None, alias=oidc_auth_service.TICKET_COOKIE)):
+def oidc_complete(payload: OIDCCompleteRequest, request: Request, response: Response, db: Session = Depends(get_db), browser: str | None = Cookie(default=None, alias=oidc_auth_service.TICKET_COOKIE)):
+    # Single sign-on only ever ends in the console (the ticket is bound to this browser): always the cookie session,
+    # so the tokens are never in a body a script on the page could read.
+    request.state.cookie_session = True
     try:
         if not browser:
             raise oidc_auth_service.OIDCError("OIDC ticket invalid")
@@ -234,14 +242,14 @@ def oidc_complete(payload: OIDCCompleteRequest, response: Response, db: Session 
         db.commit()
         response.headers["Cache-Control"] = "no-store"
         response.delete_cookie(oidc_auth_service.TICKET_COOKIE, path="/")
-        return LoginResponse(**tokens)
+        return LoginResponse(**session_cookies.deliver(request, response, tokens))
     except oidc_auth_service.OIDCError as exc:
         db.rollback()
         raise _oidc_failure(exc) from exc
 
 
 @router.post("/register", response_model=RegisterResponse | TwoStepChallenge)
-def register(payload: RegisterRequest, db: Session = Depends(get_db)):
+def register(payload: RegisterRequest, request: Request, response: Response, db: Session = Depends(get_db)):
     started_at = perf_counter()
     try:
         # The same password rule as everywhere (12+ characters, not repetitive).
@@ -270,7 +278,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         db.add(user)
         db.flush()
 
-        # Several tenants need a tenants activation code (docs/activation-codes.md).
+        # Several tenants need a tenants activation code (/settings/guide/licence).
         activation_service.assert_may_add_tenant(db)
         tenant = Tenant(name=f"{payload.full_name} Org", slug=f"{payload.email.split('@')[0]}-org", is_active=True)
         db.add(tenant)
@@ -307,7 +315,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         db.commit()
 
         return RegisterResponse(
-            **tokens,
+            **session_cookies.deliver(request, response, tokens),
             user=AuthUserResponse(id=user.id, email=user.email, full_name=user.full_name),
             tenants=[TenantMembershipResponse(id=tenant.id, name=tenant.name, role="owner")],
         )
@@ -342,10 +350,22 @@ def signed_in_response(db: Session, user: User) -> LoginResponse:
     )
 
 
+def deliver_sign_in(request: Request, response: Response, result: LoginResponse) -> LoginResponse:
+    """A sign-in's answer: for the console, the tokens as cookies on ``response`` instead of in the body."""
+
+    return LoginResponse(**session_cookies.deliver(request, response, result.model_dump()))
+
+
 def audit_access(db: Session, user: User | None, *, action: str, reason: str, request: Request | None) -> None:
     """A sign-in event in the audit log (CxMissionZero's auditAccess): never a password, code, ticket or token."""
 
     ip = account_security.client_ip(request)
+    # The log line: who (their id, never the email or what was typed), from where, and what came of it.
+    fields = {"auth_event": action, "client_ip": ip, **({"user_id": user.id} if user is not None else {})}
+    if "refused" in action:
+        logger.warning("Sign-in refused", extra=fields)
+    else:
+        logger.info("Sign-in event: %s", action, extra=fields)
     # Refusals are listed only so many a minute (app/services/refusal_audit.py: 30 per address, 120 in all).
     if "refused" in action and not refusal_audit.may_list(db, "sign_in", ip):
         return
@@ -366,7 +386,7 @@ SIGN_IN_UNAVAILABLE = "Sign-in is unavailable for a moment. Try again shortly."
 
 
 def two_step_challenge(user: User) -> TwoStepChallenge:
-    """The second step instead of tokens (docs/sign-in.md): a ticket for the code, and when an administrator requires
+    """The second step instead of tokens (/settings/guide/people-and-access): a ticket for the code, and when an administrator requires
     two-step sign-in and this person has none yet, the key to set it up (the first right code at POST /auth/two-step
     turns it on and only then gives tokens). Raises sign_in_store.StoreUnavailable."""
 
@@ -384,13 +404,14 @@ def refused(status_code: int, message: str, **extra: Any) -> JSONResponse:
 
 
 @router.post("/login", response_model=LoginResponse | TwoStepChallenge)
-def login(payload: LoginRequest, request: Request, db: Session = Depends(get_db)):
+def login(payload: LoginRequest, request: Request, response: Response, db: Session = Depends(get_db)):
     """Sign in with an email and password (CxMissionZero's POST /api/session/password): limited per address, five
     wrong passwords lock the account for 15 minutes, and with two-step sign-in only a ticket for the code comes back."""
 
     started_at = perf_counter()
     try:
         if account_security.too_many_sign_ins(request):
+            logger.warning("Sign-in refused: too many attempts from this address", extra={"client_ip": account_security.client_ip(request), "reason_code": "rate_limited"})
             return refused(429, account_security.TOO_MANY)
         try:
             user = account_security.check_password(db, payload.email, payload.password, more=True)
@@ -417,20 +438,56 @@ def login(payload: LoginRequest, request: Request, db: Session = Depends(get_db)
         result = signed_in_response(db, user)
         audit_access(db, user, action="auth.sign_in", reason=f"{user.email} signed in with a password.", request=request)
         db.commit()
-        return result
+        return deliver_sign_in(request, response, result)
     finally:
         _normalize_auth_timing(started_at)
 
 
+def _refresh_token_of(request: Request, payload: RefreshRequest | None) -> str:
+    """The refresh token in the body (every client but the console), else the console's cookie, which only a request
+    with the CSRF header may use."""
+
+    if payload is not None and payload.refresh_token:
+        return payload.refresh_token
+    cookie = session_cookies.refresh_cookie(request)
+    if cookie:
+        session_cookies.require_csrf(request)
+        request.state.cookie_session = True
+    return cookie
+
+
 @router.post("/refresh", response_model=AuthTokensResponse)
-def refresh(payload: RefreshRequest, db: Session = Depends(get_db)):
+def refresh(request: Request, response: Response, payload: RefreshRequest | None = None, db: Session = Depends(get_db)):
+    token = _refresh_token_of(request, payload)
+    if not token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
     try:
-        tokens = refresh_tokens(db, payload.refresh_token)
+        tokens = refresh_tokens(db, token)
         db.commit()
-        return AuthTokensResponse(**tokens)
+        return AuthTokensResponse(**session_cookies.deliver(request, response, tokens, keep_csrf=True))
     except ValueError as exc:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token") from exc
+
+
+@router.post("/refresh/sign-out")
+def sign_out(request: Request, response: Response, payload: RefreshRequest | None = None, db: Session = Depends(get_db)):
+    """Sign out: this sign-in's refresh token stops working and the console's cookies go. Under /auth/refresh because
+    the refresh cookie is sent nowhere else. The access token lives out its few minutes, as after any sign-out."""
+
+    token = _refresh_token_of(request, payload)
+    record = None
+    if token:
+        record = db.scalar(select(RefreshToken).where(RefreshToken.token_hash == token_hash(token), RefreshToken.revoked_at.is_(None)))
+    if record is not None:
+        record.revoked_at = datetime.now(timezone.utc)
+        user = db.get(User, record.user_id)
+        if user is not None:
+            audit_access(db, user, action="auth.sign_out", reason=f"{user.email} signed out.", request=request)
+        db.commit()
+    session_cookies.clear(request, response)
+    response.headers["Cache-Control"] = "no-store"
+    return {"ok": True}
 
 
 @router.get("/me", response_model=MeResponse)
@@ -464,6 +521,8 @@ def me(current_user: Annotated[User, Depends(get_current_user)], db: Session = D
 @router.post("/me/password", response_model=LoginResponse)
 def change_password(
     payload: ChangePasswordRequest,
+    request: Request,
+    response: Response,
     current_user: Annotated[User, Depends(get_current_user)],
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
@@ -514,7 +573,7 @@ def change_password(
         if tenant:
             tenants.append(TenantMembershipResponse(id=tenant.id, name=tenant.name, role=m.role))
     return LoginResponse(
-        **tokens,
+        **session_cookies.deliver(request, response, tokens),
         user=AuthUserResponse(id=current_user.id, email=current_user.email, full_name=current_user.full_name),
         tenants=tenants,
         selected_tenant_id=membership.tenant_id,
@@ -548,6 +607,8 @@ def my_tenants(
 @router.post("/select-tenant", response_model=SelectTenantResponse)
 def select_tenant(
     payload: SelectTenantRequest,
+    request: Request,
+    response: Response,
     current_user: Annotated[User, Depends(get_current_user)],
     db: Session = Depends(get_db),
 ):
@@ -571,4 +632,4 @@ def select_tenant(
     )
 
     db.commit()
-    return SelectTenantResponse(**tokens, selected_tenant_id=payload.tenant_id)
+    return SelectTenantResponse(**session_cookies.deliver(request, response, tokens), selected_tenant_id=payload.tenant_id)

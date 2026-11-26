@@ -249,6 +249,11 @@ def backup_to_folder(
             tenant_id=tenant_id,
             details={"file": str(file), **summary, "removed": removed},
         )
+        log.info(
+            "Backup written: %s",
+            file.name,
+            extra={"trigger": trigger, "size_bytes": summary.get("size"), "files": summary.get("files"), "encrypted": bool(summary.get("encrypted")), "removed": len(removed or [])},
+        )
         if mail:
             try:
                 mail_backup_copy(file, summary, trigger, cfg=cfg, store=store, audit=audit)
@@ -259,7 +264,7 @@ def backup_to_folder(
         last = {"at": _now_iso(), "ok": False, "error": str(error)[:500], "trigger": trigger}
         _remember(cfg, last)
         audit("backup.failed", f"{trigger} backup to {cfg.dir} failed: {str(error)[:300]}", outcome="failed", actor=actor, actor_user_id=actor_user_id, tenant_id=tenant_id)
-        _say(f"! [backup] {error}")
+        log.error("! [backup] Backup failed (%s): %s", trigger, error, exc_info=True, extra={"trigger": trigger})
         return last
 
 
@@ -396,9 +401,9 @@ def last_words(
         saved,
         "To bring it back: start Hawk AI again (sudo deploy/install.sh). Nothing needs restoring while its volumes are there.",
         (
-            "If the data is lost: install Hawk AI on a server, copy this backup to it, and restore it with the backup key an owner or admin saved from Settings → Backups & health (it is not in this email): see Restore in deploy/README.md. The backup brings back every person, setting and the audit log."
+            "If the data is lost: install Hawk AI on a server, copy this backup to it, and restore it with the backup key an owner or admin saved from Settings → Backups & health (it is not in this email): see Restore in /settings/guide/install. The backup brings back every person, setting and the audit log."
             if keyed
-            else "If the data is lost: install Hawk AI on a server with the same BACKUP_PASSPHRASE, copy this backup to it, and restore it: see Restore in deploy/README.md. The backup brings back every person, setting and the audit log."
+            else "If the data is lost: install Hawk AI on a server with the same BACKUP_PASSPHRASE, copy this backup to it, and restore it: see Restore in /settings/guide/install. The backup brings back every person, setting and the audit log."
         ),
     ]
     if keyed and not store.status()["keySaved"]:
@@ -466,7 +471,7 @@ def restore_bundle(
     if files["replacedDir"] is None and replaced.exists():
         files["replacedDir"] = str(replaced)
     # The application keys the restored database was written with. When they differ from this server's, they are put
-    # where an administrator copies them into the deployment's secrets (deploy/README.md: Restore).
+    # where an administrator copies them into the deployment's secrets (/settings/guide/backups).
     differing = []
     for name in archive.SECRET_NAMES:
         value = archive.member(bundle, f"secrets/{name}")
@@ -503,9 +508,18 @@ def apply_pending_restore(cfg: BackupConfig | None = None, **kwargs: Any) -> dic
     pending = cfg.data_dir / archive.PENDING_RESTORE
     if not pending.exists():
         return None
-    bundle = archive.read_backup(pending.read_bytes())
-    result = restore_bundle(bundle, cfg=cfg, **kwargs)
+    log.info("Applying the restore staged from Settings → Backups & health")
+    try:
+        bundle = archive.read_backup(pending.read_bytes())
+        result = restore_bundle(bundle, cfg=cfg, **kwargs)
+    except Exception:
+        log.error("! [backup] The staged restore could not be applied", exc_info=True)
+        raise
     pending.unlink(missing_ok=True)
+    log.info(
+        "Restore applied",
+        extra={"database_restored": bool(result.get("databaseRestored")), "secrets_differ": len(result.get("secretsDiffer") or [])},
+    )
     return result
 
 

@@ -11,7 +11,7 @@ import { passwordProblem } from "@/lib/access";
 import { refusalFrom, resetLinkToken } from "@/lib/sign-in";
 
 /**
- * Choose a new password from the emailed link (docs/sign-in.md, CxMissionZero's showReset): /login/reset#reset=<token>.
+ * Choose a new password from the emailed link (/settings/guide/people-and-access, CxMissionZero's showReset): /login/reset#reset=<token>.
  * The secret is after "#", so browsers never send it to a server or in a Referer; the page takes it out of the
  * address bar at once. Saving signs the account out everywhere, and an email confirms the change.
  */

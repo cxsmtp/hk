@@ -25,9 +25,10 @@ manage them in each of those tenants.
 from __future__ import annotations
 
 import hashlib
+import json
+import logging
 import re
 import secrets
-import sys
 from datetime import datetime, timezone
 from typing import Annotated, Any
 
@@ -36,6 +37,8 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.core import session_cookies
+from app.core.log_config import mask_email
 from app.core.permissions import ADMIN_ONLY, GROUPS, LOCKED_ROLES, PERMISSIONS
 from app.core.rbac import require_permission
 from app.core.security import get_password_hash
@@ -55,6 +58,9 @@ router = APIRouter(tags=["iam"])
 
 EMAIL = re.compile(r"^(?=.{3,254}$)[^\s@<>\"]+@[^\s@<>\"]+\.[^\s@<>\"]+$")
 NOT_YOURS = "That person is not one you can change."
+
+
+logger = logging.getLogger(__name__)
 
 
 def _no_store(content: Any, status_code: int = 200) -> JSONResponse:
@@ -96,7 +102,7 @@ def _send(message, to: str) -> None:  # type: ignore[no-untyped-def]
     try:
         mailer.send(message, to)
     except mailer.MailError as error:
-        print(f"[people] An email to {to} could not be sent: {error}", file=sys.stderr, flush=True)
+        logger.warning("[people] An email to %s could not be sent: %s", mask_email(to), error)
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -299,7 +305,7 @@ def add_person(
         existing = account_security.find_by_email(db, address)
         if existing is not None and db.scalar(select(UserTenantRole.id).where(UserTenantRole.user_id == existing.id, UserTenantRole.tenant_id == ctx.tenant.id)) is not None:
             raise Refused(409, "Someone with that email already has access.")
-        # The activation code's limit of active users in each tenant (docs/activation-codes.md).
+        # The activation code's limit of active users in each tenant (/settings/guide/licence).
         activation_service.assert_may_add_member(db, ctx.tenant.id)
         temporary = None
         if existing is None:
@@ -933,7 +939,7 @@ def confirm_join(request: Request, body: Annotated[dict[str, Any] | None, Body()
         problem = password_problem(password)
         if problem:
             raise Refused(400, problem)
-        # The activation code's limit of active users in each tenant (docs/activation-codes.md).
+        # The activation code's limit of active users in each tenant (/settings/guide/licence).
         activation_service.assert_may_add_member(db, tenant.id)
         # The link is spent first: a second press of the button cannot make a second person.
         if not sign_in_store.store().take(f"join:{_key(str(body.get('token') or ''))}"):
@@ -948,7 +954,7 @@ def confirm_join(request: Request, body: Annotated[dict[str, Any] | None, Body()
     db.flush()
     db.add(UserTenantRole(user_id=user.id, tenant_id=tenant.id, role=role_key, team_id=team_id, title=clean(body.get("title")), joined_at=now, joined_role=role_key, joined_team_id=team_id))
     _record(db, None, "user.join", email, tenant_id=tenant.id, actor_id=user.id, team=next((t.name for t in all_teams if t.id == team_id), None), role=role_key)
-    # Required two-step sign-in (docs/sign-in.md): no tokens before the second step is set up. They sign in, and the
+    # Required two-step sign-in (/settings/guide/people-and-access): no tokens before the second step is set up. They sign in, and the
     # sign-in page walks them through it.
     if account_security.needs_two_step(db, user):
         db.commit()
@@ -958,7 +964,8 @@ def confirm_join(request: Request, body: Annotated[dict[str, Any] | None, Body()
     account_security.record_sign_in(user)
     result = signed_in_response(db, user)
     db.commit()
-    return result
+    # The console's session: the tokens as cookies (app/core/session_cookies.py).
+    return session_cookies.answer(request, json.loads(result.model_dump_json()))
 
 
 @router.get("/iam/join-settings")

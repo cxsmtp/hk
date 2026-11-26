@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Hawk AI on one Linux machine, with one command (deploy/README.md):
+# Hawk AI on one Linux machine, with one command (/settings/guide/install):
 #
 #   sudo deploy/install.sh
 #
@@ -62,9 +62,9 @@ SECRETS="$HAWK_DATA_DIR/secrets"
 umask 077
 mkdir -p "$SECRETS" "$HAWK_DATA_DIR/certs"
 chmod 0700 "$HAWK_DATA_DIR" "$SECRETS" "$HAWK_DATA_DIR/certs"
-# Certificates given to the deployment (TLS_CERT_FILE…, docs/https-and-hosting.md): readable by the API (uid 1000) only.
+# Certificates given to the deployment (TLS_CERT_FILE…, /settings/guide/https): readable by the API (uid 1000) only.
 chown -R 1000:1000 "$HAWK_DATA_DIR/certs"
-# Backups (deploy/README.md: Backups): BACKUP_DIR, else the data folder's backups/; written by the API and the worker.
+# Backups (/settings/guide/backups): BACKUP_DIR, else the data folder's backups/; written by the API and the worker.
 BACKUP_DIR_HOST="$(sed -n 's/^BACKUP_DIR=//p' "$ENV_FILE" | tail -n 1)"
 BACKUP_DIR_HOST="${BACKUP_DIR_HOST:-$HAWK_DATA_DIR/backups}"
 case "$BACKUP_DIR_HOST" in
@@ -74,7 +74,7 @@ esac
 mkdir -p "$BACKUP_DIR_HOST"
 chown 1000:1000 "$BACKUP_DIR_HOST"
 chmod 0700 "$BACKUP_DIR_HOST"
-# Updates (docs/updating.md): the folder the API and the worker (uid 1000) share with the updater (root, no capabilities).
+# Updates (/settings/guide/updates): the folder the API and the worker (uid 1000) share with the updater (root, no capabilities).
 mkdir -p "$HAWK_DATA_DIR/updater"
 chown 0:1000 "$HAWK_DATA_DIR/updater"
 chmod 0770 "$HAWK_DATA_DIR/updater"
@@ -119,7 +119,7 @@ setting() { sed -n "s/^$1=//p" "$ENV_FILE" | tail -n 1; }
 release="$(setting HAWK_RELEASE)"
 release="${HAWK_RELEASE:-$release}"
 if [ -n "$release" ]; then
-  # The published images (docs/updating.md): <UPDATE_IMAGE>-api, -web, -proxy and -updater at HAWK_RELEASE, and the
+  # The published images (/settings/guide/updates): <UPDATE_IMAGE>-api, -web, -proxy and -updater at HAWK_RELEASE, and the
   # updater that updates and rolls back from Settings → Updates. After an update from that page the images it chose are
   # kept (the page's choice wins, as for HTTPS): delete ${HAWK_DATA_DIR}/updater/images.env to go back to HAWK_RELEASE.
   case "$release" in
@@ -197,5 +197,5 @@ fi
 say ""
 if printf '%s\n' "$log" | grep -q 'Self-signed certificate'; then
   say "The browser warns once about the certificate (\"Your connection is not private\": Advanced, then continue)."
-  say "Your own certificate, or a free one from Let's Encrypt: Settings → HTTPS, or deploy/README.md (HTTPS)."
+  say "Your own certificate, or a free one from Let's Encrypt: Settings → HTTPS, or /settings/guide/https."
 fi

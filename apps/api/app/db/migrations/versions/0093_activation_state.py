@@ -1,4 +1,4 @@
-"""Keep the accepted activation codes and the licence's clock (docs/activation-codes.md).
+"""Keep the accepted activation codes and the licence's clock (/settings/guide/licence).
 
 One row (id 1) holds the JSON state CxMissionZero keeps in DATA_DIR/activation.json:
 {tenants, product, seenAt, history}. Each code is kept as the signed code itself and checked again

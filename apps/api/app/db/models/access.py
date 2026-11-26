@@ -61,7 +61,7 @@ class SignInPolicy(Base):
 
     CxMissionZero keeps them in iam.json (policy.passwordReset, policy.twoStepRequired, policy.twoStepResetFor,
     policy.sso). Hawk's identity provider itself (issuer, client id and secret) stays in its OIDC_* configuration;
-    who may sign in through it is kept here (docs/sign-in.md).
+    who may sign in through it is kept here (/settings/guide/people-and-access).
     """
 
     __tablename__ = "sign_in_policy"

@@ -20,7 +20,7 @@ import { isTwoStepChallenge, refusalFrom, ssoRefusal, twoStepHint } from "@/lib/
 import type { TwoStepChallenge } from "@/lib/sign-in";
 import type { LoginResponse } from "@/lib/types";
 
-/** What the sign-in page shows (docs/sign-in.md, CxMissionZero's public/app/session.js). */
+/** What the sign-in page shows (/settings/guide/people-and-access, CxMissionZero's public/app/session.js). */
 type Box = "signin" | "forgot" | "twostep" | "recovery";
 type Status = { text: string; kind: "ok" | "error" | "" };
 
@@ -31,7 +31,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [workspace, setWorkspace] = useState("acme");
   const [oidcProviders, setOidcProviders] = useState<Array<{ key: string; display_name: string }>>([]);
-  // First start with FIRST_ADMIN=setup-code (deploy/README.md): nobody has access yet.
+  // First start with FIRST_ADMIN=setup-code (/settings/guide/install): nobody has access yet.
   const [setup, setSetup] = useState(false);
   const [setupCode, setSetupCode] = useState("");
   const [setupName, setSetupName] = useState("");
@@ -107,13 +107,9 @@ export default function LoginPage() {
     const tenantId = result.selected_tenant_id || result.tenants?.[0]?.id;
     if (!tenantId) throw new Error("No tenant in login response");
     const tenantRole = result.tenants?.find((item) => item.id === tenantId)?.role;
-    setSession({
-      accessToken: result.access_token,
-      refreshToken: result.refresh_token,
-      tenantId,
-      userRole: tenantRole,
-      user: result.user,
-    });
+    // The tokens are HttpOnly cookies the API set (apps/api/app/core/session_cookies.py); only who signed in is
+    // remembered here.
+    setSession({ tenantId, userRole: tenantRole, user: result.user });
     router.push(defaultRouteForRole(tenantRole));
   }
 

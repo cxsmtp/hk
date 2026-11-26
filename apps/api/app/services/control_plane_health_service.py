@@ -4,6 +4,7 @@ import os
 import time
 import math
 import json
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -17,6 +18,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.observability import get_correlation_id
 from app.services.snapshot_service import ensure_artifact_storage_writable
 from app.services.production_hardening import (
     ComponentHandshake,
@@ -92,12 +94,24 @@ def _redis_client() -> Redis:
     )
 
 
+logger = logging.getLogger(__name__)
+
+
+def _failed(what: str, exc: BaseException) -> str:
+    """A failed check's detail, as the health page shows it: what failed and the kind of error, with the request id
+    to find the whole message in the server log (a driver's message can name hosts, users, paths and statements)."""
+
+    request_id = get_correlation_id() or ""
+    logger.warning("Control plane check failed: %s", what, exc_info=exc, extra={"request_id": request_id, "reason_code": "control_plane_check_failed"})
+    return f"{what} ({exc.__class__.__name__}{f'; request id {request_id}' if request_id else ''})"
+
+
 def _check_database_connectivity(db: Session) -> ControlPlaneCheckResult:
     try:
         db.execute(text("SELECT 1"))
         return ControlPlaneCheckResult(ok=True, status="ok", detail="database reachable")
     except SQLAlchemyError as exc:
-        return ControlPlaneCheckResult(ok=False, status="unavailable", detail=f"database connectivity failed: {exc}")
+        return ControlPlaneCheckResult(ok=False, status="unavailable", detail=_failed("database connectivity failed", exc))
 
 
 def _check_migrations_applied(db: Session, *, strict_mode: bool) -> ControlPlaneCheckResult:
@@ -110,16 +124,16 @@ def _check_migrations_applied(db: Session, *, strict_mode: bool) -> ControlPlane
 
     alembic_ini = _alembic_ini_path()
     if not alembic_ini.exists():
-        return ControlPlaneCheckResult(ok=False, status="unavailable", detail=f"missing alembic config: {alembic_ini}")
+        return ControlPlaneCheckResult(ok=False, status="unavailable", detail="missing alembic config")
 
     try:
         connection = db.connection()
         context = MigrationContext.configure(connection)
         current_heads = set(context.get_current_heads())
     except SQLAlchemyError as exc:
-        return ControlPlaneCheckResult(ok=False, status="unavailable", detail=f"migration query failed: {exc}")
+        return ControlPlaneCheckResult(ok=False, status="unavailable", detail=_failed("migration query failed", exc))
     except Exception as exc:
-        return ControlPlaneCheckResult(ok=False, status="unavailable", detail=f"migration context failed: {exc}")
+        return ControlPlaneCheckResult(ok=False, status="unavailable", detail=_failed("migration context failed", exc))
 
     if not current_heads:
         return ControlPlaneCheckResult(ok=False, status="out_of_date", detail="no applied migrations found")
@@ -129,7 +143,7 @@ def _check_migrations_applied(db: Session, *, strict_mode: bool) -> ControlPlane
         script = ScriptDirectory.from_config(config)
         expected_heads = set(script.get_heads())
     except Exception as exc:
-        return ControlPlaneCheckResult(ok=False, status="unavailable", detail=f"migration head load failed: {exc}")
+        return ControlPlaneCheckResult(ok=False, status="unavailable", detail=_failed("migration head load failed", exc))
 
     if expected_heads != current_heads:
         return ControlPlaneCheckResult(
@@ -154,7 +168,7 @@ def _check_redis_connectivity(*, strict_mode: bool) -> tuple[ControlPlaneCheckRe
             return ControlPlaneCheckResult(ok=True, status="ok", detail="redis reachable"), client
         return ControlPlaneCheckResult(ok=False, status="unavailable", detail="redis ping returned false"), client
     except Exception as exc:
-        return ControlPlaneCheckResult(ok=False, status="unavailable", detail=f"redis connectivity failed: {exc}"), None
+        return ControlPlaneCheckResult(ok=False, status="unavailable", detail=_failed("redis connectivity failed", exc)), None
 
 
 def _check_celery_heartbeat(
@@ -277,10 +291,10 @@ def evaluate_component_runtime_health(
 
 def _check_artifact_storage() -> ControlPlaneCheckResult:
     try:
-        directory = ensure_artifact_storage_writable()
-        return ControlPlaneCheckResult(ok=True, status="ok", detail=f"artifact storage writable: {directory}")
+        ensure_artifact_storage_writable()
+        return ControlPlaneCheckResult(ok=True, status="ok", detail="artifact storage writable")
     except Exception as exc:
-        return ControlPlaneCheckResult(ok=False, status="unavailable", detail=f"artifact storage unavailable: {exc}")
+        return ControlPlaneCheckResult(ok=False, status="unavailable", detail=_failed("artifact storage unavailable", exc))
 
 
 def evaluate_control_plane_health(db: Session) -> ControlPlaneHealthReport:

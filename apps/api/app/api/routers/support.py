@@ -82,7 +82,7 @@ def support_team(db: Session, tenant_id: str | None) -> list[str]:
 
 
 def mail_ready(db: Session) -> str:
-    """'' when email can go out; otherwise why not (the email server must be set up and tested, docs/sign-in.md)."""
+    """'' when email can go out; otherwise why not (the email server must be set up and tested, /settings/guide/people-and-access)."""
 
     if not mailer.configured():
         return "The email server is not set up (Settings → Email (SMTP))."
@@ -245,7 +245,7 @@ def raise_request(body: dict[str, Any] | None = Body(default=None), ctx: TenantC
 
 @router.post("/support/{ticket_id}/messages")
 def write_on_request(ticket_id: str, body: dict[str, Any] | None = Body(default=None), ctx: TenantContext = Depends(require_tenant), db: Session = Depends(get_db)):
-    t = support_desk.get(db, ticket_id)
+    t = support_desk.get(db, ticket_id, lock=True)
     if t is None or not _sees(ctx, t):
         return _error(404, support_desk.NOT_YOURS)
     me = _me(ctx)
@@ -265,7 +265,7 @@ def write_on_request(ticket_id: str, body: dict[str, Any] | None = Body(default=
 def move_request_on(ticket_id: str, body: dict[str, Any] | None = Body(default=None), ctx: TenantContext = Depends(require_tenant), db: Session = Depends(get_db)):
     if not _team(ctx):
         return _error(403, "Only the support team (the organisation's owners and admins) changes a request's status.")
-    t = support_desk.get(db, ticket_id)
+    t = support_desk.get(db, ticket_id, lock=True)
     if t is None or not _sees(ctx, t):
         return _error(404, support_desk.NOT_YOURS)
     try:

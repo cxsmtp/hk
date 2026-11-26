@@ -129,7 +129,8 @@ def earlier_state(*, data_dir: Path | str, backup_dir: Path | str = "", has_peop
         if _entries(data_dir / folder):
             return f"{folder}/"
     for name in _entries(data_dir):
-        if name == BACKUP_KEY_FILE or HALF_SAVED.search(name):
+        # The evidence signing keys may be made before this is decided (a page asking for them): not a sign of before.
+        if name in (BACKUP_KEY_FILE, "evidence-signing.json", "evidence-signing.lock") or HALF_SAVED.search(name):
             continue
         if STATE_LIKE.search(name) or name.startswith("replaced-") or name.startswith("restore-pending"):
             return name
