@@ -4,7 +4,7 @@ container), so a backup holds:
 
 - ``database.pgdump``: the database, as ``pg_dump --format=custom`` writes it (app/services/pg_tools.py);
 - ``data/<path>``: every file of the data folder (the HTTPS choices and certificates, the Let's Encrypt account,
-  activation state…), but never the backup key itself, the backups, what a restore put aside, the first
+  activation state, the audit key, the evidence signing keys…), but never the backup key itself, the backups, what a restore put aside, the first
   administrator's one-time password file, or a save that never finished;
 - ``secrets/<name>``: the application keys the database depends on (connector secrets, signing keys), so that a
   backup restored on a new server can still read what it holds.
@@ -71,6 +71,7 @@ KEEP_OUT = {
     "last-words.json",
     "backup-last.json",
     "restored-secrets",
+    "evidence-signing.lock",  # only a lock (app/services/evidence_signing.py); evidence-signing.json itself is backed up
 }
 _PART = re.compile(r"^[\w.-]+$")
 

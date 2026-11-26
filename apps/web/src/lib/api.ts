@@ -5,7 +5,7 @@ import type { BackupEncryption, BackupFile, BackupInfo, BackupKeyShown, BackupNo
 import type { Integrity, IntegrityState, UpdateSettings, UpdatesStatus } from "@/lib/updates-settings";
 import type { HandsOffSettings, HandsOffView, LinkAnswer, SelfCheckHealth } from "@/lib/hands-off-settings";
 import type { AboutView, BrandingPatch, BrandingView, GeneralView, SmtpSettings, SmtpView } from "@/lib/settings-console";
-import type { AuditPage, AuditVerify, ConnectorActivity, Emailed, NetworkCheck, NetworkInfo, SupportChannel, SupportKind, SupportList, SupportRequest, TrustDiagnosis, TrustedCertificate } from "@/lib/records";
+import type { AuditPage, AuditVerify, ConnectorActivity, EvidenceSigning, Emailed, NetworkCheck, NetworkInfo, SupportChannel, SupportKind, SupportList, SupportRequest, TrustDiagnosis, TrustedCertificate } from "@/lib/records";
 import { approvalStatusFilters, mergeApprovalStatusResults } from "@/lib/approval-workflow";
 import { demoFallbackRequest, isDemoFallbackEnabled } from "@/lib/demo-fallback";
 import { isDeactivatedAnswer, LICENCE_DEACTIVATED_EVENT } from "@/lib/licence";
@@ -586,7 +586,7 @@ async function request<T>(
   }
 }
 
-async function requestBlob(path: string, init?: RequestInit, allowRefresh = true): Promise<Blob> {
+async function requestBlob(path: string, init?: RequestInit, allowRefresh = true, onResponse?: (res: Response) => void): Promise<Blob> {
   const headers = new Headers(init?.headers || {});
   let session = getSession();
 
@@ -595,7 +595,7 @@ async function requestBlob(path: string, init?: RequestInit, allowRefresh = true
     const canAttemptRefresh = allowRefresh && !!String(session?.refreshToken || "").trim();
     if (canAttemptRefresh) {
       const refreshed = await tryRefreshToken();
-      if (refreshed) return requestBlob(path, init, false);
+      if (refreshed) return requestBlob(path, init, false, onResponse);
       session = getSession();
     }
   }
@@ -612,10 +612,10 @@ async function requestBlob(path: string, init?: RequestInit, allowRefresh = true
   if (res.status === 401 && allowRefresh) {
     const accessTokenUsed = String(session.accessToken || "");
     const refreshed = await tryRefreshToken();
-    if (refreshed) return requestBlob(path, init, false);
+    if (refreshed) return requestBlob(path, init, false, onResponse);
     const latestSession = getSession();
     if (latestSession?.accessToken && latestSession.accessToken !== accessTokenUsed) {
-      return requestBlob(path, init, false);
+      return requestBlob(path, init, false, onResponse);
     }
   }
 
@@ -626,6 +626,7 @@ async function requestBlob(path: string, init?: RequestInit, allowRefresh = true
     throw new Error(text || `API ${res.status}`);
   }
 
+  onResponse?.(res);
   return res.blob();
 }
 
@@ -832,6 +833,17 @@ export const api = {
   getAuditLog: (query: string) => request<AuditPage>(`/audit/log${query ? `?${query}` : ""}`),
   verifyAuditLog: () => request<AuditVerify>("/audit/log/verify"),
   exportAuditLog: (format: "csv" | "jsonl", query: string) => requestBlob(`/audit/log/export.${format}${query ? `?${query}` : ""}`),
+  /** The export and its detached evidence signature (the X-Hawk-Evidence-Signature header, '' when none). */
+  exportAuditLogSigned: async (format: "csv" | "jsonl", query: string) => {
+    let signature = "";
+    const blob = await requestBlob(`/audit/log/export.${format}${query ? `?${query}` : ""}`, undefined, true, (res) => {
+      signature = res.headers.get("X-Hawk-Evidence-Signature") ?? "";
+    });
+    return { blob, signature };
+  },
+  // Evidence signing (app/api/routers/evidence_signing.py)
+  getEvidenceSigning: () => request<EvidenceSigning>("/evidence-signing"),
+  rotateEvidenceSigning: () => request<{ rotated: boolean; active: string; previous: string | null; status: EvidenceSigning }>("/evidence-signing/rotate", { method: "POST" }),
   getConnectorActivity: (query: string) => request<ConnectorActivity>(`/connector-activity${query ? `?${query}` : ""}`),
   exportConnectorActivity: () => requestBlob("/connector-activity/export.csv"),
   exportUserActivity: () => requestBlob("/activity/log/export.csv"),

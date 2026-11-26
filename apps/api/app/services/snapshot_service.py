@@ -33,6 +33,7 @@ from app.db.models.shadow_ai import ShadowAIEntity, ShadowAIUsage
 from app.db.models.simulation import Control, SimulationRun, SimulationScheduleDecision
 from app.db.models.snapshot import AuditorSnapshot
 from app.db.models.user import User
+from app.services import evidence_signing
 from app.services.audit_service import write_audit_log
 from app.services.evidence_service import create_evidence_node
 from app.services.executive_report_service import build_executive_report, render_executive_report_pdf
@@ -2591,7 +2592,44 @@ def export_audit_artifacts(
         "pdf": _sha256_hex(pdf_bytes),
     }
     artifact_hash = _sha256_hex(json.dumps(artifact_hashes, sort_keys=True).encode("utf-8"))
+
+    # The signed manifest: every file of this export by name and SHA-256, signed as one document with the
+    # installation's evidence key (app/services/evidence_signing.py): a detached signature over the whole export (the
+    # evidence pack, the CSV and the PDF included), checked offline with the public key alone
+    # (tools/verify_evidence.py). The files themselves stay as they were. No export leaves unsigned.
+    manifest_relative_path = f"audit_export_manifest_{tenant_id}_{stamp}.json"
+    manifest_path = artifact_dir / manifest_relative_path
+    manifest_payload = {
+        "format": "hawk-evidence-manifest/v1",
+        "tenant_id": tenant_id,
+        "ai_system_id": ai_system_id,
+        "period_start": period_start,
+        "period_end": period_end,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "files": {
+            name: {"path": path, "sha256": artifact_hashes[name]}
+            for name, path in (
+                ("json", json_relative_path),
+                ("csv", csv_relative_path),
+                ("evidence_pack", evidence_pack_relative_path),
+                ("pdf_ready_model", pdf_ready_relative_path),
+                ("pdf", pdf_relative_path),
+            )
+        },
+        "artifact_hash": artifact_hash,
+    }
+    try:
+        manifest_payload = evidence_signing.service().sign_document(manifest_payload, artifact="auditor.export_manifest")
+    except evidence_signing.EvidenceSigningError as exc:
+        raise RuntimeError(f"The export could not be signed: {exc}") from exc
+    try:
+        manifest_path.write_bytes(json.dumps(manifest_payload, indent=2).encode("utf-8"))
+    except OSError as exc:
+        raise RuntimeError(f"Failed to write the signed manifest '{manifest_path}': {exc}") from exc
+    signature = manifest_payload[evidence_signing.SIGNATURE_FIELD]
     return {
+        "signature_manifest": manifest_relative_path,
+        "evidence_signature": {"kid": signature["kid"], "alg": signature["alg"], "signed_at": signature["signed_at"], "format": signature["format"]},
         "json": json_relative_path,
         "csv": csv_relative_path,
         "evidence_pack": evidence_pack_relative_path,

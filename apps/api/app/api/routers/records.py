@@ -25,10 +25,19 @@ from app.core.tenant import TenantContext
 from app.db.models.audit import AuditLog
 from app.db.models.user import User, UserTenantRole
 from app.db.session import get_db
-from app.services import audit_chain, connector_activity, user_activity
+from app.services import audit_chain, connector_activity, evidence_signing, user_activity
 from app.services.audit_service import write_audit_log
 
 router = APIRouter(tags=["records"])
+
+
+def _signed(body: str, *, media_type: str, filename: str, artifact: str) -> Response:
+    """An export with its detached evidence signature in the X-Hawk-Evidence-Signature header
+    (app/services/evidence_signing.py): checkable offline with tools/verify_evidence.py and the public key alone."""
+
+    data = body.encode("utf-8")
+    headers = {"Content-Disposition": f'attachment; filename="{filename}"', "Cache-Control": "no-store", **evidence_signing.service().header_for(data, artifact=artifact)}
+    return Response(data, media_type=media_type, headers=headers)
 readers = require_permission("audit.view")
 exporters = require_permission("audit.export")
 PAGE = 100
@@ -205,14 +214,14 @@ def _export(ctx: TenantContext, db: Session, fmt: str, filters: dict[str, str]) 
         import json
 
         body = "\n".join([json.dumps({"notice": audit_chain.EXPORT_NOTICE}), *(audit_chain.jsonl_entry(r) for r in rows if r.mac)]) + "\n"
-        return Response(body, media_type="application/x-ndjson; charset=utf-8", headers={"Content-Disposition": f'attachment; filename="audit-{stamp}.jsonl"', "Cache-Control": "no-store"})
+        return _signed(body, media_type="application/x-ndjson; charset=utf-8", filename=f"audit-{stamp}.jsonl", artifact="audit_log.jsonl")
     out = []
     for r in rows:
         event = _event(r, people, db)
         actor = event["actor"] or {}
         out.append([event["at"], actor.get("name", ""), actor.get("email", ""), event["action"], event["target"], event["details"], event["ip"], r.seq, r.mac])
     body = audit_chain.to_csv(CSV_HEADER, out, notice=audit_chain.EXPORT_NOTICE)
-    return Response(body, media_type="text/csv; charset=utf-8", headers={"Content-Disposition": f'attachment; filename="audit-{stamp}.csv"', "Cache-Control": "no-store"})
+    return _signed(body, media_type="text/csv; charset=utf-8", filename=f"audit-{stamp}.csv", artifact="audit_log.csv")
 
 
 @router.get("/audit/log/export.csv")
@@ -247,7 +256,7 @@ def activity_log(
 def export_activity_csv(ctx: TenantContext = Depends(exporters), db: Session = Depends(get_db)):
     body = audit_chain.to_csv(user_activity.CSV_COLUMNS, user_activity.csv_rows(db, ctx.tenant.id))
     stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
-    return Response(body, media_type="text/csv; charset=utf-8", headers={"Content-Disposition": f'attachment; filename="activity-{stamp}.csv"', "Cache-Control": "no-store"})
+    return _signed(body, media_type="text/csv; charset=utf-8", filename=f"activity-{stamp}.csv", artifact="activity_log.csv")
 
 
 # ---- Connector API activity -----------------------------------------------------------------------------------------
@@ -272,4 +281,4 @@ def connector_calls(
 def export_connector_calls(ctx: TenantContext = Depends(exporters), db: Session = Depends(get_db)):
     body = audit_chain.to_csv(connector_activity.CSV_HEADER, connector_activity.csv_rows(db, ctx.tenant.id))
     stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
-    return Response(body, media_type="text/csv; charset=utf-8", headers={"Content-Disposition": f'attachment; filename="connector-activity-{stamp}.csv"', "Cache-Control": "no-store"})
+    return _signed(body, media_type="text/csv; charset=utf-8", filename=f"connector-activity-{stamp}.csv", artifact="connector_activity.csv")

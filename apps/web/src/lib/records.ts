@@ -59,6 +59,7 @@ export const AUDIT_GROUPS: Record<string, string> = {
   support: "Get help",
   monitoring: "Connectors",
   connector: "Connectors",
+  evidence_signing: "Evidence signing",
 };
 
 /** FTR's AUDIT_NAMES, for Hawk AI's actions. */
@@ -134,6 +135,40 @@ export function queryString(filters: Record<string, string | string[] | undefine
     if (value) out.set(k, value);
   }
   return out.toString();
+}
+
+// ---- Evidence signing (app/api/routers/evidence_signing.py) ---------------------------------------------------------
+
+export type EvidenceKey = { kid: string; fingerprint: string; alg: string; backend: string; key_name: string; created_at: string | null; retired_at: string | null };
+export type EvidenceSigning = {
+  backend: string;
+  backend_label: string;
+  key_ref: string;
+  active: EvidenceKey | null;
+  retired: EvidenceKey[];
+  error: string;
+  well_known_path: string;
+  can_rotate: boolean;
+};
+
+/** The fingerprint as people compare it: groups of four, the first 32 hex digits (the rest in the key list). */
+export function shortFingerprint(kid: string | null | undefined): string {
+  return (String(kid || "").slice(0, 32).match(/.{1,4}/g) ?? []).join(" ");
+}
+
+export const ALGORITHM_LABELS: Record<string, string> = { EdDSA: "Ed25519", ES256: "ECDSA P-256 (ES256)" };
+
+/** The X-Hawk-Evidence-Signature header of an export, as the .sig.json file saved beside it ('' when none). */
+export function signatureFile(header: string | null | undefined): string {
+  const value = String(header || "").trim();
+  if (!value) return "";
+  try {
+    const padded = value.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - (value.length % 4)) % 4);
+    const text = new TextDecoder().decode(Uint8Array.from(atob(padded), (c) => c.charCodeAt(0)));
+    return `${JSON.stringify(JSON.parse(text), null, 2)}\n`;
+  } catch {
+    return "";
+  }
 }
 
 // ---- Connector API activity ---------------------------------------------------------------------------------------

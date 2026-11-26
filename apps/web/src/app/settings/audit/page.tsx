@@ -9,8 +9,8 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { api } from "@/lib/api";
 import { errorMessageFrom } from "@/lib/licence";
-import { AUDIT_GROUPS, auditBase, auditDetails, auditGroups, auditLabel, auditRefused, FILTER_KEYS, queryString, verifyVerdict } from "@/lib/records";
-import type { AuditEvent, AuditPage, AuditVerify } from "@/lib/records";
+import { ALGORITHM_LABELS, AUDIT_GROUPS, auditBase, auditDetails, auditGroups, auditLabel, auditRefused, FILTER_KEYS, queryString, shortFingerprint, signatureFile, verifyVerdict } from "@/lib/records";
+import type { AuditEvent, AuditPage, AuditVerify, EvidenceSigning } from "@/lib/records";
 
 const message = (error: unknown) => errorMessageFrom(error instanceof Error ? error.message : String(error ?? ""), "Something went wrong.");
 const dateTime = (iso?: string | null) => (iso ? new Date(iso).toLocaleString(undefined, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "");
@@ -60,6 +60,78 @@ function Row({ e }: { e: AuditEvent }) {
       </td>
       <td className="small mono">{e.ip}</td>
     </tr>
+  );
+}
+
+/**
+ * Evidence signing (app/api/routers/evidence_signing.py): what signs the evidence Hawk AI hands to auditors (the
+ * exports here, the auditor's export), its fingerprint, and the keys it signed with before. Owners and admins rotate it.
+ */
+function EvidenceSigningPanel() {
+  const [s, setS] = useState<EvidenceSigning | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    api
+      .getEvidenceSigning()
+      .then(setS)
+      .catch(() => setS(null));
+  }, []);
+
+  async function rotate() {
+    if (!window.confirm("Make a new evidence signing key? Evidence signed before stays verifiable: the old public key stays published.")) return;
+    setBusy(true);
+    try {
+      const out = await api.rotateEvidenceSigning();
+      setS(out.status);
+      toast.success(out.rotated ? "New signing key in use. The previous public key stays published." : "The key service still gives the same key: make a new key or version there first.");
+    } catch (error) {
+      toast.error(message(error));
+    }
+    setBusy(false);
+  }
+
+  if (!s) return null;
+  return (
+    <div className="panel mt" id="evidence-signing">
+      <h2>
+        Evidence signing <small>{s.backend_label || "Not set up"}</small>
+      </h2>
+      <p className="muted small">
+        Exports and the auditor&apos;s evidence carry a signature an auditor checks offline with the public key alone (tools/verify_evidence.py). Public keys, current and retired:{" "}
+        <a className="mono" href={s.well_known_path} target="_blank" rel="noreferrer">
+          {s.well_known_path}
+        </a>
+      </p>
+      {s.error ? <div className="callout bad">{s.error}</div> : null}
+      {s.active ? (
+        <dl className="kv">
+          <dt>Key id (fingerprint)</dt>
+          <dd className="mono" title={s.active.kid}>
+            {shortFingerprint(s.active.kid)}
+          </dd>
+          <dt>Algorithm</dt>
+          <dd>{ALGORITHM_LABELS[s.active.alg] ?? s.active.alg}</dd>
+          {s.key_ref ? (
+            <>
+              <dt>Key</dt>
+              <dd className="mono">{s.active.key_name || s.key_ref}</dd>
+            </>
+          ) : null}
+          <dt>In use since</dt>
+          <dd>{dateTime(s.active.created_at)}</dd>
+          <dt>Retired keys</dt>
+          <dd>{s.retired.length ? `${s.retired.length}, still published` : "None"}</dd>
+        </dl>
+      ) : null}
+      {s.can_rotate ? (
+        <div className="flex mt">
+          <button className="btn ghost" id="evidence-rotate" type="button" disabled={busy} onClick={rotate}>
+            Rotate the signing key
+          </button>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -124,7 +196,11 @@ export default function AuditLogPage() {
 
   async function exportAs(format: "csv" | "jsonl") {
     try {
-      save(await api.exportAuditLog(format, qs), `audit.${format}`);
+      const { blob, signature } = await api.exportAuditLogSigned(format, qs);
+      save(blob, `audit.${format}`);
+      // Its detached signature beside it, for an auditor to check offline (tools/verify_evidence.py, --signature).
+      const sig = signatureFile(signature);
+      if (sig) save(new Blob([sig], { type: "application/json" }), `audit.${format}.sig.json`);
     } catch (error) {
       toast.error(message(error));
     }
@@ -293,6 +369,7 @@ export default function AuditLogPage() {
             </div>
           </div>
         ) : null}
+        <EvidenceSigningPanel />
       </div>
     </AppShell>
   );

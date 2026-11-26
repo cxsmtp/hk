@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import datetime, timedelta, timezone
-from typing import Literal
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import FileResponse
@@ -31,6 +31,7 @@ from app.db.models.simulation import SimulationRun
 from app.db.models.snapshot import AuditorSnapshot
 from app.db.models.user import User
 from app.db.session import get_db
+from app.services import evidence_signing
 from app.services.audit_service import write_audit_log
 from app.services.evidence_service import create_evidence_node, link_evidence_nodes
 from app.services.governance_guard import GovernanceFailSecureError, GovernanceViolationError
@@ -154,6 +155,8 @@ class AuditorExportArtifactsResponse(BaseModel):
     evidence_pack: str | None = None
     pdf_ready_model: str | None = None
     pdf: str | None = None
+    signature_manifest: str | None = None
+    evidence_signature: dict[str, Any] | None = None
     artifact_hashes: dict[str, str] = Field(default_factory=dict)
     pdf_renderer: str | None = None
     pdf_renderer_available: bool = False
@@ -1411,6 +1414,7 @@ def export(
                 "evidence_pack": artifact_named_download_url(snap.id, "evidence_pack"),
                 "pdf_ready_model": artifact_named_download_url(snap.id, "pdf_ready_model"),
                 "pdf": artifact_named_download_url(snap.id, "pdf"),
+                "signature_manifest": artifact_named_download_url(snap.id, "signature_manifest"),
             },
             artifacts=AuditorExportArtifactsResponse(**out),
         )
@@ -1451,13 +1455,14 @@ def download_snapshot(
         path=artifact_path,
         filename=artifact_path.name,
         media_type="application/octet-stream",
+        headers=evidence_signing.service().header_for(artifact_path.read_bytes(), artifact="auditor.snapshot"),
     )
 
 
 @router.get("/snapshots/{snapshot_id}/artifacts/{artifact_name}")
 def download_snapshot_artifact(
     snapshot_id: str,
-    artifact_name: Literal["json", "csv", "evidence_pack", "pdf_ready_model", "pdf"],
+    artifact_name: Literal["json", "csv", "evidence_pack", "pdf_ready_model", "pdf", "signature_manifest"],
     ctx: TenantContext = Depends(require_permission("evidence.export")),
     db: Session = Depends(get_db),
 ):
@@ -1492,6 +1497,7 @@ def download_snapshot_artifact(
         "evidence_pack": "application/json",
         "pdf_ready_model": "application/json",
         "pdf": "application/pdf",
+        "signature_manifest": "application/json",
     }[artifact_name]
     write_audit_log(
         db,
@@ -1504,10 +1510,13 @@ def download_snapshot_artifact(
         payload={"artifact_name": artifact_name, "artifact_path": artifact_relative_path(str(artifact_path))},
     )
     db.commit()
+    # Each file also carries its own detached evidence signature (app/services/evidence_signing.py), so it can be
+    # checked on its own, offline (tools/verify_evidence.py --signature).
     return FileResponse(
         path=artifact_path,
         filename=artifact_path.name,
         media_type=media_type,
+        headers=evidence_signing.service().header_for(artifact_path.read_bytes(), artifact=f"auditor.{artifact_name}"),
     )
 
 
