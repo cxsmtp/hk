@@ -15,6 +15,7 @@ description = "Made-up keys the detectors must catch: the DLP benchmark, detecto
 paths = [
   '''apps/api/tests/fixtures/detection_benchmark/.*\.jsonl$''',
   '''apps/api/tests/test_detection_engine\.py$''',
+  '''apps/api/tests/test_sensitive_data_detection_service_extended\.py$''',
   '''apps/api/tests/test_simulation_catalog_runners\.py$''',
   '''apps/api/tests/test_llm_gateway_integration\.py$''',
   '''apps/api/app/services/simulation_catalog_runners\.py$''',
