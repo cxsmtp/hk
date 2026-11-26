@@ -131,6 +131,8 @@ class _PersonalInstallationHTTP:
             return {"total_count": 1, "repositories": []}
         if url.endswith("/repos/octocat/demo-private/collaborators"):
             return []
+        if url.endswith("/repos/octocat/demo-private/branches"):
+            return [{"name": "main", "protected": True}]
         raise AssertionError(f"personal installation used an unsupported endpoint: {url}")
 
     def get_ndjson(self, _url: str, **_kwargs: Any) -> tuple[dict[str, Any], ...]:
@@ -168,6 +170,7 @@ def test_personal_github_app_inventory_uses_installation_scope_without_org_or_te
         "direct_collaborators": 0,
     }
     assert repository.metadata["protection"]["account_scope_kind"] == "PERSONAL"
+    assert list(repository.metadata["protection"]["protected_branches"]) == ["main"]
     assert owner.identifiers["access_path"] == "OWNER"
     assert owner.metadata["permission"] == "ADMIN"
     assert connector.validate(connection, http, now=_window()[1]).denominator == 1

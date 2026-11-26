@@ -28,7 +28,10 @@ from app.services.github_repository_access_service import (
     list_github_repositories,
     serialize_github_page,
     serialize_github_projection,
+    issue_github_repository_mutation_approval,
+    revoke_github_repository_mutation_approval,
     revoke_github_repository_runtime,
+    save_github_repository_agent_policy,
     save_github_repository_operation_controls,
     update_github_repository_governance,
 )
@@ -127,6 +130,18 @@ class GitHubRepositoryRuntimeBindingRequest(BaseModel):
 class GitHubRepositoryOperationControlsUpdate(BaseModel):
     controls: dict[str, Literal["ALLOW", "BLOCK"]]
     expected_governance_version: int = Field(ge=0)
+
+
+class GitHubRepositoryAgentPolicyUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    policy: dict[str, object] = Field(default_factory=dict)
+    expected_governance_version: int = Field(ge=0)
+
+
+class GitHubRepositoryMutationApprovalRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    approval_request_id: str = Field(min_length=1, max_length=64)
+    ttl_seconds: int = Field(default=900, ge=60, le=3600)
 
 
 @router.get("/coverage", response_model=DeploymentCoverageResponse)
@@ -271,6 +286,59 @@ def save_github_repository_operation_controls_route(
         db.rollback()
         detail = str(exc)
         raise HTTPException(status_code=status.HTTP_409_CONFLICT if detail == "governance version conflict" else status.HTTP_422_UNPROCESSABLE_ENTITY, detail=detail) from exc
+
+
+@router.put("/control-coverage/source-control/github-repositories/repositories/{repository_id}/agent-policy")
+def save_github_repository_agent_policy_route(
+    repository_id: str,
+    body: GitHubRepositoryAgentPolicyUpdate,
+    ctx: TenantContext = Depends(require_permission("deployments.manage")),
+    db: Session = Depends(get_db),
+):
+    try:
+        repository = save_github_repository_agent_policy(db, tenant_id=ctx.tenant.id, repository_id=repository_id, policy=body.policy, expected_governance_version=body.expected_governance_version, actor_user_id=ctx.user.id if ctx.user else None)
+        db.commit()
+        return serialize_github_projection(repository)
+    except ValueError as exc:
+        db.rollback()
+        detail = str(exc)
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT if detail == "governance version conflict" else status.HTTP_422_UNPROCESSABLE_ENTITY, detail=detail) from exc
+
+
+@router.post("/control-coverage/source-control/github-repositories/mutation-approvals")
+def issue_github_repository_mutation_approval_route(
+    body: GitHubRepositoryMutationApprovalRequest,
+    # An approver surface, like the approval decision itself; the request's own
+    # required roles are checked again in the service.
+    ctx: TenantContext = Depends(require_permission("policies.operate")),
+    db: Session = Depends(get_db),
+):
+    try:
+        grant = issue_github_repository_mutation_approval(db, tenant_id=ctx.tenant.id, approval_request_id=body.approval_request_id, issued_by=ctx.user.id if ctx.user else None, approver_role=ctx.role, ttl_seconds=body.ttl_seconds)
+        db.commit()
+        return serialize_github_projection(grant)
+    except PermissionError as exc:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc
+    except ValueError as exc:
+        db.rollback()
+        detail = str(exc)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND if detail == "approval request not found" else status.HTTP_409_CONFLICT, detail=detail) from exc
+
+
+@router.delete("/control-coverage/source-control/github-repositories/mutation-approvals/{approval_binding_id}")
+def revoke_github_repository_mutation_approval_route(
+    approval_binding_id: str,
+    ctx: TenantContext = Depends(require_permission("policies.operate")),
+    db: Session = Depends(get_db),
+):
+    try:
+        grant = revoke_github_repository_mutation_approval(db, tenant_id=ctx.tenant.id, approval_binding_id=approval_binding_id, actor_user_id=ctx.user.id if ctx.user else None)
+        db.commit()
+        return serialize_github_projection(grant)
+    except ValueError as exc:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 
 
 @router.get("/control-coverage/source-control/github-repositories/developers")

@@ -113,6 +113,18 @@ def _m365_transport(
     )
 
 
+def _github_installation_token_is_read_only(token_payload: Mapping[str, Any]) -> bool:
+    """True when the installation token's granted permissions are all read-only.
+
+    GitHub returns the granted permissions with every installation token; an
+    absent or malformed permissions object is treated as unverifiable.
+    """
+    permissions = token_payload.get("permissions")
+    if not isinstance(permissions, Mapping) or not permissions:
+        return False
+    return all(isinstance(level, str) and level.strip().lower() == "read" for level in permissions.values())
+
+
 def _github_cloud_transport(
     connection: HMAIRSourceConnectionInput, *, client: httpx.Client
 ) -> AuthenticatedSourceHTTP:
@@ -146,6 +158,11 @@ def _github_cloud_transport(
     access_token = token_payload.get("token") if isinstance(token_payload, Mapping) else None
     if not isinstance(access_token, str) or not access_token:
         raise SafeSourceHTTPError("source_authentication_failed")
+    if not _github_installation_token_is_read_only(token_payload):
+        # Inventory only reads. A token able to write or administer anything
+        # is refused rather than held, so Hawk's own connector can never be
+        # the path by which repositories are changed.
+        raise SafeSourceHTTPError("source_token_scope_excessive")
     return AuthenticatedSourceHTTP(
         client=client,
         allowed_origins=("https://api.github.com",),

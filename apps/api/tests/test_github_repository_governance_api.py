@@ -19,6 +19,11 @@ from app.services.github_repository_access_service import (
 from app.services.policy_pack_platform.service import _normalize_assignment_targets
 
 
+def _outcome(result: dict[str, object]) -> dict[str, object]:
+    """The stable decision keys; results also carry their evidence."""
+    return {key: result[key] for key in ("decision", "reason", "repository_id")}
+
+
 def _db() -> Session:
     engine = create_engine("sqlite+pysqlite:///:memory:")
     Base.metadata.create_all(engine)
@@ -144,7 +149,7 @@ def test_unapproval_blocks_a_repository_that_previously_allowed_reads() -> None:
         assert evaluate_github_repository_mutation(db, tenant_id="tenant-a", action="REPOSITORY_READ", resource="github.com/acme/app")["decision"] == "ALLOW"
         unapproved = update_github_repository_governance(db, tenant_id="tenant-a", repository_id=repository.id, decision="UNAPPROVED", expected_governance_version=1, assignment_id=None, actor_user_id=None)
         assert unapproved.read_posture == "BLOCK"
-        assert evaluate_github_repository_mutation(db, tenant_id="tenant-a", action="REPOSITORY_READ", resource="github.com/acme/app") == {"decision": "BLOCK", "reason": "repository_read_blocked", "repository_id": "R_1"}
+        assert _outcome(evaluate_github_repository_mutation(db, tenant_id="tenant-a", action="REPOSITORY_READ", resource="github.com/acme/app")) == {"decision": "BLOCK", "reason": "repository_read_blocked", "repository_id": "R_1"}
     finally:
         db.close()
 
@@ -158,7 +163,7 @@ def test_read_allow_fails_closed_when_the_stored_assignment_becomes_inactive() -
         update_github_repository_governance(db, tenant_id="tenant-a", repository_id=repository.id, decision="APPROVED", expected_governance_version=0, assignment_id=assignment.id, actor_user_id=None)
         assignment.active = False
         db.flush()
-        assert evaluate_github_repository_mutation(db, tenant_id="tenant-a", action="REPOSITORY_READ", resource="github.com/acme/app") == {"decision": "BLOCK", "reason": "repository_read_not_currently_approved", "repository_id": "R_1"}
+        assert _outcome(evaluate_github_repository_mutation(db, tenant_id="tenant-a", action="REPOSITORY_READ", resource="github.com/acme/app")) == {"decision": "BLOCK", "reason": "repository_read_not_currently_approved", "repository_id": "R_1"}
     finally:
         db.close()
 
@@ -255,7 +260,7 @@ def test_personal_repository_supports_explicit_deny_postures(
         pull_request = evaluate_github_repository_mutation(db, tenant_id="tenant-a", action="REPOSITORY_PULL_REQUEST_CREATE", resource="github.com/octocat/demo-private")
         assert read["decision"] == read_decision
         assert pull["decision"] == pull_decision
-        assert push == {"decision": "BLOCK", "reason": "repository_not_explicitly_eligible", "repository_id": "R_personal"}
+        assert _outcome(push) == {"decision": "BLOCK", "reason": "repository_not_explicitly_eligible", "repository_id": "R_personal"}
         assert pull_request["decision"] == "BLOCK"
     finally:
         db.close()
