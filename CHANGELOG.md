@@ -2,6 +2,10 @@
 
 Every release, newest first: the version shown bottom-left in the console (HK-xx.xx.xx, from the VERSION file), when it was merged, and what changed for the people using it. Updated with every change merged to main (CLAUDE.md).
 
+## HK-00.03.01 — pending · [#NN](https://github.com/cxsmtp/hk/pull/NN)
+
+- **No AI system is approved by one person alone any more, unless you allow it.** Setting an AI system to approved now goes through an approval policy you set for each risk tier on Settings → AI system approvals: how many different people must approve (with two or more, the person who asked is never one of them), which roles may approve, and whether the approval is blanket (until revoked), one-time (used up by the first request through the gateway) or time-bound (ends on its own). By default higher tiers are stricter: low needs one other person and may be blanket; high, critical and restricted need two, and critical is time-bound only. A direct change of status to approved is refused; an approval that is used up, runs out (checked every minute) or is revoked puts the system back to pending re-approval and the gateway stops letting it through; every request, approval, denial, expiry and revocation is in the audit log. Systems approved before this version stay approved, as blanket approvals you can see and revoke there.
+
 ## HK-00.03.00 — pending · [#NN](https://github.com/cxsmtp/hk/pull/NN)
 
 - **Your sign-in is no longer kept where a script could read it.** The console keeps its sign-in in secure cookies that only the API can read (no longer in the browser's storage), every change you make carries a check that another site cannot forge, and Sign out now ends the sign-in on the server too. Everyone signs in once more after this update. The SDK, the MCP proxy, the endpoint agent and the browser extension work as before.

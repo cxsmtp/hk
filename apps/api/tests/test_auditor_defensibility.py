@@ -31,6 +31,7 @@ from app.main import app
 from app.services.audit_service import write_audit_log
 from app.services.maturity_service import recalculate_control_maturity
 from app.services import snapshot_service
+from ai_system_approval_helpers import approve_ai_system
 
 
 PASSWORD = "Password123!"
@@ -177,7 +178,7 @@ def _create_ai_system(
     assert response.status_code == 200, response.text
     ai_system_id = response.json()["id"]
     if approve:
-        approved = client.patch(f"/ai-systems/{ai_system_id}", headers=headers, json={"status": "approved"})
+        approved = approve_ai_system(client, headers, ai_system_id)
         assert approved.status_code == 200, approved.text
     return ai_system_id
 
@@ -1588,11 +1589,7 @@ def test_export_includes_runtime_monitoring_and_posture_views(test_env) -> None:
         approve=False,
     )
 
-    approved = client.patch(
-        f"/ai-systems/{ai_system_id}",
-        headers=headers,
-        json={"status": "approved"},
-    )
+    approved = approve_ai_system(client, headers, ai_system_id)
     assert approved.status_code == 200, approved.text
 
     intercept = client.post(
@@ -1670,11 +1667,7 @@ def test_auditor_proof_chain_converges_browser_gateway_monitoring_and_validation
         approve=False,
     )
 
-    approve = client.patch(
-        f"/ai-systems/{ai_system_id}",
-        headers=headers,
-        json={"status": "approved"},
-    )
+    approve = approve_ai_system(client, headers, ai_system_id)
     assert approve.status_code == 200, approve.text
 
     _create_blocking_policy_version(
@@ -1836,11 +1829,7 @@ def test_export_preserves_challenge_and_conflict_ledger(test_env) -> None:
         approve=False,
     )
 
-    approved = client.patch(
-        f"/ai-systems/{ai_system_id}",
-        headers=headers,
-        json={"status": "approved"},
-    )
+    approved = approve_ai_system(client, headers, ai_system_id)
     assert approved.status_code == 200, approved.text
 
     intercept = client.post(
@@ -1901,7 +1890,8 @@ def test_export_preserves_challenge_and_conflict_ledger(test_env) -> None:
     assert resolution is not None
 
     governance_state_changes = payload.get("governance_state_changes") or []
-    assert any(row.get("action") == "ai_system.update" for row in governance_state_changes)
+    # The approval (app/services/ai_system_approval_service.py) is among the governance changes the auditor exports.
+    assert any(row.get("action") == "ai_system.approval.granted" for row in governance_state_changes)
 
     evidence_pack_response = client.get(body["download_urls"]["evidence_pack"], headers=headers)
     assert evidence_pack_response.status_code == 200, evidence_pack_response.text

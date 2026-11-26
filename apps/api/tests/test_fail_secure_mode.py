@@ -16,6 +16,7 @@ from app.main import app
 from app.core.config import settings
 from app.services import control_plane_health_service
 from app.services import fail_secure_service
+from ai_system_approval_helpers import approve_ai_system
 
 
 PASSWORD = "Password123!"
@@ -63,7 +64,7 @@ def _headers(access_token: str, tenant_id: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {access_token}", "X-Tenant-ID": tenant_id}
 
 
-def _create_ai_system(client: TestClient, headers: dict[str, str], *, risk_tier: str = "MEDIUM") -> str:
+def _create_ai_system(client: TestClient, headers: dict[str, str], *, risk_tier: str = "MEDIUM", approve: bool = True) -> str:
     response = client.post(
         "/ai-systems",
         headers=headers,
@@ -71,8 +72,9 @@ def _create_ai_system(client: TestClient, headers: dict[str, str], *, risk_tier:
     )
     assert response.status_code == 200, response.text
     ai_system_id = response.json()["id"]
-    approved = client.patch(f"/ai-systems/{ai_system_id}", headers=headers, json={"status": "approved"})
-    assert approved.status_code == 200, approved.text
+    if approve:
+        approved = approve_ai_system(client, headers, ai_system_id)
+        assert approved.status_code == 200, approved.text
     return ai_system_id
 
 
@@ -237,7 +239,9 @@ def test_governance_context_failure_blocks_request(test_env) -> None:
     client: TestClient = test_env["client"]
     owner = _register_owner(client, email="fail-secure-governance@example.com")
     headers = _headers(owner["access_token"], owner["tenant_id"])
-    ai_system_id = _create_ai_system(client, headers, risk_tier="PROHIBITED")
+    # A PROHIBITED system cannot be approved (app/services/ai_system_approval_service.py); the preflight refuses it
+    # on its tier alone.
+    ai_system_id = _create_ai_system(client, headers, risk_tier="PROHIBITED", approve=False)
 
     response = client.post(
         "/gateway/llm/intercept",

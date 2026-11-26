@@ -4,6 +4,7 @@ import type { AcmeStatus, HttpsCertificateReport, HttpsMode, HttpsStatus, Upload
 import type { BackupEncryption, BackupFile, BackupInfo, BackupKeyShown, BackupNotice, BackupsStatus, Readiness } from "@/lib/backups-settings";
 import type { Integrity, IntegrityState, UpdateSettings, UpdatesStatus } from "@/lib/updates-settings";
 import type { HandsOffSettings, HandsOffView, LinkAnswer, SelfCheckHealth } from "@/lib/hands-off-settings";
+import type { ApprovalDecision, ApprovalGrantView, ApprovalPolicy, ApprovalPolicyView, ApprovalRequestView, ApprovalScope } from "@/lib/ai-system-approvals";
 import type { AboutView, BrandingPatch, BrandingView, GeneralView, SmtpSettings, SmtpView } from "@/lib/settings-console";
 import type { AuditPage, AuditVerify, ConnectorActivity, EvidenceSigning, Emailed, NetworkCheck, NetworkInfo, SupportChannel, SupportKind, SupportList, SupportRequest, TrustDiagnosis, TrustedCertificate } from "@/lib/records";
 import { approvalStatusFilters, mergeApprovalStatusResults } from "@/lib/approval-workflow";
@@ -843,6 +844,29 @@ export const api = {
   sendTestSmtp: (to: string) => request<{ message: string }>("/settings/smtp/send-test", { method: "POST", body: JSON.stringify({ to }) }),
   forgetSmtp: () => request<SmtpView>("/settings/smtp", { method: "DELETE" }),
   getAbout: () => request<AboutView>("/settings/about"),
+  // Settings → AI system approvals (app/api/routers/ai_system_approvals.py).
+  getApprovalPolicy: () => request<ApprovalPolicyView>("/settings/ai-system-approvals"),
+  saveApprovalPolicy: (policy: ApprovalPolicy) =>
+    request<ApprovalPolicyView>("/settings/ai-system-approvals", { method: "PUT", body: JSON.stringify(policy) }),
+  listAiSystemApprovals: (status: "pending" | "approved" | "denied" | "expired" | "all" = "pending") =>
+    request<{ items: ApprovalRequestView[]; total: number }>(`/ai-system-approvals?status=${encodeURIComponent(status)}`),
+  decideAiSystemApproval: (requestId: string, body: ApprovalDecision) =>
+    request<{ request: ApprovalRequestView; grant: ApprovalGrantView | null; ai_system_status: string | null }>(
+      `/ai-system-approvals/${encodeURIComponent(requestId)}/decision`,
+      { method: "POST", body: JSON.stringify(body) },
+    ),
+  listAiSystemApprovalGrants: (state: "ACTIVE" | "all" = "ACTIVE") =>
+    request<{ items: ApprovalGrantView[]; total: number }>(`/ai-system-approvals/grants?state=${encodeURIComponent(state)}`),
+  revokeAiSystemApproval: (grantId: string, reason: string) =>
+    request<{ grant: ApprovalGrantView; ai_system_status: string | null }>(`/ai-system-approvals/grants/${encodeURIComponent(grantId)}/revoke`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    }),
+  requestAiSystemApproval: (aiSystemId: string, body: { scope?: ApprovalScope; duration_hours?: number; reason?: string; target_status?: "approved" | "active" }) =>
+    request<{ request: ApprovalRequestView; ai_system_status: string | null }>(`/ai-systems/${encodeURIComponent(aiSystemId)}/approval-requests`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
   // Settings → Hands-off and the self-check (app/api/routers/hands_off.py); the emailed links need no sign-in.
   getHandsOff: () => request<HandsOffView>("/hands-off"),
   saveHandsOff: (body: { handsOff: Partial<Omit<HandsOffSettings, "statusTo">> & { statusTo?: string | string[] } }) =>

@@ -6,7 +6,8 @@
  *
  * Hawk's LICENSING group stands where FTR's PRICING does (Engines & rates and the vulnerability estimate are FTR's
  * own business); everything else is FTR's order and wording, with Hawk's own pages added where FTR has none
- * (Connector API activity for FTR's "CxOne API audit", Hands-off and Network & proxy among the System tabs).
+ * (Connector API activity for FTR's "CxOne API audit", Hands-off and Network & proxy among the System tabs, and the
+ * Workflow group's AI system approvals).
  */
 
 /** The entry in the main menu that opens Settings (FTR: "Settings" in the side menu, opening People). */
@@ -34,6 +35,13 @@ export const SETTINGS_GROUPS = [
     items: [
       { href: "/settings/audit", label: "Audit log" },
       { href: "/settings/connector-activity", label: "Connector API activity" },
+    ],
+  },
+  {
+    // Hawk's own: how AI systems are approved (app/api/routers/ai_system_approvals.py).
+    label: "Workflow",
+    items: [
+      { href: "/settings/approvals", label: "AI system approvals" },
     ],
   },
   {
@@ -67,6 +75,9 @@ export const SETTINGS_PERMISSIONS = {
   "/settings/activation": ["activation.manage"],
   "/settings/audit": ["audit.view"],
   "/settings/connector-activity": ["audit.view"],
+  // The approval policy is changed by owners and admins (settings.manage); everyone who sees the inventory reads it
+  // and decides the approvals their role may give.
+  "/settings/approvals": ["settings.manage", "discovery.view"],
   "/settings/general": ["settings.manage"],
   "/settings/branding": ["settings.manage"],
   "/settings/email": ["settings.manage"],

@@ -56,6 +56,7 @@ celery_app.conf.update(
         "app.jobs.auditor_jobs.run_daily_snapshot_pack": dict(_DEFAULT_TASK_RETRY_POLICY),
         "app.jobs.enforcement_jobs.resolve_timed_out_approvals": dict(_DEFAULT_TASK_RETRY_POLICY),
         "app.jobs.enforcement_jobs.run_sla_timeout_checks": dict(_DEFAULT_TASK_RETRY_POLICY),
+        "app.jobs.enforcement_jobs.expire_ai_system_approvals": dict(_DEFAULT_TASK_RETRY_POLICY),
         "app.jobs.enforcement_jobs.ocr_extract_text": dict(_DEFAULT_TASK_RETRY_POLICY),
         "app.jobs.risk_jobs.reconfigure_risk_runtime": dict(_DEFAULT_TASK_RETRY_POLICY),
         "app.jobs.control_coverage_jobs.refresh_control_coverage": dict(_DEFAULT_TASK_RETRY_POLICY),
@@ -85,6 +86,7 @@ celery_app.conf.task_routes = {
     "app.jobs.auditor_jobs.run_daily_snapshot_pack": {"queue": "auditor"},
     "app.jobs.enforcement_jobs.resolve_timed_out_approvals": {"queue": "auditor"},
     "app.jobs.enforcement_jobs.run_sla_timeout_checks": {"queue": "auditor"},
+    "app.jobs.enforcement_jobs.expire_ai_system_approvals": {"queue": "auditor"},
     "app.jobs.enforcement_jobs.ocr_extract_text": {"queue": "auditor"},
     "app.jobs.risk_jobs.reconfigure_risk_runtime": {"queue": "monitoring"},
     "app.jobs.control_coverage_jobs.refresh_control_coverage": {"queue": "monitoring"},
@@ -122,6 +124,12 @@ celery_app.conf.beat_schedule = {
     },
     "approval-sla-timeout-every-minute": {
         "task": "app.jobs.enforcement_jobs.run_sla_timeout_checks",
+        "schedule": 60.0,
+        "options": {"queue": "auditor"},
+    },
+    # Time-bound AI system approvals end on time (app/services/ai_system_approval_service.py expire_due).
+    "ai-system-approval-expiry-every-minute": {
+        "task": "app.jobs.enforcement_jobs.expire_ai_system_approvals",
         "schedule": 60.0,
         "options": {"queue": "auditor"},
     },

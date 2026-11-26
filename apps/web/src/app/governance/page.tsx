@@ -12,6 +12,7 @@ import { PageHeader } from "@/components/page-header";
 import { RowActions } from "@/components/row-actions";
 import { SimpleTable } from "@/components/simple-table";
 import { Button } from "@/components/ui/button";
+import { refusalMessage } from "@/lib/ai-system-approvals";
 import { api } from "@/lib/api";
 import type { AIOrchestrationResult, AISystem } from "@/lib/types";
 import type { PresentationState } from "@/lib/presentation-state";
@@ -91,6 +92,19 @@ export default function GovernancePage() {
       await load();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Update failed");
+    }
+  }
+
+  // An AI system is approved through the approval policy (Settings → AI system approvals), not by setting its status.
+  async function askForApproval(system: AISystem) {
+    try {
+      const result = await api.requestAiSystemApproval(system.id, {});
+      toast.success(
+        `Approval asked for ${system.name}: ${result.request.approvals_needed} approver${result.request.approvals_needed === 1 ? "" : "s"} (${result.request.approver_roles.join(", ")}) decide on Settings → AI system approvals.`,
+      );
+      await load();
+    } catch (err) {
+      toast.error(refusalMessage(err instanceof Error ? err.message : String(err ?? ""), "Could not ask for approval"));
     }
   }
 
@@ -186,7 +200,7 @@ export default function GovernancePage() {
                 key={`actions-${s.id}`}
                 actions={[
                   { label: "Set HIGH", onClick: () => updateState(s.id, { risk_tier: "HIGH" }), variant: "outline" },
-                  { label: "Approve", onClick: () => updateState(s.id, { status: "approved" }), variant: "default" },
+                  { label: "Ask for approval", onClick: () => askForApproval(s), variant: "default" },
                   {
                     label: guidanceLoadingId === s.id ? "Generating..." : "AI Guidance",
                     onClick: () => generateGovernanceGuidance(s),

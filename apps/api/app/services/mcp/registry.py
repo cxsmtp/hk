@@ -97,15 +97,26 @@ class MCPToolRegistry:
         if contract.requires_approval:
             if not str(context.ai_system_id or "").strip():
                 raise PermissionError(f"Tool '{contract.tool_name}' requires ai_system_id for approval checks")
-            approved_request = db.scalar(
-                select(ApprovalRequest.id)
-                .where(
-                    ApprovalRequest.tenant_id == context.tenant_id,
-                    ApprovalRequest.ai_system_id == context.ai_system_id,
-                    ApprovalRequest.status == "approved",
-                )
-                .order_by(ApprovalRequest.updated_at.desc())
-                .limit(1)
+            from app.services.ai_system_approval_service import is_ai_system_approval_request
+
+            # The approval of the AI system itself (its registration, app/services/ai_system_approval_service.py)
+            # is not an approval of a tool call.
+            approved_request = next(
+                (
+                    row.id
+                    for row in db.scalars(
+                        select(ApprovalRequest)
+                        .where(
+                            ApprovalRequest.tenant_id == context.tenant_id,
+                            ApprovalRequest.ai_system_id == context.ai_system_id,
+                            ApprovalRequest.status == "approved",
+                        )
+                        .order_by(ApprovalRequest.updated_at.desc())
+                        .limit(50)
+                    )
+                    if not is_ai_system_approval_request(row)
+                ),
+                None,
             )
             if not approved_request:
                 raise PermissionError(

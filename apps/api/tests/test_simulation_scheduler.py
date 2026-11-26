@@ -19,6 +19,7 @@ from app.core.config import settings
 from app.services.integration_connector_service import ConnectorPullResult, NormalizedSignal
 import app.services.monitoring_service as monitoring_service
 from app.services import outbound_destination_policy
+from ai_system_approval_helpers import approve_ai_system
 
 
 PASSWORD = "Password123!"
@@ -301,11 +302,7 @@ def test_scheduler_triggers_on_new_ai_system_approved(test_env) -> None:
     )
     ai_system_id = _create_ai_system(client, headers=headers, name="Approved Trigger", session_local=session_local, risk_tier="LOW")
 
-    response = client.patch(
-        f"/ai-systems/{ai_system_id}",
-        headers=headers,
-        json={"status": "approved"},
-    )
+    response = approve_ai_system(client, headers, ai_system_id)
     assert response.status_code == 200, response.text
 
     decision = _latest_schedule_decision(
@@ -452,7 +449,7 @@ def test_scheduler_triggers_on_connector_drift_event(test_env, monkeypatch) -> N
         simulation_name="Drift Scheduler Sim",
     )
     ai_system_id = _create_ai_system(client, headers=headers, name="Drift Trigger", session_local=session_local, risk_tier="MEDIUM")
-    approve = client.patch(f"/ai-systems/{ai_system_id}", headers=headers, json={"status": "approved"})
+    approve = approve_ai_system(client, headers, ai_system_id)
     assert approve.status_code == 200, approve.text
 
     connector = client.post(

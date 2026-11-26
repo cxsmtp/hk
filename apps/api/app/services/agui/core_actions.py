@@ -406,12 +406,20 @@ def _exec_governance_change_risk_tier(
     ai_system_id = _required_str(decision_payload, "ai_system_id")
     risk_tier = _required_str(decision_payload, "risk_tier").upper()
     ai_system = _load_ai_system(db, tenant_id=ctx.tenant_id, ai_system_id=ai_system_id)
-    ai_system.risk_tier = risk_tier
     status_override = _optional_str(decision_payload, "status")
+    governance_state = _optional_str(decision_payload, "governance_state")
+    # An approved status or governance state comes only from the AI system approval workflow
+    # (app/services/ai_system_approval_service.py), never from this action.
+    from app.services.ai_system_approval_service import APPROVED_STATUSES
+
+    if (status_override and status_override.strip().lower() in APPROVED_STATUSES) or (
+        governance_state and governance_state.strip().lower() in APPROVED_STATUSES
+    ):
+        raise ValueError("an approved status is set only through the AI system approval workflow")
+    ai_system.risk_tier = risk_tier
     if status_override:
         ai_system.status = status_override
     metadata = dict(ai_system.metadata_json or {})
-    governance_state = _optional_str(decision_payload, "governance_state")
     if governance_state:
         metadata["governance_state"] = governance_state
     ai_system.metadata_json = metadata

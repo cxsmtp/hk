@@ -1036,7 +1036,10 @@ def _tool_aiiam_mint_token(ctx: ToolContext, args: dict[str, Any]) -> dict[str, 
                 ApprovalRequest.ai_system_id == ai_system_id,
             )
         )
-        if req is None or req.status != "approved":
+        from app.services.ai_system_approval_service import is_ai_system_approval_request
+
+        # The approval of the AI system itself is not an approval to mint a token for it.
+        if req is None or req.status != "approved" or is_ai_system_approval_request(req):
             raise ValueError("approval_request_id is not approved for this ai_system_id")
 
     raw_token = secrets.token_urlsafe(32)

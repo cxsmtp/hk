@@ -14,6 +14,7 @@ test("the Settings menu has FTR's groups and items, in FTR's order, with Licensi
     ["People", ["People", "Teams", "Roles & permissions", "Sign-in"]],
     ["Licensing", ["Activation codes"]],
     ["Records", ["Audit log", "Connector API activity"]],
+    ["Workflow", ["AI system approvals"]],
     ["System", ["General", "Branding", "Email (SMTP)", "Single sign-on", "HTTPS", "Updates", "Backups & health", "Hands-off", "Network & proxy", "Get help", "Guide", "About"]],
   ]);
   // Every item is a page.
@@ -30,6 +31,9 @@ test("each person sees only what their role allows; the System group only with a
   // A support desk: Get help, and the Guide and About with it.
   assert.deepEqual(labels(settingsNav(["support.manage"]))[1], ["System", ["Get help", "Guide", "About"]]);
   assert.ok(!mayOpen("/settings/email", ["dashboard.view"]) && mayOpen("/settings/email", ["settings.manage"]) && !mayOpen("/settings/nope", ALL));
+  // AI system approvals: owners and admins set the policy; whoever sees the inventory reads it and decides what their
+  // role may approve.
+  assert.deepEqual(labels(settingsNav(["dashboard.view", "discovery.view"])), [["People", ["People", "Teams"]], ["Workflow", ["AI system approvals"]]]);
   assert.ok(isSettingsItemActive("/settings/people", "/settings/people") && !isSettingsItemActive("/settings/peoples", "/settings/people"));
 });
 

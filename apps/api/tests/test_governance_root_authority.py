@@ -23,6 +23,7 @@ from app.services.gateway_service import llm_intercept
 from app.services.governance_guard import GovernanceViolationError
 from app.services.governance_resolution import resolve_ai_system_status
 import app.services.governance_guard as governance_guard
+from ai_system_approval_helpers import approve_ai_system
 
 
 PASSWORD = "Password123!"
@@ -310,11 +311,7 @@ def test_known_approved_ai_is_allowed(test_env) -> None:
     headers = _headers(owner["access_token"], owner["tenant_id"])
     ai_system_id = _create_ai_system(client, headers, risk_tier="LOW")
 
-    activate = client.patch(
-        f"/ai-systems/{ai_system_id}",
-        headers=headers,
-        json={"status": "active"},
-    )
+    activate = approve_ai_system(client, headers, ai_system_id, status="active")
     assert activate.status_code == 200, activate.text
 
     response = client.post(

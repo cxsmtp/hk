@@ -11,6 +11,7 @@ os.environ["DATABASE_URL"] = "sqlite+pysqlite:///:memory:"
 
 from app.db.session import Base, get_db
 from app.main import app
+from ai_system_approval_helpers import approve_ai_system
 
 
 PASSWORD = "Password123!"
@@ -83,11 +84,7 @@ def test_ai_systems_contract_create_update_list(test_env: TestClient) -> None:
     assert created != {}
     assert created.get("id")
 
-    update_response = client.patch(
-        f"/ai-systems/{created['id']}",
-        headers=headers,
-        json={"status": "active"},
-    )
+    update_response = approve_ai_system(client, headers, created['id'], status="active")
     assert update_response.status_code == 200, update_response.text
     updated = update_response.json()
     assert updated != {}

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import select
@@ -10,7 +11,13 @@ from app.db.models.ai_system import AISystem
 
 
 APPROVED_STATES = {"APPROVED", "ACTIVE", "LIVE"}
-PROPOSED_STATES = {"PROPOSED", "PENDING", "DRAFT", "REVIEW", "PENDING_REVIEW"}
+# PENDING_APPROVAL / PENDING_REAPPROVAL: an approval was asked for, or a one-time or time-bound approval was used up,
+# ran out or was revoked (app/services/ai_system_approval_service.py). Neither is approved.
+PROPOSED_STATES = {"PROPOSED", "PENDING", "DRAFT", "REVIEW", "PENDING_REVIEW", "PENDING_APPROVAL", "PENDING_REAPPROVAL"}
+
+#: Where a session remembers the AI systems whose one-time approval it consumed: the rest of that same governed use
+#: (the checks after the first, in the same request) still sees them approved (app/services/ai_system_approval_service.py).
+ONE_TIME_IN_USE_KEY = "ai_system_one_time_approval_in_use"
 REJECTED_STATES = {"REJECTED", "BLOCKED", "PROHIBITED", "DENIED", "RETIRED", "RESTRICTED"}
 LEGACY_NEUTRAL_STATES = {"DRAFT", "PENDING", "REVIEW", "PENDING_REVIEW", "PAUSED"}
 
@@ -37,6 +44,59 @@ def _raw_state_from_ai_system(ai_system: AISystem) -> str:
         return status_value
     # Missing explicit governance state must not silently authorize an AI system.
     return "UNKNOWN"
+
+
+def _as_utc(value: Any) -> datetime | None:
+    if isinstance(value, datetime):
+        moment = value
+    elif isinstance(value, str) and value.strip():
+        try:
+            moment = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+        except ValueError:
+            return None
+    else:
+        return None
+    return moment.replace(tzinfo=timezone.utc) if moment.tzinfo is None else moment.astimezone(timezone.utc)
+
+
+def approval_has_lapsed(ai_system: AISystem, *, now: datetime | None = None) -> bool:
+    """Whether the AI system's standing approval (metadata ``approval``) is time-bound and its time is up, or was used
+    up, revoked or replaced, even before the scheduled check has moved the system to pending re-approval."""
+
+    metadata = ai_system.metadata_json if isinstance(ai_system.metadata_json, dict) else {}
+    approval = metadata.get("approval")
+    if not isinstance(approval, dict):
+        return False
+    if str(approval.get("state") or "active").strip().lower() != "active":
+        return True
+    if str(approval.get("scope") or "").strip().lower() != "time_bound":
+        return False
+    expires_at = _as_utc(approval.get("expires_at"))
+    if expires_at is None:
+        # A time-bound approval without a readable end is not trusted.
+        return True
+    return expires_at <= (now or datetime.now(timezone.utc))
+
+
+def one_time_approval_in_use(db: Session | None, ai_system: AISystem) -> bool:
+    """Whether this session consumed the system's one-time approval for the governed use it is handling now."""
+
+    info = getattr(db, "info", None) if db is not None else None
+    in_use = info.get(ONE_TIME_IN_USE_KEY) if isinstance(info, dict) else None
+    if not isinstance(in_use, dict) or ai_system.id not in in_use:
+        return False
+    metadata = ai_system.metadata_json if isinstance(ai_system.metadata_json, dict) else {}
+    approval = metadata.get("approval")
+    return isinstance(approval, dict) and approval.get("grant_id") == in_use.get(ai_system.id)
+
+
+def ai_system_is_approved(ai_system: AISystem, *, db: Session | None = None, now: datetime | None = None) -> bool:
+    """The governance reading of one AI system: approved, and its approval not lapsed."""
+
+    if one_time_approval_in_use(db, ai_system):
+        return True
+    status = _status_from_raw_state(_raw_state_from_ai_system(ai_system))
+    return status == "APPROVED" and not approval_has_lapsed(ai_system, now=now)
 
 
 def _status_from_raw_state(raw_state: str) -> str:
@@ -90,13 +150,20 @@ def resolve_ai_system_status(ai_system_id: str | None, context: dict[str, Any]) 
     raw_state = _raw_state_from_ai_system(ai_system)
     status = _status_from_raw_state(raw_state)
     risk_tier = _normalize_risk_tier(ai_system.risk_tier)
+    lapsed = False
+    if one_time_approval_in_use(db, ai_system):
+        # The governed use that consumed a one-time approval runs to its end.
+        status = "APPROVED"
+    elif status == "APPROVED" and approval_has_lapsed(ai_system):
+        status = "PROPOSED"
+        lapsed = True
 
     if status == "REJECTED":
         enforcement_mode = "block"
         reason = "governance_state_rejected"
     elif status == "PROPOSED":
         enforcement_mode = "strict" if settings.governance_strict_mode else "monitor"
-        reason = "governance_state_proposed"
+        reason = "approval_lapsed" if lapsed else "governance_state_proposed"
     elif status == "APPROVED":
         enforcement_mode = "strict"
         reason = "governance_state_approved"

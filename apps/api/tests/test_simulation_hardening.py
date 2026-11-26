@@ -24,6 +24,7 @@ from app.db.models.policy import (
 from app.db.models.remediation import RemediationAction
 from app.db.session import Base, get_db
 from app.main import app
+from ai_system_approval_helpers import approve_ai_system
 
 
 PASSWORD = "Password123!"
@@ -136,11 +137,7 @@ def _create_ai_system(
         assert resolved is not None
         ai_system_id = resolved["id"]
 
-    activate = client.patch(
-        f"/ai-systems/{ai_system_id}",
-        headers=headers,
-        json={"status": "active"},
-    )
+    activate = approve_ai_system(client, headers, ai_system_id, status="active")
     assert activate.status_code == 200, activate.text
 
     if session_local is not None:
