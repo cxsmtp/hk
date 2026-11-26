@@ -109,6 +109,24 @@ class FirstRunState(Base):
     )
 
 
+class CompliancePolicy(Base):
+    """Settings → Compliance (/settings/guide/compliance, migration 0104): one row, id 1.
+
+    How long the user activity and connector API activity are kept (never under 180 days: CERT-In's directions of
+    28 April 2022; the audit log itself is never deleted), the data location statement shown in About and in the
+    incident report, and the contact an incident report names.
+    """
+
+    __tablename__ = "compliance_policy"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
+    activity_retention_days: Mapped[int] = mapped_column(Integer, nullable=False, default=365, server_default=text("365"))
+    connector_retention_days: Mapped[int] = mapped_column(Integer, nullable=False, default=180, server_default=text("180"))
+    data_location: Mapped[str] = mapped_column(String(200), nullable=False, default="", server_default="")
+    incident_contact: Mapped[str] = mapped_column(String(320), nullable=False, default="", server_default="")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
 class SignInPolicy(Base):
     """The sign-in rules an administrator sets for the whole installation (Settings → Sign-in): one row, id 1.
 
@@ -134,4 +152,15 @@ class SignInPolicy(Base):
     sso_password_admins_only: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default=text("false"))
     # The fingerprint of the SMTP_* settings an administrator sent a test email with (CxMissionZero's isVerified).
     smtp_verified: Mapped[str] = mapped_column(String(64), nullable=False, default="", server_default="")
+    # The password rule (app/services/password_policy.py, migration 0104): shortest length, how many kinds of character
+    # (0 = any; 3 = three of lower case, upper case, digits, symbols), how many earlier passwords may not come back
+    # (0 = only the current one), and how many days a password lasts before it must be changed (0 = no limit).
+    password_min_length: Mapped[int] = mapped_column(Integer, nullable=False, default=12, server_default=text("12"))
+    password_classes: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default=text("0"))
+    password_history: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default=text("0"))
+    password_max_age_days: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default=text("0"))
+    # Minutes without activity before a sign-in ends; None: SESSION_IDLE_MINUTES.
+    session_idle_minutes: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    # The notice shown on the sign-in page before anyone signs in (authorised use only, monitoring); "" for none.
+    banner_text: Mapped[str] = mapped_column(Text, nullable=False, default="", server_default="")
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)

@@ -30,7 +30,14 @@ from urllib.parse import urlsplit
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-KEEP_DAYS = 90
+#: Kept this long unless Settings → Compliance says longer (never under 180 days: CERT-In; app/services/compliance_service.py).
+KEEP_DAYS = 180
+
+
+def keep_days(db: Session | None) -> int:
+    from app.services import compliance_service
+
+    return compliance_service.connector_keep_days(db)
 SUMMARY_DAYS = 30
 
 _scope: contextvars.ContextVar[dict[str, Any] | None] = contextvars.ContextVar("hawk_connector_scope", default=None)
@@ -221,7 +228,7 @@ def listing(
     from app.db.models.platform_records import ConnectorCall
 
     now = now or dt.datetime.now(dt.timezone.utc)
-    base = [ConnectorCall.tenant_id == tenant_id, ConnectorCall.at >= now - dt.timedelta(days=KEEP_DAYS)]
+    base = [ConnectorCall.tenant_id == tenant_id, ConnectorCall.at >= now - dt.timedelta(days=keep_days(db))]
     conditions = list(base)
     if connectors:
         conditions.append(ConnectorCall.connector.in_(connectors))
@@ -252,7 +259,7 @@ def listing(
         "summary": {"calls": int(calls or 0), "avgMs": int(round(float(avg_ms or 0))), "failed": failed, "connectors": connector_count, "hosts": host_count},
         "connectors": sorted({c for (c,) in db.execute(select(ConnectorCall.connector).where(*base).distinct()).all() if c}),
         "hosts": sorted({h for (h,) in db.execute(select(ConnectorCall.host).where(*base).distinct()).all() if h}),
-        "keepDays": KEEP_DAYS,
+        "keepDays": keep_days(db),
     }
 
 
@@ -264,7 +271,7 @@ def csv_rows(db: Session, tenant_id: str, *, now: dt.datetime | None = None) -> 
 
     now = now or dt.datetime.now(dt.timezone.utc)
     for row in db.scalars(
-        select(ConnectorCall).where(ConnectorCall.tenant_id == tenant_id, ConnectorCall.at >= now - dt.timedelta(days=KEEP_DAYS)).order_by(ConnectorCall.at, ConnectorCall.id)
+        select(ConnectorCall).where(ConnectorCall.tenant_id == tenant_id, ConnectorCall.at >= now - dt.timedelta(days=keep_days(db))).order_by(ConnectorCall.at, ConnectorCall.id)
     ):
         yield [_iso(row.at), row.connector, row.method, row.host, row.path, row.status, row.ms, row.error]
 
@@ -275,4 +282,4 @@ def prune(db: Session, *, now: dt.datetime | None = None) -> int:
     from app.db.models.platform_records import ConnectorCall
 
     now = now or dt.datetime.now(dt.timezone.utc)
-    return int(db.execute(delete(ConnectorCall).where(ConnectorCall.at < now - dt.timedelta(days=KEEP_DAYS)).execution_options(synchronize_session=False)).rowcount or 0)
+    return int(db.execute(delete(ConnectorCall).where(ConnectorCall.at < now - dt.timedelta(days=keep_days(db))).execution_options(synchronize_session=False)).rowcount or 0)

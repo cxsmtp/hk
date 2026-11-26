@@ -13,7 +13,7 @@ test("the Settings menu has FTR's groups and items, in FTR's order, with Licensi
   assert.deepEqual(labels(settingsNav(ALL)), [
     ["People", ["People", "Teams", "Roles & permissions", "Sign-in"]],
     ["Licensing", ["Activation codes"]],
-    ["Records", ["Audit log", "Connector API activity"]],
+    ["Records", ["Audit log", "Connector API activity", "Compliance"]],
     ["Workflow", ["AI system approvals"]],
     ["System", ["General", "Branding", "Email (SMTP)", "Single sign-on", "HTTPS", "Updates", "Backups & health", "Hands-off", "Network & proxy", "Get help", "Guide", "About"]],
   ]);
@@ -27,7 +27,7 @@ test("each person sees only what their role allows; the System group only with a
   // theirs through Jump to and Get help).
   assert.deepEqual(labels(settingsNav(["dashboard.view"])), [["People", ["People", "Teams"]]]);
   // An Auditor: the records too.
-  assert.deepEqual(labels(settingsNav(["dashboard.view", "audit.view"])), [["People", ["People", "Teams"]], ["Records", ["Audit log", "Connector API activity"]]]);
+  assert.deepEqual(labels(settingsNav(["dashboard.view", "audit.view"])), [["People", ["People", "Teams"]], ["Records", ["Audit log", "Connector API activity", "Compliance"]]]);
   // A support desk: Get help, and the Guide and About with it.
   assert.deepEqual(labels(settingsNav(["support.manage"]))[1], ["System", ["Get help", "Guide", "About"]]);
   assert.ok(!mayOpen("/settings/email", ["dashboard.view"]) && mayOpen("/settings/email", ["settings.manage"]) && !mayOpen("/settings/nope", ALL));
@@ -40,7 +40,7 @@ test("each person sees only what their role allows; the System group only with a
 test("Jump to finds Settings pages by their name and by 'settings' and the group's name", () => {
   const entries = settingsJumpEntries(ALL);
   assert.deepEqual(jumpMatches(entries, "settings email").map((e) => e.href), ["/settings/email"]);
-  assert.deepEqual(jumpMatches(entries, "records").map((e) => e.title), ["Audit log", "Connector API activity"]);
+  assert.deepEqual(jumpMatches(entries, "records").map((e) => e.title), ["Audit log", "Connector API activity", "Compliance"]);
   assert.equal(jumpMatches(entries, "").length, entries.length);
 });
 

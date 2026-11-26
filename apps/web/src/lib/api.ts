@@ -7,6 +7,7 @@ import type { HandsOffSettings, HandsOffView, LinkAnswer, SelfCheckHealth } from
 import type { ApprovalDecision, ApprovalGrantView, ApprovalPolicy, ApprovalPolicyView, ApprovalRequestView, ApprovalScope } from "@/lib/ai-system-approvals";
 import type { DiagnosticsView } from "@/lib/self-recovery";
 import type { AboutView, BrandingPatch, BrandingView, GeneralView, SmtpSettings, SmtpView } from "@/lib/settings-console";
+import type { ComplianceSettings, ComplianceView } from "@/lib/compliance";
 import type { AuditPage, AuditVerify, ConnectorActivity, EvidenceSigning, Emailed, NetworkCheck, NetworkInfo, SupportChannel, SupportKind, SupportList, SupportRequest, TrustDiagnosis, TrustedCertificate } from "@/lib/records";
 import { approvalStatusFilters, mergeApprovalStatusResults } from "@/lib/approval-workflow";
 import { demoFallbackRequest, isDemoFallbackEnabled } from "@/lib/demo-fallback";
@@ -670,7 +671,7 @@ export const api = {
     }, false),
   // Sign-in (/settings/guide/people-and-access): the second step, "Forgot your password?", one's own two-step sign-in, and the
   // administrator's sign-in rules.
-  signInOptions: () => request<{ passwordReset: boolean; ssoPasswordAdminsOnly: boolean }>("/auth/sign-in-options", undefined, false),
+  signInOptions: () => request<{ passwordReset: boolean; ssoPasswordAdminsOnly: boolean; banner?: string }>("/auth/sign-in-options", undefined, false),
   twoStep: (ticket: string, code: string) =>
     request<LoginResponse & { recovery_codes?: string[] }>("/auth/two-step", { method: "POST", body: JSON.stringify({ ticket, code }) }, false),
   askPasswordReset: (email: string) =>
@@ -796,9 +797,9 @@ export const api = {
   // Records → Audit log and Connector API activity (app/api/routers/records.py)
   getAuditLog: (query: string) => request<AuditPage>(`/audit/log${query ? `?${query}` : ""}`),
   verifyAuditLog: () => request<AuditVerify>("/audit/log/verify"),
-  exportAuditLog: (format: "csv" | "jsonl", query: string) => requestBlob(`/audit/log/export.${format}${query ? `?${query}` : ""}`),
+  exportAuditLog: (format: "csv" | "jsonl" | "cef", query: string) => requestBlob(`/audit/log/export.${format}${query ? `?${query}` : ""}`),
   /** The export and its detached evidence signature (the X-Hawk-Evidence-Signature header, '' when none). */
-  exportAuditLogSigned: async (format: "csv" | "jsonl", query: string) => {
+  exportAuditLogSigned: async (format: "csv" | "jsonl" | "cef", query: string) => {
     let signature = "";
     const blob = await requestBlob(`/audit/log/export.${format}${query ? `?${query}` : ""}`, undefined, true, (res) => {
       signature = res.headers.get("X-Hawk-Evidence-Signature") ?? "";
@@ -872,6 +873,18 @@ export const api = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+  // Settings → Compliance (apps/api/app/api/routers/compliance.py; /settings/guide/compliance).
+  getCompliance: () => request<ComplianceView>("/compliance"),
+  saveCompliance: (patch: Partial<ComplianceSettings>) =>
+    request<ComplianceView>("/compliance/settings", { method: "PUT", body: JSON.stringify(patch) }),
+  /** The incident report for a time window, and its detached evidence signature ('' when none). */
+  incidentReport: async (query: string) => {
+    let signature = "";
+    const blob = await requestBlob(`/compliance/incident-report${query ? `?${query}` : ""}`, undefined, true, (res) => {
+      signature = res.headers.get("X-Hawk-Evidence-Signature") ?? "";
+    });
+    return { blob, signature };
+  },
   // Settings → Hands-off and the self-check (app/api/routers/hands_off.py); the emailed links need no sign-in.
   getHandsOff: () => request<HandsOffView>("/hands-off"),
   saveHandsOff: (body: { handsOff: Partial<Omit<HandsOffSettings, "statusTo">> & { statusTo?: string | string[] } }) =>

@@ -42,7 +42,8 @@ from app.db.models.tenant import Tenant
 from app.db.models.user import User, UserTenantRole
 from app.services import activation_service
 from app.services.audit_service import write_audit_log
-from app.services.passwords import generate_password, password_problem
+from app.services import password_policy
+from app.services.passwords import generate_password
 
 
 DEFAULT_ADMIN_EMAIL = "admin@hawk.local"
@@ -160,7 +161,7 @@ def create_administrator(
     email = normalize_email(email)
     if not _EMAIL.match(email) or len(email) > 320:
         raise AccessError("Enter a valid email address.")
-    problem = password_problem(password)
+    problem = password_policy.problem(db, password)
     if problem:
         raise AccessError(problem)
     if db.scalar(select(User.id).where(func.lower(User.email) == email.lower())):
@@ -367,7 +368,7 @@ def reset_admin(db: Session, wanted: str | None = None, *, env: Mapping[str, str
             admin, tenant = create_administrator(db, email=str(env.get("ADMIN_EMAIL") or "").strip() or DEFAULT_ADMIN_EMAIL, password=password)
             _audit(db, tenant_id=tenant.id, user=admin, reason=f"Administrator {admin.email} created from the command line.")
             return ResetResult(email=admin.email, password=password, created=True)
-        user.hashed_password = get_password_hash(password)
+        password_policy.remember(user, get_password_hash(password))
         user.must_change_password = True
         # A locked administrator could not use it otherwise; two-step sign-in goes with the password: whoever needs
         # this command may have lost the phone as well (/settings/guide/people-and-access).

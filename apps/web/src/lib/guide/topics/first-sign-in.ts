@@ -27,7 +27,7 @@ export const firstSignIn: GuideTopic = {
         {
           kind: "list",
           items: [
-            "At least 12 characters.",
+            "At least 12 characters (or what an owner or admin set on [Settings → Sign-in](/settings/signin): a longer minimum, kinds of character to mix, earlier passwords that may not come back).",
             "At most 72 bytes (longer passwords are refused, not cut short).",
             "At least 5 different characters (\"That password is too repetitive\").",
           ],

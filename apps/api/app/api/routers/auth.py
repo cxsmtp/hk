@@ -25,7 +25,7 @@ from app.services.audit_service import write_audit_log
 from app.services.auth_service import get_user_tenants, issue_tokens, refresh_tokens
 from app.services import account_security, mfa_service, oidc_auth_service, refusal_audit, sign_in_store
 from app.services.account_security import SignInRefused
-from app.services.passwords import password_problem
+from app.services import password_policy
 from app.version import APP_VERSION
 
 
@@ -252,8 +252,9 @@ def oidc_complete(payload: OIDCCompleteRequest, request: Request, response: Resp
 def register(payload: RegisterRequest, request: Request, response: Response, db: Session = Depends(get_db)):
     started_at = perf_counter()
     try:
-        # The same password rule as everywhere (12+ characters, not repetitive).
-        problem = password_problem(payload.password)
+        # The same password rule as everywhere (12+ characters, not repetitive), checked before anything touches
+        # the database; the administrator's rule (Settings → Sign-in) once registration is known to be open.
+        problem = password_policy.problem(None, payload.password)
         if problem:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=problem)
         if not settings.self_registration_enabled:
@@ -261,6 +262,9 @@ def register(payload: RegisterRequest, request: Request, response: Response, db:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=_REGISTRATION_FAILURE_DETAIL,
             )
+        problem = password_policy.problem(db, payload.password)
+        if problem:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=problem)
 
         existing = db.scalar(select(User).where(User.email == payload.email))
         if existing:
@@ -535,10 +539,10 @@ def change_password(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Your current password is wrong.")
     if payload.next == payload.current:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Choose a password different from the current one.")
-    problem = password_problem(payload.next)
+    problem = password_policy.problem(db, payload.next, user=current_user)
     if problem:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=problem)
-    current_user.hashed_password = get_password_hash(payload.next)
+    password_policy.remember(current_user, get_password_hash(payload.next))
     current_user.must_change_password = False
     # Anyone else signed in as this person is signed out; a reset link sent earlier stops working (its stamp no longer
     # matches the password), and so do two-step tickets.

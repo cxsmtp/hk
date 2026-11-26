@@ -37,11 +37,11 @@ def create_token(subject: str, token_type: str, expires_delta: timedelta, extra:
     return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
 
 
-def create_access_token(user_id: str, tenant_id: str | None = None, role: str | None = None) -> str:
+def create_access_token(user_id: str, tenant_id: str | None = None, role: str | None = None, *, minutes: int | None = None) -> str:
     return create_token(
         subject=user_id,
         token_type="access",
-        expires_delta=timedelta(minutes=settings.access_token_expire_minutes),
+        expires_delta=timedelta(minutes=minutes or settings.access_token_expire_minutes),
         extra={"tenant_id": tenant_id, "role": role},
     )
 

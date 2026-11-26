@@ -21,6 +21,7 @@ from typing import Any, Iterable
 from sqlalchemy import delete, func, or_, select
 from sqlalchemy.orm import Session
 
+#: Kept this long unless Settings → Compliance says otherwise (never under 180 days: CERT-In; app/services/compliance_service.py).
 KEEP_DAYS = 365
 MAX_ROWS = 200_000
 #: Removing what is past the limits runs once every this many rows written (per process).
@@ -186,21 +187,38 @@ def record(db: Session, entry: dict[str, Any], *, now: dt.datetime | None = None
     return row
 
 
+def keep_days(db: Session | None) -> int:
+    from app.services import compliance_service
+
+    return compliance_service.activity_keep_days(db)
+
+
 def prune(db: Session, tenant_id: str | None, *, now: dt.datetime | None = None) -> int:
-    """Remove what is past a year, and the oldest beyond MAX_ROWS for this tenant."""
+    """Remove what is past the time kept (a year unless Settings → Compliance says otherwise), and the oldest beyond
+    MAX_ROWS for this tenant, but never a row younger than the 180 days CERT-In asks to be kept."""
+
+    from app.services import compliance_service
+
 
     from app.db.models.platform_records import UserActivity
 
     now = now or dt.datetime.now(dt.timezone.utc)
-    removed = db.execute(delete(UserActivity).where(UserActivity.at < now - dt.timedelta(days=KEEP_DAYS)).execution_options(synchronize_session=False)).rowcount or 0
+    removed = db.execute(delete(UserActivity).where(UserActivity.at < now - dt.timedelta(days=keep_days(db))).execution_options(synchronize_session=False)).rowcount or 0
     count = int(db.scalar(select(func.count()).select_from(UserActivity).where(UserActivity.tenant_id == tenant_id)) or 0)
     if count > MAX_ROWS:
         cutoff = db.scalar(
             select(UserActivity.at).where(UserActivity.tenant_id == tenant_id).order_by(UserActivity.at.desc()).offset(MAX_ROWS).limit(1)
         )
+        floor = now - dt.timedelta(days=compliance_service.MIN_RETENTION_DAYS)
+        if cutoff is not None and _aware(cutoff) > floor:
+            cutoff = floor
         if cutoff is not None:
             removed += db.execute(delete(UserActivity).where(UserActivity.tenant_id == tenant_id, UserActivity.at <= cutoff).execution_options(synchronize_session=False)).rowcount or 0
     return int(removed)
+
+
+def _aware(moment: dt.datetime) -> dt.datetime:
+    return moment.replace(tzinfo=dt.timezone.utc) if moment.tzinfo is None else moment
 
 
 def _iso(moment: Any) -> str:
@@ -251,7 +269,7 @@ def listing(
     from app.db.models.platform_records import UserActivity
 
     now = now or dt.datetime.now(dt.timezone.utc)
-    conditions = [UserActivity.tenant_id == tenant_id, UserActivity.at >= now - dt.timedelta(days=KEEP_DAYS)]
+    conditions = [UserActivity.tenant_id == tenant_id, UserActivity.at >= now - dt.timedelta(days=keep_days(db))]
     people = db.execute(select(UserActivity.user, func.max(UserActivity.name)).where(*conditions).where(UserActivity.user != "").group_by(UserActivity.user)).all()
     if user:
         conditions.append(UserActivity.user == user)
@@ -280,7 +298,7 @@ def listing(
         "total": total,
         "entries": [view(r) for r in rows],
         "people": sorted(({"email": e, "name": n or ""} for e, n in people), key=lambda p: p["email"]),
-        "keepDays": KEEP_DAYS,
+        "keepDays": keep_days(db),
     }
 
 
@@ -308,7 +326,7 @@ def csv_rows(db: Session, tenant_id: str, *, now: dt.datetime | None = None) -> 
 
     now = now or dt.datetime.now(dt.timezone.utc)
     for row in db.scalars(
-        select(UserActivity).where(UserActivity.tenant_id == tenant_id, UserActivity.at >= now - dt.timedelta(days=KEEP_DAYS)).order_by(UserActivity.at, UserActivity.id)
+        select(UserActivity).where(UserActivity.tenant_id == tenant_id, UserActivity.at >= now - dt.timedelta(days=keep_days(db))).order_by(UserActivity.at, UserActivity.id)
     ):
         item = view(row)
         yield [" ".join(item["fields"]) if c == "fields" else item[c] for c in CSV_COLUMNS]

@@ -35,6 +35,7 @@ export const SETTINGS_GROUPS = [
     items: [
       { href: "/settings/audit", label: "Audit log" },
       { href: "/settings/connector-activity", label: "Connector API activity" },
+      { href: "/settings/compliance", label: "Compliance" },
     ],
   },
   {
@@ -78,6 +79,8 @@ export const SETTINGS_PERMISSIONS = {
   // The approval policy is changed by owners and admins (settings.manage); everyone who sees the inventory reads it
   // and decides the approvals their role may give.
   "/settings/approvals": ["settings.manage", "discovery.view"],
+  // DESC ISR / UAE IA / CERT-In controls and the incident report (apps/api/app/api/routers/compliance.py).
+  "/settings/compliance": ["audit.view"],
   "/settings/general": ["settings.manage"],
   "/settings/branding": ["settings.manage"],
   "/settings/email": ["settings.manage"],

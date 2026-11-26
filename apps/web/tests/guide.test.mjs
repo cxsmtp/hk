@@ -52,7 +52,7 @@ const links = () =>
 test("thirteen topics, each with a title, a summary and sections; slugs and anchors unique and safe", () => {
   assert.deepEqual(
     GUIDE_TOPICS.map((t) => t.slug),
-    ["install", "first-sign-in", "people-and-access", "https", "email", "backups", "updates", "licence", "audit-and-evidence", "ai-system-approvals", "network", "self-check-and-help", "troubleshooting"],
+    ["install", "first-sign-in", "people-and-access", "https", "email", "backups", "updates", "licence", "audit-and-evidence", "ai-system-approvals", "compliance", "network", "self-check-and-help", "troubleshooting"],
   );
   const slug = /^[a-z0-9]+(-[a-z0-9]+)*$/;
   for (const topic of GUIDE_TOPICS) {
