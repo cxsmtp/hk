@@ -70,6 +70,8 @@ from app.services.sensitive_data_detection_service import (
     detect_sensitive_data,
     detection_signal_types,
 )
+from app.services.detection.injection_engine import assess as assess_prompt_injection
+from app.services.detection.profile import with_tenant_profile
 
 
 DEFAULT_SENSITIVE_PATTERNS = [
@@ -2952,7 +2954,26 @@ def _evaluate_interaction(
     reason_codes: list[str] = []
     if not (decision.decision == "allow" and decision.reason_code == "policy_allow"):
         reason_codes = [decision.reason_code]
-    return tier, decision.decision, reason_codes, sorted(set(input_signal_types))
+    final_decision = decision.decision
+    # The layered injection engine (normalisation, rules, classifier) with the tenant's thresholds: it can only
+    # raise the decision, never lower what the guardian policy above decided.
+    try:
+        verdict = assess_prompt_injection(evaluation_text, scope="direct")
+    except Exception:  # noqa: BLE001 - the guardian policy above still applies
+        verdict = None
+    if verdict is not None and verdict.detected:
+        engine_decision = _BROWSER_DECISION_FOR_INJECTION_ACTION.get(verdict.action, "allow")
+        input_signal_types = [*input_signal_types, "prompt_injection", "prompt_injection_engine", *verdict.threat_types]
+        if _decision_rank(engine_decision) > _decision_rank(final_decision):
+            final_decision = engine_decision
+            reason_codes = [*reason_codes, "prompt_injection_engine"]
+            tier = "clear_positive" if engine_decision == "block" else ("ambiguous" if tier == "clear_negative" else tier)
+    return tier, final_decision, reason_codes, sorted(set(input_signal_types))
+
+
+# Browser and desktop decisions for the injection engine's actions (hold asks for approval; redact and log warn,
+# as a prompt in the user's own browser cannot be rewritten server-side).
+_BROWSER_DECISION_FOR_INJECTION_ACTION = {"block": "block", "hold": "require_approval", "redact": "warn", "log": "warn"}
 
 
 def _decision_rank(decision: str) -> int:
@@ -3116,6 +3137,7 @@ def _with_endpoint_redacted_entities(detection_result: dict[str, Any], reported:
     return {**detection_result, "entities": [*(detection_result.get("entities") or []), *added], "contains_sensitive": True}
 
 
+@with_tenant_profile
 def evaluate_browser_interaction_and_record(
     db: Session,
     *,

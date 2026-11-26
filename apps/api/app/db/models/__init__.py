@@ -63,6 +63,7 @@ from app.db.models.access import FirstRunState, SignInPolicy, TermsAcceptance
 from app.db.models.activation import ActivationState
 from app.db.models.audit import AuditChainHead, AuditLog
 from app.db.models.platform_records import ConnectorCall, SupportCounter, SupportSettings, SupportTicket, UserActivity
+from app.db.models.detection import DetectionSettings
 from app.db.models.control_coverage import (
     ControlCoverageAssessment,
     ControlCoverageAssertion,
@@ -316,6 +317,7 @@ __all__ = [
     "ConnectorCall",
     "SupportCounter",
     "SupportSettings",
+    "DetectionSettings",
     "SupportTicket",
     "UserActivity",
     "AuditLog",

@@ -33,10 +33,12 @@ THREAT_TYPE_TO_GUARDIAN_CONTRACTS: dict[str, list[str]] = {
     ThreatType.PROMPT_INJECTION.value: [
         "prompt_injection",
         "prompt_injection_guard",
+        "threat.detector.prompt_injection_engine",
     ],
     ThreatType.JAILBREAK.value: [
         "jailbreak",
         "prompt_injection_guard",
+        "threat.detector.prompt_injection_engine",
     ],
     ThreatType.SENSITIVE_DATA_LEAKAGE.value: [
         "sensitive_data_leakage",

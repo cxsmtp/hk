@@ -1,0 +1,5 @@
+# Optional: the spaCy English model for named entities (people, places, organisations) in DLP scans.
+# Not in the default image. Built in only with `docker build --build-arg HAWK_NER_MODEL=en_core_web_sm ...`
+# (infra/Dockerfile.api); downloaded at build time, pinned by hash, and never fetched at run time.
+en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl \
+    --hash=sha256:1932429db727d4bff3deed6b34cfc05df17794f4a52eeb26cf8928f7c1a0fb85

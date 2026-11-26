@@ -16,6 +16,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.routers import account_boundary, action_integrity, activity_audit, agui, agents, ai_discovery, ai_iam, ai_orchestration, ai_systems, ai_tools_usage, audit, auditor, auth, banking_transaction_integrity, brain, checkmarx, continuous_assurance, control_coverage, coverage, dashboard, deployments, discovery, discovery_adv, discovery_assets, discovery_capabilities, discovery_collectors, discovery_ecosystems, discovery_erg, discovery_exposure, discovery_scans, discovery_source_connections, discovery_surface_sources, discovery_targets, endpoint_agent, enforcement, executive_mcp, executive_remote_mcp, extension, external_risk, findings, gateway, guardian_contracts_v2, investigations, kb, llm_gateway, maturity_curve, monitoring, native_controls, onprem, ops, policies, policy_pack_platform, runtime, runtime_control, runtime_intelligence, scans, shadow_ai, simulation_policies, simulations, surface_coverage, system, trust_center, user_visibility
 from app.api.routers import access, backups, claude_enterprise, evidence_signing, hands_off, https, iam, licence, network, records, settings_console, sign_in, support, updates
+from app.api.routers import detection
 from app.core.access_gate import AccessRequired, access_required_response
 from app.core.config import configured_secret_sources, settings
 from app.core.licence_gate import licence_gate
@@ -678,7 +679,21 @@ def health():
         "version": APP_VERSION,
         "strict_schema": strict_schema,
         "schema_healthy": schema_report.healthy,
+        "detection": _detection_health(),
     }
+
+
+def _detection_health() -> dict:
+    """DLP / injection detection coverage, without loading a model: named entities run only when a spaCy model is
+    installed in the image; without one they degrade to patterns, and this says so."""
+    try:
+        from app.services.detection.injection_rules import RULESET_VERSION
+        from app.services.sensitive_data_detection_service import ner_status
+
+        ner = ner_status()
+        return {"offline": True, "ner_available": ner["available"], "ner_model": ner["model"], "injection_rules": RULESET_VERSION}
+    except Exception as exc:  # noqa: BLE001 - health must answer
+        return {"offline": True, "error": type(exc).__name__}
 
 
 @app.get("/health/schema")
@@ -716,6 +731,7 @@ app.include_router(updates.router)
 app.include_router(records.router)
 app.include_router(evidence_signing.router)
 app.include_router(support.router)
+app.include_router(detection.router)
 app.include_router(network.router)
 app.include_router(hands_off.router)
 app.include_router(settings_console.router)
