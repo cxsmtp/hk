@@ -59,7 +59,7 @@ from app.db.models.execution_effect import (
     EffectReservationV2,
     ExecutionPermitEffectBindingV2,
 )
-from app.db.models.access import FirstRunState, SignInPolicy, TermsAcceptance
+from app.db.models.access import FirstRunState, SignInPolicy, TermsAcceptance, TermsCopyEmail, TermsTextRecord
 from app.db.models.activation import ActivationState
 from app.db.models.audit import AuditChainHead, AuditLog
 from app.db.models.platform_records import ConnectorCall, SupportCounter, SupportSettings, SupportTicket, UserActivity
@@ -314,6 +314,8 @@ __all__ = [
     "FirstRunState",
     "SignInPolicy",
     "TermsAcceptance",
+    "TermsCopyEmail",
+    "TermsTextRecord",
     "AuditChainHead",
     "ConnectorCall",
     "SupportCounter",

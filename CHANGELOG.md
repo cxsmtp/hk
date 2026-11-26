@@ -2,6 +2,10 @@
 
 Every release, newest first: the version shown bottom-left in the console (HK-xx.xx.xx, from the VERSION file), when it was merged, and what changed for the people using it. Updated with every change merged to main (CLAUDE.md).
 
+## HK-00.03.01 — pending · [#NN](https://github.com/cxsmtp/hk/pull/NN)
+
+- **A licence agreement every administrator accepts, with a copy by email.** Hawk AI now comes with a full End User Licence Agreement (the licence and its limits, the features, the limits of what AI detections can promise, a limited warranty, a liability cap of the fees paid in the last 12 months, UAE law and DIAC arbitration in Dubai) and terms of use for everyone else. At their first sign-in, and whenever the agreement changes, each owner or admin reads it to the end and accepts it with the company's name, their own name and email, confirming they are authorised; other people accept the shorter terms of use. Each acceptance is kept for good (the exact text and its SHA-256, who, when, from where), cannot be changed or deleted, and is in the audit log and the auditor's export. A copy goes to the administrator's email, now or as soon as the email server is set up and tested, with retries; Settings → About shows where it is and can send it again or download it. The licensor's name, address, notice email, governing law, forum and fixed cap are set once in `deploy/.env`.
+
 ## HK-00.03.00 — pending · [#NN](https://github.com/cxsmtp/hk/pull/NN)
 
 - **Your sign-in is no longer kept where a script could read it.** The console keeps its sign-in in secure cookies that only the API can read (no longer in the browser's storage), every change you make carries a check that another site cannot forge, and Sign out now ends the sign-in on the server too. Everyone signs in once more after this update. The SDK, the MCP proxy, the endpoint agent and the browser extension work as before.

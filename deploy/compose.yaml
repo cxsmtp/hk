@@ -153,6 +153,13 @@ x-hawk-environment: &hawk-environment
   SMTP_FROM_NAME: ${SMTP_FROM_NAME:-}
   SMTP_REQUIRE_AUTH: ${SMTP_REQUIRE_AUTH:-}
   SMTP_REJECT_UNAUTHORIZED: ${SMTP_REJECT_UNAUTHORIZED:-}
+  # The licence agreement's parties and forum (TERMS.md): written into the terms shown, accepted and emailed.
+  LICENSOR_LEGAL_NAME: ${LICENSOR_LEGAL_NAME:-}
+  LICENSOR_ADDRESS: ${LICENSOR_ADDRESS:-}
+  LICENSOR_NOTICE_EMAIL: ${LICENSOR_NOTICE_EMAIL:-}
+  GOVERNING_LAW: ${GOVERNING_LAW:-}
+  DISPUTE_FORUM: ${DISPUTE_FORUM:-}
+  LIABILITY_CAP_NO_FEES: ${LIABILITY_CAP_NO_FEES:-}
   # Updates and software integrity (/settings/guide/updates, /settings/guide/updates). Images come from <UPDATE_IMAGE>-api, -web and
   # -proxy; a private copy needs UPDATE_REGISTRY_TOKEN (read-only). The updater shares UPDATER_DIR with api and worker.
   UPDATE_IMAGE: ${UPDATE_IMAGE:-ghcr.io/cxsmtp/hk}

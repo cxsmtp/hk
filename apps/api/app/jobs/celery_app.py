@@ -295,6 +295,7 @@ from app.jobs import (  # noqa: E402,F401
     monitoring_jobs,
     native_control_jobs,
     risk_jobs,
+    terms_jobs,
     update_jobs,
     watchdog_jobs,
 )
@@ -310,3 +311,10 @@ celery_app.conf.beat_schedule.update(update_schedule.beat_entries())
 # The self-check and hands-off (app/jobs/watchdog_jobs.py): every WATCHDOG_EVERY_SECONDS (300), the replies every
 # INBOX_EVERY_SECONDS (120), the weekly status's turn every 5 minutes.
 celery_app.conf.beat_schedule.update(watchdog_schedule.beat_entries())
+
+# The emailed copies of the accepted licence agreement (app/jobs/terms_jobs.py): every five minutes.
+celery_app.conf.beat_schedule["terms-copy-emails"] = {
+    "task": terms_jobs.TERMS_COPY_TASK,
+    "schedule": terms_jobs.TERMS_COPY_EVERY_SECONDS,
+    "options": {"queue": "default"},
+}

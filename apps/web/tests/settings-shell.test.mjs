@@ -69,7 +69,7 @@ test("General, Branding, Email (SMTP) and About keep FTR's panels, controls and 
   const email = source("app/settings/email/page.tsx");
   for (const text of ["Email server (SMTP)", "Not tested: nothing is sent until it is", "Implicit TLS", "Check the mail server&apos;s certificate", "The server needs a sign-in", "Kept: type to replace", "Who may reset a forgotten password by email", "Links in emails point at", "Test connection", "Send test email", "Send a test to (you by default)"]) assert.ok(email.includes(text), text);
   const about = source("app/settings/about/page.tsx");
-  for (const text of ["about-facts", "On premise, your data stays yours.", "Terms of use &amp; license", "What is new <small>the latest three versions; earlier ones ten at a time</small>", "earlier version", "Versions and updates"]) assert.ok(about.includes(text), text);
+  for (const text of ["about-facts", "On premise, your data stays yours.", "Licence agreement &amp; terms of use", "What is new <small>the latest three versions; earlier ones ten at a time</small>", "earlier version", "Versions and updates"]) assert.ok(about.includes(text), text);
   for (const page of [general, branding, email, about]) assert.ok(page.includes('import "../ftr-settings.css"'));
 });
 

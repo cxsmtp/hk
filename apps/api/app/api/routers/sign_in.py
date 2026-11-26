@@ -588,7 +588,7 @@ def put_sign_in_settings(ctx: AdminContext, body: Annotated[dict[str, Any] | Non
 
 
 @router.post("/sign-in-settings/test-email")
-def test_email(ctx: AdminContext, db: Session = Depends(get_db)):
+def test_email(ctx: AdminContext, background: BackgroundTasks, db: Session = Depends(get_db)):
     """Send a test email to oneself with the email server in force (Settings → Email (SMTP), else SMTP_*): once it arrives, password reset links may be sent with
     exactly these settings (CxMissionZero's isVerified)."""
 
@@ -606,6 +606,10 @@ def test_email(ctx: AdminContext, db: Session = Depends(get_db)):
     mailer.mark_verified(db, smtp)
     _audit_admin(db, ctx, action="auth.email.tested", reason=f"Test email sent to {to}; password reset links may use this email server.")
     db.commit()
+    # Copies of the licence agreement waiting for the email server go out now (app/services/terms_copy_service.py).
+    from app.services import terms_copy_service
+
+    background.add_task(terms_copy_service.deliver_with, db.get_bind())
     return _no_store({"message": f"A test message was sent to {to}.", **settings_view(db)})
 
 
