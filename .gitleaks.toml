@@ -1,0 +1,10 @@
+# Secret scanning (.github/workflows/security.yml): gitleaks' own rules, plus the files below, whose "secrets" are
+# made-up values that tests use to prove Hawk AI finds and redacts real ones. Add a path here only for such fakes.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Made-up secrets in redaction tests"
+paths = [
+  '''apps/desktop-guard/tests/test_redaction\.py$''',
+]
