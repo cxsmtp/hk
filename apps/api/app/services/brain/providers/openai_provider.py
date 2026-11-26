@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import json
-from typing import Any
+from typing import Any, Callable, Iterator
 
 import httpx
 
-from app.services.brain.providers.base import LLMProvider
+from app.services.brain.providers.base import LLMProvider, iter_sse_data
 
 
 class OpenAIProvider(LLMProvider):
@@ -84,7 +84,7 @@ class OpenAIProvider(LLMProvider):
 
         raise RuntimeError("LLM response content not parseable as text")
 
-    def _chat_completion(
+    def _payload(
         self,
         *,
         system_prompt: str,
@@ -105,6 +105,20 @@ class OpenAIProvider(LLMProvider):
             payload["reasoning_effort"] = self.reasoning_effort
         if response_format:
             payload["response_format"] = response_format
+        return payload
+
+    def _chat_completion(
+        self,
+        *,
+        system_prompt: str,
+        user_prompt: str,
+        response_format: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        payload = self._payload(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            response_format=response_format,
+        )
 
         try:
             with httpx.Client(timeout=self.timeout_secs) as client:
@@ -148,6 +162,53 @@ class OpenAIProvider(LLMProvider):
     def generate_text(self, system_prompt: str, user_prompt: str) -> str:
         response_json = self._chat_completion(system_prompt=system_prompt, user_prompt=user_prompt)
         return self._extract_text_content(response_json)
+
+    def stream_text(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        *,
+        usage_sink: Callable[[dict[str, Any]], None] | None = None,
+    ) -> Iterator[str]:
+        payload = self._payload(system_prompt=system_prompt, user_prompt=user_prompt)
+        payload["stream"] = True
+        try:
+            with httpx.Client(timeout=self.timeout_secs) as client:
+                with client.stream(
+                    "POST",
+                    self._url(),
+                    headers=self._headers(),
+                    params=self._params(),
+                    json=payload,
+                ) as response:
+                    if response.status_code >= 400:
+                        body = response.read().decode("utf-8", "replace")[:500]
+                        raise RuntimeError(
+                            f"OpenAI provider request failed with status {response.status_code}: {body}"
+                        )
+                    for data in iter_sse_data(response.iter_lines()):
+                        if data.strip() == "[DONE]":
+                            return
+                        try:
+                            event = json.loads(data)
+                        except json.JSONDecodeError as exc:
+                            raise RuntimeError("OpenAI stream event is not valid JSON") from exc
+                        if not isinstance(event, dict):
+                            raise RuntimeError("OpenAI stream event must be an object")
+                        if event.get("error"):
+                            raise RuntimeError("OpenAI stream reported an error")
+                        usage = event.get("usage")
+                        if usage_sink is not None and isinstance(usage, dict):
+                            usage_sink(usage)
+                        choices = event.get("choices") or []
+                        if not isinstance(choices, list) or not choices or not isinstance(choices[0], dict):
+                            continue
+                        delta = choices[0].get("delta")
+                        content = delta.get("content") if isinstance(delta, dict) else None
+                        if isinstance(content, str) and content:
+                            yield content
+        except httpx.HTTPError as exc:
+            raise RuntimeError(f"OpenAI provider stream error: {exc}") from exc
 
     def health(self) -> dict[str, Any]:
         return {

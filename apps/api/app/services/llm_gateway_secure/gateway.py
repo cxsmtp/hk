@@ -559,6 +559,22 @@ def _apply_verified_post_call_redaction(
     )
 
 
+def scan_stream_window(*, context: SecureCallContext, text: str) -> tuple[GuardOutcome, str]:
+    """Apply the buffered post-call guard and verified redaction to one streamed window.
+
+    Streaming reuses the exact guard so a window is never judged more leniently
+    than the same text would be in a buffered response.
+    """
+    guard = _post_call_guard(context=context, response_text=text)
+    if not guard.passed:
+        return guard, text
+    controlled, verified = _apply_verified_post_call_redaction(
+        response_text=text,
+        post_call_guard=guard,
+    )
+    return verified, controlled
+
+
 def _merge_pre_guards(*, raw_guard: GuardOutcome, minimized_guard: GuardOutcome) -> GuardOutcome:
     raw_violations = list(raw_guard.details.get("violations") or [])
     minimized_violations = list(minimized_guard.details.get("violations") or [])

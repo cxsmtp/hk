@@ -1065,7 +1065,7 @@ def test_openai_invalid_metadata_is_not_hidden_by_safe_top_level_id(test_env) ->
     assert response.status_code in {400, 422}, response.text
 
 
-def test_streaming_rejection_does_not_claim_partial(test_env) -> None:
+def test_clean_stream_does_not_claim_partial(test_env) -> None:
     client, _, user, headers, ai_system_id, policy_version_id = _setup_gateway(
         test_env,
         email="llm-openai-streaming-coverage@example.com",
@@ -1082,7 +1082,12 @@ def test_streaming_rejection_does_not_claim_partial(test_env) -> None:
         headers=headers,
         json={**base, "stream": True},
     )
-    assert streaming.status_code == 400, streaming.text
+    assert streaming.status_code == 200, streaming.text
+    assert streaming.headers["content-type"].startswith("text/event-stream")
+    assert streaming.text.rstrip().endswith("data: [DONE]")
+    final = json.loads(streaming.text.split("data: ")[-2])
+    assert final["choices"][0]["finish_reason"] == "stop"
+    assert final["hawk"]["response_control_coverage"] == "complete"
     assert '"partial"' not in streaming.text
 
 
