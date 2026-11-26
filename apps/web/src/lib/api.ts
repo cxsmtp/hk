@@ -4,6 +4,7 @@ import type { AcmeStatus, HttpsCertificateReport, HttpsMode, HttpsStatus, Upload
 import type { BackupEncryption, BackupFile, BackupInfo, BackupKeyShown, BackupNotice, BackupsStatus, Readiness } from "@/lib/backups-settings";
 import type { Integrity, IntegrityState, UpdateSettings, UpdatesStatus } from "@/lib/updates-settings";
 import type { HandsOffSettings, HandsOffView, LinkAnswer, SelfCheckHealth } from "@/lib/hands-off-settings";
+import type { DiagnosticsView } from "@/lib/self-recovery";
 import type { AboutView, BrandingPatch, BrandingView, GeneralView, SmtpSettings, SmtpView } from "@/lib/settings-console";
 import type { AuditPage, AuditVerify, ConnectorActivity, EvidenceSigning, Emailed, NetworkCheck, NetworkInfo, SupportChannel, SupportKind, SupportList, SupportRequest, TrustDiagnosis, TrustedCertificate } from "@/lib/records";
 import { approvalStatusFilters, mergeApprovalStatusResults } from "@/lib/approval-workflow";
@@ -860,6 +861,17 @@ export const api = {
     request<UpdatesStatus>("/updates/settings", { method: "PUT", body: JSON.stringify(patch) }),
   restartHawk: () => request<{ restarting: boolean }>("/updates/restart", { method: "POST", body: "{}" }),
   downloadUpdateReport: () => requestBlob("/updates/report"),
+  // Self-recovery and the diagnostics bundle on Settings → Backups & health (app/api/routers/diagnostics.py)
+  getDiagnostics: () => request<DiagnosticsView>("/diagnostics"),
+  runSelfRecovery: () => request<DiagnosticsView>("/diagnostics/recovery/run", { method: "POST", body: "{}" }),
+  retrySelfRecovery: (reference: string) => request<DiagnosticsView>(`/diagnostics/recovery/${encodeURIComponent(reference)}/retry`, { method: "POST", body: "{}" }),
+  downloadDiagnosticsBundle: async (prepared = false) => {
+    let disposition: string | null = null;
+    const blob = await requestBlob(prepared ? "/diagnostics/bundle/prepared" : "/diagnostics/bundle", undefined, true, (res) => {
+      disposition = res.headers.get("Content-Disposition");
+    });
+    return { blob, disposition: disposition as string | null };
+  },
   checkIntegrity: () => request<Integrity>("/integrity/check", { method: "POST", body: "{}" }),
   getIntegrityNotice: () => request<{ notice: { state: IntegrityState; summary: string } | null }>("/integrity/notice"),
   getPlatformMode: () => request<PlatformModeResponse>("/system/platform-mode"),

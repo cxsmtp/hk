@@ -2,6 +2,10 @@
 
 Every release, newest first: the version shown bottom-left in the console (HK-xx.xx.xx, from the VERSION file), when it was merged, and what changed for the people using it. Updated with every change merged to main (CLAUDE.md).
 
+## HK-00.03.01 — pending · [#NN](https://github.com/cxsmtp/hk/pull/NN)
+
+- **Hawk AI fixes what it recognises and tells you when it needs the OEM.** Every 5 minutes it reads its own error log and its failed background jobs and puts known problems right, each within a limit: it runs a failed job again, clears a stale lock, reconnects to the database or Redis, restarts a stuck worker or scheduler, frees disk space, checks the database schema again, and goes back to the previous version when an update fails or the new version is unhealthy, then checks it is healthy; the installer tries one fix of its own when the API does not come up. When a fix keeps failing or the problem is one it does not know, it stops, marks it "Needs OEM help" and prepares a diagnostics bundle: one file on Settings → Backups & health with recent errors, failed jobs, update and rollback history, health and the settings in force, every secret taken out, signed so the OEM can check it came from your server. Admins of other organisations on the same server now see a plain line with a time and a reference instead of the server's raw job errors, and get a bundle of their own organisation only.
+
 ## HK-00.03.00 — pending · [#NN](https://github.com/cxsmtp/hk/pull/NN)
 
 - **Your sign-in is no longer kept where a script could read it.** The console keeps its sign-in in secure cookies that only the API can read (no longer in the browser's storage), every change you make carries a check that another site cannot forge, and Sign out now ends the sign-in on the server too. Everyone signs in once more after this update. The SDK, the MCP proxy, the endpoint agent and the browser extension work as before.

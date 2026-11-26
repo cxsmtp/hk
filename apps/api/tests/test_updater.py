@@ -391,6 +391,12 @@ def test_restart_and_the_heartbeat(world):
     assert status["state"] == "done" and status["action"] == "restart"
     assert [c[1] for c in engine.calls if c[0] == "stop"] == ["hawk-api-1", "hawk-worker-1", "hawk-beat-1", "hawk-web-1", "hawk-proxy-1"]
     assert up.events(cfg.updater_dir)[-1]["type"] == "restart"
+    # Self-recovery asks for one service alone (the worker that stopped answering); a name not Hawk AI's is ignored.
+    engine.calls.clear()
+    up.write_json(cfg.updater_dir / "request.json", {"id": "y", "action": "restart", "services": ["worker", "postgres"], "by": "self-recovery"})
+    status = tick(engine, cfg, beat=False)
+    assert status["state"] == "done"
+    assert [c[1] for c in engine.calls if c[0] == "stop"] == ["hawk-worker-1"]
     engine._find("hawk-web-1")["Config"]["Image"] = "hawk-web:local"
     beat = heartbeat(engine, cfg)
     assert beat["manages"] is False and "web runs hawk-web:local" in beat["engineError"]

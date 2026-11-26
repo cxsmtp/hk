@@ -66,6 +66,7 @@ export const updates: GuideTopic = {
             "The updater takes a backup, downloads the images, brings the database up to date and starts each service in order.",
             "If the new version is not healthy within 150 seconds (`UPDATE_START_TIMEOUT_SECONDS`), the previous one is put back by itself, with the database as it was before the update.",
             "A version that failed to start is never installed again by itself.",
+            "Later, if the new version turns out unhealthy (services not answering, errors piling up), self-recovery goes back to the previous one, once, then checks it is healthy; if not, it asks for the OEM ([Self-recovery](/settings/guide/troubleshooting#self-recovery)).",
           ],
         },
         {

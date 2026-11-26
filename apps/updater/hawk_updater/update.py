@@ -509,12 +509,15 @@ def _roll_back(engine, config: Config, stack, old_images, parked: list[str], cre
     return restored
 
 
-def restart(engine, config: Config, *, step: Step = lambda _t: None) -> dict[str, Any]:
-    """Restart Hawk AI's services in order (Settings → Updates: Restart Hawk AI)."""
+def restart(engine, config: Config, *, step: Step = lambda _t: None, services: Any = None) -> dict[str, Any]:
+    """Restart Hawk AI's services in order (Settings → Updates: Restart Hawk AI), or only some of them: self-recovery
+    (the API's app/services/self_recovery.py) asks for the worker or the scheduler alone when it stopped answering.
+    Only Hawk AI's own services are ever named; anything else in the list is ignored."""
 
+    wanted = {str(s) for s in services} & set(START_ORDER) if isinstance(services, (list, tuple)) and services else set(START_ORDER)
     stack = find_services(engine, config.project, config.services)
     for service in START_ORDER:
-        if service in stack:
+        if service in stack and service in wanted:
             step(f"Restarting {service}")
             engine.stop(stack[service]["Id"], config.stop_seconds)
             engine.start(stack[service]["Id"])

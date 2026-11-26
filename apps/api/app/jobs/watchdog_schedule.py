@@ -15,12 +15,18 @@ SELF_CHECK_TASK = "app.jobs.watchdog_jobs.self_check"
 INBOX_TASK = "app.jobs.watchdog_jobs.read_replies"
 STATUS_TASK = "app.jobs.watchdog_jobs.weekly_status"
 STATUS_EVERY_SECONDS = 5 * 60
+#: Self-recovery (app/services/self_recovery.py): every SELF_RECOVERY_EVERY_SECONDS (300), first after two minutes.
+SELF_RECOVERY_TASK = "app.jobs.watchdog_jobs.self_recovery"
 
 
 def beat_entries(env=None) -> dict[str, dict]:
+    from app.services.self_recovery import every_seconds as recovery_every_seconds
+
     watchdog = watchdog_every_seconds(env)
     inbox = inbox_every_seconds(env)
+    recovery = recovery_every_seconds(env)
     return {
+        "self-recovery": {"task": SELF_RECOVERY_TASK, "schedule": FirstSoonThenEvery(dt.timedelta(seconds=recovery), first_after=min(120, recovery)), "options": {"queue": "default"}},
         "self-check": {"task": SELF_CHECK_TASK, "schedule": FirstSoonThenEvery(dt.timedelta(seconds=watchdog), first_after=min(60, watchdog)), "options": {"queue": "default"}},
         "hands-off-replies": {"task": INBOX_TASK, "schedule": FirstSoonThenEvery(dt.timedelta(seconds=inbox), first_after=min(30, inbox)), "options": {"queue": "default"}},
         "hands-off-weekly-status": {"task": STATUS_TASK, "schedule": FirstSoonThenEvery(dt.timedelta(seconds=STATUS_EVERY_SECONDS), first_after=30), "options": {"queue": "default"}},

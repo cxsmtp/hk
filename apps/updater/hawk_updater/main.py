@@ -175,7 +175,7 @@ def tick(engine, config: Config, *, beat: bool = True, wait_ready=None, sleep=ti
     save()
     try:
         if action == "restart":
-            result = restart(engine, config, step=lambda text: save(step=text))
+            result = restart(engine, config, step=lambda text: save(step=text), services=request.get("services"))
         elif action == "update":
             result = full_update(engine, config, request, wait_ready=wait_ready or make_wait_ready(engine, config), step=lambda text: save(step=text), sleep=sleep)
         else:
