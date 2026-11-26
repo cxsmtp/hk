@@ -16,6 +16,12 @@ MAX_OCR_FILE_BYTES = 10 * 1024 * 1024
 
 EMAIL_PATTERN = re.compile(r"(?i)\b[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}\b")
 PHONE_PATTERN = re.compile(r"(?<!\d)(?:\+?\d[\d\-\s().]{7,}\d)(?!\d)")
+# Record ids (UUIDs) and long hex digests are identifiers, not personal data: a digit run inside one (about one random
+# UUID in four has a phone-shaped run) must never be masked, or the ids in a response stop matching their records.
+IDENTIFIER_PATTERN = re.compile(
+    r"(?<![0-9A-Fa-f])(?:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}|[0-9a-fA-F]{32,})(?![0-9A-Fa-f])"
+)
+_NUMERIC_KINDS = frozenset({"phone", "credit_card", "emirates_id", "us_ssn", "uk_nino", "ip_address", "bank_account", "iban", "date_of_birth"})
 ISO_DATETIME_PATTERN = re.compile(
     r"\b\d{4}-\d{2}-\d{2}"
     r"(?:[T ][0-2]\d:[0-5]\d(?::[0-5]\d(?:\.\d{1,6})?)?(?:Z|[+-][0-2]\d:?[0-5]\d)?)?\b"
@@ -218,6 +224,14 @@ def private_sensitive_spans(text: str) -> list[tuple[int, int, str]]:
             candidates.append((span[0], span[1], finding.entity_type, 5))
     except Exception:  # noqa: BLE001 - masking keeps the long-standing patterns if the engine fails
         pass
+    identifiers = [match.span() for match in IDENTIFIER_PATTERN.finditer(text)]
+    if identifiers:
+        candidates = [
+            row
+            for row in candidates
+            if row[2] not in _NUMERIC_KINDS
+            or not any(id_start <= row[0] and row[1] <= id_end for id_start, id_end in identifiers)
+        ]
     candidates.sort(key=lambda row: (row[3], -(row[1] - row[0]), row[0]))
     selected: list[tuple[int, int, str]] = []
     for start, end, kind, _priority in candidates:
