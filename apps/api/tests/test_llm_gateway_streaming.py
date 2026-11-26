@@ -387,7 +387,9 @@ def test_stream_happy_path_relays_all_chunks_and_records_like_buffered(stream_en
 
 def test_stream_violation_split_across_chunks_is_stopped_and_recorded(stream_env) -> None:
     client, session_local, holder = stream_env["client"], stream_env["SessionLocal"], stream_env["holder"]
-    chunks = [*_split(CLEAN_TEXT), "the service pass", "word: hunter2 ", *_split(CLEAN_TEXT)]
+    # A private key header split across chunks. (A ``password: ...`` line is masked rather than blocked since the
+    # data-protection check recognises it as a secret, in streamed and buffered answers alike.)
+    chunks = [*_split(CLEAN_TEXT), "here is BEGIN RSA PRI", "VATE KEY now. ", *_split(CLEAN_TEXT)]
     holder["provider"] = _StreamingProvider(_Upstream(chunks))
     before = _counts(session_local)
     response = client.post(
@@ -398,7 +400,7 @@ def test_stream_violation_split_across_chunks_is_stopped_and_recorded(stream_env
     assert response.status_code == 200, response.text
     frames = _frames(response.text)
     content = _content(frames)
-    assert "hunter2" not in content and "pass" not in content
+    assert "PRIVATE" not in content and "BEGIN" not in content
     # Clean text before the violation was released early, and the evidence says so.
     assert content and CLEAN_TEXT.startswith(content)
     final = frames[-2]
