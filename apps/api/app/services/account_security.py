@@ -13,6 +13,7 @@ src/routes/session.js (the limit per address, the sign-in policy). docs/sign-in.
 from __future__ import annotations
 
 import json
+import logging
 import re
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -27,6 +28,8 @@ from app.db.models.user import RefreshToken, User, UserTenantRole
 from app.services import mfa_service, sign_in_store
 from app.services.sign_in_store import StoreUnavailable
 
+
+logger = logging.getLogger(__name__)
 
 MAX_FAILED = 5
 LOCK_SECONDS = 15 * 60
@@ -97,6 +100,7 @@ def too_many_sign_ins(request: Request | None) -> bool:
     try:
         recent = sign_in_store.store().hit(f"signin-ip:{client_ip(request)}", SIGN_IN_WINDOW_SECONDS, sign_in_store.now())
     except StoreUnavailable:
+        logger.warning("Sign-in limit per address unavailable (Redis unreachable): the attempt is let through", extra={"reason_code": "store_unavailable"})
         return False
     return recent > SIGN_IN_LIMIT
 
@@ -190,6 +194,11 @@ def _count_wrong(user: User, now: datetime) -> None:
     if user.failed_logins >= MAX_FAILED:
         user.locked_until = now + timedelta(seconds=LOCK_SECONDS)
         user.failed_logins = 0
+        logger.warning(
+            "Account locked after %d failed sign-in attempts",
+            MAX_FAILED,
+            extra={"user_id": user.id, "locked_seconds": LOCK_SECONDS, "reason_code": "account_locked"},
+        )
 
 
 def check_password(db: Session, email: str, password: str, *, more: bool | None = None) -> User:

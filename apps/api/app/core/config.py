@@ -185,6 +185,10 @@ class Settings(BaseSettings):
     deployment_data_location: str = "local-development"
     deployment_topology: str = "development"
     component_type: str = "api"
+    # Logs (app/core/log_config.py): one line per event on stdout. LOG_FORMAT=json (one JSON object a line, as
+    # deploy/compose.yaml sets it) or text (easier to read on a laptop); LOG_LEVEL=DEBUG|INFO|WARNING|ERROR.
+    log_format: str = "text"
+    log_level: str = "INFO"
     component_version: str = "0.1.0"
     component_protocol_version: str = "1.0"
     minimum_component_versions_json: str = (
@@ -289,6 +293,18 @@ class Settings(BaseSettings):
         if value is not None and value != "none":
             raise ValueError("OPENAI_REASONING_EFFORT supports only 'none'.")
         return value
+
+    @field_validator("log_format", mode="before")
+    @classmethod
+    def _normalize_log_format(cls, value: object) -> str:
+        # A typo never stops the start: anything but "text" is the JSON a deployment reads.
+        return "text" if str(value or "").strip().lower() == "text" else "json"
+
+    @field_validator("log_level", mode="before")
+    @classmethod
+    def _normalize_log_level(cls, value: object) -> str:
+        text = str(value or "").strip().upper()
+        return text if text in {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"} else "INFO"
     enforcement_contract_mode: str = "v1"
     llm_intercept_qps_per_tenant: int = 10
     mcp_authorize_qps_per_tenant: int = 20

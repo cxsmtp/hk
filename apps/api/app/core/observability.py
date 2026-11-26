@@ -321,7 +321,10 @@ banking_runtime_metrics = BankingRuntimeMetrics()
 request_logger = logging.getLogger("app.request")
 
 
-def log_structured(event: str, **fields: Any) -> None:
+def log_structured(event: str, *, exc_info: Any = None, **fields: Any) -> None:
+    """One event on the ``app.request`` logger. Its fields become the line's own (app/core/log_config.py); with
+    ``exc_info`` the traceback goes with it."""
+
     correlation_id = fields.get("correlation_id") or get_correlation_id()
     payload = sanitize_privacy_payload({"event": event, **fields})
     if correlation_id:
@@ -335,4 +338,7 @@ def log_structured(event: str, **fields: Any) -> None:
         "critical": request_logger.critical,
     }
     emitter = emitters.get(level, request_logger.info) if isinstance(level, str) else request_logger.info
-    emitter(json.dumps(payload, default=str))
+    if exc_info:
+        emitter(json.dumps(payload, default=str), exc_info=exc_info)
+    else:
+        emitter(json.dumps(payload, default=str))

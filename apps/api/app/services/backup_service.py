@@ -249,6 +249,11 @@ def backup_to_folder(
             tenant_id=tenant_id,
             details={"file": str(file), **summary, "removed": removed},
         )
+        log.info(
+            "Backup written: %s",
+            file.name,
+            extra={"trigger": trigger, "size_bytes": summary.get("size"), "files": summary.get("files"), "encrypted": bool(summary.get("encrypted")), "removed": len(removed or [])},
+        )
         if mail:
             try:
                 mail_backup_copy(file, summary, trigger, cfg=cfg, store=store, audit=audit)
@@ -259,7 +264,7 @@ def backup_to_folder(
         last = {"at": _now_iso(), "ok": False, "error": str(error)[:500], "trigger": trigger}
         _remember(cfg, last)
         audit("backup.failed", f"{trigger} backup to {cfg.dir} failed: {str(error)[:300]}", outcome="failed", actor=actor, actor_user_id=actor_user_id, tenant_id=tenant_id)
-        _say(f"! [backup] {error}")
+        log.error("! [backup] Backup failed (%s): %s", trigger, error, exc_info=True, extra={"trigger": trigger})
         return last
 
 
@@ -503,9 +508,18 @@ def apply_pending_restore(cfg: BackupConfig | None = None, **kwargs: Any) -> dic
     pending = cfg.data_dir / archive.PENDING_RESTORE
     if not pending.exists():
         return None
-    bundle = archive.read_backup(pending.read_bytes())
-    result = restore_bundle(bundle, cfg=cfg, **kwargs)
+    log.info("Applying the restore staged from Settings → Backups & health")
+    try:
+        bundle = archive.read_backup(pending.read_bytes())
+        result = restore_bundle(bundle, cfg=cfg, **kwargs)
+    except Exception:
+        log.error("! [backup] The staged restore could not be applied", exc_info=True)
+        raise
     pending.unlink(missing_ok=True)
+    log.info(
+        "Restore applied",
+        extra={"database_restored": bool(result.get("databaseRestored")), "secrets_differ": len(result.get("secretsDiffer") or [])},
+    )
     return result
 
 

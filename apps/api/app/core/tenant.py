@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.auth import get_current_user, oauth2_scheme
+from app.core.log_config import update_log_context
 from app.db.models.user import User, UserTenantRole
 from app.db.models.tenant import Tenant
 from app.db.session import SessionLocal, get_db
@@ -71,6 +72,8 @@ def require_tenant(
     current_user: User = Depends(get_current_user),
 ) -> TenantContext:
     context = _tenant_context_for_user(tenant_id=x_tenant_id, db=db, current_user=current_user)
+    # The tenant, on every log line of this request from now on (app/core/log_config.py).
+    update_log_context(tenant_id=context.tenant.id, user_id=current_user.id)
     # Who made this request, for the user activity log (app/services/user_activity.py), read once it is answered.
     try:
         request.state.activity_actor = {

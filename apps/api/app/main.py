@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+import logging
 import time
 from uuid import uuid4
 
@@ -18,6 +19,13 @@ from app.api.routers import access, backups, claude_enterprise, hands_off, https
 from app.core.access_gate import AccessRequired, access_required_response
 from app.core.config import configured_secret_sources, settings
 from app.core.licence_gate import licence_gate
+from app.core.log_config import (
+    bind_log_context,
+    configure_logging,
+    get_log_context,
+    reset_log_context,
+    safe_id,
+)
 from app.core.observability import (
     gateway_latency_paths,
     latency_tracker,
@@ -42,6 +50,10 @@ from app.services.pg_tools import InstanceLock, is_postgres
 from app.services.integrity import service as integrity_service
 from app.services.updates.companion import acknowledge_start
 from app.version import APP_VERSION, PACKAGE_VERSION
+
+# Logs (app/core/log_config.py): JSON lines on stdout (LOG_FORMAT, LOG_LEVEL), uvicorn's own access line off.
+configure_logging()
+logger = logging.getLogger(__name__)
 
 
 def _safe_internal_error_message(exc: Exception) -> str:
@@ -404,8 +416,16 @@ def _assert_production_readiness_or_fail_startup() -> None:
 
 @app.middleware("http")
 async def correlation_and_request_logging_middleware(request, call_next):
-    correlation_id = request.headers.get("x-correlation-id") or str(uuid4())
+    # The request id (app/core/log_config.py): the caller's X-Request-ID or X-Correlation-Id when it is a plain,
+    # short identifier, otherwise a new one. It is the correlation id written with the audit records, comes back in
+    # X-Request-ID and X-Correlation-Id, and is on every log line of this request.
+    correlation_id = (
+        safe_id(request.headers.get("x-request-id"))
+        or safe_id(request.headers.get("x-correlation-id"))
+        or str(uuid4())
+    )
     token = set_correlation_id(correlation_id)
+    log_token = bind_log_context(request_id=correlation_id)
     request.state.correlation_id = correlation_id
     started = time.perf_counter()
     status_code = 500
@@ -427,6 +447,7 @@ async def correlation_and_request_logging_middleware(request, call_next):
                     error_type=exc.__class__.__name__,
                     error_message=_safe_internal_error_message(exc),
                     tenant_id=request.headers.get("x-tenant-id"),
+                    exc_info=exc,
                 )
                 response = JSONResponse(
                     status_code=500,
@@ -440,10 +461,15 @@ async def correlation_and_request_logging_middleware(request, call_next):
                 )
                 status_code = response.status_code
                 response.headers["X-Correlation-Id"] = correlation_id
+                response.headers["X-Request-ID"] = correlation_id
                 return response
 
             status_code = 503
             tenant_id = request.headers.get("x-tenant-id")
+            access_logger.warning(
+                "Gateway request blocked (fail closed): the database is unavailable",
+                extra={"error_type": exc.__class__.__name__},
+            )
             audit_id = None
             if tenant_id:
                 try:
@@ -502,6 +528,7 @@ async def correlation_and_request_logging_middleware(request, call_next):
                 error_type=exc.__class__.__name__,
                 **({"error_message": error_message} if error_message else {}),
                 tenant_id=request.headers.get("x-tenant-id"),
+                exc_info=exc,
             )
             response = JSONResponse(
                 status_code=500,
@@ -515,26 +542,59 @@ async def correlation_and_request_logging_middleware(request, call_next):
             )
             status_code = response.status_code
             response.headers["X-Correlation-Id"] = correlation_id
+            response.headers["X-Request-ID"] = correlation_id
             return response
         if response is not None:
             status_code = response.status_code
             response.headers["X-Correlation-Id"] = correlation_id
+            response.headers["X-Request-ID"] = correlation_id
     finally:
         latency_ms = (time.perf_counter() - started) * 1000.0
         path = request.url.path
         if path in gateway_latency_paths:
             latency_tracker.observe(path, latency_ms)
-        log_structured(
-            "http_request",
-            correlation_id=correlation_id,
-            method=request.method,
-            path=path,
-            status_code=status_code,
-            latency_ms=round(latency_ms, 4),
-            tenant_id=request.headers.get("x-tenant-id"),
-        )
+        _log_access(request, status_code=status_code, latency_ms=latency_ms)
+        reset_log_context(log_token)
         reset_correlation_id(token)
     return response
+
+
+access_logger = logging.getLogger("app.access")
+
+
+def _log_access(request, *, status_code: int, latency_ms: float) -> None:
+    """One line per request: the route as declared (/ai-systems/{ai_system_id}, never the ids in the path), the
+    status, how long it took, the tenant and person when known, and the client's address (uvicorn's --proxy-headers
+    already put the front proxy's X-Forwarded-For there). Never a header, query string or body."""
+
+    try:
+        route = getattr(request.scope.get("route"), "path", None)
+        actor = getattr(request.state, "activity_actor", None) or {}
+        context = get_log_context()
+        fields = {
+            "method": request.method,
+            "route": route or None,
+            "status": status_code,
+            "duration_ms": round(latency_ms, 2),
+            "client_ip": request.client.host if request.client else None,
+            "tenant_id": actor.get("tenant_id") or context.get("tenant_id") or safe_id(request.headers.get("x-tenant-id")),
+            "user_id": actor.get("user_id") or context.get("user_id"),
+        }
+        if not route:
+            # No route matched (404s, scans): the path, without its query string, shortened.
+            fields["path"] = request.url.path[:200]
+        level = logging.ERROR if status_code >= 500 else logging.INFO
+        access_logger.log(
+            level,
+            "%s %s %s %.1fms",
+            request.method,
+            route or fields["path"],
+            status_code,
+            latency_ms,
+            extra={key: value for key, value in fields.items() if value is not None},
+        )
+    except Exception:  # noqa: BLE001 - the access line never fails a request
+        pass
 
 
 @app.middleware("http")
