@@ -371,6 +371,9 @@ export class HawkMcpProxy {
         sessionId: this.sessionId,
         clientApp: this.clientApp,
         mcpServerUrl: this.mcpServerUrl,
+        // A bound repository approval travels in MCP request metadata, never
+        // in the tool arguments forwarded to the GitHub server.
+        approvalBindingId: message.params?._meta?.["ai.hawk/approval_binding_id"] ?? null,
       });
       let decision;
       try {

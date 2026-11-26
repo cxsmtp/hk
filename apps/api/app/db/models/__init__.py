@@ -175,6 +175,7 @@ from app.db.models.github_repository_access import (
     GitHubRepository,
     GitHubRepositoryAIConnection,
     GitHubRepositoryAccess,
+    GitHubRepositoryMutationApproval,
     GitHubRepositoryRuntimeBinding,
     GitHubSourceOrganization,
 )
@@ -435,6 +436,7 @@ __all__ = [
     "GitHubRepository",
     "GitHubRepositoryAccess",
     "GitHubRepositoryAIConnection",
+    "GitHubRepositoryMutationApproval",
     "ProviderSeatSnapshot",
     "RemediationAction",
     "EvidenceNode",

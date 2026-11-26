@@ -3726,15 +3726,24 @@ def mcp_authorize(
         evidence_node_ids.append(str(mcp_integrity["evidence_bundle_id"]))
     mcp_final_actions["mcp_integrity"] = mcp_integrity
     trace_payload["mcp_integrity"] = mcp_integrity
+    repository_guard: dict[str, Any] | None = None
     if str(action or "").upper().startswith("REPOSITORY_"):
         repository_parameters = _extract_tool_usage_field(tool_usage_meta, "parameters")
         repository_parameters = repository_parameters if isinstance(repository_parameters, dict) else {}
+        # Declared by the Hawk MCP proxy (branch, paths, diff stats, approval
+        # reference); declared stats can only tighten the decision.
+        repository_change_context = _extract_tool_usage_field(tool_usage_meta, "github_change_context")
+        repository_change_context = repository_change_context if isinstance(repository_change_context, dict) else {}
         repository_guard = evaluate_github_repository_mutation(
             db,
             tenant_id=tenant_id,
             action=action,
             resource=resource,
-            branch=_normalized_optional(repository_parameters.get("branch")),
+            branch=_normalized_optional(
+                repository_parameters.get("branch")
+                or repository_parameters.get("head")
+                or repository_change_context.get("branch")
+            ),
             actor_id=actor_id,
             ai_system_id=ai_system_id,
             provider=provider,
@@ -3742,12 +3751,14 @@ def mcp_authorize(
             agent_id=resolved_agent_identity_id or actor_id,
             tool_fingerprint_id=_normalized_optional(_extract_tool_usage_field(tool_usage_meta, "tool_fingerprint_id")),
             tool_schema_fingerprint=_normalized_optional(_extract_tool_usage_field(tool_usage_meta, "tool_schema_fingerprint")),
-            change_digest=_normalized_optional(repository_parameters.get("change_digest")),
-            approval_binding_id=_normalized_optional(repository_parameters.get("approval_binding_id")),
+            change_digest=_normalized_optional(repository_parameters.get("change_digest") or repository_change_context.get("content_sha256")),
+            approval_binding_id=_normalized_optional(
+                repository_parameters.get("approval_binding_id") or repository_change_context.get("approval_binding_id")
+            ),
+            change_parameters=repository_parameters,
+            change_context=repository_change_context,
         )
         repository_guard_decision = str(repository_guard["decision"]).lower()
-        if repository_guard_decision == "hold_for_approval":
-            repository_guard_decision = "hold_for_approval"
         decision = _aggregate_guardian_decisions([decision, repository_guard_decision])
         mcp_guardian_results.append(
             {
@@ -3755,10 +3766,15 @@ def mcp_authorize(
                 "decision": repository_guard_decision,
                 "confidence": 1.0,
                 "matched_conditions": [str(repository_guard.get("reason") or "repository_guard")],
-                "actions_taken": {"repository_id": repository_guard.get("repository_id")},
+                "actions_taken": {
+                    "repository_id": repository_guard.get("repository_id"),
+                    "evidence_ref": repository_guard.get("evidence_ref"),
+                },
                 "threat_types": ["repository_authorization"],
             }
         )
+        if repository_guard.get("evidence_ref"):
+            evidence_node_ids.append(str(repository_guard["evidence_ref"]))
         mcp_final_actions["github_repository_guard"] = repository_guard
         trace_payload["github_repository_guard"] = repository_guard
     tool_provenance_path: dict[str, Any] = {}
@@ -4554,6 +4570,36 @@ def mcp_authorize(
             error=str(exc),
         )
 
+    if (
+        decision == "hold_for_approval"
+        and repository_guard is not None
+        and str(repository_guard.get("decision")) == "HOLD_FOR_APPROVAL"
+        and isinstance(repository_guard.get("canonical_action"), dict)
+    ):
+        # A held repository mutation becomes an approval request whose payload
+        # is the exact canonical action; an approver then issues a MAC-bound,
+        # single-use binding for it (POST .../github-repositories/mutation-approvals).
+        repository_approval = ApprovalRequest(
+            tenant_id=tenant_id,
+            enforcement_event_id=event.id,
+            ai_system_id=ai_system_id,
+            request_payload={
+                "request_id": request_id,
+                "guardian_id": "github_repository_identity_guard",
+                "reason": repository_guard.get("reason"),
+                "github_repository_action": repository_guard["canonical_action"],
+            },
+            required_roles=["owner", "admin"],
+            sla_minutes=60,
+            default_if_timeout="block",
+            status="pending",
+        )
+        db.add(repository_approval)
+        db.flush()
+        repository_guard["approval_request_id"] = repository_approval.id
+        traced_guard = trace_payload.get("github_repository_guard")
+        if isinstance(traced_guard, dict):
+            traced_guard["approval_request_id"] = repository_approval.id
     decision_receipt_id = str(
         pre_action_governance_check.get("decision_receipt_id") or ""
     ).strip()

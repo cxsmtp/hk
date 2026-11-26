@@ -4,24 +4,28 @@ from __future__ import annotations
 
 from base64 import urlsafe_b64decode, urlsafe_b64encode
 from collections.abc import Mapping
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
+from fnmatch import fnmatchcase
 import hashlib
+import hmac
 import json
 import re
+import secrets
 from typing import Any
+from uuid import uuid4
 
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from app.db.models.github_repository_access import (
     GitHubRepository,
     GitHubRepositoryAIConnection,
     GitHubRepositoryAccess,
+    GitHubRepositoryMutationApproval,
     GitHubRepositoryRuntimeBinding,
     GitHubSourceOrganization,
 )
 from app.db.models.native_control import NativeControlIntegration
-from app.db.models.action_integrity import ApprovalAuthorityProjectionV2, ApprovalBindingV2Extension
 from app.db.models.activity_audit import AIAction, AISession
 from app.db.models.evidence import EvidenceNode
 from app.db.models.policy import ApprovalRequest
@@ -627,9 +631,43 @@ def list_github_ai_connections(db: Session, *, tenant_id: str, limit: int = 100,
     return _bounded_page(db, statement, GitHubRepositoryAIConnection, limit=limit, cursor=cursor)
 
 
+_HOST_RE = re.compile(r"^[a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?(?::[0-9]{1,5})?$")
+_OWNER_RE = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9_.-]{0,98})$")
+_REPOSITORY_NAME_RE = re.compile(r"^[A-Za-z0-9._-]{1,100}$")
+_REFERENCE_ID_RE = re.compile(r"^[A-Za-z0-9_.:-]{1,64}$")
+
+
 def resolve_current_repository_identity(db: Session, *, tenant_id: str, host: str, owner: str, repository: str) -> GitHubRepository | None:
-    expected = f"{owner.strip()}/{repository.strip()}".lower()
-    return db.scalar(select(GitHubRepository).where(GitHubRepository.tenant_id == tenant_id, GitHubRepository.host == host.strip().lower(), GitHubRepository.full_name.ilike(expected)))
+    """Resolve exactly one tenant repository by host and full name, or nothing.
+
+    The full name is compared for case-insensitive *equality*, never as a LIKE
+    pattern: a caller-supplied ``%`` or ``_`` must not widen the match to some
+    other repository (CWE-943). Inputs outside GitHub's own name grammar and
+    ambiguous matches resolve to nothing, so callers fail closed.
+    """
+    normalized_host = _text(host).lower()
+    normalized_owner = _text(owner)
+    normalized_name = _text(repository)
+    if (
+        not _HOST_RE.fullmatch(normalized_host)
+        or not _OWNER_RE.fullmatch(normalized_owner)
+        or not _REPOSITORY_NAME_RE.fullmatch(normalized_name)
+        or normalized_name in {".", ".."}
+    ):
+        return None
+    expected = f"{normalized_owner}/{normalized_name}".lower()
+    rows = list(
+        db.scalars(
+            select(GitHubRepository)
+            .where(
+                GitHubRepository.tenant_id == tenant_id,
+                GitHubRepository.host == normalized_host,
+                func.lower(GitHubRepository.full_name) == expected,
+            )
+            .limit(2)
+        )
+    )
+    return rows[0] if len(rows) == 1 else None
 
 
 def derive_github_repository_ai_connections(db: Session, *, tenant_id: str, limit: int = 200) -> int:
@@ -650,7 +688,14 @@ def derive_github_repository_ai_connections(db: Session, *, tenant_id: str, limi
     derived = 0
     for action in actions:
         metadata = action.metadata_json if isinstance(action.metadata_json, Mapping) else {}
-        evidence = db.scalar(select(EvidenceNode).where(EvidenceNode.tenant_id == tenant_id, EvidenceNode.id == action.evidence_bundle_id))
+        # The evidence reference comes from a row of this tenant and is bound as
+        # a query parameter (never interpolated); it is also checked against the
+        # bounded identifier grammar and the lookup is tenant-scoped, so another
+        # tenant's evidence can never be read here (CWE-943 review).
+        evidence_bundle_id = action.evidence_bundle_id
+        if not isinstance(evidence_bundle_id, str) or not _REFERENCE_ID_RE.fullmatch(evidence_bundle_id):
+            continue
+        evidence = db.scalar(select(EvidenceNode).where(EvidenceNode.tenant_id == tenant_id, EvidenceNode.id == evidence_bundle_id))
         evidence_payload = evidence.payload if evidence is not None and isinstance(evidence.payload, Mapping) else {}
         source_binding = evidence_payload.get("source_binding") if isinstance(evidence_payload.get("source_binding"), Mapping) else {}
         if (
@@ -715,12 +760,304 @@ def _repository_locator(resource: str) -> tuple[str, str, str] | None:
     return parts[-3].lower(), parts[-2], parts[-1]
 
 
-def _current_approval_matches(
-    db: Session,
+# ---------------------------------------------------------------------------
+# AI agent repository mutations: posture, change rules and bound approvals
+# ---------------------------------------------------------------------------
+
+_READ_ACTIONS = frozenset({"REPOSITORY_READ", "REPOSITORY_PULL", "REPOSITORY_CLONE", "REPOSITORY_FETCH"})
+# Never performed by an AI agent, approved or not: they change who can see,
+# own or protect the repository, or rewrite its history.
+_ALWAYS_BLOCKED_ACTIONS = frozenset({
+    "REPOSITORY_FORCE_PUSH", "REPOSITORY_DELETE", "REPOSITORY_TRANSFER", "REPOSITORY_VISIBILITY_CHANGE",
+    "REPOSITORY_FORK", "REPOSITORY_ARCHIVE", "REPOSITORY_CREATE", "REPOSITORY_SECRET_CHANGE",
+    "REPOSITORY_ADMIN_CHANGE", "REPOSITORY_SETTINGS_CHANGE", "REPOSITORY_COLLABORATOR_CHANGE",
+    "REPOSITORY_BRANCH_PROTECTION_CHANGE", "REPOSITORY_RULESET_CHANGE", "REPOSITORY_WEBHOOK_CHANGE",
+    "REPOSITORY_DEPLOY_KEY_CHANGE", "REPOSITORY_REMOTE_ADD", "REPOSITORY_REMOTE_CHANGE",
+})
+# The pull-request flow: allowed without a per-action approval only under the
+# PULL_REQUEST_ONLY posture, and only away from protected branches and paths.
+_PULL_REQUEST_FLOW_ACTIONS = frozenset({
+    "REPOSITORY_BRANCH_CREATE", "REPOSITORY_PUSH", "REPOSITORY_PULL_REQUEST_CREATE",
+    "REPOSITORY_PULL_REQUEST_UPDATE", "REPOSITORY_PULL_REQUEST_COMMENT",
+})
+# Always need a bound approval (they land, publish or bless changes).
+_APPROVAL_ONLY_ACTIONS = frozenset({
+    "REPOSITORY_PULL_REQUEST_MERGE", "REPOSITORY_PULL_REQUEST_APPROVE", "REPOSITORY_WORKFLOW_CHANGE",
+    "REPOSITORY_TAG_CREATE", "REPOSITORY_RELEASE_CREATE", "REPOSITORY_BRANCH_DELETE",
+})
+_WRITE_ACTIONS = _PULL_REQUEST_FLOW_ACTIONS | _APPROVAL_ONLY_ACTIONS
+_BRANCH_TARGET_ACTIONS = frozenset({"REPOSITORY_PUSH", "REPOSITORY_BRANCH_CREATE", "REPOSITORY_BRANCH_DELETE"})
+
+_WRITE_MODES = frozenset({"APPROVAL_REQUIRED", "PULL_REQUEST_ONLY", "READ_ONLY"})
+_DEFAULT_AGENT_POLICY: dict[str, Any] = {
+    "write_mode": "APPROVAL_REQUIRED",
+    "protected_branches": [],
+    "approval_required_paths": [],
+    "blocked_paths": [],
+    "max_files_changed": 100,
+    "max_bytes_changed": 1_000_000,
+    "max_mutations_per_minute": 30,
+}
+_AGENT_POLICY_BOUNDS = {"max_files_changed": (1, 1000), "max_bytes_changed": (1, 5_000_000), "max_mutations_per_minute": (1, 600)}
+_RATE_WINDOW_SECONDS = 60
+_MAX_CHANGE_PATHS = 1000
+_MAX_SCANNED_CHANGE_BYTES = 5_000_000
+
+# Files whose change by an agent is refused outright (credentials and state).
+_BLOCKED_PATH_PATTERNS = (
+    ".env", ".env.*", "*/.env", "*/.env.*", "*.pem", "*.key", "*.p12", "*.pfx", "*.jks", "*.keystore", "*.kdbx",
+    "id_rsa*", "*/id_rsa*", "id_dsa*", "*/id_dsa*", "id_ecdsa*", "*/id_ecdsa*", "id_ed25519*", "*/id_ed25519*",
+    ".ssh/*", "*/.ssh/*", ".npmrc", "*/.npmrc", ".pypirc", "*/.pypirc", ".netrc", "*/.netrc", ".git-credentials",
+    "*/.git-credentials", ".dockercfg", "*/.dockercfg", ".docker/config.json", "*/.docker/config.json",
+    "credentials.json", "*/credentials.json", "secrets.*", "*/secrets.*", "*.secrets", "*.tfstate", "*.tfstate.*",
+)
+# Files that steer CI, code ownership or infrastructure: held for approval.
+_APPROVAL_PATH_PATTERNS = (
+    ".github/workflows/*", ".github/actions/*", ".github/codeowners", "codeowners", "docs/codeowners",
+    ".gitlab-ci.yml", ".circleci/*", "jenkinsfile", "azure-pipelines.yml", ".buildkite/*",
+    "*.tf", "*.tfvars", "*.hcl", "terraform/*", "*/terraform/*", "*.bicep", "cdk.json", "pulumi.yaml", "pulumi.*.yaml",
+    "cloudformation/*", "*/cloudformation/*", "infra/*", "iac/*", "k8s/*", "kubernetes/*", "helm/*", "charts/*",
+)
+_BRANCH_RE = re.compile(r"^[A-Za-z0-9._/-]{1,255}$")
+_GLOB_RE = re.compile(r"^[A-Za-z0-9._/*?\[\]-]{1,512}$")
+_SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+_EXTRA_SECRET_PATTERNS = (
+    re.compile(r"\b(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{40,})\b"),
+    re.compile(r"\b(?:AKIA|ASIA)[0-9A-Z]{16}\b"),
+)
+
+_APPROVAL_MAC_DOMAIN = "github_repository_mutation_approval"
+_APPROVAL_MAC_VERSION = "ghrma-v1"
+_APPROVAL_DEFAULT_TTL_SECONDS = 900
+_APPROVAL_MAX_TTL_SECONDS = 3600
+
+
+def _bounded_int(value: object, *, low: int, high: int) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or not (low <= value <= high):
+        raise ValueError("agent policy limit out of range")
+    return value
+
+
+def _normalized_patterns(value: object, *, field: str, pattern: re.Pattern[str]) -> list[str]:
+    if value is None:
+        return []
+    if not isinstance(value, (list, tuple)) or len(value) > 64:
+        raise ValueError(f"{field} must be a list of at most 64 patterns")
+    result: list[str] = []
+    for item in value:
+        text = _text(item)
+        if not pattern.fullmatch(text) or ".." in text:
+            raise ValueError(f"{field} contains an invalid pattern")
+        result.append(text.lower() if pattern is _GLOB_RE else text)
+    return sorted(set(result))
+
+
+def normalize_github_agent_policy(policy: Mapping[str, object] | None) -> dict[str, Any]:
+    """Validate an owner/admin agent policy; it may only add to the built-in rules."""
+    raw = dict(policy or {})
+    unknown = set(raw) - set(_DEFAULT_AGENT_POLICY)
+    if unknown:
+        raise ValueError("unknown agent policy field")
+    result = dict(_DEFAULT_AGENT_POLICY)
+    write_mode = _text(raw.get("write_mode"), _DEFAULT_AGENT_POLICY["write_mode"]).upper()
+    if write_mode not in _WRITE_MODES:
+        raise ValueError("write_mode must be APPROVAL_REQUIRED, PULL_REQUEST_ONLY or READ_ONLY")
+    result["write_mode"] = write_mode
+    result["protected_branches"] = _normalized_patterns(raw.get("protected_branches"), field="protected_branches", pattern=re.compile(r"^[A-Za-z0-9._/*?-]{1,255}$"))
+    result["approval_required_paths"] = _normalized_patterns(raw.get("approval_required_paths"), field="approval_required_paths", pattern=_GLOB_RE)
+    result["blocked_paths"] = _normalized_patterns(raw.get("blocked_paths"), field="blocked_paths", pattern=_GLOB_RE)
+    for key, (low, high) in _AGENT_POLICY_BOUNDS.items():
+        if key in raw and raw[key] is not None:
+            result[key] = _bounded_int(raw[key], low=low, high=high)
+    return result
+
+
+def _agent_policy(repository: GitHubRepository) -> dict[str, Any]:
+    stored = repository.agent_policy_json if isinstance(repository.agent_policy_json, Mapping) else {}
+    try:
+        return normalize_github_agent_policy(stored)
+    except ValueError:
+        # A stored policy that no longer validates falls back to the strictest
+        # posture rather than to an unvalidated one.
+        return {**_DEFAULT_AGENT_POLICY, "write_mode": "READ_ONLY"}
+
+
+def save_github_repository_agent_policy(db: Session, *, tenant_id: str, repository_id: str, policy: Mapping[str, object], expected_governance_version: int, actor_user_id: str | None = None) -> GitHubRepository:
+    repository = get_github_repository_detail(db, tenant_id=tenant_id, repository_id=repository_id)
+    normalized = normalize_github_agent_policy(policy)
+    if normalized["write_mode"] == "PULL_REQUEST_ONLY" and (
+        repository.evidence_state != "CONFIRMED"
+        or repository.visibility != "PRIVATE"
+        or repository.lifecycle_state != "ACTIVE"
+        or not _repository_governance_is_current(db, tenant_id=tenant_id, repository=repository)
+    ):
+        raise ValueError("PULL_REQUEST_ONLY requires current confirmed private repository governance")
+    # Bumping the governance version also invalidates every outstanding bound
+    # approval for this repository (the version is part of each approval MAC).
+    result = db.execute(update(GitHubRepository).where(GitHubRepository.tenant_id == tenant_id, GitHubRepository.id == repository.id, GitHubRepository.governance_version == expected_governance_version).values(agent_policy_json=normalized, governance_version=expected_governance_version + 1))
+    if result.rowcount != 1:
+        raise ValueError("governance version conflict")
+    write_audit_log(db, tenant_id=tenant_id, actor_user_id=actor_user_id, actor_type="human", action="github_repository.agent_policy_updated", resource_type="github_repository", resource_id=repository.id, payload={"agent_policy": normalized, "governance_version": expected_governance_version + 1})
+    db.flush()
+    return get_github_repository_detail(db, tenant_id=tenant_id, repository_id=repository.id)
+
+
+def _normalized_branch(value: object) -> tuple[str | None, bool]:
+    """Return (branch, valid). ``None`` with valid=True means no branch was given."""
+    if value is None or _text(value) == "":
+        return None, True
+    branch = _text(value).removeprefix("refs/heads/")
+    if not _BRANCH_RE.fullmatch(branch) or ".." in branch or branch.startswith(("/", "-", ".")) or branch.endswith(("/", ".lock", ".")) or "//" in branch:
+        return None, False
+    return branch, True
+
+
+def _normalized_path(value: object) -> str | None:
+    if not isinstance(value, str):
+        return None
+    path = value.strip().replace("\\", "/")
+    if not path or len(path) > 1024 or "\x00" in path or path.startswith("/") or re.match(r"^[A-Za-z]:", path):
+        return None
+    parts = [part for part in path.split("/") if part not in {"", "."}]
+    if not parts or any(part == ".." for part in parts) or parts[0].lower() == ".git":
+        return None
+    return "/".join(parts)
+
+
+def _content_fingerprint(pairs: list[tuple[str, str]]) -> str:
+    digest = hashlib.sha256()
+    for path, content in sorted(pairs):
+        digest.update(json.dumps([path, hashlib.sha256(content.encode("utf-8")).hexdigest()], separators=(",", ":")).encode("utf-8"))
+        digest.update(b"\n")
+    return digest.hexdigest()
+
+
+def github_repository_change_context(parameters: Mapping[str, object] | None, declared: Mapping[str, object] | None = None) -> dict[str, Any]:
+    """Derive the change facts used for decisions from the tool arguments.
+
+    Declared stats (sent by the Hawk MCP proxy) can only make the result
+    stricter: counts take the larger of declared and computed, paths are the
+    union. Contents are used for the secret scan and the fingerprint only and
+    are never returned or stored.
+    """
+    params = parameters if isinstance(parameters, Mapping) else {}
+    claims = declared if isinstance(declared, Mapping) else {}
+    raw_paths: list[object] = []
+    pairs: list[tuple[str, str]] = []
+    texts: list[str] = []
+    invalid_paths = 0
+    if "path" in params:
+        raw_paths.append(params.get("path"))
+        if isinstance(params.get("content"), str):
+            normalized = _normalized_path(params.get("path"))
+            if normalized:
+                pairs.append((normalized, str(params["content"])))
+    files = params.get("files")
+    if isinstance(files, list):
+        for item in files[: _MAX_CHANGE_PATHS + 1]:
+            if not isinstance(item, Mapping):
+                invalid_paths += 1
+                continue
+            raw_paths.append(item.get("path"))
+            normalized = _normalized_path(item.get("path"))
+            if normalized and isinstance(item.get("content"), str):
+                pairs.append((normalized, str(item["content"])))
+    declared_paths = claims.get("paths")
+    if isinstance(declared_paths, list):
+        raw_paths.extend(declared_paths[: _MAX_CHANGE_PATHS + 1])
+    paths: set[str] = set()
+    for raw in raw_paths:
+        normalized = _normalized_path(raw)
+        if normalized is None:
+            invalid_paths += 1
+        else:
+            paths.add(normalized)
+    declared_invalid = claims.get("invalid_paths")
+    if isinstance(declared_invalid, int) and not isinstance(declared_invalid, bool) and declared_invalid > 0:
+        invalid_paths += declared_invalid
+    for _path, content in pairs:
+        texts.append(content)
+    for key in ("body", "title", "message"):
+        if isinstance(params.get(key), str):
+            texts.append(str(params[key]))
+    computed_bytes = sum(len(content.encode("utf-8")) for _path, content in pairs)
+
+    def _declared_int(key: str) -> int:
+        value = claims.get(key)
+        return value if isinstance(value, int) and not isinstance(value, bool) and value >= 0 else 0
+
+    declared_sha = _text(claims.get("content_sha256")).lower()
+    content_sha256 = _content_fingerprint(pairs) if pairs else (declared_sha if _SHA256_RE.fullmatch(declared_sha) else None)
+    return {
+        "paths": sorted(paths)[:_MAX_CHANGE_PATHS],
+        "paths_truncated": len(paths) > _MAX_CHANGE_PATHS,
+        "invalid_paths": invalid_paths,
+        "files_changed": max(len(paths), _declared_int("files_changed")),
+        "bytes_changed": max(computed_bytes, _declared_int("bytes_changed")),
+        "content_sha256": content_sha256,
+        "_texts": texts,
+    }
+
+
+def _secret_findings(texts: list[str]) -> dict[str, int]:
+    """Count secret detections with the platform DLP detectors; never return values."""
+    from app.services.ai_iam_service import SECRET_PATTERNS
+    from app.services.sensitive_data_detection_service import LONG_SECRET_PATTERN
+
+    findings: dict[str, int] = {}
+    budget = _MAX_SCANNED_CHANGE_BYTES
+    detectors = (("dlp_prefixed_secret", LONG_SECRET_PATTERN), *((f"dlp_secret_pattern_{index}", pattern) for index, pattern in enumerate(SECRET_PATTERNS)), *((f"credential_format_{index}", pattern) for index, pattern in enumerate(_EXTRA_SECRET_PATTERNS)))
+    for text in texts:
+        if budget <= 0:
+            findings["scan_budget_exhausted"] = 1
+            break
+        sample = text[:budget]
+        budget -= len(sample)
+        for name, pattern in detectors:
+            count = sum(1 for _ in pattern.finditer(sample))
+            if count:
+                findings[name] = findings.get(name, 0) + count
+    return findings
+
+
+def _path_matches(path: str, patterns: tuple[str, ...] | list[str]) -> bool:
+    lowered = path.lower()
+    return any(fnmatchcase(lowered, pattern) for pattern in patterns)
+
+
+def _protected_branches(repository: GitHubRepository, policy: Mapping[str, Any]) -> list[str]:
+    protection = repository.protection_json if isinstance(repository.protection_json, Mapping) else {}
+    names = [repository.default_branch] if repository.default_branch else []
+    discovered = protection.get("protected_branches")
+    if isinstance(discovered, list):
+        names.extend(_text(item) for item in discovered[:256] if _text(item))
+    names.extend(policy.get("protected_branches") or [])
+    return sorted(set(names))
+
+
+def _agent_key(executing_principal: str | None, actor_id: str | None) -> str:
+    return hashlib.sha256(f"github-agent:{_text(executing_principal) or _text(actor_id) or 'unidentified'}".encode("utf-8")).hexdigest()
+
+
+def _recent_mutation_count(db: Session, *, tenant_id: str, agent_key: str, now: datetime) -> int:
+    return int(
+        db.scalar(
+            select(func.count())
+            .select_from(EvidenceNode)
+            .where(
+                EvidenceNode.tenant_id == tenant_id,
+                EvidenceNode.signal_type == "github_repository.agent_mutation_decision",
+                EvidenceNode.correlation_id == agent_key,
+                EvidenceNode.created_at >= now - timedelta(seconds=_RATE_WINDOW_SECONDS),
+            )
+        )
+        or 0
+    )
+
+
+def _canonical_repository_action(
     *,
-    tenant_id: str,
-    approval_binding_id: str | None,
-    repository_id: str,
+    repository: GitHubRepository,
     host: str,
     action: str,
     branch: str | None,
@@ -731,56 +1068,177 @@ def _current_approval_matches(
     model: str | None,
     tool_fingerprint_id: str | None,
     tool_schema_fingerprint: str | None,
-    target: str,
     change_digest: str | None,
-) -> bool:
-    """Resolve immutable current authority server-side; callers provide only a binding reference."""
-    if not approval_binding_id:
-        return False
-    binding = db.scalar(
-        select(ApprovalBindingV2Extension).where(
-            ApprovalBindingV2Extension.tenant_id == tenant_id,
-            ApprovalBindingV2Extension.binding_id == approval_binding_id,
-        )
-    )
-    if binding is None or _at(binding.expires_at) <= datetime.now(UTC):
-        return False
-    approval = db.scalar(
-        select(ApprovalRequest).where(
-            ApprovalRequest.tenant_id == tenant_id,
-            ApprovalRequest.id == binding.approval_request_id,
-            ApprovalRequest.status == "approved",
-            ApprovalRequest.decision == "approve",
-        )
-    )
-    projection = db.scalar(
-        select(ApprovalAuthorityProjectionV2).where(
-            ApprovalAuthorityProjectionV2.tenant_id == tenant_id,
-            ApprovalAuthorityProjectionV2.approval_request_id == binding.approval_request_id,
-        )
-    )
-    if approval is None or projection is None or projection.state != "APPROVED" or projection.reconstruction_status != "VERIFIED" or projection.uses_consumed >= binding.use_limit:
-        return False
-    envelope = dict(binding.permitted_variation_envelope or {})
-    signed = dict(binding.signed_envelope or {})
-    if signed.get("approval_binding_id") != binding.binding_id or signed.get("tenant_id") != tenant_id or signed.get("approval_decision") != "APPROVED":
-        return False
-    expected = {
-        "repository_id": repository_id,
+    change: Mapping[str, Any],
+) -> dict[str, Any]:
+    """The exact action an approver approves; every field is MAC-bound."""
+    return {
+        "repository_row_id": repository.id,
+        "repository_id": repository.external_repository_id,
         "host": host,
+        "target": f"{host}/{repository.full_name.lower()}",
         "action": action,
         "branch": branch,
-        "actor_id": actor_id,
-        "executing_principal": executing_principal,
-        "ai_system_id": ai_system_id,
-        "provider": provider,
-        "model": model,
-        "tool_fingerprint_id": tool_fingerprint_id,
-        "tool_schema_fingerprint": tool_schema_fingerprint,
-        "target": target,
-        "change_digest": change_digest,
+        "actor_id": _text(actor_id) or None,
+        "executing_principal": _text(executing_principal) or None,
+        "ai_system_id": _text(ai_system_id) or None,
+        "provider": _text(provider) or None,
+        "model": _text(model) or None,
+        "tool_fingerprint_id": _text(tool_fingerprint_id) or None,
+        "tool_schema_fingerprint": _text(tool_schema_fingerprint) or None,
+        "change_digest": _text(change_digest) or None,
+        "content_sha256": change.get("content_sha256"),
+        "paths": list(change.get("paths") or []),
+        "files_changed": int(change.get("files_changed") or 0),
+        "bytes_changed": int(change.get("bytes_changed") or 0),
     }
-    return all(_text(envelope.get(key)) == _text(value) for key, value in expected.items())
+
+
+def _approval_mac(*, tenant_id: str, grant_id: str, approval_request_id: str, governance_version: int, nonce: str, expires_at: datetime, canonical_action: Mapping[str, Any]) -> str:
+    from app.core.control_engine.canonical_action import canonical_field_hash
+
+    material = {
+        "mac_version": _APPROVAL_MAC_VERSION,
+        "grant_id": grant_id,
+        "approval_request_id": approval_request_id,
+        "tenant_id": tenant_id,
+        "governance_version": int(governance_version),
+        "nonce": nonce,
+        "expires_at": _at(expires_at).isoformat(),
+        "canonical_action": {key: canonical_action.get(key) for key in sorted(canonical_action)},
+    }
+    # HMAC-SHA256 under CANONICAL_ACTION_BINDING_KEY with tenant and purpose
+    # separation; raises ValueError when the key is not configured.
+    return canonical_field_hash(tenant_id, _APPROVAL_MAC_DOMAIN, material)
+
+
+def issue_github_repository_mutation_approval(db: Session, *, tenant_id: str, approval_request_id: str, issued_by: str | None, approver_role: str | None, ttl_seconds: int = _APPROVAL_DEFAULT_TTL_SECONDS, now: datetime | None = None) -> GitHubRepositoryMutationApproval:
+    """Bind an approved held repository mutation to a MAC, a nonce, an expiry and one use.
+
+    The canonical action is the one stored server-side when the gateway held
+    the mutation; the approver never types it, and the caller cannot change it.
+    """
+    issued_at = _at(now or datetime.now(UTC))
+    if isinstance(ttl_seconds, bool) or not isinstance(ttl_seconds, int) or not (60 <= ttl_seconds <= _APPROVAL_MAX_TTL_SECONDS):
+        raise ValueError("ttl_seconds must be between 60 and 3600")
+    if not _REFERENCE_ID_RE.fullmatch(_text(approval_request_id)):
+        raise ValueError("approval request not found")
+    request = db.scalar(select(ApprovalRequest).where(ApprovalRequest.tenant_id == tenant_id, ApprovalRequest.id == approval_request_id))
+    if request is None:
+        raise ValueError("approval request not found")
+    if request.status != "approved" or request.decision != "approve":
+        raise ValueError("approval request is not approved")
+    required_roles = {_text(role).lower() for role in (request.required_roles if isinstance(request.required_roles, list) else []) if _text(role)}
+    if not required_roles or _text(approver_role).lower() not in required_roles:
+        raise PermissionError("role is not authorized for this approval")
+    payload = request.request_payload if isinstance(request.request_payload, Mapping) else {}
+    canonical = payload.get("github_repository_action")
+    if not isinstance(canonical, Mapping) or not canonical.get("repository_row_id"):
+        raise ValueError("approval request is not a held GitHub repository mutation")
+    repository = get_github_repository_detail(db, tenant_id=tenant_id, repository_id=_text(canonical.get("repository_row_id")))
+    if not _repository_governance_is_current(db, tenant_id=tenant_id, repository=repository):
+        raise ValueError("repository governance is not current")
+    if _text(canonical.get("action")).upper() in _ALWAYS_BLOCKED_ACTIONS:
+        raise ValueError("this repository action is never approvable for AI agents")
+    existing = db.scalar(select(GitHubRepositoryMutationApproval).where(GitHubRepositoryMutationApproval.tenant_id == tenant_id, GitHubRepositoryMutationApproval.approval_request_id == request.id))
+    if existing is not None:
+        raise ValueError("approval request already has a bound repository approval")
+    grant_id = str(uuid4())
+    nonce = secrets.token_hex(32)
+    expires_at = issued_at + timedelta(seconds=ttl_seconds)
+    mac = _approval_mac(tenant_id=tenant_id, grant_id=grant_id, approval_request_id=request.id, governance_version=repository.governance_version, nonce=nonce, expires_at=expires_at, canonical_action=canonical)
+    grant = GitHubRepositoryMutationApproval(
+        id=grant_id, tenant_id=tenant_id, approval_request_id=request.id, repository_id=repository.id,
+        action=_text(canonical.get("action")).upper()[:64], action_mac=mac, mac_version=_APPROVAL_MAC_VERSION,
+        nonce=nonce, governance_version=repository.governance_version, expires_at=expires_at,
+        use_limit=1, uses_consumed=0, state="ACTIVE", issued_by=issued_by,
+    )
+    db.add(grant)
+    write_audit_log(db, tenant_id=tenant_id, actor_user_id=issued_by, actor_type="human", action="github_repository.mutation_approval_issued", resource_type="github_repository", resource_id=repository.id, payload={"approval_binding_id": grant_id, "approval_request_id": request.id, "action": grant.action, "expires_at": expires_at.isoformat(), "governance_version": repository.governance_version})
+    db.flush()
+    return grant
+
+
+def revoke_github_repository_mutation_approval(db: Session, *, tenant_id: str, approval_binding_id: str, actor_user_id: str | None) -> GitHubRepositoryMutationApproval:
+    grant = db.scalar(select(GitHubRepositoryMutationApproval).where(GitHubRepositoryMutationApproval.tenant_id == tenant_id, GitHubRepositoryMutationApproval.id == approval_binding_id))
+    if grant is None:
+        raise ValueError("repository approval not found")
+    if grant.state == "ACTIVE":
+        grant.state = "REVOKED"
+        write_audit_log(db, tenant_id=tenant_id, actor_user_id=actor_user_id, actor_type="human", action="github_repository.mutation_approval_revoked", resource_type="github_repository", resource_id=grant.repository_id, payload={"approval_binding_id": grant.id})
+    db.flush()
+    return grant
+
+
+def _verify_and_consume_mutation_approval(
+    db: Session,
+    *,
+    tenant_id: str,
+    approval_binding_id: str,
+    repository: GitHubRepository,
+    canonical_action: Mapping[str, Any],
+    now: datetime,
+) -> str:
+    """Verify the approval MAC over the live canonical action and consume it once.
+
+    This is where the approval binding is verified cryptographically (CWE-347):
+    nothing caller-supplied or database-stored is compared field by field. The
+    MAC is recomputed from the *current request's* canonical action plus the
+    grant's nonce, expiry and governance version, compared in constant time,
+    and the single use is consumed with a conditional UPDATE so two concurrent
+    requests cannot both spend it. Returns "verified" or a failure code.
+    """
+    if not _REFERENCE_ID_RE.fullmatch(approval_binding_id):
+        return "approval_binding_mismatch"
+    grant = db.scalar(select(GitHubRepositoryMutationApproval).where(GitHubRepositoryMutationApproval.tenant_id == tenant_id, GitHubRepositoryMutationApproval.id == approval_binding_id))
+    if grant is None or grant.repository_id != repository.id or grant.mac_version != _APPROVAL_MAC_VERSION:
+        return "approval_binding_mismatch"
+    if grant.state != "ACTIVE" or grant.uses_consumed >= grant.use_limit:
+        return "approval_binding_consumed"
+    if _at(grant.expires_at) <= now:
+        return "approval_binding_expired"
+    if grant.governance_version != repository.governance_version:
+        return "approval_binding_mismatch"
+    request = db.scalar(select(ApprovalRequest).where(ApprovalRequest.tenant_id == tenant_id, ApprovalRequest.id == grant.approval_request_id, ApprovalRequest.status == "approved", ApprovalRequest.decision == "approve"))
+    if request is None:
+        return "approval_binding_mismatch"
+    try:
+        expected = _approval_mac(tenant_id=tenant_id, grant_id=grant.id, approval_request_id=grant.approval_request_id, governance_version=repository.governance_version, nonce=grant.nonce, expires_at=grant.expires_at, canonical_action=canonical_action)
+    except ValueError:
+        return "approval_binding_mismatch"
+    if not hmac.compare_digest(expected.encode("ascii"), _text(grant.action_mac).encode("ascii")):
+        return "approval_binding_mismatch"
+    consumed = db.execute(
+        update(GitHubRepositoryMutationApproval)
+        .where(
+            GitHubRepositoryMutationApproval.tenant_id == tenant_id,
+            GitHubRepositoryMutationApproval.id == grant.id,
+            GitHubRepositoryMutationApproval.state == "ACTIVE",
+            GitHubRepositoryMutationApproval.uses_consumed == grant.uses_consumed,
+            GitHubRepositoryMutationApproval.uses_consumed < GitHubRepositoryMutationApproval.use_limit,
+        )
+        .values(uses_consumed=grant.uses_consumed + 1, state="CONSUMED", consumed_at=now)
+        .execution_options(synchronize_session=False)
+    )
+    if consumed.rowcount != 1:
+        return "approval_binding_consumed"
+    return "verified"
+
+
+def _record_decision_evidence(db: Session, *, tenant_id: str, result: Mapping[str, Any], evidence: Mapping[str, Any], mutation: bool, agent_key: str, now: datetime) -> str:
+    node = EvidenceNode(
+        tenant_id=tenant_id,
+        correlation_id=agent_key,
+        node_type="github_repository_decision",
+        signal_type="github_repository.agent_mutation_decision" if mutation else "github_repository.agent_read_decision",
+        label=f"GitHub repository {result.get('decision')} {result.get('reason')}"[:255],
+        payload={"decision": result.get("decision"), "reason": result.get("reason"), "repository_id": result.get("repository_id"), **dict(evidence)},
+        created_at=now,
+        updated_at=now,
+    )
+    db.add(node)
+    db.flush()
+    return node.id
 
 
 def evaluate_github_repository_mutation(
@@ -799,61 +1257,185 @@ def evaluate_github_repository_mutation(
     tool_schema_fingerprint: str | None = None,
     change_digest: str | None = None,
     approval_binding_id: str | None = None,
+    change_parameters: Mapping[str, Any] | None = None,
+    change_context: Mapping[str, Any] | None = None,
+    record_evidence: bool = True,
+    now: datetime | None = None,
 ) -> dict[str, object]:
-    """Fail closed for governed repository mutations without altering generic MCP flow."""
+    """Default-deny decision for one AI agent action on a GitHub repository.
+
+    Returns ``decision``, ``reason`` and ``repository_id`` (stable keys and
+    reason codes) plus ``evidence`` (every check made) and, when recorded,
+    ``evidence_ref``. A HOLD also carries ``canonical_action``: the exact
+    action an approver approves and a bound approval is MAC-checked against.
+    """
+    evaluated_at = _at(now or datetime.now(UTC))
     normalized_action = _text(action).upper()
+    # change_parameters: the tool arguments (paths, contents, PR text);
+    # change_context: stats declared by the Hawk MCP proxy (can only tighten).
+    change = github_repository_change_context(change_parameters, change_context)
+    texts = list(change.pop("_texts", []) or [])
+    mutation = normalized_action not in _READ_ACTIONS
+    agent_key = _agent_key(agent_id, actor_id)
+    evidence: dict[str, Any] = {
+        "schema": "hawk.github_repository_decision.v1",
+        "evaluated_at": evaluated_at.isoformat(),
+        "action": normalized_action,
+        "target": _text(resource)[:512],
+        "actor_id": _text(actor_id) or None,
+        "executing_principal": _text(agent_id) or None,
+        "ai_system_id": _text(ai_system_id) or None,
+        "provider": _text(provider) or None,
+        "model": _text(model) or None,
+        "tool_fingerprint_id": _text(tool_fingerprint_id) or None,
+        "tool_schema_fingerprint": _text(tool_schema_fingerprint) or None,
+        "checks": [],
+    }
+    extra: dict[str, Any] = {}
+
+    def finish(decision: str, reason: str, repository_id: str | None) -> dict[str, object]:
+        result: dict[str, object] = {"decision": decision, "reason": reason, "repository_id": repository_id, **extra}
+        if record_evidence:
+            # A failure to record raises: no decision is returned without evidence.
+            result["evidence_ref"] = _record_decision_evidence(db, tenant_id=tenant_id, result=result, evidence=evidence, mutation=mutation, agent_key=agent_key, now=evaluated_at)
+        result["evidence"] = evidence
+        return result
+
+    def check(name: str, outcome: str, **details: Any) -> None:
+        evidence["checks"].append({"check": name, "outcome": outcome, **details})
+
     locator = _repository_locator(resource)
     if locator is None:
-        return {"decision": "BLOCK", "reason": "repository_resolution_unavailable", "repository_id": None}
+        check("repository_identity", "unresolved")
+        return finish("BLOCK", "repository_resolution_unavailable", None)
     host, owner, name = locator
     repository_row = resolve_current_repository_identity(db, tenant_id=tenant_id, host=host, owner=owner, repository=name)
     if repository_row is None:
-        return {"decision": "BLOCK", "reason": "repository_resolution_unavailable", "repository_id": None}
+        # Default deny: an unknown repository or organization is never governed.
+        check("repository_identity", "unknown_or_ambiguous")
+        return finish("BLOCK", "repository_resolution_unavailable", None)
+    repository_id = repository_row.external_repository_id
+    evidence.update({"repository_row_id": repository_row.id, "full_name": repository_row.full_name, "host": host, "governance_version": repository_row.governance_version, "policy_mapping_ref": repository_row.policy_mapping_ref, "approved_scope_ref": repository_row.approved_scope_ref})
+    check("repository_identity", "resolved")
     if repository_row.evidence_state != "CONFIRMED" or repository_row.visibility != "PRIVATE" or repository_row.lifecycle_state != "ACTIVE":
-        return {"decision": "BLOCK", "reason": "repository_not_currently_approved", "repository_id": repository_row.external_repository_id}
-    is_write = any(marker in normalized_action for marker in ("PUSH", "PULL_REQUEST", "MERGE", "BRANCH_CREATE", "WORKFLOW_CHANGE", "SECRET_CHANGE", "DELETE", "TRANSFER", "VISIBILITY_CHANGE"))
-    if not is_write:
-        if normalized_action not in {"REPOSITORY_READ", "REPOSITORY_PULL", "REPOSITORY_CLONE", "REPOSITORY_FETCH"}:
-            return {"decision": "BLOCK", "reason": "repository_action_unsupported", "repository_id": repository_row.external_repository_id}
+        check("repository_state", "not_confirmed_private_active", visibility=repository_row.visibility, lifecycle_state=repository_row.lifecycle_state, evidence_state=repository_row.evidence_state)
+        return finish("BLOCK", "repository_not_currently_approved", repository_id)
+    check("repository_state", "confirmed_private_active")
+    if not mutation:
+        evidence["read_posture"] = repository_row.read_posture
         if repository_row.read_posture == "BLOCK":
-            return {"decision": "BLOCK", "reason": "repository_read_blocked", "repository_id": repository_row.external_repository_id}
+            return finish("BLOCK", "repository_read_blocked", repository_id)
         if (
             repository_row.read_posture == "ALLOW"
             and repository_row.governance_state == "UNAPPROVED"
             and _repository_account_scope_kind(repository_row) == "PERSONAL"
         ):
-            return {"decision": "ALLOW", "reason": "personal_repository_read_only", "repository_id": repository_row.external_repository_id}
+            return finish("ALLOW", "personal_repository_read_only", repository_id)
         if repository_row.read_posture in {"ALLOW", "APPROVAL_REQUIRED"} and not _repository_governance_is_current(db, tenant_id=tenant_id, repository=repository_row):
-            return {"decision": "BLOCK", "reason": "repository_read_not_currently_approved", "repository_id": repository_row.external_repository_id}
+            return finish("BLOCK", "repository_read_not_currently_approved", repository_id)
         if repository_row.read_posture == "ALLOW":
-            return {"decision": "ALLOW", "reason": "configured_repository_read", "repository_id": repository_row.external_repository_id}
+            return finish("ALLOW", "configured_repository_read", repository_id)
         if repository_row.read_posture == "APPROVAL_REQUIRED":
-            return {"decision": "HOLD_FOR_APPROVAL", "reason": "repository_read_approval_required", "repository_id": repository_row.external_repository_id}
-        return {"decision": "BLOCK", "reason": "repository_read_posture_unconfigured", "repository_id": repository_row.external_repository_id}
+            return finish("HOLD_FOR_APPROVAL", "repository_read_approval_required", repository_id)
+        return finish("BLOCK", "repository_read_posture_unconfigured", repository_id)
+
+    if normalized_action in _ALWAYS_BLOCKED_ACTIONS:
+        check("action_class", "admin_or_destructive")
+        return finish("BLOCK", "repository_admin_action_blocked", repository_id)
+    if normalized_action not in _WRITE_ACTIONS and not normalized_action.startswith("REPOSITORY_PULL_REQUEST_"):
+        check("action_class", "unsupported")
+        return finish("BLOCK", "repository_action_unsupported", repository_id)
+    check("action_class", "write")
     if not _repository_governance_is_current(db, tenant_id=tenant_id, repository=repository_row):
-        return {"decision": "BLOCK", "reason": "repository_not_explicitly_eligible", "repository_id": repository_row.external_repository_id}
+        check("governance", "not_current")
+        return finish("BLOCK", "repository_not_explicitly_eligible", repository_id)
+    check("governance", "current")
+    policy = _agent_policy(repository_row)
+    evidence["agent_policy"] = policy
+    if policy["write_mode"] == "READ_ONLY":
+        check("write_posture", "read_only")
+        return finish("BLOCK", "repository_write_not_permitted", repository_id)
+    check("write_posture", policy["write_mode"].lower())
+
+    recent = _recent_mutation_count(db, tenant_id=tenant_id, agent_key=agent_key, now=evaluated_at)
+    evidence["rate"] = {"window_seconds": _RATE_WINDOW_SECONDS, "recent_mutations": recent, "limit": policy["max_mutations_per_minute"]}
+    if recent >= policy["max_mutations_per_minute"]:
+        check("agent_rate", "exceeded")
+        return finish("BLOCK", "repository_agent_rate_limited", repository_id)
+    check("agent_rate", "within_limit")
+
+    normalized_branch, branch_valid = _normalized_branch(branch)
+    evidence["branch"] = normalized_branch
+    if not branch_valid:
+        check("branch", "invalid")
+        return finish("BLOCK", "repository_branch_invalid", repository_id)
+    evidence["change"] = {key: change.get(key) for key in ("files_changed", "bytes_changed", "content_sha256", "invalid_paths", "paths_truncated")}
+    evidence["change"]["paths"] = list(change.get("paths") or [])[:64]
+    if change.get("invalid_paths") or change.get("paths_truncated"):
+        check("paths", "invalid")
+        return finish("BLOCK", "repository_path_invalid", repository_id)
+    findings = _secret_findings(texts)
+    evidence["secret_scan"] = {"detectors": "dlp", "findings": findings}
+    if findings:
+        check("secret_scan", "secret_detected")
+        return finish("BLOCK", "repository_secret_in_change", repository_id)
+    check("secret_scan", "clean" if texts else "no_content_supplied")
+    paths = list(change.get("paths") or [])
+    blocked_paths = [path for path in paths if _path_matches(path, _BLOCKED_PATH_PATTERNS) or _path_matches(path, policy["blocked_paths"])]
+    if blocked_paths:
+        evidence["blocked_paths"] = blocked_paths[:32]
+        check("paths", "secret_or_blocked_file")
+        return finish("BLOCK", "repository_secret_file_change_blocked", repository_id)
+
+    approval_reasons: list[str] = []
+    if normalized_action in _BRANCH_TARGET_ACTIONS:
+        protected = _protected_branches(repository_row, policy)
+        evidence["protected_branches"] = protected[:64]
+        if normalized_branch is None:
+            check("branch", "unresolved")
+            return finish("BLOCK", "repository_branch_unresolved", repository_id)
+        if not repository_row.default_branch:
+            check("branch", "default_branch_unverified")
+            return finish("BLOCK", "repository_default_branch_unverified", repository_id)
+        if any(fnmatchcase(normalized_branch, pattern) for pattern in protected):
+            # Agents change protected and default branches only through a pull
+            # request; a direct push is refused even with an approval.
+            check("branch", "protected")
+            return finish("BLOCK", "repository_protected_branch_direct_push", repository_id)
+        check("branch", "unprotected")
+    approval_paths = [path for path in paths if _path_matches(path, _APPROVAL_PATH_PATTERNS) or _path_matches(path, policy["approval_required_paths"])]
+    if approval_paths or normalized_action == "REPOSITORY_WORKFLOW_CHANGE":
+        evidence["approval_paths"] = approval_paths[:32]
+        approval_reasons.append("repository_protected_path_requires_approval")
+    if int(change.get("files_changed") or 0) > policy["max_files_changed"] or int(change.get("bytes_changed") or 0) > policy["max_bytes_changed"]:
+        approval_reasons.append("repository_change_size_requires_approval")
+    if normalized_action == "REPOSITORY_PUSH" and not paths:
+        approval_reasons.append("repository_change_context_incomplete")
+    if normalized_action not in _PULL_REQUEST_FLOW_ACTIONS:
+        approval_reasons.append("repository_approval_required")
+    if policy["write_mode"] == "APPROVAL_REQUIRED":
+        approval_reasons.append("repository_approval_required")
+    check("change_rules", "approval_required" if approval_reasons else "pull_request_flow", reasons=sorted(set(approval_reasons)))
+    if not approval_reasons:
+        return finish("ALLOW", "repository_pull_request_flow_allowed", repository_id)
+
+    canonical = _canonical_repository_action(
+        repository=repository_row, host=host, action=normalized_action, branch=normalized_branch, actor_id=actor_id,
+        executing_principal=agent_id, ai_system_id=ai_system_id, provider=provider, model=model,
+        tool_fingerprint_id=tool_fingerprint_id, tool_schema_fingerprint=tool_schema_fingerprint,
+        change_digest=change_digest, change=change,
+    )
     if approval_binding_id is None:
-        return {"decision": "HOLD_FOR_APPROVAL", "reason": "repository_approval_required", "repository_id": repository_row.external_repository_id}
-    if not _current_approval_matches(
-        db,
-        tenant_id=tenant_id,
-        approval_binding_id=approval_binding_id,
-        repository_id=repository_row.external_repository_id,
-        host=host,
-        action=normalized_action,
-        branch=branch,
-        actor_id=actor_id,
-        executing_principal=agent_id,
-        ai_system_id=ai_system_id,
-        provider=provider,
-        model=model,
-        tool_fingerprint_id=tool_fingerprint_id,
-        tool_schema_fingerprint=tool_schema_fingerprint,
-        target=resource,
-        change_digest=change_digest,
-    ):
-        return {"decision": "BLOCK", "reason": "approval_binding_mismatch", "repository_id": repository_row.external_repository_id}
-    return {"decision": "ALLOW", "reason": "approved_repository_mutation", "repository_id": repository_row.external_repository_id}
+        # The more specific reason wins; plain approval is the stable default.
+        reason = next(code for code in ("repository_protected_path_requires_approval", "repository_change_size_requires_approval", "repository_approval_required", "repository_change_context_incomplete") if code in approval_reasons)
+        extra["canonical_action"] = canonical
+        return finish("HOLD_FOR_APPROVAL", reason, repository_id)
+    verification = _verify_and_consume_mutation_approval(db, tenant_id=tenant_id, approval_binding_id=_text(approval_binding_id), repository=repository_row, canonical_action=canonical, now=evaluated_at)
+    evidence["approval"] = {"approval_binding_id": _text(approval_binding_id)[:64], "verification": verification, "mac_version": _APPROVAL_MAC_VERSION}
+    check("approval_binding", verification)
+    if verification != "verified":
+        return finish("BLOCK", verification, repository_id)
+    return finish("ALLOW", "approved_repository_mutation", repository_id)
 
 
 def serialize_github_projection(row: object) -> dict[str, object]:
@@ -865,11 +1447,14 @@ def serialize_github_projection(row: object) -> dict[str, object]:
         deny_posture = None
         if account_scope_kind == "PERSONAL" and row.governance_state == "UNAPPROVED":
             deny_posture = "BLOCK_CHANGES" if row.read_posture == "ALLOW" else "BLOCK_ALL" if row.read_posture == "BLOCK" else None
-        return {"id": row.id, "host": row.host, "repository_id": row.external_repository_id, "node_id": row.node_id, "full_name": row.full_name, "visibility": row.visibility, "lifecycle_state": row.lifecycle_state, "default_branch": row.default_branch, "protection": row.protection_json, "account_scope_kind": account_scope_kind, "deny_posture": deny_posture, "evidence_state": row.evidence_state, "governance_state": row.governance_state, "governance_version": row.governance_version, "approved_scope_ref": row.approved_scope_ref, "policy_mapping_ref": row.policy_mapping_ref, "policy_current": row.policy_current, "read_posture": row.read_posture, "operation_controls": row.operation_controls_json, "first_seen_at": row.first_seen_at, "last_seen_at": row.last_seen_at, "last_verified_at": row.last_verified_at}
+        return {"id": row.id, "host": row.host, "repository_id": row.external_repository_id, "node_id": row.node_id, "full_name": row.full_name, "visibility": row.visibility, "lifecycle_state": row.lifecycle_state, "default_branch": row.default_branch, "protection": row.protection_json, "account_scope_kind": account_scope_kind, "deny_posture": deny_posture, "evidence_state": row.evidence_state, "governance_state": row.governance_state, "governance_version": row.governance_version, "approved_scope_ref": row.approved_scope_ref, "policy_mapping_ref": row.policy_mapping_ref, "policy_current": row.policy_current, "read_posture": row.read_posture, "operation_controls": row.operation_controls_json, "agent_policy": _agent_policy(row), "first_seen_at": row.first_seen_at, "last_seen_at": row.last_seen_at, "last_verified_at": row.last_verified_at}
     if isinstance(row, GitHubRepositoryAccess):
         return {"id": row.id, "repository_id": row.repository_id, "external_principal_id": row.external_principal_id, "principal_type": row.principal_type, "access_path": row.access_path, "permission": row.permission, "source_team_id": row.source_team_id, "mapped_user_id": row.mapped_user_id, "mapped_group_id": row.mapped_group_id, "evidence_state": row.evidence_state, "valid_until": row.valid_until}
     if isinstance(row, GitHubRepositoryAIConnection):
         return {"id": row.id, "repository_id": row.repository_id, "user_id": row.user_id, "ai_system_id": row.ai_system_id, "ai_asset_id": row.ai_asset_id, "provider": row.provider, "model": row.model, "client_name": row.client_name, "agent_id": row.agent_id, "mcp_server_id": row.mcp_server_id, "external_capability_id": row.external_capability_id, "tool_name": row.tool_name, "tool_schema_fingerprint": row.tool_schema_fingerprint, "relationship_state": row.relationship_state, "confidence": row.confidence, "source_surface": row.source_surface, "evidence_refs": row.evidence_refs_json, "action_count": row.action_count, "first_seen_at": row.first_seen_at, "last_seen_at": row.last_seen_at}
+    if isinstance(row, GitHubRepositoryMutationApproval):
+        # The MAC and nonce stay server-side: they are verification material.
+        return {"approval_binding_id": row.id, "approval_request_id": row.approval_request_id, "repository_id": row.repository_id, "action": row.action, "state": row.state, "expires_at": row.expires_at, "use_limit": row.use_limit, "uses_consumed": row.uses_consumed, "governance_version": row.governance_version, "consumed_at": row.consumed_at}
     if isinstance(row, GitHubRepositoryRuntimeBinding):
         return {"id": row.id, "repository_id": row.repository_id, "native_integration_id": row.native_integration_id, "canonical_root_sha256": row.canonical_root_sha256, "common_dir_sha256": row.common_dir_sha256, "scope": row.scope, "state": row.state, "signed_evidence_ref": row.signed_evidence_ref, "actor_id": row.actor_id, "created_at": row.created_at, "updated_at": row.updated_at}
     raise ValueError("unsupported GitHub projection row")
@@ -879,4 +1464,4 @@ def serialize_github_page(page: Mapping[str, object]) -> dict[str, object]:
     return {"items": [serialize_github_projection(row) for row in page.get("items", [])], "next_cursor": page.get("next_cursor"), "limit": page.get("limit")}
 
 
-__all__ = ["bind_github_repository_runtime", "derive_github_repository_ai_connections", "evaluate_github_repository_mutation", "get_github_repository_detail", "get_github_repository_detail_payload", "list_github_ai_connections", "list_github_developers", "list_github_organizations", "list_github_repositories", "list_github_runtime_bindings", "observe_github_repository_runtime", "persist_github_inventory_unit", "resolve_current_repository_identity", "resolve_repository_control_floor", "revoke_github_repository_runtime", "save_github_repository_operation_controls", "serialize_github_page", "serialize_github_projection", "update_github_repository_governance"]
+__all__ = ["bind_github_repository_runtime", "derive_github_repository_ai_connections", "evaluate_github_repository_mutation", "get_github_repository_detail", "github_repository_change_context", "issue_github_repository_mutation_approval", "normalize_github_agent_policy", "revoke_github_repository_mutation_approval", "save_github_repository_agent_policy", "get_github_repository_detail_payload", "list_github_ai_connections", "list_github_developers", "list_github_organizations", "list_github_repositories", "list_github_runtime_bindings", "observe_github_repository_runtime", "persist_github_inventory_unit", "resolve_current_repository_identity", "resolve_repository_control_floor", "revoke_github_repository_runtime", "save_github_repository_operation_controls", "serialize_github_page", "serialize_github_projection", "update_github_repository_governance"]

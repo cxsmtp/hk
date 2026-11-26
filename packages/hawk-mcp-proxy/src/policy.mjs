@@ -7,6 +7,27 @@ const EXEC_TOOL_PATTERN = /(shell|terminal|exec|command|run|process|script)/i;
 const READ_TOOL_PATTERN = /(read|get|fetch|list|search|query|summari[sz]e)/i;
 const GITHUB_PULL_REQUESTS_SERVER = "github-pull-requests";
 const GITHUB_SCOPE_PATTERN = /^github\.com\/([A-Za-z0-9][A-Za-z0-9._-]*)\/([A-Za-z0-9][A-Za-z0-9._-]*)$/i;
+// GitHub MCP server tools that change a repository, mapped to the governed
+// repository actions the Hawk gateway decides on (default deny, branch, path,
+// size, secret and approval rules). Reads keep their generic classification.
+const GITHUB_REPOSITORY_ACTIONS = new Map([
+  ["create_branch", "REPOSITORY_BRANCH_CREATE"],
+  ["create_or_update_file", "REPOSITORY_PUSH"],
+  ["push_files", "REPOSITORY_PUSH"],
+  ["delete_file", "REPOSITORY_PUSH"],
+  ["create_pull_request", "REPOSITORY_PULL_REQUEST_CREATE"],
+  ["update_pull_request", "REPOSITORY_PULL_REQUEST_UPDATE"],
+  ["update_pull_request_branch", "REPOSITORY_PULL_REQUEST_UPDATE"],
+  ["add_comment_to_pending_review", "REPOSITORY_PULL_REQUEST_COMMENT"],
+  ["add_reply_to_pull_request_comment", "REPOSITORY_PULL_REQUEST_COMMENT"],
+  ["pull_request_review_write", "REPOSITORY_PULL_REQUEST_APPROVE"],
+  ["merge_pull_request", "REPOSITORY_PULL_REQUEST_MERGE"],
+  ["enable_pr_auto_merge", "REPOSITORY_PULL_REQUEST_MERGE"],
+  ["fork_repository", "REPOSITORY_FORK"],
+  ["delete_repository", "REPOSITORY_DELETE"],
+]);
+const MAX_CHANGE_PATHS = 1000;
+const SAFE_APPROVAL_BINDING_ID = /^[A-Za-z0-9_.:-]{1,64}$/;
 
 export function normalizeMcpServerUrl(value) {
   if (typeof value !== "string" || !value.trim()) return null;
@@ -89,6 +110,19 @@ export function classifyToolCall({ mcpServerId, repositoryScope = null, toolName
     };
   }
 
+  const repositoryAction = githubRepository ? GITHUB_REPOSITORY_ACTIONS.get(normalizedTool) : undefined;
+  if (repositoryAction) {
+    return {
+      action: repositoryAction,
+      resource,
+      destination,
+      dataClassification,
+      toolCategory: "write",
+      actionRisk: "high",
+      githubChangeContext: buildGitHubChangeContext(repositoryAction, argumentsObject),
+    };
+  }
+
   if (EXEC_TOOL_PATTERN.test(normalizedTool)) {
     return {
       action: "terminal_command",
@@ -151,6 +185,7 @@ export function buildAuthorizePayload({
   sessionId,
   clientApp,
   mcpServerUrl = null,
+  approvalBindingId = null,
 }) {
   const classification = classifyToolCall({
     mcpServerId,
@@ -179,6 +214,16 @@ export function buildAuthorizePayload({
       arguments_summary: summarizeArguments(argumentsObject),
       action_risk: classification.actionRisk,
       transport_binding: buildTransportBinding({ mcpServerUrl }),
+      ...(classification.githubChangeContext
+        ? {
+            github_change_context: {
+              ...classification.githubChangeContext,
+              ...(typeof approvalBindingId === "string" && SAFE_APPROVAL_BINDING_ID.test(approvalBindingId)
+                ? { approval_binding_id: approvalBindingId }
+                : {}),
+            },
+          }
+        : {}),
     },
     chain_id: chainId || null,
     session_id: sessionId || null,
@@ -214,6 +259,62 @@ export function buildToolScanPayload({
       ...(mcpServerUrl ? { hawk_transport_binding: buildTransportBinding({ mcpServerUrl }) } : {}),
     },
     chain_id: chainId || null,
+  };
+}
+
+function normalizeChangePath(value) {
+  if (typeof value !== "string") return null;
+  const parts = value.trim().replace(/\\/g, "/").split("/").filter((part) => part !== "" && part !== ".");
+  return parts.length ? parts.join("/") : null;
+}
+
+/**
+ * Change facts the gateway needs before a GitHub repository mutation: target
+ * and base branch, touched paths, file and byte counts, and a content
+ * fingerprint. File contents are not copied here (the gateway scans the
+ * arguments it receives itself); declared counts can only tighten a decision.
+ */
+export function buildGitHubChangeContext(repositoryAction, args) {
+  const input = args && typeof args === "object" ? args : {};
+  const pairs = [];
+  const paths = new Set();
+  let invalidPaths = 0;
+  const addPath = (rawPath, content) => {
+    const path = normalizeChangePath(rawPath);
+    if (!path) {
+      invalidPaths += 1;
+      return;
+    }
+    paths.add(path);
+    if (typeof content === "string") pairs.push([path, content]);
+  };
+  if (Object.prototype.hasOwnProperty.call(input, "path")) addPath(input.path, input.content);
+  if (Array.isArray(input.files)) {
+    for (const file of input.files.slice(0, MAX_CHANGE_PATHS + 1)) {
+      if (file && typeof file === "object") addPath(file.path, file.content);
+      else invalidPaths += 1;
+    }
+  }
+  const bytesChanged = pairs.reduce((total, [, content]) => total + Buffer.byteLength(content, "utf8"), 0);
+  let contentSha256 = null;
+  if (pairs.length) {
+    const digest = createHash("sha256");
+    for (const [path, content] of [...pairs].sort((left, right) => (left[0] < right[0] ? -1 : left[0] > right[0] ? 1 : left[1] < right[1] ? -1 : left[1] > right[1] ? 1 : 0))) {
+      digest.update(JSON.stringify([path, createHash("sha256").update(content, "utf8").digest("hex")]));
+      digest.update("\n");
+    }
+    contentSha256 = digest.digest("hex");
+  }
+  const text = (value) => (typeof value === "string" && value.trim() ? value.trim().slice(0, 255) : null);
+  return {
+    repository_action: repositoryAction,
+    branch: text(input.branch) || text(input.head),
+    base_branch: text(input.base) || text(input.from_branch),
+    paths: [...paths].sort().slice(0, MAX_CHANGE_PATHS),
+    files_changed: paths.size,
+    bytes_changed: bytesChanged,
+    invalid_paths: invalidPaths,
+    content_sha256: contentSha256,
   };
 }
 
