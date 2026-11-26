@@ -7,4 +7,5 @@ useDefault = true
 description = "Made-up secrets in redaction tests"
 paths = [
   '''apps/desktop-guard/tests/test_redaction\.py$''',
+  '''apps/api/tests/test_structured_logging\.py$''',
 ]

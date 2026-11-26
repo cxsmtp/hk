@@ -101,7 +101,7 @@ export const install: GuideTopic = {
             "================================================================",
             "  First start: an administrator was created. Sign in with:",
             "      Email:    admin@hawk.local",
-            "      Password: Hq7Tz-mWb3K-p9XcR-a4NfE",
+            "      Password: xxxxx-xxxxx-xxxxx-xxxxx",
             "  You choose your own password at first sign-in. This is shown only once;",
             "  until then it is also in /data/first-admin-password.txt.",
             "  Lost it? Run: python -m app.cli.reset_admin  (with Docker: docker compose exec api python -m app.cli.reset_admin)",
