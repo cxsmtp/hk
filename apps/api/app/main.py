@@ -28,6 +28,7 @@ from app.core.log_config import (
 )
 from app.core.observability import (
     gateway_latency_paths,
+    get_correlation_id,
     latency_tracker,
     log_structured,
     reset_correlation_id,
@@ -643,6 +644,15 @@ def health_ready():
     return JSONResponse(status_code=200 if report.ready else 503, content=report.to_dict())
 
 
+def _health_failure(exc: Exception) -> str:
+    """What an unauthenticated health answer says about a failure: its kind and the request id, never the database's
+    own message (it can name the host, the user and the statement). The whole error is in the server log."""
+
+    request_id = get_correlation_id() or ""
+    logger.warning("Schema health check failed", exc_info=exc, extra={"request_id": request_id, "reason_code": "schema_health_failed"})
+    return f"schema_health_failed:{exc.__class__.__name__}" + (f" (request id {request_id})" if request_id else "")
+
+
 @app.get("/health")
 def health():
     strict_schema = _strict_schema_mode_enabled()
@@ -657,7 +667,7 @@ def health():
                 "service": "api",
                 "strict_schema": strict_schema,
                 "schema_healthy": False,
-                "error": f"schema_health_failed:{exc}",
+                "error": _health_failure(exc),
             },
         )
 
@@ -696,7 +706,7 @@ def health_schema():
                 "pending_migrations": [],
                 "missing_tables": [],
                 "missing_columns": [],
-                "notes": [f"schema_health_failed:{exc}"],
+                "notes": [_health_failure(exc)],
             },
         )
 

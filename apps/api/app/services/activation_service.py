@@ -44,6 +44,7 @@ from app.core.config import settings
 from app.db.models.activation import ActivationState
 from app.db.models.tenant import Tenant
 from app.db.models.user import User, UserTenantRole
+from app.db import xact_lock
 from app.db.session import SessionLocal
 
 
@@ -491,7 +492,8 @@ def tenant_limits(db: Session, now: float | None = None) -> tuple[int, int | Non
 
 def assert_may_add_tenant(db: Session) -> None:
     """Refuse (403) a tenant created or activated beyond what the tenants code allows. Nothing already there is
-    removed or disabled."""
+    removed or disabled. Two at the same moment are counted one after the other."""
+    xact_lock.hold(db, "tenants")
     tenants = load_store(db).tenants()
     in_force = bool(tenants and tenants["valid"])
     max_tenants = int(tenants["maxTenants"]) if in_force else DEFAULT_MAX_TENANTS
@@ -511,6 +513,8 @@ def assert_may_add_member(db: Session, tenant_id: str) -> None:
     _, max_users = tenant_limits(db)
     if max_users is None:
         return
+    # Two people added at the same moment are counted one after the other.
+    xact_lock.hold(db, "tenant-people", tenant_id)
     active = int(
         db.scalar(
             select(func.count())

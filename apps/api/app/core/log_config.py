@@ -277,12 +277,29 @@ class JsonFormatter(logging.Formatter):
         return json.dumps(payload, default=str, ensure_ascii=False)
 
 
+_LINE_BREAKS = re.compile(r"[\r\n\u0085\u2028\u2029]")
+
+
+def one_line(text: str) -> str:
+    """``text`` with its line breaks written as \\r and \\n, so it cannot start a log line of its own."""
+
+    return _LINE_BREAKS.sub(lambda m: {"\r": "\\r", "\n": "\\n"}.get(m.group(0), "\\u%04x" % ord(m.group(0))), str(text))
+
+
+def _text_value(value: Any) -> str:
+    plain = isinstance(value, str) and " " not in value and not _LINE_BREAKS.search(value)
+    return value if plain else one_line(json.dumps(value, default=str, ensure_ascii=False))
+
+
 class TextFormatter(logging.Formatter):
     """For a laptop: ``2026-11-26T09:14:03.512Z INFO  app.access  GET /x 200 12.4ms  request_id=… route=…``."""
 
     def format(self, record: logging.LogRecord) -> str:
         message, fields = _record_fields(record)
-        extra = " ".join(f"{key}={json.dumps(value, default=str, ensure_ascii=False) if not isinstance(value, str) or ' ' in value else value}" for key, value in fields.items())
+        # One record, one line: a value that came from outside (an email's subject, a header, an error's text) can
+        # hold CR or LF, and would otherwise start a line that looks like a record of its own.
+        message = one_line(message)
+        extra = " ".join(f"{one_line(key)}={_text_value(value)}" for key, value in fields.items())
         line = f"{_utc_iso(record.created)} {record.levelname:<7} {record.name}  {message}"
         if extra:
             line = f"{line}  {extra}"
