@@ -422,12 +422,19 @@ def _decode_file_bytes(file_meta: dict[str, Any]) -> bytes | None:
         or file_meta.get("local_path")
         or file_meta.get("tmp_path")
     )
-    if isinstance(file_path, str) and file_path.strip() and os.path.exists(file_path):
+    if isinstance(file_path, str) and file_path.strip():
+        # file_meta arrives from the browser extension, the gateway and agent-action requests: a path is read only
+        # when it is a file a simulation put in its evidence folder, never anywhere else on the server.
+        from app.services.simulation_orchestrator.executor import contained_upload_file
+
+        local = contained_upload_file(file_path)
+        if local is None:
+            return None
         try:
-            if os.path.getsize(file_path) > MAX_OCR_FILE_BYTES:
+            if local.stat().st_size > MAX_OCR_FILE_BYTES:
                 return None
-            with open(file_path, "rb") as handle:
-                return handle.read()
+            with open(local, "rb") as handle:
+                return handle.read(MAX_OCR_FILE_BYTES)
         except Exception:
             return None
     return None

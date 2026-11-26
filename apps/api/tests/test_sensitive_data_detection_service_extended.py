@@ -163,13 +163,33 @@ def test_decode_file_bytes_variants_and_limits(tmp_path, monkeypatch: pytest.Mon
     assert sds._decode_file_bytes({"bytes": b"abc"}) == b"abc"
     assert sds._decode_file_bytes({"bytes": "abc"}) == b"abc"
 
-    small = tmp_path / "small.txt"
+    evidence = tmp_path / "evidence"
+    evidence.mkdir()
+    monkeypatch.setattr(sds.settings, "simulation_evidence_dir", str(evidence), raising=False)
+    small = evidence / "small.txt"
     small.write_bytes(b"small")
     assert sds._decode_file_bytes({"path": str(small)}) == b"small"
+    assert sds._decode_file_bytes({"path": "small.txt"}) == b"small"
 
     monkeypatch.setattr(sds, "MAX_OCR_FILE_BYTES", 3)
     assert sds._decode_file_bytes({"path": str(small)}) is None
     assert sds._decode_file_bytes({"content_b64": "%%%not-base64%%%"}) is None
+
+
+def test_decode_file_bytes_never_reads_a_server_path_outside_the_simulation_evidence_folder(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Checkmarx Path Traversal (simulation_service browser steps): file_meta comes from the browser extension, gateway
+    and agent-action requests, and a path in it was opened as given, so a caller could have the server read and scan
+    any file it can see (secrets files, /proc/self/environ) or block on /dev/zero."""
+
+    evidence = tmp_path / "evidence"
+    evidence.mkdir()
+    monkeypatch.setattr(sds.settings, "simulation_evidence_dir", str(evidence), raising=False)
+    outside = tmp_path / "outside.txt"
+    outside.write_bytes(b"server-only")
+    (evidence / "link.txt").symlink_to(outside)
+    for path in (str(outside), "../outside.txt", str(evidence / "link.txt"), "/proc/self/environ", "/dev/zero", str(evidence)):
+        for key in ("path", "file_path", "local_path", "tmp_path"):
+            assert sds._decode_file_bytes({key: path}) is None, (key, path)
 
 
 def test_pdf_and_tesseract_extractors_with_fallbacks(monkeypatch: pytest.MonkeyPatch) -> None:

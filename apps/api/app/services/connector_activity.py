@@ -176,11 +176,17 @@ def _iso(moment: Any) -> str:
     return str(moment or "")
 
 
-def _parse(value: str, *, end: bool = False) -> dt.datetime:
+def _parse(value: str, *, end: bool = False) -> dt.datetime | None:
+    """A date or ISO time from the query string; None for one that is not (the bound is then ignored, as the audit log
+    does) rather than a server error."""
+
     text_value = str(value).strip()
     if re.fullmatch(r"\d{4}-\d{2}-\d{2}", text_value):
         text_value += "T23:59:59.999999+00:00" if end else "T00:00:00+00:00"
-    moment = dt.datetime.fromisoformat(text_value.replace("Z", "+00:00"))
+    try:
+        moment = dt.datetime.fromisoformat(text_value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
     return moment if moment.tzinfo else moment.replace(tzinfo=dt.timezone.utc)
 
 
@@ -225,13 +231,14 @@ def listing(
         conditions.append(ConnectorCall.ok.is_(True))
     elif outcome == "failed":
         conditions.append(ConnectorCall.ok.is_(False))
-    if since:
-        conditions.append(ConnectorCall.at >= _parse(since))
-    if until:
-        conditions.append(ConnectorCall.at <= _parse(until, end=True))
+    start, end, cursor = _parse(since), _parse(until, end=True), _parse(before)
+    if start is not None:
+        conditions.append(ConnectorCall.at >= start)
+    if end is not None:
+        conditions.append(ConnectorCall.at <= end)
     page_conditions = list(conditions)
-    if before:
-        page_conditions.append(ConnectorCall.at < _parse(before))
+    if cursor is not None:
+        page_conditions.append(ConnectorCall.at < cursor)
     size = min(500, max(1, int(limit or 100)))
     rows = db.scalars(select(ConnectorCall).where(*page_conditions).order_by(ConnectorCall.at.desc(), ConnectorCall.id.desc()).limit(size + 1)).all()
     window = [ConnectorCall.tenant_id == tenant_id, ConnectorCall.at >= now - dt.timedelta(days=SUMMARY_DAYS)]

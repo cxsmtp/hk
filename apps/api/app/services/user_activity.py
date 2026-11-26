@@ -229,6 +229,9 @@ def view(row: Any) -> dict[str, Any]:
     }
 
 
+MAX_OFFSET = 1_000_000  # a page far past any kept row, and well inside a 64-bit OFFSET
+
+
 def listing(
     db: Session,
     tenant_id: str,
@@ -254,10 +257,11 @@ def listing(
         conditions.append(UserActivity.user == user)
     if kind:
         conditions.append(UserActivity.kind == kind)
-    if since:
-        conditions.append(UserActivity.at >= _parse(since))
-    if until:
-        conditions.append(UserActivity.at <= _parse(until, end=True))
+    start, end = _parse(since), _parse(until, end=True)
+    if start is not None:
+        conditions.append(UserActivity.at >= start)
+    if end is not None:
+        conditions.append(UserActivity.at <= end)
     needle = clean(q).lower()
     if needle:
         like = f"%{needle}%"
@@ -271,7 +275,7 @@ def listing(
         )
     total = int(db.scalar(select(func.count()).select_from(UserActivity).where(*conditions)) or 0)
     size = min(500, max(1, int(limit or 50)))
-    rows = db.scalars(select(UserActivity).where(*conditions).order_by(UserActivity.at.desc(), UserActivity.id.desc()).offset(max(0, int(offset or 0))).limit(size)).all()
+    rows = db.scalars(select(UserActivity).where(*conditions).order_by(UserActivity.at.desc(), UserActivity.id.desc()).offset(min(MAX_OFFSET, max(0, int(offset or 0)))).limit(size)).all()
     return {
         "total": total,
         "entries": [view(r) for r in rows],
@@ -280,11 +284,17 @@ def listing(
     }
 
 
-def _parse(value: str, *, end: bool = False) -> dt.datetime:
+def _parse(value: str, *, end: bool = False) -> dt.datetime | None:
+    """A date or ISO time from the query string; None for one that is not (the bound is then ignored, as the audit log
+    does) rather than a server error."""
+
     text_value = str(value).strip()
     if re.fullmatch(r"\d{4}-\d{2}-\d{2}", text_value):
         text_value += "T23:59:59.999999+00:00" if end else "T00:00:00+00:00"
-    moment = dt.datetime.fromisoformat(text_value.replace("Z", "+00:00"))
+    try:
+        moment = dt.datetime.fromisoformat(text_value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
     return moment if moment.tzinfo else moment.replace(tzinfo=dt.timezone.utc)
 
 

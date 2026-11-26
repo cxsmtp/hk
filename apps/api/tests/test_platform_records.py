@@ -506,6 +506,19 @@ def test_activity_rows_are_cut_to_size_described_and_pruned_after_a_year(factory
     assert audit_chain.to_csv(user_activity.CSV_COLUMNS, rows).splitlines()[1].split(",")[6] == "'=bad thing"
 
 
+def test_activity_listings_ignore_a_malformed_date_and_a_huge_offset_instead_of_failing(factory):
+    """Checkmarx 'Improper Input Validation' (records.py /activity/log): a from/to that is not a date raised ValueError
+    (a 500), and an offset past a 64-bit integer reached the database; now the bound is ignored, as the audit log does."""
+
+    now = dt.datetime.now(dt.timezone.utc)
+    with factory() as db:
+        user_activity.record(db, {"tenant_id": "t", "action": "kept"}, now=now)
+        db.commit()
+        assert user_activity.listing(db, "t", since="not-a-date", until="2026-13-45")["total"] == 1
+        assert user_activity.listing(db, "t", offset=10**30)["entries"] == []
+        assert connector_activity.listing(db, "t", since="nope", until="x", before="2026-99-99")["events"] == []
+
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Support cases
 # ---------------------------------------------------------------------------------------------------------------------
