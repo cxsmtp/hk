@@ -2,12 +2,14 @@
 
 import "../settings/ftr-settings.css";
 
+import Link from "next/link";
 import { Fragment, useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
 import { api } from "@/lib/api";
+import { GUIDE_HREF } from "@/lib/guide";
 import { errorMessageFrom } from "@/lib/licence";
 import { HELP_KIND, HELP_PRIORITY, HELP_STATUS, helpCrumbs, sentToast } from "@/lib/records";
 import type { SupportKind, SupportList, SupportRequest, SupportStatus } from "@/lib/records";
@@ -230,6 +232,9 @@ export default function GetHelpPage() {
             <h1 className="serif">Get help</h1>
             <span className="crumbs">{helpCrumbs(d?.channel)}</span>
           </div>
+          <Link className="btn ghost" href={GUIDE_HREF} data-guide-link>
+            Administrator&apos;s guide
+          </Link>
         </div>
         {loadError ? (
           <div className="panel">

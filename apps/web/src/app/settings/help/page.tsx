@@ -2,10 +2,12 @@
 
 import "../ftr-settings.css";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { api } from "@/lib/api";
+import { GUIDE_HREF } from "@/lib/guide";
 import { errorMessageFrom } from "@/lib/licence";
 import type { SupportChannel } from "@/lib/records";
 
@@ -57,6 +59,9 @@ export default function GetHelpSettingsPage() {
             <h1 className="serif">Get help</h1>
             <span className="crumbs">for this organisation · Owners and admins only</span>
           </div>
+          <Link className="btn ghost" href={GUIDE_HREF} data-guide-link>
+            Administrator&apos;s guide
+          </Link>
         </div>
         <div id="tab">
           {loadError ? (

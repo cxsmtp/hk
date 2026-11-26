@@ -49,6 +49,7 @@ export const SETTINGS_GROUPS = [
       { href: "/settings/hands-off", label: "Hands-off" },
       { href: "/settings/network", label: "Network & proxy" },
       { href: "/settings/help", label: "Get help" },
+      { href: "/settings/guide", label: "Guide" },
       { href: "/settings/about", label: "About" },
     ],
   },
@@ -76,6 +77,8 @@ export const SETTINGS_PERMISSIONS = {
   "/settings/hands-off": ["settings.manage"],
   "/settings/network": ["network.manage"],
   "/settings/help": ["support.manage"],
+  // Hawk's administrator's guide (lib/guide): for everyone signed in, as About; Jump to lists it for everyone.
+  "/settings/guide": null,
   "/settings/about": null,
 };
 

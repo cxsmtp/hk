@@ -4,6 +4,7 @@ import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { guideJumpEntries } from "@/lib/guide";
 import { LIFECYCLE_NAV_ITEMS, SPECIALIST_WORKSPACES } from "@/lib/navigation";
 import { useMyPermissions } from "@/lib/settings-console";
 import { jumpMatches, settingsJumpEntries } from "@/lib/settings-menu";
@@ -12,7 +13,8 @@ type Entry = { title: string; sub: string; href: string };
 
 /**
  * Jump to (Ctrl K), as FTR Command Center's (public/js/shell.js `jumpTo()`): pages as you type, every word in any
- * order; arrows and Enter; Esc closes. Every Settings page answers to "settings" and to its group's name.
+ * order; arrows and Enter; Esc closes. Every Settings page answers to "settings" and to its group's name; the guide's
+ * topics (lib/guide) are listed for everyone signed in.
  */
 export function JumpTo() {
   const router = useRouter();
@@ -28,7 +30,7 @@ export function JumpTo() {
     );
     const tools = SPECIALIST_WORKSPACES.flatMap((group) => group.items.map((item) => ({ title: item.label, sub: group.label, href: item.href })));
     const seen = new Set<string>();
-    return [...areas, ...settingsJumpEntries(permissions ?? []), ...tools].filter((entry) => (seen.has(`${entry.href}|${entry.title}`) ? false : (seen.add(`${entry.href}|${entry.title}`), true)));
+    return [...areas, ...settingsJumpEntries(permissions ?? []), ...guideJumpEntries(), ...tools].filter((entry) => (seen.has(`${entry.href}|${entry.title}`) ? false : (seen.add(`${entry.href}|${entry.title}`), true)));
   }, [permissions]);
   const items = jumpMatches(pages, query);
 

@@ -14,7 +14,7 @@ test("the Settings menu has FTR's groups and items, in FTR's order, with Licensi
     ["People", ["People", "Teams", "Roles & permissions", "Sign-in"]],
     ["Licensing", ["Activation codes"]],
     ["Records", ["Audit log", "Connector API activity"]],
-    ["System", ["General", "Branding", "Email (SMTP)", "Single sign-on", "HTTPS", "Updates", "Backups & health", "Hands-off", "Network & proxy", "Get help", "About"]],
+    ["System", ["General", "Branding", "Email (SMTP)", "Single sign-on", "HTTPS", "Updates", "Backups & health", "Hands-off", "Network & proxy", "Get help", "Guide", "About"]],
   ]);
   // Every item is a page.
   for (const group of SETTINGS_GROUPS) for (const item of group.items) assert.ok(existsSync(new URL(`../src/app${item.href}/page.tsx`, import.meta.url)), item.href);
@@ -22,12 +22,13 @@ test("the Settings menu has FTR's groups and items, in FTR's order, with Licensi
 });
 
 test("each person sees only what their role allows; the System group only with a System tab of their own", () => {
-  // A Viewer: their people and the teams (FTR: dashboard.view), nothing of the system, not even About.
+  // A Viewer: their people and the teams (FTR: dashboard.view), nothing of the system, not even About (the Guide is
+  // theirs through Jump to and Get help).
   assert.deepEqual(labels(settingsNav(["dashboard.view"])), [["People", ["People", "Teams"]]]);
   // An Auditor: the records too.
   assert.deepEqual(labels(settingsNav(["dashboard.view", "audit.view"])), [["People", ["People", "Teams"]], ["Records", ["Audit log", "Connector API activity"]]]);
-  // A support desk: Get help, and About with it.
-  assert.deepEqual(labels(settingsNav(["support.manage"]))[1], ["System", ["Get help", "About"]]);
+  // A support desk: Get help, and the Guide and About with it.
+  assert.deepEqual(labels(settingsNav(["support.manage"]))[1], ["System", ["Get help", "Guide", "About"]]);
   assert.ok(!mayOpen("/settings/email", ["dashboard.view"]) && mayOpen("/settings/email", ["settings.manage"]) && !mayOpen("/settings/nope", ALL));
   assert.ok(isSettingsItemActive("/settings/people", "/settings/people") && !isSettingsItemActive("/settings/peoples", "/settings/people"));
 });
