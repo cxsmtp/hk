@@ -6,8 +6,8 @@ import hmac
 import json
 from typing import Any, Mapping
 
-from jose import jwt
-from jose.exceptions import JWTError
+import jwt
+from jwt import PyJWTError as JWTError
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -167,7 +167,7 @@ def validate_and_bind_banking_subject_context(
 
     try:
         header = jwt.get_unverified_header(token)
-        unverified = jwt.get_unverified_claims(token)
+        unverified = jwt.decode(token, options={"verify_signature": False})
         algorithm = str(header.get("alg") or "")
         key_id = str(header.get("kid") or "").strip()
         issuer = str(unverified.get("iss") or "").strip()
@@ -185,12 +185,7 @@ def validate_and_bind_banking_subject_context(
             algorithms=["ES256"],
             audience=audience,
             issuer=issuer,
-            options={
-                "require_aud": True,
-                "require_exp": True,
-                "require_iat": True,
-                "require_iss": True,
-            },
+            options={"require": ["aud", "exp", "iat", "iss"]},
         )
         claims = BankingSubjectClaims.model_validate(decoded)
     except BankingSubjectContextError:

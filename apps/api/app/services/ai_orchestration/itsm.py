@@ -9,6 +9,7 @@ from urllib import error as urllib_error
 from urllib import request as urllib_request
 
 from app.core.config import settings
+from app.services.outbound_url import check_outbound_url
 from app.db.models.ai_orchestration import AIReasoningTrace
 
 
@@ -71,12 +72,14 @@ def _http_post_json(
     timeout: float,
     attempts: int,
 ) -> dict[str, Any]:
+    # Only https (or http to this machine): never file:, ftp: or a cloud metadata address.
+    url = check_outbound_url(url, label="ticketing address")
     body = json.dumps(payload, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
     last_error = ""
     for attempt in range(1, max(1, attempts) + 1):
         req = urllib_request.Request(url, data=body, headers=headers, method="POST")
         try:
-            with urllib_request.urlopen(req, timeout=timeout) as response:
+            with urllib_request.urlopen(req, timeout=timeout) as response:  # nosec B310 - scheme checked above
                 text = response.read().decode("utf-8") or "{}"
                 return json.loads(text)
         except urllib_error.HTTPError as exc:  # noqa: PERF203

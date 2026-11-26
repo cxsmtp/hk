@@ -28,9 +28,12 @@ concurrency:
 
 jobs:
   # Every API test and the console's checks: nothing is published unless they pass.
+  # On a pull request these already run from api-tests.yml and component-tests.yml themselves.
   api-tests:
+    if: github.event_name != 'pull_request'
     uses: ./.github/workflows/api-tests.yml
   component-tests:
+    if: github.event_name != 'pull_request'
     uses: ./.github/workflows/component-tests.yml
 
   # Each image builds, and its file list matches what is in it (as CxMissionZero's smoke test checks its list).

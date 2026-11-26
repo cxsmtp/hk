@@ -39,8 +39,9 @@ _SEVERITY_TO_DECISION = {
     "low": "warn",
 }
 
-_ZERO_WIDTH_RE = re.compile("[​‌‍‎‏⁠﻿]")
-_CYRILLIC_IN_LATIN_RE = re.compile("[Ѐ-ӿ]")
+# Escaped, never literal: invisible and right-to-left characters in source are a "Trojan Source" risk.
+_ZERO_WIDTH_RE = re.compile("[\u200b\u200c\u200d\u200e\u200f\u2060\ufeff]")
+_CYRILLIC_IN_LATIN_RE = re.compile("[\u0400-\u04ff]")
 _BASE64_BLOB_RE = re.compile(r"[A-Za-z0-9+/]{24,}={0,2}")
 _HEX_BLOB_RE = re.compile(r"(?:[0-9a-fA-F]{2}\s?){12,}")
 

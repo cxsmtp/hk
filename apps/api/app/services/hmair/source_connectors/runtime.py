@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 import httpx
 
 from app.services import connector_activity, trust_store
-from jose import jwt
+import jwt
 
 from app.services.hmair.source_connectors.contracts import (
     HMAIRSourceConnectionInput,
