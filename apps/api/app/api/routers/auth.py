@@ -252,8 +252,9 @@ def oidc_complete(payload: OIDCCompleteRequest, request: Request, response: Resp
 def register(payload: RegisterRequest, request: Request, response: Response, db: Session = Depends(get_db)):
     started_at = perf_counter()
     try:
-        # The same password rule as everywhere (12+ characters, not repetitive).
-        problem = password_policy.problem(db, payload.password)
+        # The same password rule as everywhere (12+ characters, not repetitive), checked before anything touches
+        # the database; the administrator's rule (Settings → Sign-in) once registration is known to be open.
+        problem = password_policy.problem(None, payload.password)
         if problem:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=problem)
         if not settings.self_registration_enabled:
@@ -261,6 +262,9 @@ def register(payload: RegisterRequest, request: Request, response: Response, db:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=_REGISTRATION_FAILURE_DETAIL,
             )
+        problem = password_policy.problem(db, payload.password)
+        if problem:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=problem)
 
         existing = db.scalar(select(User).where(User.email == payload.email))
         if existing:
