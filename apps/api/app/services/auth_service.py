@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -110,7 +110,16 @@ def refresh_tokens(db: Session, refresh_token: str) -> dict:
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User inactive")
 
-    record.revoked_at = datetime.now(timezone.utc)
-    db.flush()
+    # Spent in one statement that only succeeds while it is still unspent: two refreshes with the same token at the
+    # same moment cannot both get a new pair (the second is refused, as a used token is).
+    spent = db.execute(
+        update(RefreshToken)
+        .where(RefreshToken.id == record.id, RefreshToken.revoked_at.is_(None))
+        .values(revoked_at=datetime.now(timezone.utc))
+        .execution_options(synchronize_session=False)
+    )
+    if spent.rowcount != 1:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token revoked or unknown")
+    db.refresh(record)
 
     return issue_tokens(db, user=user, tenant_id=tenant_id, role=membership.role)

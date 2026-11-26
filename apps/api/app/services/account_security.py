@@ -189,6 +189,15 @@ def find_by_email(db: Session, email: str) -> User | None:
     return db.scalar(select(User).where(func.lower(User.email) == text.lower()))
 
 
+def _lock_user(db: Session, user: User) -> None:
+    """Hold the person's row until the caller commits (PostgreSQL ``SELECT … FOR UPDATE``), reading it afresh: two
+    sign-in attempts at the same moment are then checked one after the other, so neither the wrong-attempt count (and
+    so the lock), nor a two-step code's step, nor a recovery code can be used twice by racing requests."""
+
+    db.flush()
+    db.refresh(user, with_for_update=True)
+
+
 def _count_wrong(user: User, now: datetime) -> None:
     user.failed_logins = int(user.failed_logins or 0) + 1
     if user.failed_logins >= MAX_FAILED:
@@ -210,6 +219,8 @@ def check_password(db: Session, email: str, password: str, *, more: bool | None 
 
     now = utcnow()
     user = find_by_email(db, email)
+    if user is not None:
+        _lock_user(db, user)
     ok = verify_password(str(password or ""), user.hashed_password if user else _DUMMY_BCRYPT_HASH)
     if user is None:
         raise SignInRefused(401, WRONG)
@@ -239,6 +250,7 @@ def check_two_step(db: Session, user: User, typed: Any, *, recovery: bool = True
     Returns {kind: 'code' | 'recovery', left}. A wrong one raises SignInRefused 401 and counts as a wrong password
     does: five in a row lock the account for 15 minutes (423 while it is locked). The caller commits."""
 
+    _lock_user(db, user)
     secret = mfa_service.open_secret(user.mfa_secret)
     if not secret:
         raise SignInRefused(400, "Two-step sign-in is not on.", user=user)

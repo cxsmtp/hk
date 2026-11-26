@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any, Literal
 
@@ -15,6 +16,7 @@ from app.api.envelopes import ListEnvelope, paginate_rows
 from app.core.deps_control_plane import require_control_plane_healthy
 from app.core.deps_governance import governance_payload_dependency
 from app.core.config import settings
+from app.core.observability import get_correlation_id
 from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.audit import AuditLog
@@ -47,6 +49,8 @@ from app.services.snapshot_service import (
     resolve_artifact_file_path,
 )
 
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/auditor",
@@ -344,6 +348,18 @@ def _scope_hash(scope: dict) -> str:
     serialized = json.dumps(scope, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
     return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
 
+
+
+def _storage_failure(exc: RuntimeError) -> HTTPException:
+    """A 500 for an artifact that could not be written or read: a plain sentence and the request id; the error itself
+    (it names the server's folders and the operating system's message) goes to the server log only."""
+
+    request_id = get_correlation_id() or ""
+    logger.error("Auditor artifact storage failed", exc_info=exc, extra={"request_id": request_id, "reason_code": "artifact_storage_failed"})
+    return HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail=f"The evidence files could not be written or read on the server.{f' Request id: {request_id}.' if request_id else ''}",
+    )
 
 @router.get("/dashboard", response_model=AuditorDashboardResponse)
 def dashboard(
@@ -1355,7 +1371,7 @@ def snapshot(
         return AuditorSnapshotResponse.model_validate(row)
     except RuntimeError as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise _storage_failure(exc) from exc
     except GovernanceViolationError as exc:
         db.rollback()
         raise HTTPException(
@@ -1420,7 +1436,7 @@ def export(
         )
     except RuntimeError as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise _storage_failure(exc) from exc
     except ValueError as exc:
         db.rollback()
         raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -1446,7 +1462,7 @@ def download_snapshot(
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     except RuntimeError as exc:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
+        raise _storage_failure(exc) from exc
 
     if not artifact_path.exists():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Snapshot artifact not found")
@@ -1486,7 +1502,7 @@ def download_snapshot_artifact(
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     except RuntimeError as exc:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
+        raise _storage_failure(exc) from exc
 
     if not artifact_path.exists():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Snapshot artifact not found")

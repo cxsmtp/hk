@@ -69,10 +69,13 @@ def iso(moment: Any) -> str:
     return str(moment or "")
 
 
-def get(db: Session, ticket_id: str) -> Any:
+def get(db: Session, ticket_id: str, *, lock: bool = False) -> Any:
+    """A request by its number. ``lock``: held until the caller commits (``SELECT … FOR UPDATE``), for a change to its
+    conversation or status, so two at the same moment are made one after the other and neither is lost."""
+
     from app.db.models.platform_records import SupportTicket
 
-    return db.get(SupportTicket, str(ticket_id or "").upper())
+    return db.get(SupportTicket, str(ticket_id or "").upper(), with_for_update=True if lock else None)
 
 
 def raised_since(db: Session, requester_id: str, since: dt.datetime) -> int:
