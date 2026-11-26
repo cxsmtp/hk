@@ -82,7 +82,7 @@ def create_endpoint_access_token(
 
 def decode_token(token: str) -> dict[str, Any]:
     try:
-        return jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm], options={"verify_iat": False})
+        return jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
     except JWTError as exc:
         raise ValueError("Invalid token") from exc
 
@@ -96,7 +96,6 @@ def decode_endpoint_access_token(token: str) -> dict[str, Any]:
             algorithms=[settings.algorithm],
             audience="hawk-endpoint-api",
             issuer="hawk-api",
-            options={"verify_iat": False},
         )
     except JWTError as exc:
         raise ValueError("Invalid endpoint token") from exc
