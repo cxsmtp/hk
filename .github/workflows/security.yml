@@ -34,16 +34,26 @@ jobs:
           curl -sSfL -o gitleaks.tgz https://github.com/gitleaks/gitleaks/releases/download/v8.28.0/gitleaks_8.28.0_linux_x64.tar.gz
           echo "a65b5253807a68ac0cafa4414031fd740aeb55f54fb7e55f386acb52e6a840eb  gitleaks.tgz" | sha256sum -c -
           tar xzf gitleaks.tgz gitleaks
-      - name: New commits carry no secrets
+      - name: The files this pull request changes carry no secrets
+        # The files as they end up, not every commit on the branch: after a squash merge the branch still holds commits
+        # that are already on main.
         if: github.event_name == 'pull_request'
         env:
           BASE: ${{ github.event.pull_request.base.sha }}
           HEAD: ${{ github.event.pull_request.head.sha }}
-        run: ./gitleaks git . --no-banner --redact --log-opts="$BASE..$HEAD"
+        run: |
+          set -euo pipefail
+          changed="$RUNNER_TEMP/changed"
+          mkdir -p "$changed"
+          git diff -z --name-only --diff-filter=ACMR "$BASE...$HEAD" | while IFS= read -r -d '' f; do
+            mkdir -p "$changed/$(dirname "$f")"
+            cp "$f" "$changed/$f"
+          done
+          ./gitleaks dir "$changed" --no-banner --redact --verbose --config .gitleaks.toml
       - name: Whole history (report)
         # Reported, not yet blocking: the history predates this check. Make it blocking once its findings are cleared.
         continue-on-error: true
-        run: ./gitleaks git . --no-banner --redact
+        run: ./gitleaks git . --no-banner --redact --verbose --config .gitleaks.toml
 
   python-dependencies:
     name: Python dependencies (pip-audit)

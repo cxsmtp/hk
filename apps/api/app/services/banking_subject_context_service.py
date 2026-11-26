@@ -185,8 +185,7 @@ def validate_and_bind_banking_subject_context(
             algorithms=["ES256"],
             audience=audience,
             issuer=issuer,
-            # The issue time is checked below with its own 30 s allowance, as before.
-            options={"require": ["aud", "exp", "iat", "iss"], "verify_iat": False},
+            options={"require": ["aud", "exp", "iat", "iss"]},
         )
         claims = BankingSubjectClaims.model_validate(decoded)
     except BankingSubjectContextError:
