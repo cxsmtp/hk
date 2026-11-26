@@ -1910,7 +1910,7 @@ def test_structured_document_provider_failure_is_sanitized_and_destroys_masking_
     assert any(destroyed)
 
 
-def test_public_chat_complete_rejects_streaming_before_provider_execution(test_env, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_public_chat_complete_streams_through_provider_seam(test_env, monkeypatch: pytest.MonkeyPatch) -> None:
     client: TestClient = test_env["client"]
     session_local: sessionmaker = test_env["SessionLocal"]
     user = _register_owner(client, email="stream-rejection-owner@example.com")
@@ -1924,7 +1924,7 @@ def test_public_chat_complete_rejects_streaming_before_provider_execution(test_e
 
         def generate_text(self, system_prompt: str, user_prompt: str) -> str:
             provider_calls.append(True)
-            return "unexpected"
+            return "Compliant streamed response."
 
     monkeypatch.setattr("app.services.llm_gateway_service._load_provider", lambda provider, model: (Provider(), "openai", "gpt-mock"))
     response = client.post("/llm-gateway/chat/complete", headers=headers, json={
@@ -1932,9 +1932,12 @@ def test_public_chat_complete_rejects_streaming_before_provider_execution(test_e
         "policy_version_id": policy_version_id, "provider": "openai", "actor_id": "caller",
         "stream": True, "messages": [{"role": "user", "content": "hello"}],
     })
-    assert response.status_code == 400, response.text
-    assert response.json()["detail"]["code"] == "streaming_not_executable"
-    assert provider_calls == []
+    assert response.status_code == 200, response.text
+    assert response.headers["content-type"].startswith("text/event-stream")
+    assert "Compliant streamed response." in response.text
+    assert response.text.rstrip().endswith("data: [DONE]")
+    # A provider without a native stream is still invoked exactly once.
+    assert provider_calls == [True]
 
 
 def test_document_draft_pdf_public_route_returns_readable_download(test_env, monkeypatch: pytest.MonkeyPatch) -> None:

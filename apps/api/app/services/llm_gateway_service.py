@@ -1491,6 +1491,7 @@ def _gateway_chat_complete_impl(
     _masking_sessions: list[MaskingSession],
     _response_validator: Callable[[str], Any] | None = None,
     _response_schema: dict[str, Any] | None = None,
+    _stream_relay: Any | None = None,
 ) -> dict[str, Any]:
     # A caller request ID is correlation metadata, not an action, chain, trace,
     # receipt, or idempotency identity. Every invocation gets a fresh action ID.
@@ -1930,9 +1931,22 @@ def _gateway_chat_complete_impl(
     execution_attempt_id = str(uuid4())
     if provider_invoked:
         provider_stage_failed = False
+        provider_delegate: Any = provider_instance
+        if _stream_relay is not None:
+            # The relay reads the upstream stream inside the same final seam,
+            # so every guard below still sees the complete output.
+            provider_delegate = _stream_relay.wrap(
+                provider_instance,
+                secure_context=secure_context,
+                output_guardian=lambda text: evaluate_post_response_guardian(
+                    response_text=text,
+                    strictness_level=strictness_level,
+                )[0][0],
+                hold_all=masking_policy.enabled,
+            )
         try:
             secure_result = secure_generate_text(
-            delegate=provider_instance,
+            delegate=provider_delegate,
             provider=resolved_provider,
             model=(model or resolved_model),
             model_version=str(model or resolved_model or ""),
@@ -2004,6 +2018,26 @@ def _gateway_chat_complete_impl(
                     )
                 )
                 post_controls = _augment_control_impacts(post_controls, triggered_controls=["POLICY_ENFORCEMENT_CONTROL"])
+            stream_violation = getattr(_stream_relay, "violation", None)
+            if stream_violation:
+                # A window-level stop must stay authoritative even if the
+                # truncated full text would have passed on its own.
+                post_results.append(
+                    _guardian_result(
+                        guardian_id="stream_output_guardian",
+                        stage="post_response",
+                        decision=str(stream_violation["decision"]),
+                        confidence=1.0,
+                        matched_conditions=[str(stream_violation["reason"])],
+                        reason=str(stream_violation["reason"]),
+                        actions_taken={"stream_stopped": True},
+                        threat_types=["sensitive_data_leakage"],
+                    )
+                )
+                post_controls = _augment_control_impacts(
+                    post_controls,
+                    triggered_controls=[GUARDIAN_CONTROL_MAP["output_guardian"]],
+                )
 
     if receipt_context:
         from app.services.receipt_service import queue_post_execution_receipt
@@ -2120,6 +2154,15 @@ def _gateway_chat_complete_impl(
         response_control_coverage = "request_only"
     else:
         response_control_coverage = "unknown"
+    if (
+        _stream_relay is not None
+        and response_control_coverage == "complete"
+        and final_decision not in {"allow", "warn"}
+        and _stream_relay.released_text
+    ):
+        # A window-scanned prefix reached the client before this restrictive
+        # final decision, so the decision did not govern the whole response.
+        response_control_coverage = "partial"
     trace_payload = _build_trace_payload(
         ai_system_id=ai_system.id,
         actor_type=effective_actor_type,
@@ -2140,6 +2183,8 @@ def _gateway_chat_complete_impl(
     )
     trace_payload["business_purpose"] = purpose_summary
     trace_payload["reversible_masking"] = masking_facts
+    if _stream_relay is not None:
+        trace_payload["streaming"] = _stream_relay.trace_facts()
     if claimed_actor_correlation_ref:
         trace_payload["claimed_actor_correlation_ref"] = claimed_actor_correlation_ref
     if secure_gateway_trace:
