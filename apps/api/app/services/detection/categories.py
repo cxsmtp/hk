@@ -113,6 +113,9 @@ _QUESTION_RE = re.compile(
     r"tell me|give me an example|help me understand|what is the difference)\b",
     re.I,
 )
+# A credential is a value: a token of six or more characters that mixes letters with digits or symbols. Talking about a
+# password ("the password is weak") is not one.
+_SECRET_VALUE_RE = re.compile(r"(?<!\S)(?=\S*[A-Za-z])(?=\S*[\d!@#$%^&*_+=~/\\|-])[^\s\"',;]{6,}")
 _EDUCATIONAL_RE = re.compile(r"\b(?:example|template|explain|definition|meaning|difference between|in general|tutorial|course|homework|exam)\b", re.I)
 
 _CODE_LINE_RES = (
@@ -264,6 +267,9 @@ def classify_document(
         if category == "financial_statements" and numeric_tokens < 4:
             score = min(score, 0.55)
             reasons.append("few_figures")
+        if category == "credentials" and not _SECRET_VALUE_RE.search(plain):
+            score = min(score, 0.55)
+            reasons.append("no_secret_value")
         if is_short_question or educational:
             score *= 0.6
             reasons.append("question_damped")

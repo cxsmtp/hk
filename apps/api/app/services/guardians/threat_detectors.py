@@ -466,6 +466,10 @@ def _injection_engine_results(fields: dict[str, str], *, surface: str) -> list[d
         reason_codes.extend(code for code in verdict.reason_codes if code not in reason_codes)
         threat_types.extend(t for t in verdict.threat_types if t not in threat_types)
     matched_fields = sorted({field_name for field_name, _ in verdicts})
+    if decision in {"allow", "warn"}:
+        # "log" is the engine's record-only level. Any guardian result from this contract reads as a detected
+        # injection to the central control engine, which escalates it to a block, so a suspicion adds none.
+        return []
     return [
         {
             "guardian_contract_id": INJECTION_ENGINE_CONTRACT_ID,

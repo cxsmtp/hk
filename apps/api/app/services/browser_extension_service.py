@@ -2963,7 +2963,11 @@ def _evaluate_interaction(
         verdict = None
     if verdict is not None and verdict.detected:
         engine_decision = _BROWSER_DECISION_FOR_INJECTION_ACTION.get(verdict.action, "allow")
-        input_signal_types = [*input_signal_types, "prompt_injection", "prompt_injection_engine", *verdict.threat_types]
+        if engine_decision in {"block", "require_approval"}:
+            input_signal_types = [*input_signal_types, "prompt_injection", "prompt_injection_engine", *verdict.threat_types]
+        else:
+            # A suspicion only: the confirmed-attack signals would make the browser policy block it.
+            input_signal_types = [*input_signal_types, "prompt_injection_suspected", "prompt_injection_engine"]
         if _decision_rank(engine_decision) > _decision_rank(final_decision):
             final_decision = engine_decision
             reason_codes = [*reason_codes, "prompt_injection_engine"]
