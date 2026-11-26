@@ -1,7 +1,7 @@
 /**
  * Settings → HTTPS (apps/api/app/api/routers/https.py): what the API says, and the words the page shows. The page's
  * layout and wording are FTR Command Center's Settings → HTTPS (public/js/settings.js `https()`); the behaviour behind
- * it is CxMissionZero's (docs/https-and-hosting.md).
+ * it is CxMissionZero's (/settings/guide/https).
  */
 
 export type HttpsMode = "http" | "both" | "https";

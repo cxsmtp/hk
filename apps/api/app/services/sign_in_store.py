@@ -1,4 +1,4 @@
-"""Short-lived sign-in state shared by every API process (docs/sign-in.md).
+"""Short-lived sign-in state shared by every API process (/settings/guide/people-and-access).
 
 CxMissionZero keeps its two-step tickets, pending two-step setups, password reset links and sign-in limits in the
 memory of its one process (src/mfa.js, src/password-reset.js, src/routes/session.js). Hawk runs several API

@@ -1,5 +1,5 @@
 """How Hawk AI reaches the internet: directly, or through a company proxy, and what a network team needs to allow.
-Ported from CxMissionZero's src/network.js (docs/network.md).
+Ported from CxMissionZero's src/network.js (/settings/guide/network).
 
 The proxy is set under Settings → Network & proxy (saved in the data folder as network.json, 0600, with no last good
 copy: it holds the proxy's password) or with the usual HTTPS_PROXY / HTTP_PROXY / NO_PROXY environment variables; the

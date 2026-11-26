@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import { activatedText, errorMessageFrom, LICENCE_DEACTIVATED_EVENT } from "@/lib/licence";
 
 /**
- * The deactivation page (docs/activation-codes.md), ported from CxMissionZero's public/deactivated.html: once the
+ * The deactivation page (/settings/guide/licence), ported from CxMissionZero's public/deactivated.html: once the
  * product licence has ended, every page shows that Hawk AI has been deactivated, with a field for the activation
  * code from the maintainer. On success the page reloads and everything works again as it was.
  */

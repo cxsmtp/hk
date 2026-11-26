@@ -54,7 +54,7 @@ def get_current_user(
     user = db.scalar(select(User).where(User.id == user_id, User.is_active.is_(True)))
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
-    # Signed out everywhere (a password reset, docs/sign-in.md): tokens issued before that moment no longer work.
+    # Signed out everywhere (a password reset, /settings/guide/people-and-access): tokens issued before that moment no longer work.
     signed_out = user.signed_out_at
     if signed_out is not None:
         if signed_out.tzinfo is None:

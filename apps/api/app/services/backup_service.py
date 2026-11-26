@@ -401,9 +401,9 @@ def last_words(
         saved,
         "To bring it back: start Hawk AI again (sudo deploy/install.sh). Nothing needs restoring while its volumes are there.",
         (
-            "If the data is lost: install Hawk AI on a server, copy this backup to it, and restore it with the backup key an owner or admin saved from Settings → Backups & health (it is not in this email): see Restore in deploy/README.md. The backup brings back every person, setting and the audit log."
+            "If the data is lost: install Hawk AI on a server, copy this backup to it, and restore it with the backup key an owner or admin saved from Settings → Backups & health (it is not in this email): see Restore in /settings/guide/install. The backup brings back every person, setting and the audit log."
             if keyed
-            else "If the data is lost: install Hawk AI on a server with the same BACKUP_PASSPHRASE, copy this backup to it, and restore it: see Restore in deploy/README.md. The backup brings back every person, setting and the audit log."
+            else "If the data is lost: install Hawk AI on a server with the same BACKUP_PASSPHRASE, copy this backup to it, and restore it: see Restore in /settings/guide/install. The backup brings back every person, setting and the audit log."
         ),
     ]
     if keyed and not store.status()["keySaved"]:
@@ -471,7 +471,7 @@ def restore_bundle(
     if files["replacedDir"] is None and replaced.exists():
         files["replacedDir"] = str(replaced)
     # The application keys the restored database was written with. When they differ from this server's, they are put
-    # where an administrator copies them into the deployment's secrets (deploy/README.md: Restore).
+    # where an administrator copies them into the deployment's secrets (/settings/guide/backups).
     differing = []
     for name in archive.SECRET_NAMES:
         value = archive.member(bundle, f"secrets/{name}")

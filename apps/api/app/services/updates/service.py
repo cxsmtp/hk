@@ -357,7 +357,7 @@ class UpdateService:
         if state["busy"]:
             raise UpdateError("An update is already under way.", 409)
         if not state["connected"]:
-            raise UpdateError("The updater is not running: updates from this page need it (deploy/README.md: Updates). Update with deploy/install.sh meanwhile.", 409)
+            raise UpdateError("The updater is not running: updates from this page need it (/settings/guide/updates). Update with deploy/install.sh meanwhile.", 409)
         if not state["manages"]:
             raise UpdateError(f"The updater cannot update this installation: {(state['heartbeat'] or {}).get('engineError') or 'it does not look after Hawk AI yet'}", 409)
         try:

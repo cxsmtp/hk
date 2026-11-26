@@ -57,7 +57,7 @@ export const troubleshooting: GuideTopic = {
       blocks: [
         {
           kind: "p",
-          text: "**Download troubleshooting report** on [Settings → Updates](/settings/updates) saves a JSON file with the versions, the updater and its recent events, the integrity check, the disk, the HTTPS mode, the last backup and the time zone: no secrets, keys or customer data. Send it to whoever helps you. (The same button on Settings → Backups & health is not working yet.)",
+          text: "**Download troubleshooting report** on [Settings → Updates](/settings/updates) or [Settings → Backups & health](/settings/backups) saves a JSON file with the versions, the updater and its recent events, the integrity check, the disk, the HTTPS mode, the last backup and the time zone: no secrets, keys or customer data. Send it to whoever helps you. (The same button on Settings → Backups & health is not working yet.)",
         },
       ],
     },

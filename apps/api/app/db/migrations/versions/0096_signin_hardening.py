@@ -1,4 +1,4 @@
-"""Sign-in hardening (docs/sign-in.md, ported from CxMissionZero's src/iam.js, src/mfa.js, src/oidc.js and
+"""Sign-in hardening (/settings/guide/people-and-access, ported from CxMissionZero's src/iam.js, src/mfa.js, src/oidc.js and
 src/password-reset.js).
 
 - users: wrong attempts and the lock after 5 of them (failed_logins, locked_until), the last sign-in, the moment the

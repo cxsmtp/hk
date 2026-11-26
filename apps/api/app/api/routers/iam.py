@@ -305,7 +305,7 @@ def add_person(
         existing = account_security.find_by_email(db, address)
         if existing is not None and db.scalar(select(UserTenantRole.id).where(UserTenantRole.user_id == existing.id, UserTenantRole.tenant_id == ctx.tenant.id)) is not None:
             raise Refused(409, "Someone with that email already has access.")
-        # The activation code's limit of active users in each tenant (docs/activation-codes.md).
+        # The activation code's limit of active users in each tenant (/settings/guide/licence).
         activation_service.assert_may_add_member(db, ctx.tenant.id)
         temporary = None
         if existing is None:
@@ -939,7 +939,7 @@ def confirm_join(request: Request, body: Annotated[dict[str, Any] | None, Body()
         problem = password_problem(password)
         if problem:
             raise Refused(400, problem)
-        # The activation code's limit of active users in each tenant (docs/activation-codes.md).
+        # The activation code's limit of active users in each tenant (/settings/guide/licence).
         activation_service.assert_may_add_member(db, tenant.id)
         # The link is spent first: a second press of the button cannot make a second person.
         if not sign_in_store.store().take(f"join:{_key(str(body.get('token') or ''))}"):
@@ -954,7 +954,7 @@ def confirm_join(request: Request, body: Annotated[dict[str, Any] | None, Body()
     db.flush()
     db.add(UserTenantRole(user_id=user.id, tenant_id=tenant.id, role=role_key, team_id=team_id, title=clean(body.get("title")), joined_at=now, joined_role=role_key, joined_team_id=team_id))
     _record(db, None, "user.join", email, tenant_id=tenant.id, actor_id=user.id, team=next((t.name for t in all_teams if t.id == team_id), None), role=role_key)
-    # Required two-step sign-in (docs/sign-in.md): no tokens before the second step is set up. They sign in, and the
+    # Required two-step sign-in (/settings/guide/people-and-access): no tokens before the second step is set up. They sign in, and the
     # sign-in page walks them through it.
     if account_security.needs_two_step(db, user):
         db.commit()

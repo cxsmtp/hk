@@ -275,7 +275,7 @@ class SelfCheck:
 
     @staticmethod
     def mail_ready(db: Session) -> bool:
-        """Email goes out only once the email server is set up and tested (docs/sign-in.md)."""
+        """Email goes out only once the email server is set up and tested (/settings/guide/people-and-access)."""
 
         from app.services import account_security
 

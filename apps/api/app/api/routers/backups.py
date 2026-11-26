@@ -36,9 +36,9 @@ from app.services.state_file import read_state, write_state
 router = APIRouter(tags=["backups"])
 admin_only = require_permission("backup.manage")
 
-#: A backup uploaded on the page: 200 MB at most (a larger one is restored on the server, deploy/README.md).
+#: A backup uploaded on the page: 200 MB at most (a larger one is restored on the server, /settings/guide/install).
 MAX_RESTORE_UPLOAD_BYTES = 200 * 1024 * 1024
-TOO_LARGE = "That backup is too large to upload here (200 MB at most). Restore it on the server itself with python -m app.cli.restore (deploy/README.md: Restore)."
+TOO_LARGE = "That backup is too large to upload here (200 MB at most). Restore it on the server itself with python -m app.cli.restore (/settings/guide/backups)."
 NO_KEY = "This server has no backup key: backup encryption has not been turned on."
 READINESS_FILE = "readiness.json"
 

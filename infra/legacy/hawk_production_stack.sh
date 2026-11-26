@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Legacy: the production stack layered on the demo compose file (infra/docker-compose.demo.yml +
 # infra/legacy/docker-compose.production.yml). Superseded by deploy/compose.yaml and deploy/install.sh
-# (deploy/README.md); kept for installations that still run it.
+# (/settings/guide/install); kept for installations that still run it.
 set -euo pipefail
 
 HAWK_PRODUCTION_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

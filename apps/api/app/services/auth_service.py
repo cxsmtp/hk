@@ -93,7 +93,7 @@ def refresh_tokens(db: Session, refresh_token: str) -> dict:
     now = datetime.now(timezone.utc)
     if _as_utc(record.expires_at) < now:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token expired")
-    # Idle sign-ins end (CxMissionZero's SESSION_IDLE_MINUTES, docs/sign-in.md): every refresh issues a new refresh
+    # Idle sign-ins end (CxMissionZero's SESSION_IDLE_MINUTES, /settings/guide/people-and-access): every refresh issues a new refresh
     # token, so the age of this one is the time since this sign-in was last used.
     if _as_utc(record.created_at) + timedelta(minutes=max(1, int(settings.session_idle_minutes))) < now:
         record.revoked_at = now

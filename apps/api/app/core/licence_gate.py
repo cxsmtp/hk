@@ -1,4 +1,4 @@
-"""The licence gate (app/services/activation_service.py, docs/activation-codes.md).
+"""The licence gate (app/services/activation_service.py, /settings/guide/licence).
 
 After the end of 31 January 2027 (UTC), or a product code's date if later, Hawk AI stops: every request is refused
 with the message that it has been deactivated, and the console shows the deactivation page with a field for the

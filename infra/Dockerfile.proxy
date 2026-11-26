@@ -12,7 +12,7 @@ RUN cp /usr/bin/caddy /tmp/caddy && mv /tmp/caddy /usr/bin/caddy \
   && chown -R 1000:1000 /data /config /hawk-proxy \
   && chmod 0700 /data /hawk-proxy
 
-# ---- The file list: the Caddy binary this image ships, with its SHA-256 (docs/integrity.md) --------------------------
+# ---- The file list: the Caddy binary this image ships, with its SHA-256 (/settings/guide/updates) --------------------------
 # It is built for each platform, so each platform's list differs; the release workflow signs each one.
 FROM --platform=$BUILDPLATFORM python:3.11-slim@sha256:9c900dea9e8fb7e16277c179b555cc72d29a352dbc33cff48ad5a0412fd5bfc7 AS integrity
 ARG HAWK_COMMIT=""

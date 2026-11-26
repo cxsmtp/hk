@@ -1,4 +1,4 @@
-"""The product licence and the activation codes (app/services/activation_service.py, docs/activation-codes.md).
+"""The product licence and the activation codes (app/services/activation_service.py, /settings/guide/licence).
 
 Ported from CxMissionZero's src/routes/licence.js.
 

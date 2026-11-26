@@ -16,7 +16,7 @@ import type { AccessNeeded, TermsState, TermsView } from "@/lib/access";
 import { errorMessageFrom } from "@/lib/licence";
 
 /**
- * First sign-in (deploy/README.md), ported from CxMissionZero's public/app/session.js: someone with a temporary
+ * First sign-in (/settings/guide/install), ported from CxMissionZero's public/app/session.js: someone with a temporary
  * password chooses their own first, then the terms of use are accepted (an owner or admin for the organisation, then
  * each person). Until then the API answers 403 (apps/api/app/core/access_gate.py) and this shows the page instead.
  */

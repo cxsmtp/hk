@@ -128,7 +128,7 @@ function CertificateCard({ found, onTrusted }: { found: TrustDiagnosis; onTruste
 }
 
 /**
- * Settings → Network & proxy: CxMissionZero's page (public/index.html #set-network, public/app/system.js, docs/network.md)
+ * Settings → Network & proxy: CxMissionZero's page (public/index.html #set-network, public/app/system.js, /settings/guide/network)
  * in FTR Command Center's settings look. How Hawk AI reaches the services its connectors use: directly, or through the
  * company proxy (checked step by step, saved only when it lets the service through); what the network team needs to
  * allow; and the certificates outgoing connections trust (a company proxy's root, or an intermediate a server left out).

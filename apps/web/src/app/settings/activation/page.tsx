@@ -17,7 +17,7 @@ import {
 import type { ActivationView } from "@/lib/licence";
 
 /**
- * Settings → Activation codes (docs/activation-codes.md), ported from CxMissionZero's Settings → Activation codes:
+ * Settings → Activation codes (/settings/guide/licence), ported from CxMissionZero's Settings → Activation codes:
  * the product licence (until when Hawk AI works), the tenants code, the last codes entered, and a field to apply a
  * code from the maintainer. Owners and admins only.
  */

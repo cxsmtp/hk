@@ -194,7 +194,7 @@ class Settings(BaseSettings):
     minimum_component_versions_json: str = (
         '{"api":"0.1.0","worker":"0.1.0","celery_beat":"0.1.0","web":"0.1.0"}'
     )
-    # First run (deploy/README.md, app/services/first_run_service.py): the API's own data folder (0700) holds the
+    # First run (/settings/guide/install, app/services/first_run_service.py): the API's own data folder (0700) holds the
     # generated first administrator's password (0600) until they choose their own; it is never in a backup.
     hawk_data_dir: str = ".runtime/data"
     # Make the first administrator when the API starts on an empty database (deploy/compose.yaml turns it on).
@@ -214,7 +214,7 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     refresh_token_expire_minutes: int = 60 * 24 * 7
-    # Sign-in (docs/sign-in.md, ported from CxMissionZero): a sign-in that is not used for this long ends. Hawk's
+    # Sign-in (/settings/guide/people-and-access, ported from CxMissionZero): a sign-in that is not used for this long ends. Hawk's
     # console keeps a 30-minute access token and a rotating refresh token; a refresh token that was not used (rotated)
     # for SESSION_IDLE_MINUTES is refused, so the person signs in again.
     session_idle_minutes: int = 480
@@ -546,7 +546,7 @@ class Settings(BaseSettings):
                     raise ValueError("OIDC issuers must be exact HTTPS origins.")
                 if row["kind"].lower() == "entra" and any(part.lower() in {"common", "organizations", "consumers"} for part in issuer.path.split("/")):
                     raise ValueError("Entra OIDC authority must be tenant-specific.")
-            # Bindings are optional since accounts link by (issuer, subject) at the first sign-in (docs/sign-in.md);
+            # Bindings are optional since accounts link by (issuer, subject) at the first sign-in (/settings/guide/people-and-access);
             # those listed must still be well formed.
             if not isinstance(bindings, list) or any(not isinstance(row, dict) for row in bindings):
                 raise ValueError("OIDC bindings must be a list of objects.")

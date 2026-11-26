@@ -1,4 +1,4 @@
-"""Activation codes and the product licence (docs/activation-codes.md), ported from CxMissionZero's checks.
+"""Activation codes and the product licence (/settings/guide/licence), ported from CxMissionZero's checks.
 
 These tests run the real dates, caps and licence gate (the ``real_licence`` marker keeps conftest from patching
 them out), with the clock injected through activation_service.now_ms.

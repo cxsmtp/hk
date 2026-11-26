@@ -10,7 +10,7 @@ apply_test_settings()
 
 @pytest.fixture(autouse=True)
 def _licence_out_of_the_way(request, monkeypatch):
-    """Keep the product licence and the tenant caps (docs/activation-codes.md) out of tests about other things.
+    """Keep the product licence and the tenant caps (/settings/guide/licence) out of tests about other things.
 
     Without this, every test would start failing after 31 January 2027, when the built-in product date passes, and
     tests that register several owners (each with a tenant of their own) would be refused for want of a tenants

@@ -1,4 +1,4 @@
-# Hawk AI's updater: the `updater` service of deploy/compose.yaml (apps/updater; docs/updating.md). It is the only
+# Hawk AI's updater: the `updater` service of deploy/compose.yaml (apps/updater; /settings/guide/updates). It is the only
 # container with the container engine's socket, so it carries nothing but Python's standard library and its own
 # package, and runs no package manager. It updates and rolls back the whole stack on request from Settings → Updates.
 
@@ -10,7 +10,7 @@ WORKDIR /app
 COPY apps/updater/hawk_updater /app/hawk_updater
 COPY VERSION /app/VERSION
 
-# ---- The file list: every file the updater ships, with its SHA-256 (docs/integrity.md) -------------------------------
+# ---- The file list: every file the updater ships, with its SHA-256 (/settings/guide/updates) -------------------------------
 FROM --platform=$BUILDPLATFORM python:3.11-slim@sha256:9c900dea9e8fb7e16277c179b555cc72d29a352dbc33cff48ad5a0412fd5bfc7 AS integrity
 ARG HAWK_COMMIT=""
 ARG HAWK_REPOSITORY=""

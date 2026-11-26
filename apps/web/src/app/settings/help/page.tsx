@@ -16,7 +16,7 @@ const message = (error: unknown) => errorMessageFrom(error instanceof Error ? er
 /**
  * Settings → Get help, laid out and worded as FTR Command Center's (public/js/settings.js `help()`): saved as it
  * changes, the address requests go to. With CxMissionZero's choice of the support portal here or plain email for an
- * offline installation (docs/support.md), which FTR's page offered at CC-01.50.00. Owners and admins only.
+ * offline installation (/settings/guide/self-check-and-help), which FTR's page offered at CC-01.50.00. Owners and admins only.
  */
 export default function GetHelpSettingsPage() {
   const [channel, setChannel] = useState<SupportChannel | null>(null);

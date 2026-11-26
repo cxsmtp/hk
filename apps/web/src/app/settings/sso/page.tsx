@@ -11,7 +11,7 @@ import { domainList, refusalFrom } from "@/lib/sign-in";
 import type { SignInSettings } from "@/lib/sign-in";
 
 /**
- * Settings → Single sign-on, for owners and admins (docs/sign-in.md). The page is FTR Command Center's System →
+ * Settings → Single sign-on, for owners and admins (/settings/guide/people-and-access). The page is FTR Command Center's System →
  * Single sign-on (ftr-cc-dashboard public/js/settings.js `sso()`): its two panels, wording, controls and autosave.
  * FTR's is SAML 2.0; Hawk's is OpenID Connect, so the SAML fields (SSO URL, IdP entity ID, signing certificate,
  * attributes, signed response) are replaced by the identity provider's issuer and client id. Those, the button label

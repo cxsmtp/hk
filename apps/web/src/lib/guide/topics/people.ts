@@ -103,7 +103,7 @@ export const people: GuideTopic = {
         },
         {
           kind: "p",
-          text: "An Owner or Admin can require it for everyone who signs in with a password ([Settings → Sign-in](/settings/signin)). Someone who lost their phone and their recovery codes: **Reset two-step** on their row takes it off, and they set it up again. For the only owner or admin, run `reset_admin` on the server ([First sign-in](/settings/guide/first-sign-in#lost-admin-password)).",
+          text: "An Owner or Admin can require it for everyone who signs in with a password ([Settings → Sign-in](/settings/signin)). Someone who lost their phone and their recovery codes: **Reset two-step** on their row takes it off, and they set it up again. For the only owner or admin, run `reset_admin` on the server ([First sign-in](/settings/guide/first-sign-in#lost-admin-password)), or put their email in `RESET_TWO_STEP` in `deploy/.env`, run `sudo deploy/install.sh` again, and empty it afterwards.",
         },
       ],
     },
@@ -114,22 +114,17 @@ export const people: GuideTopic = {
       blocks: [
         {
           kind: "p",
-          text: "People can sign in at your organisation's identity provider. The provider itself is set on the server, not in the console:",
+          text: "People can sign in at your organisation's identity provider. The provider itself is set on the server, in `deploy/.env` (then run `sudo deploy/install.sh` again to apply it), not in the console:",
         },
         {
           kind: "table",
           head: ["Setting", "What it holds"],
           rows: [
             ["`COMPANY_SSO_ENABLED`", "`true` turns single sign-on on."],
-            ["`OIDC_PROVIDERS_JSON`", "The identity provider: its issuer address, client id and the button's name (`display_name`)."],
-            ["`OIDC_PROVIDER_SECRETS_JSON`", "Its client secret, encrypted."],
+            ["`OIDC_PROVIDERS_JSON`", "The identity provider: its `key`, `kind` (`entra` or `okta`), the button's name (`display_name`), `workspace_slug`, `issuer` address, `client_id` and the Hawk AI `tenant_id` it signs people into. `deploy/.env.example` has an example."],
+            ["`OIDC_PROVIDER_SECRETS_JSON`", "Its client secret, by `key`. Keep `deploy/.env` readable by root only (the installer makes it so)."],
             ["`OIDC_CALLBACK_URL`", "The https address of `/auth/oidc/callback` on this API, which the identity provider needs."],
           ],
-        },
-        {
-          kind: "note",
-          tone: "warn",
-          text: "The one-machine installation (`deploy/compose.yaml`) does not pass these four settings to the API yet: putting them in `deploy/.env` alone does not turn single sign-on on. Ask whoever supplied Hawk AI before relying on it.",
         },
         {
           kind: "p",
@@ -153,7 +148,7 @@ export const people: GuideTopic = {
           kind: "list",
           items: [
             "The console keeps its sign-in in secure cookies that only the API reads, never in the browser's storage, and every change carries a check another site cannot forge.",
-            "While the console is in use it renews its sign-in by itself (the token it sends lasts 30 minutes). A sign-in not used for 8 hours ends, and the person signs in again.",
+            "While the console is in use it renews its sign-in by itself (the token it sends lasts 30 minutes). A sign-in not used for 8 hours ends, and the person signs in again (`SESSION_IDLE_MINUTES` in `deploy/.env`, 480 by default).",
             "**Sign out** ends the sign-in on the server too. A person who manages people can sign someone out everywhere from [Settings → People](/settings/people); a password reset by link does the same.",
             "Over plain http the cookies cannot be marked secure; use HTTPS for anything but a test.",
           ],

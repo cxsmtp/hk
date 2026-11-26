@@ -13,7 +13,7 @@ import type { TwoStepSetup, TwoStepState } from "@/lib/sign-in";
 type Step = "idle" | "setup" | "off" | "codes";
 
 /**
- * Settings → Two-step sign-in, for oneself (docs/sign-in.md): CxMissionZero's Your profile → Two-step sign-in (its
+ * Settings → Two-step sign-in, for oneself (/settings/guide/people-and-access): CxMissionZero's Your profile → Two-step sign-in (its
  * wording and steps), in FTR Command Center's profile look (ftr-cc-dashboard public/js/profile.js: head compact, one
  * panel, h3 sections). Turning it on asks for a first code from the app; turning it off or making new recovery codes
  * asks for a current code from the app (a recovery code is not enough).

@@ -117,7 +117,7 @@ class LoginResponse(AuthTokensResponse):
 
 
 class TwoStepChallenge(BaseModel):
-    """The password was right and a second step follows (docs/sign-in.md): no tokens yet, only a ticket for the code.
+    """The password was right and a second step follows (/settings/guide/people-and-access): no tokens yet, only a ticket for the code.
     ``setup``: an administrator requires two-step sign-in and this person has none yet; the page shows the key and its
     QR code, and the first right code turns it on."""
 
@@ -132,7 +132,7 @@ class MeResponse(BaseModel):
     email: str
     full_name: str
     tenants: list[TenantMembershipResponse]
-    # The product licence's end, for the admins' banner in its last 30 days (docs/activation-codes.md): only for
+    # The product licence's end, for the admins' banner in its last 30 days (/settings/guide/licence): only for
     # someone who is an owner or admin of a tenant, as they may enter activation codes.
     licence: dict[str, Any] | None = None
     # Choose a new password first (app/core/access_gate.py).
@@ -142,7 +142,7 @@ class MeResponse(BaseModel):
     terms: dict[str, Any] | None = None
     # This build's version, shown bottom-left in the console (VERSION).
     version: str = APP_VERSION
-    # Two-step sign-in for this person (docs/sign-in.md): {available, on, since, recoveryLeft, required}.
+    # Two-step sign-in for this person (/settings/guide/people-and-access): {available, on, since, recoveryLeft, required}.
     two_step: dict[str, Any] | None = None
 
 
@@ -278,7 +278,7 @@ def register(payload: RegisterRequest, request: Request, response: Response, db:
         db.add(user)
         db.flush()
 
-        # Several tenants need a tenants activation code (docs/activation-codes.md).
+        # Several tenants need a tenants activation code (/settings/guide/licence).
         activation_service.assert_may_add_tenant(db)
         tenant = Tenant(name=f"{payload.full_name} Org", slug=f"{payload.email.split('@')[0]}-org", is_active=True)
         db.add(tenant)
@@ -386,7 +386,7 @@ SIGN_IN_UNAVAILABLE = "Sign-in is unavailable for a moment. Try again shortly."
 
 
 def two_step_challenge(user: User) -> TwoStepChallenge:
-    """The second step instead of tokens (docs/sign-in.md): a ticket for the code, and when an administrator requires
+    """The second step instead of tokens (/settings/guide/people-and-access): a ticket for the code, and when an administrator requires
     two-step sign-in and this person has none yet, the key to set it up (the first right code at POST /auth/two-step
     turns it on and only then gives tokens). Raises sign_in_store.StoreUnavailable."""
 

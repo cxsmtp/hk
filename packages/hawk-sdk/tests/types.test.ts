@@ -36,7 +36,7 @@ const developerAgentRequest = {
   actor_id: "agent-1",
   capability_token: "short-lived-capability-token",
   action: "repository.read",
-  resource: "repo://docs/readme.md",
+  resource: "repo:///settings/guide",
 } satisfies EndpointDeveloperAgentRequest;
 void developerAgentRequest;
 
@@ -45,7 +45,7 @@ const missingDeveloperCapability: EndpointDeveloperAgentRequest = {
   ai_system_id: "developer-agent",
   actor_id: "agent-1",
   action: "repository.read",
-  resource: "repo://docs/readme.md",
+  resource: "repo:///settings/guide",
 };
 void missingDeveloperCapability;
 

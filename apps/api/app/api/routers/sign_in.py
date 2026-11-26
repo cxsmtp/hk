@@ -1,5 +1,5 @@
 """Two-step sign-in, forgotten passwords and the administrator's sign-in rules, ported from CxMissionZero's
-src/routes/session.js (docs/sign-in.md).
+src/routes/session.js (/settings/guide/people-and-access).
 
 Before signing in:
 - GET  /auth/sign-in-options           what the sign-in page offers ("Forgot your password?")

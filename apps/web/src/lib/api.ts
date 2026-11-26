@@ -259,7 +259,7 @@ let refreshTokenInFlight: Promise<boolean> | null = null;
 const inflightGetRequests = new Map<string, Promise<unknown>>();
 
 /**
- * The licence gate's answer (docs/activation-codes.md): Hawk AI has been deactivated. Tells the page, which then
+ * The licence gate's answer (/settings/guide/licence): Hawk AI has been deactivated. Tells the page, which then
  * shows the deactivation screen, and says whether it was that answer (so it is not retried).
  */
 function reportDeactivated(status: number, text: string): boolean {
@@ -652,11 +652,11 @@ export type CurrentUser = {
   full_name: string;
   tenants: { id: string; name: string; role: string }[];
   licence?: AdminLicence | null;
-  // A temporary password to change, and the terms of use, first (deploy/README.md).
+  // A temporary password to change, and the terms of use, first (/settings/guide/install).
   must_change_password?: boolean;
   terms?: TermsState | null;
   version?: string;
-  // Two-step sign-in for this person (docs/sign-in.md).
+  // Two-step sign-in for this person (/settings/guide/people-and-access).
   two_step?: TwoStepState | null;
 };
 
@@ -666,7 +666,7 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ email, password }),
     }, false),
-  // Sign-in (docs/sign-in.md): the second step, "Forgot your password?", one's own two-step sign-in, and the
+  // Sign-in (/settings/guide/people-and-access): the second step, "Forgot your password?", one's own two-step sign-in, and the
   // administrator's sign-in rules.
   signInOptions: () => request<{ passwordReset: boolean; ssoPasswordAdminsOnly: boolean }>("/auth/sign-in-options", undefined, false),
   twoStep: (ticket: string, code: string) =>
@@ -732,7 +732,7 @@ export const api = {
   me: () => request<CurrentUser>("/auth/me"),
   // Sign out: the API revokes this sign-in's refresh token and clears the session cookies.
   signOut: () => request<{ ok: boolean }>("/auth/refresh/sign-out", { method: "POST", body: "{}" }, false),
-  // First sign-in (deploy/README.md): a new password, the terms of use, and the first administrator's setup code.
+  // First sign-in (/settings/guide/install): a new password, the terms of use, and the first administrator's setup code.
   changePassword: (current: string, next: string) =>
     request<LoginResponse>("/auth/me/password", { method: "POST", body: JSON.stringify({ current, next }) }),
   // Before or after signing in: the session cookie, when there is one, says whose acceptance to show.
@@ -742,14 +742,14 @@ export const api = {
   setupStatus: () => request<{ setup: boolean }>("/setup", undefined, false),
   setup: (payload: { code: string; email: string; name: string; password: string }) =>
     request<LoginResponse | TwoStepChallenge>("/setup", { method: "POST", body: JSON.stringify(payload) }, false),
-  // The product licence and activation codes (docs/activation-codes.md).
+  // The product licence and activation codes (/settings/guide/licence).
   getLicence: () => request<LicenceStatus>("/licence", undefined, false),
   activateLicence: (code: string) =>
     request<{ active: boolean; until: string }>("/licence/activate", { method: "POST", body: JSON.stringify({ code }) }, false),
   getActivation: () => request<ActivationView>("/activation"),
   applyActivation: (code: string) =>
     request<ActivationApplied>("/activation", { method: "POST", body: JSON.stringify({ code }) }),
-  // Settings → HTTPS (docs/https-and-hosting.md).
+  // Settings → HTTPS (/settings/guide/https).
   getHttps: () => request<HttpsStatus>("/https"),
   setHttpsMode: (mode: HttpsMode, confirm = false) =>
     request<HttpsStatus>("/https/mode", { method: "POST", body: JSON.stringify({ mode, confirm }) }),

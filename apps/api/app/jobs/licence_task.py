@@ -1,4 +1,4 @@
-"""Background tasks stop while Hawk AI is deactivated (docs/activation-codes.md).
+"""Background tasks stop while Hawk AI is deactivated (/settings/guide/licence).
 
 Every Celery task is a LicensedTask (app/jobs/celery_app.py). While the product licence is not active a task does
 not run: it logs once and returns, without a retry, so scheduled work simply stops until an activation code is

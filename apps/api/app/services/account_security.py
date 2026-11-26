@@ -1,5 +1,5 @@
 """Signing in with a password, ported from CxMissionZero's src/iam.js (signIn, checkTwoStep, recordSignIn) and
-src/routes/session.js (the limit per address, the sign-in policy). docs/sign-in.md.
+src/routes/session.js (the limit per address, the sign-in policy). /settings/guide/people-and-access.
 
 - Five wrong passwords in a row lock the account for 15 minutes. While it is locked, only someone who typed the right
   password learns it (423); to anyone else it looks like any wrong password (401), so nothing gives it away.

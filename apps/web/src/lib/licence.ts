@@ -1,5 +1,5 @@
 /**
- * The product licence and activation codes in the console (docs/activation-codes.md), ported from CxMissionZero's
+ * The product licence and activation codes in the console (/settings/guide/licence), ported from CxMissionZero's
  * public/deactivated.js, public/app/core.js (renderLicenceBanner) and public/app/system.js (renderActivation).
  */
 

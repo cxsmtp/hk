@@ -82,7 +82,7 @@ def support_team(db: Session, tenant_id: str | None) -> list[str]:
 
 
 def mail_ready(db: Session) -> str:
-    """'' when email can go out; otherwise why not (the email server must be set up and tested, docs/sign-in.md)."""
+    """'' when email can go out; otherwise why not (the email server must be set up and tested, /settings/guide/people-and-access)."""
 
     if not mailer.configured():
         return "The email server is not set up (Settings → Email (SMTP))."

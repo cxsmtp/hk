@@ -8,7 +8,7 @@ name: Release images
 # Each image carries the list of the files it ships, with their SHA-256 (integrity.json, written by its Dockerfile's
 # integrity stage). The list is read from the amd64 and the arm64 image and must be the same; then the list and the
 # image are signed with a GitHub build attestation (Sigstore, public log). Hawk AI checks its own files and that
-# signature, and the updater checks a new version's before installing it (docs/integrity.md, docs/updating.md).
+# signature, and the updater checks a new version's before installing it (/settings/guide/updates, /settings/guide/updates).
 # `stable` is moved by hand only, with promote-stable.yml.
 
 on:

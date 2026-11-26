@@ -4,7 +4,7 @@ scripts/backup.mjs.
     python -m app.cli.backup [output file or folder]
     docker compose -f deploy/compose.yaml exec api python -m app.cli.backup
 
-Default output: BACKUP_DIR (default /data/backups). The backup is encrypted as the server's own are: with
+Default output: BACKUP_DIR (/backups in the containers; ${HAWK_DATA_DIR}/backups on the host by default). The backup is encrypted as the server's own are: with
 BACKUP_PASSPHRASE when set, else with the server's backup key (in the data folder) when encryption is on, else not at
 all. BACKUP_ENCRYPTION=off keeps it plain. Whether this installation is new or existing is the server's to decide, at
 its start: this only reads it.

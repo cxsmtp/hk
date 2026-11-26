@@ -9,7 +9,7 @@ name: Promote to stable
 #      tests, the console's checks and the image smoke test passed;
 #   3. only once every image checks out, points ghcr.io/<owner>/<repo>-<image>:stable at that same digest, and checks
 #      that it did.
-# `latest` is every merged release; `stable` is the one promoted here (docs/updating.md). Settings → Updates follows
+# `latest` is every merged release; `stable` is the one promoted here (/settings/guide/updates). Settings → Updates follows
 # either, as chosen there.
 #
 # It never runs on a push or a pull request, and checks out no code. To go back, run it again with the earlier

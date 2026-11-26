@@ -1,5 +1,5 @@
 /**
- * Sign-in in the console (docs/sign-in.md), ported from CxMissionZero's public/app/session.js: two-step sign-in after
+ * Sign-in in the console (/settings/guide/people-and-access), ported from CxMissionZero's public/app/session.js: two-step sign-in after
  * the password, "Forgot your password?" and its emailed link, and the sentences single sign-on comes back with.
  */
 

@@ -1,4 +1,4 @@
-"""First run and terms of use (deploy/README.md, ported from CxMissionZero).
+"""First run and terms of use (/settings/guide/install, ported from CxMissionZero).
 
 - users.must_change_password: the generated first administrator, and anyone given a temporary password by
   reset_admin, chooses their own password at first sign-in.

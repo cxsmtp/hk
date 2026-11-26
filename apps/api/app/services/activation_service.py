@@ -1,4 +1,4 @@
-"""Activation codes and the product licence (docs/activation-codes.md).
+"""Activation codes and the product licence (/settings/guide/licence).
 
 Ported from CxMissionZero's src/activation.js, with the same behaviour, messages and protections.
 

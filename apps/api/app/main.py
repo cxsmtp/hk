@@ -153,7 +153,7 @@ def _prepare_access_at_start() -> None:
             db.commit()
     if settings.first_run_access:
         first_run_service.prepare_access(SessionLocal)
-    # RESET_TWO_STEP=<email>: two-step sign-in taken off once for that person (docs/sign-in.md).
+    # RESET_TWO_STEP=<email>: two-step sign-in taken off once for that person (/settings/guide/people-and-access).
     reset_two_step = os.environ.get("RESET_TWO_STEP")
     try:
         with SessionLocal() as db:

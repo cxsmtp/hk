@@ -20,7 +20,7 @@ import { isTwoStepChallenge, refusalFrom, ssoRefusal, twoStepHint } from "@/lib/
 import type { TwoStepChallenge } from "@/lib/sign-in";
 import type { LoginResponse } from "@/lib/types";
 
-/** What the sign-in page shows (docs/sign-in.md, CxMissionZero's public/app/session.js). */
+/** What the sign-in page shows (/settings/guide/people-and-access, CxMissionZero's public/app/session.js). */
 type Box = "signin" | "forgot" | "twostep" | "recovery";
 type Status = { text: string; kind: "ok" | "error" | "" };
 
@@ -31,7 +31,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [workspace, setWorkspace] = useState("acme");
   const [oidcProviders, setOidcProviders] = useState<Array<{ key: string; display_name: string }>>([]);
-  // First start with FIRST_ADMIN=setup-code (deploy/README.md): nobody has access yet.
+  // First start with FIRST_ADMIN=setup-code (/settings/guide/install): nobody has access yet.
   const [setup, setSetup] = useState(false);
   const [setupCode, setSetupCode] = useState("");
   const [setupName, setSetupName] = useState("");
