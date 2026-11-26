@@ -53,8 +53,24 @@ test("Get help and Network & proxy word things as CxMissionZero does", async () 
   );
 });
 
+test("evidence signing: the fingerprint as people compare it, and the signature file saved beside an export", async () => {
+  const { shortFingerprint, signatureFile, ALGORITHM_LABELS } = await loadRecords();
+  assert.equal(shortFingerprint("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"), "0123 4567 89ab cdef 0123 4567 89ab cdef");
+  assert.equal(shortFingerprint(null), "");
+  const envelope = { format: "hawk-evidence-signature/v1", alg: "EdDSA", kid: "ab", signature: "x" };
+  const header = Buffer.from(JSON.stringify(envelope)).toString("base64url");
+  assert.deepEqual(JSON.parse(signatureFile(header)), envelope);
+  assert.ok(signatureFile(header).endsWith("}\n"));
+  assert.equal(signatureFile(""), "");
+  assert.equal(signatureFile("not base64 json"), "");
+  assert.equal(ALGORITHM_LABELS.EdDSA, "Ed25519");
+});
+
 test("the Records pages keep FTR's panels, controls and wording", () => {
   const audit = source("app/settings/audit/page.tsx");
+  for (const text of ["Evidence signing", "Key id (fingerprint)", "Rotate the signing key", "exportAuditLogSigned", ".sig.json"]) {
+    assert.ok(audit.includes(text), `audit page, evidence signing: ${text}`);
+  }
   for (const text of ["Audit log", "Check the log is intact", "Export CSV", "Search everything", "Every action", "Older entries", "No events", "Nothing matches these filters.", "<th>When</th>", "<th>Address</th>", 'className="audit"']) {
     assert.ok(audit.includes(text), `audit page: ${text}`);
   }

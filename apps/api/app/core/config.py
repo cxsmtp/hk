@@ -306,6 +306,22 @@ class Settings(BaseSettings):
     authorization_kernel_v2_enforce: bool = False
     authorization_kernel_v2_enforce_rollout: str = "{}"
     decision_execution_receipts_enabled: bool = False
+    # Evidence signing (app/services/evidence_signing.py): what signs the evidence handed to auditors. local (an
+    # Ed25519 key in the data folder), aws_kms, azure_kv or gcp_kms; the cloud keys' secrets also as *_FILE.
+    evidence_signing_backend: str = "local"
+    evidence_signing_aws_kms_key_id: str = ""
+    evidence_signing_aws_region: str = ""
+    evidence_signing_aws_endpoint: str = ""
+    evidence_signing_aws_access_key_id: str = ""
+    evidence_signing_aws_secret_access_key: str = ""
+    evidence_signing_aws_session_token: str = ""
+    evidence_signing_azure_key_id: str = ""
+    evidence_signing_azure_tenant_id: str = ""
+    evidence_signing_azure_client_id: str = ""
+    evidence_signing_azure_client_secret: str = ""
+    evidence_signing_azure_authority_host: str = "https://login.microsoftonline.com"
+    evidence_signing_gcp_key_version: str = ""
+    evidence_signing_gcp_credentials_json: str = ""
     receipt_signing_active_key_id: str = ""
     receipt_signing_keys_json: str = "{}"
     banking_transaction_integrity_enabled: bool = False
@@ -435,6 +451,14 @@ class Settings(BaseSettings):
         if not token:
             raise ValueError("Required secret/config value must be set via environment and cannot be empty.")
         return token
+
+    @field_validator("evidence_signing_backend")
+    @classmethod
+    def _validate_evidence_signing_backend(cls, value: str) -> str:
+        backend = str(value or "").strip().lower() or "local"
+        if backend not in ("local", "aws_kms", "azure_kv", "gcp_kms"):
+            raise ValueError("EVIDENCE_SIGNING_BACKEND must be local, aws_kms, azure_kv or gcp_kms.")
+        return backend
 
     @field_validator("connector_secrets_kdf_iterations")
     @classmethod
