@@ -20,6 +20,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.routers.auth import SIGN_IN_UNAVAILABLE, two_step_challenge
+from app.core import session_cookies
 from app.core.auth import get_current_user
 from app.core.security import decode_token
 from app.db.models.tenant import Tenant
@@ -135,25 +136,28 @@ def setup(request: Request, body: dict[str, Any] | None = Body(default=None), db
     tenants = _tenants_of(db, admin)
     tokens = issue_tokens(db, user=admin, tenant_id=tenants[0]["id"], role=tenants[0]["role"])
     db.commit()
-    return JSONResponse(
-        status_code=201,
-        headers={"Cache-Control": "no-store"},
-        content={
+    # The console's session: the tokens as cookies (app/core/session_cookies.py).
+    return session_cookies.answer(
+        request,
+        {
             **tokens,
             "user": {"id": admin.id, "email": admin.email, "full_name": admin.full_name},
             "tenants": tenants,
             "selected_tenant_id": tenants[0]["id"],
             "must_change_password": False,
         },
+        201,
     )
 
 
 def _optional_user(request: Request, db: Session) -> User | None:
     header = request.headers.get("authorization") or ""
-    if not header.lower().startswith("bearer "):
+    # A bearer token, else the console's session cookie (app/core/session_cookies.py; a read, so no CSRF check).
+    token = header[7:].strip() if header.lower().startswith("bearer ") else session_cookies.access_cookie(request)
+    if not token:
         return None
     try:
-        payload = decode_token(header[7:].strip())
+        payload = decode_token(token)
     except ValueError:
         return None
     if payload.get("type") != "access" or not payload.get("sub"):

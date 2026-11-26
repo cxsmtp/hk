@@ -30,7 +30,8 @@ export default function OIDCCallbackPage() {
       const tenantId = login.selected_tenant_id || login.tenants?.[0]?.id;
       if (!tenantId) throw new Error("No tenant in login response");
       const role = login.tenants?.find((tenant) => tenant.id === tenantId)?.role;
-      setSession({ accessToken: login.access_token, refreshToken: login.refresh_token, tenantId, userRole: role, user: login.user });
+      // The tokens are HttpOnly cookies the API set; only who signed in is remembered here.
+      setSession({ tenantId, userRole: role, user: login.user });
       router.replace(defaultRouteForRole(role));
     }).catch(() => {
       if (active) {

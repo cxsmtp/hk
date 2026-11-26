@@ -25,6 +25,7 @@ manage them in each of those tenants.
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 import secrets
 import sys
@@ -36,6 +37,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.core import session_cookies
 from app.core.permissions import ADMIN_ONLY, GROUPS, LOCKED_ROLES, PERMISSIONS
 from app.core.rbac import require_permission
 from app.core.security import get_password_hash
@@ -958,7 +960,8 @@ def confirm_join(request: Request, body: Annotated[dict[str, Any] | None, Body()
     account_security.record_sign_in(user)
     result = signed_in_response(db, user)
     db.commit()
-    return result
+    # The console's session: the tokens as cookies (app/core/session_cookies.py).
+    return session_cookies.answer(request, json.loads(result.model_dump_json()))
 
 
 @router.get("/iam/join-settings")

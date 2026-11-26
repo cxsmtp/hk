@@ -89,7 +89,7 @@ export function useRuntimeIntelligenceStream(options: UseRuntimeIntelligenceStre
       let attempt = 0;
       while (!stopped) {
         const session = getSession();
-        if (!session?.accessToken || !session?.tenantId) {
+        if (!session?.tenantId) {
           onConnectionStateChangeRef.current?.(false);
           await sleep(1000);
           continue;
@@ -103,9 +103,10 @@ export function useRuntimeIntelligenceStream(options: UseRuntimeIntelligenceStre
             method: "GET",
             headers: {
               Accept: "text/event-stream",
-              Authorization: `Bearer ${session.accessToken}`,
               "X-Tenant-ID": session.tenantId,
             },
+            // The session cookie (apps/api/app/core/session_cookies.py): a GET, so no CSRF token.
+            credentials: "include",
             cache: "no-store",
             signal: controller.signal,
           });

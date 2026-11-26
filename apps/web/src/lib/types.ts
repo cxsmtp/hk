@@ -3,8 +3,9 @@ import type { ListEnvelope as SharedListEnvelope } from "@shared/schemas/api_env
 export type ListEnvelope<T> = SharedListEnvelope<T>;
 
 export type LoginResponse = {
-  access_token: string;
-  refresh_token: string;
+  // Empty for the console: it asks for the cookie session (apps/api/app/core/session_cookies.py) and never sees them.
+  access_token?: string;
+  refresh_token?: string;
   token_type: string;
   user: {
     id: string;

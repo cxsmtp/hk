@@ -5,6 +5,7 @@ Every release, newest first: the version shown bottom-left in the console (HK-xx
 ## HK-00.02.01 — pending · [#NN](https://github.com/cxsmtp/hk/pull/NN)
 
 - **No known vulnerable component.** The console moves to Next.js 15.5.29 and sharp 0.35.5 (a critical remote-code-execution flaw and several image-library flaws fixed). The API's PDF reader, certificate bundle, DNS, ASN.1 and HTTP libraries move to their fixed versions, and sign-in tokens are now made and checked with PyJWT instead of python-jose, which has an unfixed advisory. Nothing changes for people signing in.
+- **Your sign-in is no longer kept where a script could read it.** The console keeps its sign-in in secure cookies that only the API can read (no longer in the browser's storage), every change you make carries a check that another site cannot forge, and Sign out now ends the sign-in on the server too. Everyone signs in once more after this update. The SDK, the MCP proxy, the endpoint agent and the browser extension work as before.
 - **Ticketing only over https.** Jira and ServiceNow addresses must be https (or this machine); a file: or cloud metadata address is refused.
 - **Every change is checked for security.** A new check on every pull request, on main and weekly: no secret in new commits, no known-vulnerable Python or JavaScript component that ships, and no medium or high finding in the API code.
 - **Faster, cheaper checks.** Tests run once per change instead of twice, and the API tests run in parallel.

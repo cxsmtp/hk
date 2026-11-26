@@ -29,7 +29,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkSession = () => {
       const session = getSession();
-      const active = !!session?.accessToken;
+      // The tokens are cookies the page cannot see: a remembered sign-in is enough here, and the first refused
+      // request (no cookie, or one that cannot be refreshed) clears it and comes back to the sign-in page.
+      const active = !!session?.tenantId;
       setHasSession(active);
       setSessionReady(true);
       if (!active) {

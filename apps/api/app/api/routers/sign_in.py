@@ -30,6 +30,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.routers.auth import audit_access, refused, signed_in_response
+from app.core import session_cookies
 from app.core.auth import get_current_user
 from app.core.config import settings
 from app.core.rbac import require_permission
@@ -162,7 +163,8 @@ def two_step(request: Request, body: Annotated[dict[str, Any] | None, Body()] = 
     content = json.loads(response.model_dump_json())
     if recovery_codes:
         content["recovery_codes"] = recovery_codes
-    return _no_store(content, 200)
+    # The console's session: the tokens as cookies (app/core/session_cookies.py).
+    return session_cookies.answer(request, content, 200)
 
 
 # ---------------------------------------------------------------------------------------------------------------------
