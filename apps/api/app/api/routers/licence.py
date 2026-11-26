@@ -9,6 +9,7 @@ Ported from CxMissionZero's src/routes/licence.js.
 
 from __future__ import annotations
 
+import logging
 import threading
 from typing import Any
 
@@ -25,6 +26,7 @@ from app.services.audit_service import write_audit_log
 
 
 router = APIRouter(tags=["licence"])
+logger = logging.getLogger(__name__)
 
 #: A code is a few hundred characters: anything longer is cut, as in CxMissionZero.
 MAX_CODE_LENGTH = 4000
@@ -126,6 +128,7 @@ def licence_activate(request: Request, body: dict[str, Any] | None = Body(defaul
     ip = _client_ip(request)
     now = activation_service.now_ms()
     if not licence_tries.allow(ip, now):
+        logger.warning("Product activation code refused: too many tries from this address", extra={"client_ip": ip, "reason_code": "rate_limited"})
         return JSONResponse(status_code=429, content={"error": TOO_MANY_TRIES}, headers={"Cache-Control": "no-store"})
     result = activation_service.check_code(_code_from(body))
     store = activation_service.load_store(db, for_update=True)

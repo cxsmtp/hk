@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import logging
 import math
+import re
 from typing import Any, Literal
 from uuid import uuid4
 
@@ -37,6 +39,49 @@ from app.services.mcp_tool_approval_service import (
     decide_mcp_tool_fingerprint,
     list_mcp_tool_fingerprints,
 )
+
+
+logger = logging.getLogger(__name__)
+#: A reason that is a code (policy_denied, scope.missing): logged. Free text could repeat what was asked: never logged.
+_REASON_CODE = re.compile(r"^[A-Za-z0-9_.:-]{1,80}$")
+
+
+def _code_or_none(value: Any) -> str | None:
+    text = str(value or "").strip()
+    return text if _REASON_CODE.fullmatch(text) else None
+
+
+def _log_gateway_decision(route_key: str, *, tenant_id: str, ai_system_id: str, request_id: str, result: Any) -> None:
+    """One line per gateway decision: the decision, the control mode and the reason codes, never the prompt, the
+    tool arguments or the resource asked for."""
+
+    try:
+        result = result if isinstance(result, dict) else {}
+        decision = str(result.get("decision") or result.get("final_decision") or "unknown")
+        fields: dict[str, Any] = {
+            "gateway_route": route_key,
+            "decision": decision,
+            "control_mode": _code_or_none(result.get("control_mode")),
+            "reason_code": _code_or_none(result.get("reason")) or _code_or_none(result.get("violation_reason")),
+            "ai_system_id": ai_system_id,
+            "gateway_request_id": request_id,
+            "tenant_id": tenant_id,
+            "event_id": result.get("event_id"),
+        }
+        level = logging.INFO if decision.lower() in {"allow", "allowed", "warn", "monitor"} else logging.WARNING
+        logger.log(level, "Gateway decision %s: %s", route_key, decision, extra={k: v for k, v in fields.items() if v is not None})
+    except Exception:  # noqa: BLE001 - the log line never changes the decision
+        pass
+
+
+def _log_gateway_refusal(route_key: str, *, tenant_id: str, ai_system_id: str, request_id: str, code: str, reason_code: Any = None, level: int = logging.WARNING) -> None:
+    logger.log(
+        level,
+        "Gateway request refused %s: %s",
+        route_key,
+        code,
+        extra={k: v for k, v in {"gateway_route": route_key, "decision": "block", "refusal": code, "reason_code": _code_or_none(reason_code), "ai_system_id": ai_system_id, "gateway_request_id": request_id, "tenant_id": tenant_id}.items() if v is not None},
+    )
 
 
 router = APIRouter(
@@ -325,6 +370,7 @@ def _raise_fail_closed(
         audit_log_id=audit_id,
         evidence_node_id=evidence_id,
         error=str(error),
+        level="error",
     )
     raise HTTPException(
         status_code=503,
@@ -411,18 +457,22 @@ def gateway_llm_intercept(
             parent_agent_id=payload.parent_agent_id,
         )
         db.commit()
+        _log_gateway_decision("gateway.llm.intercept", tenant_id=ctx.tenant.id, ai_system_id=payload.ai_system_id, request_id=req_id, result=result)
         return result
     except ValueError as exc:
         db.rollback()
+        _log_gateway_refusal("gateway.llm.intercept", tenant_id=ctx.tenant.id, ai_system_id=payload.ai_system_id, request_id=req_id, code="not_found", level=logging.INFO)
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except GovernanceViolationError as exc:
         db.rollback()
+        _log_gateway_refusal("gateway.llm.intercept", tenant_id=ctx.tenant.id, ai_system_id=payload.ai_system_id, request_id=req_id, code="governance_context_blocked", reason_code=exc.reason_code)
         raise HTTPException(
             status_code=exc.status_code,
             detail={"code": "governance_context_blocked", "reason_code": exc.reason_code, "message": exc.message},
         ) from exc
     except GovernanceFailSecureError as exc:
         db.rollback()
+        _log_gateway_refusal("gateway.llm.intercept", tenant_id=ctx.tenant.id, ai_system_id=payload.ai_system_id, request_id=req_id, code="governance_fail_secure", reason_code=exc.reason_code, level=logging.ERROR)
         raise HTTPException(
             status_code=503,
             detail={"code": "governance_fail_secure", "reason_code": exc.reason_code, "message": exc.message},
@@ -619,18 +669,22 @@ def gateway_mcp_authorize(
             dynamic_permission=payload.dynamic_permission,
         )
         db.commit()
+        _log_gateway_decision("gateway.mcp.authorize", tenant_id=ctx.tenant.id, ai_system_id=payload.ai_system_id, request_id=req_id, result=result)
         return result
     except ValueError as exc:
         db.rollback()
+        _log_gateway_refusal("gateway.mcp.authorize", tenant_id=ctx.tenant.id, ai_system_id=payload.ai_system_id, request_id=req_id, code="not_found", level=logging.INFO)
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except GovernanceViolationError as exc:
         db.rollback()
+        _log_gateway_refusal("gateway.mcp.authorize", tenant_id=ctx.tenant.id, ai_system_id=payload.ai_system_id, request_id=req_id, code="governance_context_blocked", reason_code=exc.reason_code)
         raise HTTPException(
             status_code=exc.status_code,
             detail={"code": "governance_context_blocked", "reason_code": exc.reason_code, "message": exc.message},
         ) from exc
     except GovernanceFailSecureError as exc:
         db.rollback()
+        _log_gateway_refusal("gateway.mcp.authorize", tenant_id=ctx.tenant.id, ai_system_id=payload.ai_system_id, request_id=req_id, code="governance_fail_secure", reason_code=exc.reason_code, level=logging.ERROR)
         raise HTTPException(
             status_code=503,
             detail={"code": "governance_fail_secure", "reason_code": exc.reason_code, "message": exc.message},

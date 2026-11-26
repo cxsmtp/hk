@@ -26,9 +26,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import re
 import secrets
-import sys
 from datetime import datetime, timezone
 from typing import Annotated, Any
 
@@ -38,6 +38,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core import session_cookies
+from app.core.log_config import mask_email
 from app.core.permissions import ADMIN_ONLY, GROUPS, LOCKED_ROLES, PERMISSIONS
 from app.core.rbac import require_permission
 from app.core.security import get_password_hash
@@ -57,6 +58,9 @@ router = APIRouter(tags=["iam"])
 
 EMAIL = re.compile(r"^(?=.{3,254}$)[^\s@<>\"]+@[^\s@<>\"]+\.[^\s@<>\"]+$")
 NOT_YOURS = "That person is not one you can change."
+
+
+logger = logging.getLogger(__name__)
 
 
 def _no_store(content: Any, status_code: int = 200) -> JSONResponse:
@@ -98,7 +102,7 @@ def _send(message, to: str) -> None:  # type: ignore[no-untyped-def]
     try:
         mailer.send(message, to)
     except mailer.MailError as error:
-        print(f"[people] An email to {to} could not be sent: {error}", file=sys.stderr, flush=True)
+        logger.warning("[people] An email to %s could not be sent: %s", mask_email(to), error)
 
 
 # ---------------------------------------------------------------------------------------------------------------------

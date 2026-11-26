@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select
@@ -20,6 +21,8 @@ from app.services.monitoring_service import (
 )
 from app.services.simulation_pack_service import evaluate_simulation_coverage_remediation
 
+
+logger = logging.getLogger(__name__)
 
 _DETERMINISTIC_CONNECTOR_CONFIGURATION_ERRORS = frozenset(
     {
@@ -67,6 +70,11 @@ def run_all_connectors(tenant_id: str) -> dict:
                 if persisted is None or persisted.tenant_id != tenant_id:
                     raise
                 reason = str(exc).strip()
+                logger.warning(
+                    "Connector not run: its configuration is invalid (%s)",
+                    reason,
+                    extra={"connector_id": connector_id, "tenant_id": tenant_id, "reason_code": "connector_configuration_invalid"},
+                )
                 persisted.last_run_at = datetime.now(timezone.utc)
                 persisted.status = "degraded"
                 persisted.last_pull_status = "error"
@@ -82,6 +90,14 @@ def run_all_connectors(tenant_id: str) -> dict:
                         "reason_code": "connector_configuration_invalid",
                     }
                 )
+        if executed:
+            logger.info(
+                "Connectors run: %d of %d, %d signal(s)",
+                executed,
+                len(connectors),
+                generated,
+                extra={"tenant_id": tenant_id, "configuration_errors": len(configuration_errors)},
+            )
         return {
             "tenant_id": tenant_id,
             "connectors": len(connectors),

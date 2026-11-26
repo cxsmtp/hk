@@ -24,6 +24,8 @@ from pathlib import Path
 from typing import Any, Callable
 from zoneinfo import ZoneInfo
 
+import logging
+
 import httpx
 
 from app.services.integrity.service import IntegrityService, audit_system, offline_allowed
@@ -45,6 +47,8 @@ CACHE_FILE = "update-published.json"
 LOOK_OUTSIDE_HOUR_SECONDS = 55 * 60
 
 Record = Callable[..., None]
+
+logger = logging.getLogger(__name__)
 
 
 def compare_versions(a: str, b: str) -> int:
@@ -295,7 +299,12 @@ class UpdateService:
                 "error": error,
                 "warning": warning,
             }
+            if error:
+                logger.warning("Update check: %s", error)
+            else:
+                logger.info("Update check: %d version(s) published, newest %s", len(versions), versions[0]["version"], extra={"running_version": self.running_version})
         except UpdateError as error:
+            logger.warning("Update check failed: %s", error)
             self.last_check = {**(previous or {"versions": []}), "at": _iso(dt.datetime.now(dt.timezone.utc)), "error": str(error)}
         try:
             _write(self.data_dir / CACHE_FILE, self.last_check)
@@ -363,6 +372,11 @@ class UpdateService:
         except companion.UpdaterUnavailable as error:
             raise UpdateError(str(error), 409) from error
         going = "back" if compare_versions(target["version"], self.running_version) < 0 else "to"
+        logger.info(
+            "Update to %s asked of the updater",
+            target["version"],
+            extra={"running_version": self.running_version, "tag": ref, "automatic": automatic, "update_request_id": sent.get("id")},
+        )
         self.record(
             outcome="changed",
             reason=oneline(f"Update {'back ' if going == 'back' else ''}to {display_version(target['version'])} asked of the updater ({ref}; {genuine}){' automatically' if automatic else ''}."),
@@ -376,6 +390,7 @@ class UpdateService:
             sent = companion.request(self.updater, {"action": "restart", "by": by})
         except companion.UpdaterUnavailable as error:
             raise UpdateError(str(error), 409) from error
+        logger.info("Restart asked of the updater", extra={"update_request_id": sent.get("id")})
         self.record(outcome="changed", reason="Hawk AI restarted from Settings → Updates.", by=by, details={"id": sent["id"]})
         return {"restarting": True}
 
@@ -391,6 +406,7 @@ class UpdateService:
             return None
 
         def say(result: str) -> None:
+            logger.info("Auto-update: %s", result)
             self.save_settings({"lastAutoAt": _iso(now), "lastAutoResult": result})
 
         # The updater's heartbeat is fresh or not now, whatever moment this look is for.

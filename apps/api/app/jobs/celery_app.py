@@ -5,13 +5,25 @@ import time
 
 from celery import Celery
 from celery.schedules import crontab
-from celery.signals import beat_init, heartbeat_sent, task_failure, worker_init, worker_process_init, worker_ready
+from celery.signals import beat_init, heartbeat_sent, setup_logging, task_failure, worker_init, worker_process_init, worker_ready
 
 from app.core.config import settings
 from app.jobs import backup_schedule, update_schedule, watchdog_schedule
+from app.jobs import task_logging  # noqa: F401 - task start / finish / failure lines, and their context
 from app.jobs.licence_task import LicensedTask
 from app.services.control_plane_health_service import write_beat_heartbeat, write_worker_heartbeat
 from app.services.job_run_service import write_dead_letter_job_run
+
+
+@setup_logging.connect
+def _configure_logging(**kwargs) -> None:  # pragma: no cover - exercised in running worker and beat processes
+    """The worker and beat log as the API does (app/core/log_config.py: LOG_FORMAT, LOG_LEVEL), instead of Celery's
+    own format: connecting this signal is what keeps Celery from setting logging up itself."""
+
+    del kwargs
+    from app.core.log_config import configure_logging
+
+    configure_logging(service=str(settings.component_type or "worker"))
 
 
 celery_app = Celery(

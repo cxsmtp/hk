@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import logging
 import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -25,6 +26,9 @@ from app.services.microsoft_graph_integration_service import (
     normalize_permission_mode,
     resolve_microsoft_graph_scopes,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -2618,6 +2622,7 @@ def run_provider_pull(
 ) -> ConnectorPullResult:
     provider = PROVIDERS.get(provider_key)
     if provider is None:
+        logger.warning("Connector pull failed: unknown provider", extra={"provider_key": provider_key, "reason_code": "unknown_provider"})
         return ConnectorPullResult(
             status="error",
             is_stub=False,
@@ -2643,6 +2648,7 @@ def run_provider_pull(
         if provider.auth_mode == "aws_sdk":
             pulled, aws_error = _pull_aws_signals(secrets, connector_config)
             if aws_error:
+                logger.warning("Connector pull failed: %s: %s", provider_key, aws_error, extra={"provider_key": provider_key, "reason_code": "aws_pull_error"})
                 return ConnectorPullResult(
                     status="error",
                     is_stub=False,
@@ -2664,6 +2670,7 @@ def run_provider_pull(
                 destination_policy=policy,
             )
             if auth_error:
+                logger.warning("Connector sign-in failed: %s: %s", provider_key, auth_error, extra={"provider_key": provider_key, "reason_code": "auth_error"})
                 return ConnectorPullResult(
                     status="error",
                     is_stub=False,
@@ -2684,6 +2691,13 @@ def run_provider_pull(
                 mappings=active_mappings,
             )
     except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "Connector pull failed: %s: %s",
+            provider_key,
+            exc,
+            exc_info=True,
+            extra={"provider_key": provider_key, "reason_code": "pull_error", "error_type": type(exc).__name__},
+        )
         return ConnectorPullResult(
             status="error",
             is_stub=False,

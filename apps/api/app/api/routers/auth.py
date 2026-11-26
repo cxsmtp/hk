@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import re
 from datetime import datetime, timezone
 from time import perf_counter, sleep
@@ -29,6 +30,7 @@ from app.version import APP_VERSION
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+logger = logging.getLogger(__name__)
 _AUTH_MIN_RESPONSE_SECONDS = 0.25
 _REGISTRATION_FAILURE_DETAIL = "Unable to process registration request"
 
@@ -184,7 +186,7 @@ def _sso_refused(db: Session, exc: oidc_auth_service.OIDCError, provider_key: st
         db.commit()
     except Exception:  # noqa: BLE001 - the refusal is still answered
         db.rollback()
-    print(f"! [single sign-on] Not signed in ({exc.code}): {exc}.", flush=True)
+    logger.warning("[single sign-on] Not signed in (%s): %s.", exc.code, exc, extra={"sso_provider": provider_key or None, "reason_code": exc.code})
     if not settings.oidc_frontend_url:
         raise _oidc_failure(exc)
     base = settings.oidc_frontend_url.split("#", 1)[0]
@@ -358,6 +360,12 @@ def audit_access(db: Session, user: User | None, *, action: str, reason: str, re
     """A sign-in event in the audit log (CxMissionZero's auditAccess): never a password, code, ticket or token."""
 
     ip = account_security.client_ip(request)
+    # The log line: who (their id, never the email or what was typed), from where, and what came of it.
+    fields = {"auth_event": action, "client_ip": ip, **({"user_id": user.id} if user is not None else {})}
+    if "refused" in action:
+        logger.warning("Sign-in refused", extra=fields)
+    else:
+        logger.info("Sign-in event: %s", action, extra=fields)
     # Refusals are listed only so many a minute (app/services/refusal_audit.py: 30 per address, 120 in all).
     if "refused" in action and not refusal_audit.may_list(db, "sign_in", ip):
         return
@@ -403,6 +411,7 @@ def login(payload: LoginRequest, request: Request, response: Response, db: Sessi
     started_at = perf_counter()
     try:
         if account_security.too_many_sign_ins(request):
+            logger.warning("Sign-in refused: too many attempts from this address", extra={"client_ip": account_security.client_ip(request), "reason_code": "rate_limited"})
             return refused(429, account_security.TOO_MANY)
         try:
             user = account_security.check_password(db, payload.email, payload.password, more=True)

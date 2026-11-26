@@ -21,12 +21,17 @@ from __future__ import annotations
 import copy
 import datetime as dt
 import errno
+import logging
 import socket
 import ssl
 from pathlib import Path
 from typing import Any, Callable
 
 from app.services.state_file import read_state, write_state
+
+#: Every watchdog event (a problem found, a repair tried or that worked, a case raised, a rollback) is also a log line.
+logger = logging.getLogger(__name__)
+_EVENT_LEVELS = {"problem": logging.WARNING, "tried": logging.WARNING, "rollback": logging.WARNING, "case": logging.WARNING}
 
 NOTIFY_AFTER = 2
 CASE_AFTER = 3
@@ -96,6 +101,13 @@ class Watchdog:
         return copy.deepcopy(self._state["events"][:limit])
 
     def _event(self, entry: dict[str, Any]) -> None:
+        try:
+            fields = {"watchdog_event": entry.get("kind"), "problem_key": entry.get("key") or None}
+            if entry.get("tenant"):
+                fields["tenant_id"] = entry["tenant"]
+            logger.log(_EVENT_LEVELS.get(str(entry.get("kind")), logging.INFO), "Watchdog %s: %s", entry.get("kind"), entry.get("message"), extra={k: v for k, v in fields.items() if v})
+        except Exception:  # noqa: BLE001 - the log line never stands in the way of the watchdog
+            pass
         self._state["events"].insert(0, entry)
         self._state["events"] = self._state["events"][:EVENTS_KEPT]
 

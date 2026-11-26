@@ -9,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core import access_gate, session_cookies
+from app.core.log_config import update_log_context
 from app.core.security import decode_token
 from app.db.models.user import User
 from app.db.session import get_db
@@ -60,6 +61,8 @@ def get_current_user(
             signed_out = signed_out.replace(tzinfo=timezone.utc)
         if int(payload.get("iat") or 0) < int(signed_out.timestamp()):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Signed out")
+    # Who is asking, on every log line of this request from now on (app/core/log_config.py).
+    update_log_context(user_id=user.id)
     # A temporary password to change, or terms of use to accept, first (app/core/access_gate.py).
     access_gate.enforce(request, db, user)
     return user

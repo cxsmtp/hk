@@ -665,6 +665,11 @@ class HttpsManager:
         stored = {k: v for k, v in self.state.items() if k != "saved"}
         write_state(self.file, stored, mode=FILE_MODE)
         self._stamp = self._file_stamp()
+        log.info(
+            "HTTPS settings saved: mode %s",
+            self.mode,
+            extra={"https_mode": self.mode, "certificate_source": self.active.source if self.active else None, "min_tls_version": self.state.get("minVersion")},
+        )
 
     @property
     def mode(self) -> str:
@@ -743,6 +748,7 @@ class HttpsManager:
             try:
                 self._apply()
             except Exception as error:
+                log.error("! [https] The certificate in use cannot be served: HTTPS is stopped (%s)", error)
                 self.proxy.write_stopped(str(error))
                 raise
 

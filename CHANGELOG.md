@@ -11,6 +11,7 @@ Every release, newest first: the version shown bottom-left in the console (HK-xx
 - **Ticketing only over https.** Jira and ServiceNow addresses must be https (or this machine); a file: or cloud metadata address is refused.
 - **Every change is checked for security.** A new check on every pull request, on main and weekly: no secret in new commits, no known-vulnerable Python or JavaScript component that ships, and no medium or high finding in the API code.
 - **Faster, cheaper checks.** Tests run once per change instead of twice, and the API tests run in parallel.
+- **Logs you can follow.** The API, worker and scheduler write one line per event as JSON (LOG_FORMAT, LOG_LEVEL): every request with its route, status, time taken and a request id that comes back in the X-Request-ID header and in error messages; every background task's start, end or failure; sign-ins, lockouts, licence, people and role changes, backups and restores, updates, software integrity, HTTPS, the self-check's repairs, gateway decisions and connector errors. Passwords, tokens, keys, cookies and prompt text never reach the log, and Docker keeps at most 100 MB of it per service.
 - **Status.** Not merged yet.
 
 ## HK-00.02.00 — 2026-11-25 22:36 UTC · [#5](https://github.com/cxsmtp/hk/pull/5), [#7](https://github.com/cxsmtp/hk/pull/7), [#8](https://github.com/cxsmtp/hk/pull/8)
