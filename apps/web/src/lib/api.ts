@@ -12,7 +12,7 @@ import { approvalStatusFilters, mergeApprovalStatusResults } from "@/lib/approva
 import { demoFallbackRequest, isDemoFallbackEnabled } from "@/lib/demo-fallback";
 import { isDeactivatedAnswer, LICENCE_DEACTIVATED_EVENT } from "@/lib/licence";
 import { accessNeededFrom, PASSWORD_CHANGE_EVENT, TERMS_REQUIRED_EVENT } from "@/lib/access";
-import type { TermsState, TermsView } from "@/lib/access";
+import type { TermsAcceptPayload, TermsAcceptance, TermsAcceptances, TermsState, TermsView } from "@/lib/access";
 import type { SignInPerson, SignInSettings, TwoStepChallenge, TwoStepSetup, TwoStepState } from "@/lib/sign-in";
 import type { IamJoinSettings, IamRole, IamView, JoinLink } from "@/lib/iam";
 import type { ActivationApplied, ActivationView, AdminLicence, LicenceStatus } from "@/lib/licence";
@@ -739,8 +739,12 @@ export const api = {
     request<LoginResponse>("/auth/me/password", { method: "POST", body: JSON.stringify({ current, next }) }),
   // Before or after signing in: the session cookie, when there is one, says whose acceptance to show.
   getTerms: () => request<TermsView>("/terms", undefined, false),
-  acceptTerms: (payload: { version: string; forOrganisation?: boolean; organisationName?: string }) =>
-    request<{ terms: TermsState }>("/terms/accept", { method: "POST", body: JSON.stringify(payload) }),
+  acceptTerms: (payload: TermsAcceptPayload) => request<{ terms: TermsState }>("/terms/accept", { method: "POST", body: JSON.stringify(payload) }),
+  // The accepted licence agreement (Settings → About): the acceptances, their emailed copy, send again, download.
+  getTermsAcceptances: () => request<TermsAcceptances>("/terms/acceptances"),
+  resendTermsCopy: (id: string, to?: string) =>
+    request<TermsAcceptance>(`/terms/acceptances/${encodeURIComponent(id)}/resend`, { method: "POST", body: JSON.stringify(to ? { to } : {}) }),
+  downloadTermsCopy: (id: string, format: "html" | "txt") => requestBlob(`/terms/acceptances/${encodeURIComponent(id)}/copy?format=${format}`),
   setupStatus: () => request<{ setup: boolean }>("/setup", undefined, false),
   setup: (payload: { code: string; email: string; name: string; password: string }) =>
     request<LoginResponse | TwoStepChallenge>("/setup", { method: "POST", body: JSON.stringify(payload) }, false),

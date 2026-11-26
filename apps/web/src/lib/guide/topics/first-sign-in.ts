@@ -1,10 +1,10 @@
 import type { GuideTopic } from "../types";
 
-/** app/core/access_gate.py, app/services/terms_service.py, app/services/passwords.py, app/cli/reset_admin.py. */
+/** app/core/access_gate.py, app/services/terms_service.py, app/services/terms_copy_service.py, app/services/passwords.py, app/cli/reset_admin.py. */
 export const firstSignIn: GuideTopic = {
   slug: "first-sign-in",
   title: "First sign-in and a lost password",
-  summary: "The new password at first sign-in, the terms of use for the organisation and for each person, and getting back in when the administrator's password is lost.",
+  summary: "The new password at first sign-in, the licence agreement every administrator accepts for the organisation (and its emailed copy), the terms of use for everyone else, and getting back in when the administrator's password is lost.",
   sections: [
     {
       id: "open-hawk",
@@ -36,19 +36,28 @@ export const firstSignIn: GuideTopic = {
     },
     {
       id: "terms",
-      title: "Terms of use, for the organisation and for each person",
+      title: "The licence agreement, and the terms of use for everyone else",
       blocks: [
         {
           kind: "steps",
           items: [
-            "Before anyone can use Hawk AI, an owner or admin accepts the terms of use for the organisation, and gives the organisation's name (unless `ORGANISATION_NAME` set it). Until then Hawk AI is closed to everyone and background work does not run; others see \"An administrator must accept the terms of use before Hawk AI can be used.\"",
-            "Then each person accepts them for themselves before they first use Hawk AI.",
-            "Acceptance is tied to the exact text: when the terms change, they are asked for again. Every acceptance is in the audit log.",
+            "Right after choosing their password, an owner or admin is shown Hawk AI's End User Licence Agreement (the licence, its limits of liability, the AI disclaimers, the features and the terms of use). They read it to the end, tick \"I have read\", give the company's legal name, their own full name and email (filled in from their account, and editable), and confirm they accept on behalf of the company and are authorised to.",
+            "Until the first administrator has accepted, Hawk AI is closed to everyone and background work does not run; others see \"An administrator must accept the terms of use before Hawk AI can be used.\" Every other owner or admin accepts the agreement the same way at their own next sign-in.",
+            "Everyone else accepts the shorter terms of use for users (Schedule 2 of the agreement) before they first use Hawk AI: no company details are asked.",
+            "Acceptance is tied to the exact text: its version and SHA-256. A new version of the agreement, or a change to the licensor's details in `deploy/.env` (`LICENSOR_LEGAL_NAME`, `LICENSOR_ADDRESS`, `LICENSOR_NOTICE_EMAIL`, `GOVERNING_LAW`, `DISPUTE_FORUM`, `LIABILITY_CAP_NO_FEES`), is asked for again.",
           ],
         },
         {
           kind: "p",
-          text: "For an automated setup, `ACCEPT_TERMS` set to the deploying person's email in `deploy/.env` accepts the terms for the organisation and everyone using this installation, recorded under that name.",
+          text: "Each acceptance is kept for good: who accepted, for which company, the version and its SHA-256, the time, the address and the browser. Nobody can change or delete it; it is in the audit log and in the auditor's export.",
+        },
+        {
+          kind: "p",
+          text: "A copy of the agreement goes to the administrator's email: the full text in the email, the exact accepted text attached (.txt, whose SHA-256 is the recorded one) and an .html copy with the acceptance details. Hawk AI runs on your server, so the email server is often set up later: the copy waits, and goes out as soon as a test of the email server passes (Settings → Email (SMTP)), or within five minutes after. Failed sends are tried again, waiting longer each time. Settings → About shows \"Copy emailed to … on …\" or \"Will be emailed when the mail server is set up\", and owners and admins can email it again or download it there.",
+        },
+        {
+          kind: "p",
+          text: "For an automated setup, `ACCEPT_TERMS` set to the deploying person's email in `deploy/.env` accepts the agreement for the organisation and everyone using this installation, recorded under that name (with `ORGANISATION_NAME` as the company), and its copy is emailed to them.",
         },
       ],
     },

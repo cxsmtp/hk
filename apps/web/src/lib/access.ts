@@ -16,23 +16,100 @@ export const TERMS_REQUIRED = "terms_required";
 
 export type AccessNeeded = "password" | "terms" | null;
 
-/** Where this person stands with the terms of use (/auth/me). */
+/** Where this person stands with the terms (/auth/me): an owner or admin accepts the whole licence agreement for the
+ * organisation ("organisation"), anyone else the terms of use for users ("user"). */
 export type TermsState = {
   version: string;
   organisationAccepted: boolean;
   accepted: boolean;
   canAcceptForOrganisation: boolean;
+  scope?: "organisation" | "user";
 };
 
-/** The terms of use, as GET /terms gives them. */
+/** The licence agreement, as GET /terms gives it (rendered: the licensor's details are written in). */
 export type TermsView = {
   version: string;
+  /** SHA-256 of `text`: what an acceptance is tied to. */
+  hash: string;
   text: string;
+  /** The terms of use for users (Schedule 2 of the agreement). */
+  userText: string;
+  licensor: string;
   notice: string;
   organisation: { at: string; by: string; via: string } | null;
   organisationName: string;
-  you?: { accepted: boolean; at: string | null; canAcceptForOrganisation: boolean };
+  you?: { accepted: boolean; at: string | null; canAcceptForOrganisation: boolean; scope: "organisation" | "user"; email: string; fullName: string };
 };
+
+/** What POST /terms/accept takes. */
+export type TermsAcceptPayload = {
+  version: string;
+  hash: string;
+  read: boolean;
+  forOrganisation?: boolean;
+  companyName?: string;
+  fullName?: string;
+  email?: string;
+  authorised?: boolean;
+};
+
+/** Where the emailed copy of an accepted agreement is (apps/api/app/services/terms_copy_service.py). */
+export type TermsCopy = {
+  state: "none" | "waiting" | "queued" | "retrying" | "sent" | "failed";
+  to: string;
+  sentAt: string | null;
+  attempts: number;
+  lastError: string;
+  nextAttemptAt: string | null;
+};
+
+/** One acceptance record: permanent, never changed. */
+export type TermsAcceptance = {
+  id: string;
+  scope: "organisation" | "user";
+  version: string;
+  hash: string;
+  companyName: string;
+  fullName: string;
+  email: string;
+  authorised: boolean;
+  everyone: boolean;
+  via: string;
+  acceptedAt: string | null;
+  copy: TermsCopy;
+};
+
+export type TermsAcceptances = { current: { version: string; hash: string }; emailReady: boolean; acceptances: TermsAcceptance[] };
+
+/** The emailed copy's status, in words, for Settings → About. */
+export function termsCopyStatus(copy: TermsCopy, when: (iso: string) => string = (iso) => new Date(iso).toLocaleString()): string {
+  switch (copy.state) {
+    case "sent":
+      return `Copy emailed to ${copy.to}${copy.sentAt ? ` on ${when(copy.sentAt)}` : ""}.`;
+    case "waiting":
+      return `Will be emailed to ${copy.to} when the mail server is set up and tested (Settings → Email (SMTP)).`;
+    case "queued":
+      return `Being emailed to ${copy.to}.`;
+    case "retrying":
+      return `Emailing ${copy.to} failed (${copy.lastError || "no answer"}); trying again${copy.nextAttemptAt ? ` at ${when(copy.nextAttemptAt)}` : ""}.`;
+    case "failed":
+      return `Emailing ${copy.to} failed after ${copy.attempts} tries (${copy.lastError || "no answer"}). Send it again.`;
+    default:
+      return "No copy was emailed.";
+  }
+}
+
+const EMAIL = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/;
+
+/** What the administrator's acceptance form still needs, or "" when it can be sent (the API checks the same). */
+export function termsFormProblem(form: { read: boolean; companyName: string; fullName: string; email: string; authorised: boolean }): string {
+  if (!form.read) return "Read the agreement to the end and tick that you have read it.";
+  if (!form.companyName.trim()) return "Write your company’s legal name.";
+  if (form.fullName.trim().length < 2) return "Write your full name.";
+  if (!EMAIL.test(form.email.trim())) return "Write an email address the copy of the agreement can be sent to.";
+  if (!form.authorised) return "Confirm that you accept on behalf of the company and are authorised to.";
+  return "";
+}
 
 /** What an API answer asks for first: a new password, the terms of use, or nothing. */
 export function accessNeededFrom(status: number, text: string): AccessNeeded {
@@ -74,10 +151,11 @@ export function newPasswordProblem(current: string, next: string, repeat: string
   return passwordProblem(next);
 }
 
-/** What the terms page asks of this person. */
+/** What the terms page asks of this person: an owner or admin always accepts the whole agreement for the
+ * organisation; anyone else waits for that, then accepts the terms of use for users. */
 export function termsStep(state: Pick<TermsState, "organisationAccepted" | "canAcceptForOrganisation">): "organisation" | "wait" | "person" {
-  if (state.organisationAccepted) return "person";
-  return state.canAcceptForOrganisation ? "organisation" : "wait";
+  if (state.canAcceptForOrganisation) return "organisation";
+  return state.organisationAccepted ? "person" : "wait";
 }
 
 /** "1.2.3" → "HK-01.02.03": the version shown bottom-left on every screen (apps/api/app/version.py). */

@@ -66,6 +66,7 @@ export const email: GuideTopic = {
             "People: the welcome email for someone added, and both addresses when a sign-in email changes.",
             "Get help: each support case or enhancement and every answer, when Get help uses the portal.",
             "Hands-off: the weekly status, and the self-check's emails to owners and admins (a problem found, a problem gone, a support case to forward).",
+            "The licence agreement: the copy each administrator gets when accepting it. It waits for the email server and goes out as soon as a test passes.",
             "Backups: a copy of every encrypted backup to the backup mailbox (`BACKUP_EMAIL`), and the \"Hawk AI stopped\" email. These go whenever a mail server is set, tested or not.",
           ],
         },

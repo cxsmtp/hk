@@ -1742,6 +1742,19 @@ def build_control_posture_views(
     }
 
 
+def _terms_acceptance_rows(db: Session, tenant_id: str) -> list[dict[str, Any]]:
+    from app.db.models.access import TermsAcceptance
+    from app.services.terms_service import acceptance_view
+
+    rows = db.scalars(
+        select(TermsAcceptance)
+        .where((TermsAcceptance.scope == "organisation") | (TermsAcceptance.tenant_id == tenant_id))
+        .order_by(TermsAcceptance.accepted_at.desc())
+        .limit(1000)
+    ).all()
+    return [acceptance_view(row) for row in rows]
+
+
 def export_audit_artifacts(
     db: Session,
     *,
@@ -2363,6 +2376,9 @@ def export_audit_artifacts(
 
     json_payload = sanitize_privacy_payload(json_payload)
     json_payload["pilot_user_activity"] = safe_pilot_user_activity
+    # The licence agreement's acceptances (app/services/terms_service.py): permanent records of who accepted which
+    # text (its SHA-256), for which company, when and from where. Kept as recorded: they are the contract's evidence.
+    json_payload["terms_acceptances"] = _terms_acceptance_rows(db, tenant_id)
     json_executive_report = json_payload.get("executive_report")
     if isinstance(json_executive_report, dict):
         json_executive_sections = dict(json_executive_report.get("sections") or {})

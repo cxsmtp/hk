@@ -39,11 +39,32 @@ test("the password rule matches the API's, and the change page checks the two ne
   assert.equal(newPasswordProblem("Hq7Tz-mWb3K-p9XcR-a4NfE", "a-new-Password-2026", "a-new-Password-2026"), "");
 });
 
-test("the terms page asks an owner or admin for the organisation first, and others to wait", async () => {
+test("every owner or admin accepts the licence agreement for the organisation; others wait, then accept the terms of use", async () => {
   const { termsStep } = await load("lib/access.ts");
   assert.equal(termsStep({ organisationAccepted: false, canAcceptForOrganisation: true }), "organisation");
+  assert.equal(termsStep({ organisationAccepted: true, canAcceptForOrganisation: true }), "organisation");
   assert.equal(termsStep({ organisationAccepted: false, canAcceptForOrganisation: false }), "wait");
   assert.equal(termsStep({ organisationAccepted: true, canAcceptForOrganisation: false }), "person");
+});
+
+test("the administrator's acceptance needs read, company, full name, email and authorised", async () => {
+  const { termsFormProblem } = await load("lib/access.ts");
+  const ok = { read: true, companyName: "Acme LLC", fullName: "Ada Admin", email: "ada@acme.example", authorised: true };
+  assert.equal(termsFormProblem(ok), "");
+  assert.match(termsFormProblem({ ...ok, read: false }), /Read the agreement/);
+  assert.match(termsFormProblem({ ...ok, companyName: " " }), /company/);
+  assert.match(termsFormProblem({ ...ok, fullName: "A" }), /full name/);
+  assert.match(termsFormProblem({ ...ok, email: "ada" }), /email address/);
+  assert.match(termsFormProblem({ ...ok, authorised: false }), /authorised/);
+});
+
+test("the emailed copy's status reads plainly", async () => {
+  const { termsCopyStatus } = await load("lib/access.ts");
+  const base = { to: "ada@acme.example", sentAt: null, attempts: 0, lastError: "", nextAttemptAt: null };
+  const when = (iso) => iso.slice(0, 10);
+  assert.equal(termsCopyStatus({ ...base, state: "sent", sentAt: "2026-12-01T10:00:00Z" }, when), "Copy emailed to ada@acme.example on 2026-12-01.");
+  assert.match(termsCopyStatus({ ...base, state: "waiting" }, when), /^Will be emailed to ada@acme\.example when the mail server is set up/);
+  assert.match(termsCopyStatus({ ...base, state: "failed", attempts: 10, lastError: "down" }, when), /failed after 10 tries \(down\)/);
 });
 
 test("the terms render as escaped HTML without the top heading", async () => {
@@ -54,8 +75,10 @@ test("the terms render as escaped HTML without the top heading", async () => {
     "<p>Version 1.0</p><h3>1. What</h3><p>Use <strong>the software</strong> with <code>LICENSE</code> &lt;script&gt;.</p><ul><li>one<ul><li>nested</li></ul></li><li>two</li></ul>",
   );
   const terms = readFileSync(new URL("../../../TERMS.md", import.meta.url), "utf8");
-  assert.match(terms, /^Version 1\.0 /m);
-  assert.match(termsHtml(terms), /Bhawani Singh/);
+  assert.match(terms, /^Version 2\.0 /m);
+  assert.match(terms, /\{\{LICENSOR_LEGAL_NAME\}\}/);
+  assert.match(termsHtml(terms), /<h3>11\. Limitation of liability<\/h3>/);
+  assert.match(termsHtml(terms), /<h3>Schedule 2 — Terms of use for users and acceptable use<\/h3>/);
 });
 
 test("the version is shown like CxMissionZero's, from the one VERSION file", async () => {
@@ -84,6 +107,8 @@ test("every screen has the gates and the version, and the API client reports the
   const gate = source("components/access-gate.tsx");
   assert.match(gate, /Choose a new password/);
   assert.match(gate, /Accept and continue/);
+  for (const id of ["terms-read", "terms-company", "terms-name", "terms-email", "terms-authorised"]) assert.match(gate, new RegExp(`id="${id}"`));
+  assert.match(api, /"\/terms\/acceptances"/);
   assert.match(gate, /Decline and sign out/);
   assert.match(source("app/login/page.tsx"), /Create the first administrator/);
   assert.match(source("lib/api-url.ts"), /A path on the console's own address/);

@@ -84,6 +84,8 @@ export const AUDIT_NAMES: Record<string, string> = {
   "support.enhancement": "Requested an enhancement",
   "support.status": "Changed a request's status",
   "terms.accept": "Accepted the terms",
+  "terms.accepted": "Accepted the licence agreement or terms of use",
+  "terms.copy.resend": "Sent the licence agreement again",
 };
 
 export const auditBase = (action: string) => String(action).replace(/^refused: /, "");

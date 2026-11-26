@@ -118,5 +118,5 @@ def test_migration_graph_has_one_short_alembic_head() -> None:
     assert len(migration.revision) <= 32
     config = Config(str(Path(__file__).resolve().parents[1] / "app/db/migrations/alembic.ini"))
     heads = ScriptDirectory.from_config(config).get_heads()
-    assert heads == ["0102_ai_system_approval_policy"]
+    assert heads == ["0103_terms_acceptance"]
     assert all(len(head) <= 128 for head in heads)
