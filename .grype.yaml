@@ -1,0 +1,22 @@
+# The container scan (grype; .github/workflows/release.yml's smoke test scans every image built, and
+# .github/workflows/security.yml the PostgreSQL and Redis images deploy/compose.yaml runs): it fails on a known
+# vulnerability rated High or Critical that has a fix. Every exception below says why; review them whenever a pinned
+# image digest is bumped, and remove one as soon as its reason no longer holds.
+fail-on-severity: high
+only-fixed: true
+
+ignore:
+  # PostgreSQL's image carries gosu (a Go binary) for its entrypoint to drop from root to the postgres user. Hawk AI
+  # starts PostgreSQL as that user (uid 999) from the start (deploy/compose.yaml), so gosu is never run.
+  - package:
+      location: "/usr/local/bin/gosu"
+  # The Caddy binary of the proxy image is built by the Caddy project; its Go modules and Go itself can only be updated
+  # by a new Caddy release. They are listed by the report-only scan in security.yml; bump the pinned caddy digest
+  # (infra/Dockerfile.proxy) when Caddy publishes the fix.
+  - package:
+      type: go-module
+      location: "/usr/bin/caddy"
+  # Copies of jaraco.context and wheel vendored inside setuptools (Python's base image), used only by setuptools' own
+  # packaging commands, never imported by Hawk AI at run time.
+  - package:
+      location: "/usr/local/lib/python3.11/site-packages/setuptools/_vendor/**"

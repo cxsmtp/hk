@@ -58,6 +58,8 @@ log = logging.getLogger("hawk.self_check")
 ERRORS_PER_15_MIN = 30
 INBOX_FAILURES_FILE = "hands-off-inbox.json"
 LOCK_FILE = "watchdog.lock"
+#: Written by deploy/install.sh into the updater folder it shares with the API: this machine's CIS Linux items.
+HOST_CHECK_FILE = "host-check.json"
 APP_NAME = "Hawk AI"
 AUTOMATIC = {"id": "system", "name": "Hawk AI (automatic)", "email": ""}
 #: The automatic runs Hawk AI relies on, by the name their runs are recorded under (scheduled_job_runs), and what a
@@ -954,6 +956,24 @@ class SelfCheck:
 
     # ---- What the pages show ----------------------------------------------------------------------------------------
 
+    def host_checks(self) -> dict[str, Any] | None:
+        """The machine's own checks (CIS Linux benchmark items: firewall, SSH, automatic updates, time, disk encryption,
+        auditd), made by deploy/install.sh at each run and only reported: {checkedAt, checks: [{id, status, title,
+        detail}]}, or None when the installer has not written them (another way of running Hawk AI)."""
+
+        try:
+            raw = json.loads((self._updater() / HOST_CHECK_FILE).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return None
+        if not isinstance(raw, dict) or not isinstance(raw.get("checks"), list):
+            return None
+        checks = [
+            {key: str(item.get(key) or "")[:300] for key in ("id", "status", "title", "detail")}
+            for item in raw["checks"][:20]
+            if isinstance(item, dict) and item.get("status") in ("pass", "warn")
+        ]
+        return {"checkedAt": str(raw.get("checkedAt") or "")[:40], "checks": checks}
+
     def health_view(self) -> dict[str, Any]:
         state = self.watchdog.state
         return {
@@ -962,6 +982,7 @@ class SelfCheck:
             "problems": self.watchdog.problems(),
             "events": self.watchdog.events(20),
             "maintainer": maintainer_email(self.env),
+            "host": self.host_checks(),
         }
 
     # ---- The audit log ----------------------------------------------------------------------------------------------

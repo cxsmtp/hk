@@ -2,6 +2,10 @@
 
 Every release, newest first: the version shown bottom-left in the console (HK-xx.xx.xx, from the VERSION file), when it was merged, and what changed for the people using it. Updated with every change merged to main (CLAUDE.md).
 
+## HK-00.03.01 — pending · [#NN](https://github.com/cxsmtp/hk/pull/NN)
+
+- **The installation itself meets the CIS benchmarks, and every release says what is in it.** Every service runs as an ordinary user with no special rights, a read-only file system, memory and process limits and a health check; PostgreSQL and Redis sit on an internal network of their own, PostgreSQL accepts only strong passwords over an encrypted connection and logs who connects, and Redis refuses the commands that could wipe it. The updater, the one service that can manage the others, no longer runs as root and has no network at all. Base images move to current, patched versions (the console now runs on Node.js 22), every published image comes with a signed list of its components (CycloneDX SBOM), as do the API's and the console's dependencies, and nothing is published with a known, fixable high or critical vulnerability. The installer also checks the machine (firewall, SSH, automatic updates, time, disk encryption, audit daemon) and Settings → Backups & health shows the result; it changes nothing. Run `sudo deploy/install.sh` once to apply this. If `deploy/.env` names a published version older than this one, the installer leaves the updater off and updates go through the installer.
+
 ## HK-00.03.00 — pending · [#NN](https://github.com/cxsmtp/hk/pull/NN)
 
 - **Your sign-in is no longer kept where a script could read it.** The console keeps its sign-in in secure cookies that only the API can read (no longer in the browser's storage), every change you make carries a check that another site cannot forge, and Sign out now ends the sign-in on the server too. Everyone signs in once more after this update. The SDK, the MCP proxy, the endpoint agent and the browser extension work as before.

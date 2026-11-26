@@ -107,11 +107,99 @@ for name in secret_key secret_key_lock_pepper connector_secrets_key connector_se
   write_secret "$name" "$(random 64)" 1000:1000
 done
 unset pg rd
+
+# PostgreSQL's TLS certificate (deploy/compose.yaml: ssl=on, and deploy/postgres-hba.conf refuses connections without
+# TLS). Self-signed and for the name `postgres` only: the connection never leaves this machine's internal network.
+# Made once, with this machine's openssl, else with the openssl in the PostgreSQL image itself.
+if [ ! -s "$SECRETS/postgres_tls.key" ] || [ ! -s "$SECRETS/postgres_tls.crt" ]; then
+  tls_args=(req -x509 -newkey rsa:3072 -nodes -days 3650 -subj "/CN=postgres" -addext "subjectAltName=DNS:postgres" -keyout postgres_tls.key -out postgres_tls.crt)
+  if command -v openssl >/dev/null 2>&1; then
+    (cd "$SECRETS" && openssl "${tls_args[@]}" >/dev/null 2>&1) || fail "Could not make PostgreSQL's TLS certificate with openssl."
+  else
+    pg_image="$(sed -n 's/^    image: \(postgres:[^ ]*\)$/\1/p' "$DEPLOY_DIR/compose.yaml" | head -n 1)"
+    docker run --rm --user 0:0 --network none --entrypoint openssl -v "$SECRETS:/out" -w /out "$pg_image" "${tls_args[@]}" >/dev/null 2>&1 \
+      || fail "Could not make PostgreSQL's TLS certificate (install openssl, then run this again)."
+  fi
+  created=$((created + 2))
+fi
+chown 999:999 "$SECRETS/postgres_tls.key" "$SECRETS/postgres_tls.crt"
+chmod 0600 "$SECRETS/postgres_tls.key"
+chmod 0644 "$SECRETS/postgres_tls.crt"
+
 if [ "$created" -gt 0 ]; then
   say "Created $created secret(s) in $SECRETS (folder 0700, files 0600). Back this folder up with the database."
 else
   say "Secrets in $SECRETS kept as they are."
 fi
+
+# --- This machine against the CIS Linux benchmark (reported, never changed) -------------------------------------------
+# A few items an auditor asks about first. Written to ${HAWK_DATA_DIR}/updater/host-check.json, which the API reads:
+# Settings → Backups & health shows them under the self-check (/settings/guide/self-check-and-help).
+host_checks=()
+host_check() { # id pass|warn "what" "detail"
+  host_checks+=("$(printf '{"id": "%s", "status": "%s", "title": "%s", "detail": "%s"}' "$1" "$2" "$3" "$4")")
+  printf '  %-5s %s: %s\n' "$2" "$3" "$4"
+}
+active() { command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet "$1" 2>/dev/null; }
+enabled() { command -v systemctl >/dev/null 2>&1 && systemctl is-enabled --quiet "$1" 2>/dev/null; }
+check_host() {
+  say "This machine (CIS Linux benchmark items, reported only; nothing is changed):"
+  if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q '^Status: active'; then
+    host_check firewall pass "Firewall" "ufw is active. Docker's published ports bypass ufw: BIND_ADDRESS limits them."
+  elif active firewalld || active nftables; then
+    host_check firewall pass "Firewall" "firewalld or nftables is active."
+  else
+    host_check firewall warn "Firewall" "No host firewall is active (ufw, firewalld or nftables). Allow only SSH and the Hawk AI ports."
+  fi
+  sshd_config=""
+  if command -v sshd >/dev/null 2>&1; then sshd_config="$(sshd -T 2>/dev/null || true)"; fi
+  if [ -z "$sshd_config" ]; then
+    host_check ssh-root pass "SSH root sign-in" "No SSH server is running here."
+    host_check ssh-passwords pass "SSH passwords" "No SSH server is running here."
+  else
+    root_login="$(printf '%s\n' "$sshd_config" | awk '$1 == "permitrootlogin" {print $2}')"
+    if [ "$root_login" = "no" ]; then
+      host_check ssh-root pass "SSH root sign-in" "PermitRootLogin no."
+    else
+      host_check ssh-root warn "SSH root sign-in" "PermitRootLogin is ${root_login:-unset}: set PermitRootLogin no in /etc/ssh/sshd_config."
+    fi
+    if [ "$(printf '%s\n' "$sshd_config" | awk '$1 == "passwordauthentication" {print $2}')" = "no" ]; then
+      host_check ssh-passwords pass "SSH passwords" "PasswordAuthentication no: keys only."
+    else
+      host_check ssh-passwords warn "SSH passwords" "SSH accepts passwords: set PasswordAuthentication no and use keys."
+    fi
+  fi
+  if [ -f /etc/apt/apt.conf.d/20auto-upgrades ] && grep -Eq 'Unattended-Upgrade "1"' /etc/apt/apt.conf.d/20auto-upgrades; then
+    host_check updates pass "Automatic security updates" "unattended-upgrades is on."
+  elif enabled dnf-automatic.timer || enabled dnf-automatic-install.timer; then
+    host_check updates pass "Automatic security updates" "dnf-automatic is on."
+  else
+    host_check updates warn "Automatic security updates" "Not on: apt-get install unattended-upgrades (Debian, Ubuntu) or dnf-automatic (RHEL)."
+  fi
+  if command -v timedatectl >/dev/null 2>&1 && [ "$(timedatectl show -p NTPSynchronized --value 2>/dev/null)" = "yes" ]; then
+    host_check time-sync pass "Time synchronisation" "The clock is synchronised (NTP)."
+  elif active chronyd || active chrony || active systemd-timesyncd || active ntp || active ntpd; then
+    host_check time-sync pass "Time synchronisation" "A time service is running."
+  else
+    host_check time-sync warn "Time synchronisation" "No time service found: logs and evidence need the right time (chrony or systemd-timesyncd)."
+  fi
+  if command -v lsblk >/dev/null 2>&1 && lsblk -rno TYPE 2>/dev/null | grep -qx crypt; then
+    host_check disk-encryption pass "Disk encryption" "An encrypted volume (LUKS) is in use."
+  else
+    host_check disk-encryption warn "Disk encryption" "No LUKS volume found. A cloud disk may be encrypted by its provider: check there, and keep HAWK_DATA_DIR and BACKUP_DIR on encrypted disks."
+  fi
+  if active auditd; then
+    host_check auditd pass "Audit daemon" "auditd is running."
+  else
+    host_check auditd warn "Audit daemon" "auditd is not running: apt-get install auditd (Debian, Ubuntu) or dnf install audit (RHEL)."
+  fi
+  local joined
+  joined="$(IFS=,; printf '%s' "${host_checks[*]}")"
+  printf '{"checkedAt": "%s", "by": "deploy/install.sh", "checks": [%s]}\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$joined" > "$HAWK_DATA_DIR/updater/host-check.json"
+  chown 0:1000 "$HAWK_DATA_DIR/updater/host-check.json"
+  chmod 0640 "$HAWK_DATA_DIR/updater/host-check.json"
+}
+check_host || say "! The checks of this machine did not finish; installing anyway."
 
 # --- 3. Start -----------------------------------------------------------------------------------------------------
 compose() { docker compose --project-directory "$DEPLOY_DIR" -f "$DEPLOY_DIR/compose.yaml" --env-file "$ENV_FILE" "$@"; }
@@ -141,9 +229,19 @@ if [ -n "$release" ]; then
   fi
   if [ "$(setting HAWK_UPDATER)" != "off" ]; then
     export COMPOSE_PROFILES=updates
+    # The updater runs as uid 1000 and reaches the Docker socket through the socket's group only.
+    HAWK_DOCKER_GID="$(stat -c %g /var/run/docker.sock 2>/dev/null || echo 0)"
+    export HAWK_DOCKER_GID
   fi
   say "Downloading and starting Hawk AI ($release)..."
   compose pull --quiet
+  # The api, worker, beat and migrate containers are on two networks (deploy/compose.yaml); an updater made before
+  # that could not put them back after an update. Such an updater is not started: update with this script instead.
+  if [ "${COMPOSE_PROFILES:-}" = updates ] && [ "$(docker image inspect -f '{{ index .Config.Labels "org.cxsmtp.hawk.updater.networks" }}' "$HAWK_UPDATER_IMAGE" 2>/dev/null)" != "many" ]; then
+    say "! The updater in $release predates this folder's compose.yaml: Settings → Updates is off; update with deploy/install.sh."
+    compose rm --stop --force updater >/dev/null 2>&1 || true
+    unset COMPOSE_PROFILES
+  fi
   compose up -d --no-build --remove-orphans
 else
   say "Building and starting Hawk AI (the first build takes several minutes)..."

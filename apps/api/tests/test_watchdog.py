@@ -367,6 +367,32 @@ def test_all_checks_pass_on_a_healthy_server(world):
     assert check.watchdog.was_healthy("0.3.0")
 
 
+def test_the_machines_own_checks_from_the_installer_are_shown_with_the_self_check(world):
+    """deploy/install.sh writes host-check.json (CIS Linux items, reported only) into the updater folder."""
+
+    check = world["make"]()
+    assert check.health_view()["host"] is None
+    (Path(world["updater"]) / "host-check.json").write_text(
+        json.dumps(
+            {
+                "checkedAt": "2026-11-26T10:00:00Z",
+                "by": "deploy/install.sh",
+                "checks": [
+                    {"id": "firewall", "status": "pass", "title": "Firewall", "detail": "ufw is active."},
+                    {"id": "auditd", "status": "warn", "title": "Audit daemon", "detail": "auditd is not running."},
+                    {"id": "odd", "status": "maybe", "title": "Not a check", "detail": ""},
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    host = check.health_view()["host"]
+    assert host["checkedAt"] == "2026-11-26T10:00:00Z"
+    assert [(c["id"], c["status"]) for c in host["checks"]] == [("firewall", "pass"), ("auditd", "warn")]
+    (Path(world["updater"]) / "host-check.json").write_text("not json", encoding="utf-8")
+    assert check.health_view()["host"] is None
+
+
 def test_the_database_redis_worker_and_beat_are_checked(world):
     from unittest.mock import MagicMock
 

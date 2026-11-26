@@ -10,6 +10,14 @@ name: Release images
 # image are signed with a GitHub build attestation (Sigstore, public log). Hawk AI checks its own files and that
 # signature, and the updater checks a new version's before installing it (/settings/guide/updates, /settings/guide/updates).
 # `stable` is moved by hand only, with promote-stable.yml.
+#
+# Software bill of materials (NIST SSDF PS.3.2, SBOM): every published image gets a CycloneDX SBOM for amd64 and for
+# arm64 (syft, pinned and checksum-verified), and the API's Python dependencies (apps/api/requirements.lock) and the
+# console's npm dependencies (apps/web/package-lock.json, the packages that ship) get one each. Each SBOM is signed with
+# a GitHub SBOM attestation (Sigstore, public log) bound to the image's digest or to the lock file it describes, kept
+# with the image in the registry, uploaded with the run, and attached to the GitHub release of a version tag. An SBOM
+# lists packages and their versions only: no file contents (and the images carry no secrets: .dockerignore), and a
+# secret scan of every SBOM must pass before it is published.
 
 on:
   push:
@@ -38,6 +46,68 @@ jobs:
   e2e-tests:
     if: github.event_name != 'pull_request'
     uses: ./.github/workflows/e2e.yml
+
+  # The Python and npm dependencies, as CycloneDX SBOMs. On a pull request they are only made and checked.
+  dependency-sbom:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    env:
+      SYFT_CHECK_FOR_APP_UPDATE: "false"
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Install syft (checksum verified)
+        run: |
+          set -euo pipefail
+          curl -sSfL -o syft.tgz https://github.com/anchore/syft/releases/download/v1.32.0/syft_1.32.0_linux_amd64.tar.gz
+          echo "d6400b579fa84dd383573b1d1ff6f081a37fc64d3ffaafdfdda95c4325f204be  syft.tgz" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/bin" && tar xzf syft.tgz -C "$RUNNER_TEMP/bin" syft && rm syft.tgz
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+      - name: Install gitleaks (checksum verified)
+        run: |
+          set -euo pipefail
+          curl -sSfL -o gitleaks.tgz https://github.com/gitleaks/gitleaks/releases/download/v8.28.0/gitleaks_8.28.0_linux_x64.tar.gz
+          echo "a65b5253807a68ac0cafa4414031fd740aeb55f54fb7e55f386acb52e6a840eb  gitleaks.tgz" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/bin" && tar xzf gitleaks.tgz -C "$RUNNER_TEMP/bin" gitleaks && rm gitleaks.tgz
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+      - name: SBOMs of the API's Python and the console's npm dependencies
+        run: |
+          set -euo pipefail
+          version=$(tr -d '[:space:]' < VERSION)
+          mkdir -p sbom "$RUNNER_TEMP/src/python" "$RUNNER_TEMP/src/npm"
+          # syft reads pinned Python requirements from a requirements*.txt name; the lock is exactly that format.
+          cp apps/api/requirements.lock "$RUNNER_TEMP/src/python/requirements.txt"
+          cp apps/web/package.json apps/web/package-lock.json "$RUNNER_TEMP/src/npm/"
+          syft scan "dir:$RUNNER_TEMP/src/python" --source-name hawk-api-python --source-version "$version" -o "cyclonedx-json=sbom/hawk-api-python.cdx.json"
+          syft scan "dir:$RUNNER_TEMP/src/npm" --source-name hawk-web-npm --source-version "$version" -o "cyclonedx-json=sbom/hawk-web-npm.cdx.json"
+          for f in sbom/*.cdx.json; do
+            test "$(jq -r .bomFormat "$f")" = CycloneDX
+            test "$(jq '.components | length' "$f")" -gt 10
+          done
+      - name: The SBOMs carry no secret
+        run: gitleaks dir sbom --no-banner --redact --verbose
+      - name: Sign the Python SBOM (bound to apps/api/requirements.lock)
+        if: github.event_name != 'pull_request'
+        uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0
+        with:
+          subject-path: apps/api/requirements.lock
+          sbom-path: sbom/hawk-api-python.cdx.json
+      - name: Sign the npm SBOM (bound to apps/web/package-lock.json)
+        if: github.event_name != 'pull_request'
+        uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0
+        with:
+          subject-path: apps/web/package-lock.json
+          sbom-path: sbom/hawk-web-npm.cdx.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: sbom-dependencies
+          path: sbom/
+          retention-days: 90
 
   # Each image builds, and its file list matches what is in it (as CxMissionZero's smoke test checks its list).
   smoke-test:
@@ -71,6 +141,20 @@ jobs:
           grep -q '"image": "${{ matrix.image }}"' integrity.json
           grep -q "\"version\": \"$(cat VERSION)\"" integrity.json
           if [ -n "$CHECK" ]; then docker run --rm --read-only --cap-drop ALL --security-opt no-new-privileges:true --entrypoint sh "$IMAGE" -c "$CHECK"; fi
+      - name: Install grype (checksum verified)
+        run: |
+          set -euo pipefail
+          curl -sSfL -o grype.tgz https://github.com/anchore/grype/releases/download/v0.99.1/grype_0.99.1_linux_amd64.tar.gz
+          echo "7fde4d45fe097daa2554078cd9e81faa43e51266a888337f5446c1ffc42d451f  grype.tgz" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/bin" && tar xzf grype.tgz -C "$RUNNER_TEMP/bin" grype && rm grype.tgz
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+      # Nothing is published with a known vulnerability rated High or Critical that has a fix (.grype.yaml lists the
+      # few reasoned exceptions).
+      - name: The image has no fixable High or Critical vulnerability
+        env:
+          IMAGE: hawk-${{ matrix.image }}:test
+          GRYPE_CHECK_FOR_APP_UPDATE: "false"
+        run: grype "docker:$IMAGE" --config .grype.yaml
 
   publish:
     needs: [api-tests, component-tests, e2e-tests, smoke-test]
@@ -170,3 +254,84 @@ jobs:
           subject-name: ${{ steps.name.outputs.image }}
           subject-digest: ${{ steps.build.outputs.digest }}
           push-to-registry: true
+      - name: Install syft (checksum verified)
+        run: |
+          set -euo pipefail
+          curl -sSfL -o syft.tgz https://github.com/anchore/syft/releases/download/v1.32.0/syft_1.32.0_linux_amd64.tar.gz
+          echo "d6400b579fa84dd383573b1d1ff6f081a37fc64d3ffaafdfdda95c4325f204be  syft.tgz" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/bin" && tar xzf syft.tgz -C "$RUNNER_TEMP/bin" syft && rm syft.tgz
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+      - name: Install gitleaks (checksum verified)
+        run: |
+          set -euo pipefail
+          curl -sSfL -o gitleaks.tgz https://github.com/gitleaks/gitleaks/releases/download/v8.28.0/gitleaks_8.28.0_linux_x64.tar.gz
+          echo "a65b5253807a68ac0cafa4414031fd740aeb55f54fb7e55f386acb52e6a840eb  gitleaks.tgz" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/bin" && tar xzf gitleaks.tgz -C "$RUNNER_TEMP/bin" gitleaks && rm gitleaks.tgz
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+      # The SBOM of what each platform's image ships: its operating-system packages, Python and npm packages and
+      # binaries. Packages and versions only (no file contents; SYFT_FILE_METADATA_SELECTION=none: no file list).
+      - name: SBOM of the image, for amd64 and arm64
+        env:
+          IMAGE: ${{ steps.name.outputs.image }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+          KIND: ${{ matrix.image }}
+          SYFT_CHECK_FOR_APP_UPDATE: "false"
+          SYFT_FILE_METADATA_SELECTION: none
+        run: |
+          set -euo pipefail
+          version=$(tr -d '[:space:]' < VERSION)
+          mkdir -p sbom
+          for arch in amd64 arm64; do
+            syft scan "registry:$IMAGE@$DIGEST" --platform "linux/$arch" --source-name "hawk-$KIND" --source-version "$version" \
+              -o "cyclonedx-json=sbom/hawk-$KIND-$arch.cdx.json"
+            test "$(jq -r .bomFormat "sbom/hawk-$KIND-$arch.cdx.json")" = CycloneDX
+          done
+          ls -l sbom
+      - name: The SBOMs carry no secret
+        run: gitleaks dir sbom --no-banner --redact --verbose
+      # Bound to the multi-platform image's digest, kept next to it in the registry (as the image's signature is).
+      - name: Sign the SBOM (amd64)
+        uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0
+        with:
+          subject-name: ${{ steps.name.outputs.image }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          sbom-path: sbom/hawk-${{ matrix.image }}-amd64.cdx.json
+          push-to-registry: true
+      - name: Sign the SBOM (arm64)
+        uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0
+        with:
+          subject-name: ${{ steps.name.outputs.image }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          sbom-path: sbom/hawk-${{ matrix.image }}-arm64.cdx.json
+          push-to-registry: true
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: sbom-${{ matrix.image }}
+          path: sbom/
+          retention-days: 90
+
+  # A version tag (v*): its GitHub release carries every SBOM (the images' and the dependencies'), next to the images.
+  release-sboms:
+    needs: [publish, dependency-sbom]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      # Create the release when the tag has none yet, and attach the files. Nothing else.
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: sbom-*
+          path: sbom
+          merge-multiple: true
+      - name: Attach the SBOMs to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          ls -l sbom
+          gh release view "$TAG" > /dev/null 2>&1 || gh release create "$TAG" --verify-tag --title "$TAG" --notes "Hawk AI $TAG. Images: ghcr.io/${GH_REPO,,}-api, -web, -proxy, -updater (signed; SBOMs attached and attested)."
+          gh release upload "$TAG" sbom/*.cdx.json --clobber

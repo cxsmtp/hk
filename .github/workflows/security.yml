@@ -1,7 +1,8 @@
 name: Security checks
 
-# Secrets, known-vulnerable dependencies and risky code patterns. Runs on every pull request, on main, and once a week
-# (a dependency can become vulnerable without any change here).
+# Secrets, known-vulnerable dependencies, risky code patterns and known-vulnerable container images. Runs on every pull
+# request, on main, and once a week (a dependency or an image can become vulnerable without any change here).
+# Hawk AI's own images are scanned as they are built, in release.yml's smoke test (the same grype and .grype.yaml).
 
 on:
   pull_request:
@@ -104,3 +105,48 @@ jobs:
       - name: No medium or high finding in the API
         # Migrations build DDL from fixed names in the file itself; reviewed by hand instead.
         run: bandit -q -r apps/api/app -ll -ii -x apps/api/app/db/migrations
+
+  container-images:
+    name: Container images (grype)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GRYPE_CHECK_FOR_APP_UPDATE: "false"
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Install grype (checksum verified)
+        run: |
+          set -euo pipefail
+          curl -sSfL -o grype.tgz https://github.com/anchore/grype/releases/download/v0.99.1/grype_0.99.1_linux_amd64.tar.gz
+          echo "7fde4d45fe097daa2554078cd9e81faa43e51266a888337f5446c1ffc42d451f  grype.tgz" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/bin" && tar xzf grype.tgz -C "$RUNNER_TEMP/bin" grype && rm grype.tgz
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+      - name: The images Hawk AI runs as they are (PostgreSQL, Redis) have no fixable High or Critical vulnerability
+        run: |
+          set -euo pipefail
+          grype db update
+          # Pinned by digest in deploy/compose.yaml (infra/tests/test_deploy_hardening.py checks they are).
+          images=$(sed -n 's/^    image: \([a-z0-9.\/-]*:[^@ ]*@sha256:[0-9a-f]\{64\}\)$/\1/p' deploy/compose.yaml)
+          test -n "$images"
+          status=0
+          for image in $images; do
+            echo "::group::$image"
+            grype "registry:$image" --platform linux/amd64 --config .grype.yaml || status=1
+            echo "::endgroup::"
+          done
+          exit $status
+      - name: Every pinned base image, all findings (report)
+        # Reported, not blocking: the shipped images add the fixes released since (apk upgrade) and are gated as built
+        # in release.yml; this list shows when a pinned digest is due to be bumped, including Caddy's own Go modules.
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          : > "$RUNNER_TEMP/none.yaml"
+          images=$(grep -hoE '[a-z0-9./-]+:[A-Za-z0-9._-]+@sha256:[0-9a-f]{64}' infra/Dockerfile.api infra/Dockerfile.web infra/Dockerfile.proxy infra/Dockerfile.updater deploy/compose.yaml | sort -u)
+          for image in $images; do
+            echo "::group::$image"
+            grype "registry:$image" --platform linux/amd64 --config "$RUNNER_TEMP/none.yaml" --only-fixed || true
+            echo "::endgroup::"
+          done

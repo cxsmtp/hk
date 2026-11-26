@@ -30,6 +30,10 @@ export const selfCheck: GuideTopic = {
           kind: "p",
           text: "A version installed less than a day ago that broke what worked before is put back to the previous version, once, when the updater looks after the services. An outage on the far side (a service down or slow) is never blamed on it.",
         },
+        {
+          kind: "p",
+          text: "Under the self-check, **This server** lists what `deploy/install.sh` found on the machine itself the last time it ran, each as Pass or Check: a firewall, SSH root sign-in and passwords, automatic security updates, time synchronisation, disk encryption and the audit daemon (items of the CIS Linux benchmark auditors ask about). Hawk AI only reports them and changes nothing on the machine: put one right, then run `sudo deploy/install.sh` again to refresh the list.",
+        },
       ],
     },
     {

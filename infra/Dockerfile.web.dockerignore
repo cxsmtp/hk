@@ -49,3 +49,22 @@ secrets/**
 **/*.sqlite
 **/*.sqlite3
 **/*.dump
+# Never in an image (CIS Docker 4.10, no secrets in images): the deployment's settings and secrets, private keys and
+# certificates, tools' credentials, and a data folder put inside the checkout by mistake.
+deploy/.env
+**/.env
+**/.env.*
+!**/.env.example
+secrets
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+**/id_rsa*
+**/id_ed25519*
+**/.npmrc
+**/.pypirc
+**/.netrc
+**/.git-credentials
+**/.aws
+**/.ssh
