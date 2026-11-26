@@ -143,7 +143,7 @@ export function useMyPermissions(): string[] | null {
     const read = () => {
       const session = getSession();
       const key = `${session?.tenantId ?? ""}:${session?.user?.email ?? ""}`;
-      if (!session?.accessToken) return;
+      if (!session?.tenantId) return;
       let pending = permissionsByTenant.get(key);
       if (!pending) {
         pending = api.getSettingsMe().then((me) => me.permissions);

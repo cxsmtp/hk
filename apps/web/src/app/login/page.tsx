@@ -107,13 +107,9 @@ export default function LoginPage() {
     const tenantId = result.selected_tenant_id || result.tenants?.[0]?.id;
     if (!tenantId) throw new Error("No tenant in login response");
     const tenantRole = result.tenants?.find((item) => item.id === tenantId)?.role;
-    setSession({
-      accessToken: result.access_token,
-      refreshToken: result.refresh_token,
-      tenantId,
-      userRole: tenantRole,
-      user: result.user,
-    });
+    // The tokens are HttpOnly cookies the API set (apps/api/app/core/session_cookies.py); only who signed in is
+    // remembered here.
+    setSession({ tenantId, userRole: tenantRole, user: result.user });
     router.push(defaultRouteForRole(tenantRole));
   }
 

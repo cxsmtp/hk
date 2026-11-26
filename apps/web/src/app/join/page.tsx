@@ -85,7 +85,8 @@ export default function JoinPage() {
       const tenantId = result.selected_tenant_id || result.tenants?.[0]?.id;
       if (!tenantId) throw new Error("No tenant in the answer.");
       const tenantRole = result.tenants?.find((item) => item.id === tenantId)?.role;
-      setSession({ accessToken: result.access_token, refreshToken: result.refresh_token, tenantId, userRole: tenantRole, user: result.user });
+      // The tokens are HttpOnly cookies the API set; only who signed in is remembered here.
+      setSession({ tenantId, userRole: tenantRole, user: result.user });
       router.push(defaultRouteForRole(tenantRole));
     } catch (error) {
       setErr(said(error));

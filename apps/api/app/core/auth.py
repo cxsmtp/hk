@@ -4,16 +4,34 @@ from datetime import timezone
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
+from fastapi.security.utils import get_authorization_scheme_param
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core import access_gate
+from app.core import access_gate, session_cookies
 from app.core.security import decode_token
 from app.db.models.user import User
 from app.db.session import get_db
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+class _BearerOrSessionCookie(OAuth2PasswordBearer):
+    """The access token: from ``Authorization: Bearer`` (every client but the console, unchanged), else from the
+    console's session cookie (app/core/session_cookies.py), which a request that changes something must back with
+    the CSRF header. A bearer header wins: a browser never adds one by itself, so it needs no CSRF check."""
+
+    async def __call__(self, request: Request) -> str | None:  # type: ignore[override]
+        scheme, param = get_authorization_scheme_param(request.headers.get("Authorization"))
+        if scheme.lower() == "bearer":
+            return param
+        cookie = session_cookies.access_cookie(request)
+        if cookie:
+            session_cookies.require_csrf(request)
+            request.state.cookie_session = True
+            return cookie
+        return await super().__call__(request)
+
+
+oauth2_scheme = _BearerOrSessionCookie(tokenUrl="/auth/login")
 
 
 def get_current_user(

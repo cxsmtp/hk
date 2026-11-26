@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { api } from "@/lib/api";
-import { clearSession, getSession, SESSION_CHANGE_EVENT, updateSessionTokens } from "@/lib/auth";
+import { api, signOut as endSession } from "@/lib/api";
+import { getSession, SESSION_CHANGE_EVENT } from "@/lib/auth";
 import {
   accessNeededFor,
   newPasswordProblem,
@@ -27,7 +27,7 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
 
   const check = useCallback(() => {
     const session = getSession();
-    if (!session?.accessToken) {
+    if (!session?.tenantId) {
       setNeeded(null);
       return;
     }
@@ -64,8 +64,7 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
 }
 
 function signOut() {
-  clearSession();
-  window.location.assign("/login");
+  void endSession().finally(() => window.location.assign("/login"));
 }
 
 function Screen({ children, wide = false }: { children: React.ReactNode; wide?: boolean }) {
@@ -101,8 +100,8 @@ function ChangePasswordScreen({ email, onDone }: { email: string; onDone: () => 
     setBusy(true);
     setStatus("");
     try {
-      const result = await api.changePassword(current, next);
-      updateSessionTokens(result.access_token, result.refresh_token);
+      // The new tokens come back as cookies (everyone else signed in as this person is signed out).
+      await api.changePassword(current, next);
       onDone();
     } catch (error) {
       setStatus(errorMessageFrom(error instanceof Error ? error.message : "", "The password could not be changed."));

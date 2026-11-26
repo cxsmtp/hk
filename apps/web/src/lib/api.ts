@@ -1,4 +1,4 @@
-import { clearSession, getSession, updateSessionTokens } from "@/lib/auth";
+import { clearSession, getSession, sessionHeaders } from "@/lib/auth";
 import { API_BASE_URL } from "@/lib/api-url";
 import type { AcmeStatus, HttpsCertificateReport, HttpsMode, HttpsStatus, UploadFile } from "@/lib/https-settings";
 import type { BackupEncryption, BackupFile, BackupInfo, BackupKeyShown, BackupNotice, BackupsStatus, Readiness } from "@/lib/backups-settings";
@@ -244,12 +244,12 @@ const DEFAULT_GET_TIMEOUT_MS = 20000;
 const REFRESH_TIMEOUT_MS = 8000;
 const TRANSIENT_HTTP_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
 
-type RefreshResponse = {
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
-  expires_in: number;
-};
+// The tokens never reach this code: the API keeps them in HttpOnly cookies (apps/api/app/core/session_cookies.py), sent
+// with every request (same origin behind the front proxy; credentials "include" for a developer's API on another
+// port), and every request carries the CSRF token (sessionHeaders, @/lib/auth).
+const CREDENTIALS: RequestCredentials = "include";
+// Before trying a refresh again after a refusal: another tab may have rotated the refresh cookie at that moment.
+const REFRESH_RACE_PAUSE_MS = 250;
 
 type RequestBehavior = {
   timeoutMs?: number;
@@ -332,19 +332,19 @@ function isTerminalRefreshFailureStatus(statusCode: number): boolean {
 
 async function performRefreshToken(): Promise<boolean> {
   for (let refreshAttempt = 0; refreshAttempt < 2; refreshAttempt += 1) {
-    const session = getSession();
-    const refreshToken = String(session?.refreshToken || "").trim();
-    if (!refreshToken) return false;
+    if (!getSession()) return false;
 
     let res: Response;
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), REFRESH_TIMEOUT_MS);
       try {
+        // No token in the body: the refresh cookie is sent to this path only.
         res = await fetch(`${API_URL}/auth/refresh`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ refresh_token: refreshToken }),
+          headers: sessionHeaders(new Headers({ "Content-Type": "application/json" })),
+          body: "{}",
+          credentials: CREDENTIALS,
           cache: "no-store",
           signal: controller.signal,
         });
@@ -358,14 +358,10 @@ async function performRefreshToken(): Promise<boolean> {
 
     if (!res.ok) {
       if (isTerminalRefreshFailureStatus(res.status)) {
-        const latest = getSession();
-        const latestRefreshToken = String(latest?.refreshToken || "").trim();
-        const tokenRotatedInAnotherTab =
-          latestRefreshToken.length > 0 &&
-          latestRefreshToken !== refreshToken;
-
-        // Multi-tab rotation race: another tab likely refreshed and rotated token already.
-        if (tokenRotatedInAnotherTab && refreshAttempt === 0) {
+        // Multi-tab rotation race: another tab may have refreshed with the same cookie a moment before, and the
+        // browser now holds the new one. One more try tells; a second refusal signs out.
+        if (refreshAttempt === 0) {
+          await sleep(REFRESH_RACE_PAUSE_MS);
           continue;
         }
         clearSession();
@@ -374,17 +370,8 @@ async function performRefreshToken(): Promise<boolean> {
       }
       return false;
     }
-
-    let payload: RefreshResponse;
-    try {
-      payload = (await res.json()) as RefreshResponse;
-    } catch {
-      return false;
-    }
-    if (!payload.access_token || !payload.refresh_token) {
-      return false;
-    }
-    updateSessionTokens(payload.access_token, payload.refresh_token);
+    // The new tokens came as cookies; the body has none.
+    await res.text().catch(() => "");
     return true;
   }
   return false;
@@ -422,24 +409,12 @@ async function request<T>(
   allowRefresh = true,
   behavior?: RequestBehavior,
 ): Promise<T> {
-  const headers = new Headers(init?.headers || {});
+  const headers = sessionHeaders(new Headers(init?.headers || {}));
   headers.set("Content-Type", "application/json");
-  let session = useAuth ? getSession() : null;
+  const session = useAuth ? getSession() : null;
 
   if (useAuth) {
     if (!session?.tenantId) throw new Error("No tenant selected");
-    if (!session?.accessToken) {
-      const canAttemptRefresh = allowRefresh && !!String(session?.refreshToken || "").trim();
-      if (canAttemptRefresh) {
-        const refreshed = await tryRefreshToken();
-        if (refreshed) {
-          return request<T>(path, init, useAuth, false, behavior);
-        }
-        session = getSession();
-      }
-    }
-    if (!session?.accessToken) throw new Error("No session");
-    headers.set("Authorization", `Bearer ${session.accessToken}`);
     headers.set("X-Tenant-ID", session.tenantId);
   }
 
@@ -451,8 +426,9 @@ async function request<T>(
   const effectiveTimeoutMs = behavior?.timeoutMs ?? ((method === "GET" || method === "HEAD") ? DEFAULT_GET_TIMEOUT_MS : 0);
   const timeoutMs = Math.max(0, Math.floor(Number(effectiveTimeoutMs || 0)));
   const dedupeEligible = method === "GET" && !init?.body;
+  // The try after a refresh has a key of its own: it runs inside the first try, which would otherwise wait on itself.
   const dedupeKey = dedupeEligible
-    ? `${useAuth ? `${session?.tenantId || ""}:${session?.accessToken || ""}` : "public"}|${path}`
+    ? `${useAuth ? `${session?.tenantId || ""}:${session?.user?.id || ""}` : "public"}|${allowRefresh ? "" : "refreshed|"}${path}`
     : "";
   if (dedupeEligible) {
     const inflight = inflightGetRequests.get(dedupeKey);
@@ -482,18 +458,14 @@ async function request<T>(
       const res = await fetch(`${API_URL}${path}`, {
         ...init,
         headers,
+        credentials: CREDENTIALS,
         cache: "no-store",
         signal,
       });
 
       if (res.status === 401 && useAuth && allowRefresh) {
-        const accessTokenUsed = String(session?.accessToken || "");
         const refreshed = await tryRefreshToken();
         if (refreshed) {
-          return request<T>(path, init, useAuth, false, behavior);
-        }
-        const latestSession = getSession();
-        if (latestSession?.accessToken && latestSession.accessToken !== accessTokenUsed) {
           return request<T>(path, init, useAuth, false, behavior);
         }
       }
@@ -587,36 +559,21 @@ async function request<T>(
 }
 
 async function requestBlob(path: string, init?: RequestInit, allowRefresh = true): Promise<Blob> {
-  const headers = new Headers(init?.headers || {});
-  let session = getSession();
+  const headers = sessionHeaders(new Headers(init?.headers || {}));
+  const session = getSession();
 
   if (!session?.tenantId) throw new Error("No tenant selected");
-  if (!session?.accessToken) {
-    const canAttemptRefresh = allowRefresh && !!String(session?.refreshToken || "").trim();
-    if (canAttemptRefresh) {
-      const refreshed = await tryRefreshToken();
-      if (refreshed) return requestBlob(path, init, false);
-      session = getSession();
-    }
-  }
-  if (!session?.accessToken) throw new Error("No session");
-  headers.set("Authorization", `Bearer ${session.accessToken}`);
   headers.set("X-Tenant-ID", session.tenantId);
 
   const res = await fetch(`${API_URL}${path}`, {
     ...init,
     headers,
+    credentials: CREDENTIALS,
     cache: "no-store",
   });
 
   if (res.status === 401 && allowRefresh) {
-    const accessTokenUsed = String(session.accessToken || "");
-    const refreshed = await tryRefreshToken();
-    if (refreshed) return requestBlob(path, init, false);
-    const latestSession = getSession();
-    if (latestSession?.accessToken && latestSession.accessToken !== accessTokenUsed) {
-      return requestBlob(path, init, false);
-    }
+    if (await tryRefreshToken()) return requestBlob(path, init, false);
   }
 
   if (!res.ok) {
@@ -630,32 +587,21 @@ async function requestBlob(path: string, init?: RequestInit, allowRefresh = true
 }
 
 async function requestMultipart<T>(path: string, form: FormData, allowRefresh = true): Promise<T> {
-  let session = getSession();
+  const session = getSession();
   if (!session?.tenantId) throw new Error("No tenant selected");
-  if (!session.accessToken) {
-    const canAttemptRefresh = allowRefresh && !!String(session.refreshToken || "").trim();
-    if (canAttemptRefresh && await tryRefreshToken()) return requestMultipart<T>(path, form, false);
-    session = getSession();
-  }
-  if (!session?.accessToken) throw new Error("No session");
   if (!form.has("tenant_id")) form.set("tenant_id", session.tenantId);
 
+  const headers = sessionHeaders();
+  headers.set("X-Tenant-ID", session.tenantId);
   const res = await fetch(`${API_URL}${path}`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${session.accessToken}`,
-      "X-Tenant-ID": session.tenantId,
-    },
+    headers,
     body: form,
+    credentials: CREDENTIALS,
     cache: "no-store",
   });
   if (res.status === 401 && allowRefresh) {
-    const accessTokenUsed = session.accessToken;
     if (await tryRefreshToken()) return requestMultipart<T>(path, form, false);
-    const latestSession = getSession();
-    if (latestSession?.accessToken && latestSession.accessToken !== accessTokenUsed) {
-      return requestMultipart<T>(path, form, false);
-    }
   }
   if (!res.ok) {
     let message = `API ${res.status}`;
@@ -672,6 +618,19 @@ async function requestMultipart<T>(path: string, form: FormData, allowRefresh = 
     throw new Error(message);
   }
   return await res.json() as T;
+}
+
+/**
+ * Sign out: the API revokes this sign-in's refresh token and clears the session cookies (only it can: they are
+ * HttpOnly). What the console remembers goes in any case, even when the API cannot be reached.
+ */
+export async function signOut(): Promise<void> {
+  try {
+    await api.signOut();
+  } catch {
+    // Signed out here all the same; the refresh token ends by itself.
+  }
+  clearSession();
 }
 
 function boundedQuery<T extends object>(params: T): string {
@@ -770,14 +729,13 @@ export const api = {
   oidcComplete: (ticket: string) =>
     request<LoginResponse>("/auth/oidc/complete", { method: "POST", body: JSON.stringify({ ticket }) }, false),
   me: () => request<CurrentUser>("/auth/me"),
+  // Sign out: the API revokes this sign-in's refresh token and clears the session cookies.
+  signOut: () => request<{ ok: boolean }>("/auth/refresh/sign-out", { method: "POST", body: "{}" }, false),
   // First sign-in (deploy/README.md): a new password, the terms of use, and the first administrator's setup code.
   changePassword: (current: string, next: string) =>
     request<LoginResponse>("/auth/me/password", { method: "POST", body: JSON.stringify({ current, next }) }),
-  getTerms: () => {
-    const session = getSession();
-    const headers: Record<string, string> = session?.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {};
-    return request<TermsView>("/terms", { headers }, false);
-  },
+  // Before or after signing in: the session cookie, when there is one, says whose acceptance to show.
+  getTerms: () => request<TermsView>("/terms", undefined, false),
   acceptTerms: (payload: { version: string; forOrganisation?: boolean; organisationName?: string }) =>
     request<{ terms: TermsState }>("/terms/accept", { method: "POST", body: JSON.stringify(payload) }),
   setupStatus: () => request<{ setup: boolean }>("/setup", undefined, false),
