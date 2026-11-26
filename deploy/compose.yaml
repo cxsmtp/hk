@@ -76,6 +76,10 @@ x-hawk-environment: &hawk-environment
   DEPLOYMENT_ID: ${DEPLOYMENT_ID:-hawk}
   DEPLOYMENT_REGION: ${DEPLOYMENT_REGION:-on-premise}
   DEPLOYMENT_DATA_LOCATION: ${DEPLOYMENT_DATA_LOCATION:-on-premise}
+  # Settings → Compliance (/settings/guide/compliance): an NTP server to measure the clock against (UDP 123), and
+  # whether the customer confirmed that this machine's disk is encrypted.
+  TIME_SYNC_NTP_SERVER: ${TIME_SYNC_NTP_SERVER:-}
+  DISK_ENCRYPTION_CONFIRMED: ${DISK_ENCRYPTION_CONFIRMED:-false}
   DEPLOYMENT_TOPOLOGY: single_node_compose
   COMPONENT_VERSION: "0.1.0"
   COMPONENT_PROTOCOL_VERSION: "1.0"

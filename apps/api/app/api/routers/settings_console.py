@@ -263,6 +263,26 @@ def _read(name: str, limit: int = 2_000_000) -> str:
         return ""
 
 
+def _residency(db: Session) -> dict[str, Any]:
+    from app.services import compliance_service
+
+    try:
+        location = compliance_service.data_location(db)
+    except Exception:  # noqa: BLE001 - About must answer
+        location = ""
+    return {
+        "location": location,
+        "region": str(settings.deployment_region or ""),
+        "statement": (
+            "Hawk AI runs on this server, which the customer installs and operates. Everything it keeps (the database, "
+            "backups, logs and evidence) stays on this server and where its backups are sent; nothing is sent to the "
+            "vendor. It connects out only where its administrators set it up: AI providers through the gateways, the "
+            "email server, the identity provider, connectors and risk-intelligence feeds (such as NVD), the backup mailbox, and, when updates are on, the image "
+            "registry and GitHub's signing service."
+        ),
+    }
+
+
 @router.get("/settings/about")
 def about(ctx: TenantContext = Depends(require_tenant), db: Session = Depends(get_db)):
     from app.services import activation_service, terms_service
@@ -294,6 +314,8 @@ def about(ctx: TenantContext = Depends(require_tenant), db: Session = Depends(ge
         "changelog": _read("CHANGELOG.md"),
         "notices": {"name": notices[0], "text": notices[1]} if notices else None,
         "canUpdate": "system.update" in ctx.permissions,
+        # Where the data is (Settings → Compliance): everything stays on this server.
+        "dataResidency": _residency(db),
     }
     db.commit()
     return JSONResponse(view, headers=NO_STORE)

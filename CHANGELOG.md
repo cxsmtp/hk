@@ -2,6 +2,10 @@
 
 Every release, newest first: the version shown bottom-left in the console (HK-xx.xx.xx, from the VERSION file), when it was merged, and what changed for the people using it. Updated with every change merged to main (CLAUDE.md).
 
+## HK-00.03.01 — pending · [#NN](https://github.com/cxsmtp/hk/pull/NN)
+
+- **Ready for Dubai (DESC) and India (CERT-In) audits.** A new Settings → Compliance page shows, control by control, where this installation stands against Dubai's Information Security Regulation, the UAE IA Standard and India's CERT-In directions, with a link to where each is set, and applies a recommended sign-in baseline in one click. Owners and admins can now set the password rule (length, kinds of character, no reuse of the last passwords, expiry after so many days), sign people out after a few minutes without activity, and show a notice on the sign-in page. Activity records are kept at least 180 days, the health check and the page say whether the server's clock is synchronised, About states where the data is, the audit log exports in CEF for a SIEM, and one button downloads a signed incident report for a time window (for CERT-In's 6-hour deadline or a report to DESC).
+
 ## HK-00.03.00 — pending · [#NN](https://github.com/cxsmtp/hk/pull/NN)
 
 - **Your sign-in is no longer kept where a script could read it.** The console keeps its sign-in in secure cookies that only the API can read (no longer in the browser's storage), every change you make carries a check that another site cannot forge, and Sign out now ends the sign-in on the server too. Everyone signs in once more after this update. The SDK, the MCP proxy, the endpoint agent and the browser extension work as before.

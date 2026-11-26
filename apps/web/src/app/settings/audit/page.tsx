@@ -194,7 +194,7 @@ export default function AuditLogPage() {
     setBusy(false);
   }
 
-  async function exportAs(format: "csv" | "jsonl") {
+  async function exportAs(format: "csv" | "jsonl" | "cef") {
     try {
       const { blob, signature } = await api.exportAuditLogSigned(format, qs);
       save(blob, `audit.${format}`);
@@ -231,6 +231,10 @@ export default function AuditLogPage() {
             <button className="btn ghost" id="aexport-jsonl" type="button" title="Every entry with its MAC, for a SIEM" onClick={() => exportAs("jsonl")}>
               <Icon name="download" />
               Export JSON Lines
+            </button>
+            <button className="btn ghost" id="aexport-cef" type="button" title="One CEF line per entry, for ArcSight, QRadar, Sentinel or Splunk" onClick={() => exportAs("cef")}>
+              <Icon name="download" />
+              Export CEF
             </button>
           </div>
         </div>

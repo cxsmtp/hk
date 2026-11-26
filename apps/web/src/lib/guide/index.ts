@@ -4,6 +4,7 @@
  */
 import { audit } from "./topics/audit";
 import { backups } from "./topics/backups";
+import { compliance } from "./topics/compliance";
 import { email } from "./topics/email";
 import { firstSignIn } from "./topics/first-sign-in";
 import { https } from "./topics/https";
@@ -39,6 +40,7 @@ export const GUIDE_TOPICS: readonly GuideTopic[] = [
   updates,
   licence,
   audit,
+  compliance,
   network,
   selfCheck,
   troubleshooting,

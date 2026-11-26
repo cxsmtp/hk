@@ -34,6 +34,7 @@ export const SETTINGS_GROUPS = [
     items: [
       { href: "/settings/audit", label: "Audit log" },
       { href: "/settings/connector-activity", label: "Connector API activity" },
+      { href: "/settings/compliance", label: "Compliance" },
     ],
   },
   {
@@ -67,6 +68,8 @@ export const SETTINGS_PERMISSIONS = {
   "/settings/activation": ["activation.manage"],
   "/settings/audit": ["audit.view"],
   "/settings/connector-activity": ["audit.view"],
+  // DESC ISR / UAE IA / CERT-In controls and the incident report (apps/api/app/api/routers/compliance.py).
+  "/settings/compliance": ["audit.view"],
   "/settings/general": ["settings.manage"],
   "/settings/branding": ["settings.manage"],
   "/settings/email": ["settings.manage"],

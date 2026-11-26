@@ -163,7 +163,14 @@ export default function AboutSettingsPage() {
                     <dt>Organisation</dt>
                     <dd>{view.organisationName}</dd>
                   </div>
+                  {view.dataResidency ? (
+                    <div>
+                      <dt>Data location</dt>
+                      <dd data-ui="about-data-location">{view.dataResidency.location || "Not stated (Settings → Compliance)"}</dd>
+                    </div>
+                  ) : null}
                 </dl>
+                {view.dataResidency ? <p className="muted small">{view.dataResidency.statement}</p> : null}
                 <p className="onprem-note">
                   <b>On premise, your data stays yours.</b> {terms?.notice ?? ""}
                 </p>

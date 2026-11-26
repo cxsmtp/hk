@@ -210,6 +210,14 @@ def _export(ctx: TenantContext, db: Session, fmt: str, filters: dict[str, str]) 
     )
     db.commit()
     stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
+    if fmt == "cef":
+        # ArcSight Common Event Format, one line per entry, for a SIEM (QRadar, ArcSight, Sentinel, Splunk): Settings →
+        # Compliance, /settings/guide/compliance.
+        from app.services import compliance_service
+        from app.version import APP_VERSION
+
+        body = "".join(compliance_service.cef_line(_event(r, people, db), version=APP_VERSION) + "\n" for r in rows)
+        return _signed(body, media_type="text/plain; charset=utf-8", filename=f"audit-{stamp}.cef", artifact="audit_log.cef")
     if fmt == "jsonl":
         import json
 
@@ -232,6 +240,11 @@ def export_audit_csv(q: str = "", who: str = "", what: str = "", since: str = Qu
 @router.get("/audit/log/export.jsonl")
 def export_audit_jsonl(q: str = "", who: str = "", what: str = "", since: str = Query(default="", alias="from"), until: str = Query(default="", alias="to"), outcome: str = "", ctx: TenantContext = Depends(exporters), db: Session = Depends(get_db)):
     return _export(ctx, db, "jsonl", {"q": q, "who": who, "what": what, "since": since, "until": until, "outcome": outcome})
+
+
+@router.get("/audit/log/export.cef")
+def export_audit_cef(q: str = "", who: str = "", what: str = "", since: str = Query(default="", alias="from"), until: str = Query(default="", alias="to"), outcome: str = "", ctx: TenantContext = Depends(exporters), db: Session = Depends(get_db)):
+    return _export(ctx, db, "cef", {"q": q, "who": who, "what": what, "since": since, "until": until, "outcome": outcome})
 
 
 # ---- The user activity log ------------------------------------------------------------------------------------------

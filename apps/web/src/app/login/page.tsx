@@ -40,6 +40,8 @@ export default function LoginPage() {
   const [box, setBox] = useState<Box>("signin");
   const [status, setStatus] = useState<Status>({ text: "", kind: "" });
   const [forgotOffered, setForgotOffered] = useState(false);
+  // The notice an administrator set (Settings → Sign-in): authorised use only, monitoring (DESC ISR access control).
+  const [banner, setBanner] = useState("");
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotStatus, setForgotStatus] = useState<Status>({ text: "", kind: "" });
   const [forgotWait, setForgotWait] = useState(false);
@@ -67,7 +69,9 @@ export default function LoginPage() {
     }
     let active = true;
     api.signInOptions().then((options) => {
-      if (active) setForgotOffered(Boolean(options?.passwordReset));
+      if (!active) return;
+      setForgotOffered(Boolean(options?.passwordReset));
+      setBanner(typeof options?.banner === "string" ? options.banner : "");
     }).catch(() => undefined);
     return () => { active = false; };
   }, []);
@@ -371,6 +375,11 @@ export default function LoginPage() {
           <CardDescription>Access the AI Control Plane with tenant-scoped credentials.</CardDescription>
         </CardHeader>
         <CardContent>
+          {banner ? (
+            <div role="note" data-ui="sign-in-banner" className="mb-4 whitespace-pre-line rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-100">
+              {banner}
+            </div>
+          ) : null}
           <form className="space-y-4" onSubmit={onSubmit}>
             <div className="space-y-1">
               <label className="text-sm font-medium">Workspace</label>

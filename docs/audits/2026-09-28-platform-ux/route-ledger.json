@@ -1979,6 +1979,25 @@
     "mobile": "not-observed"
   },
   {
+    "route": "/settings/compliance",
+    "file": "apps/web/src/app/settings/compliance/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-applicable",
+      "unavailable": "not-observed",
+      "stale": "not-applicable"
+    },
+    "notes": "Records → Compliance: the DESC ISR, UAE IA Standard and CERT-In controls the software takes part in, the clock, encryption at rest, retention, data location, the recommended sign-in baseline and the incident report (app/api/routers/compliance.py). Covered by apps/web/tests/compliance.test.mjs and apps/api/tests/test_desc_controls.py; not yet observed in a browser.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
+  },
+  {
     "route": "/settings/help",
     "file": "apps/web/src/app/settings/help/page.tsx",
     "owner": "W3",

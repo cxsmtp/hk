@@ -6,7 +6,6 @@ from fastapi import HTTPException, status
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
 from app.core.security import (
     create_access_token,
     create_refresh_token,
@@ -42,7 +41,10 @@ def get_user_tenants(db: Session, user_id: str) -> list[UserTenantRole]:
 
 
 def issue_tokens(db: Session, *, user: User, tenant_id: str, role: str) -> dict:
-    access_token = create_access_token(user.id, tenant_id=tenant_id, role=role)
+    from app.services import account_security
+
+    # At most half the idle sign-out (Settings → Sign-in), so a short idle limit still lets someone working carry on.
+    access_token = create_access_token(user.id, tenant_id=tenant_id, role=role, minutes=account_security.access_minutes(db))
     refresh_token = create_refresh_token(user.id, tenant_id=tenant_id)
 
     refresh_payload = decode_token(refresh_token)
@@ -95,7 +97,9 @@ def refresh_tokens(db: Session, refresh_token: str) -> dict:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token expired")
     # Idle sign-ins end (CxMissionZero's SESSION_IDLE_MINUTES, /settings/guide/people-and-access): every refresh issues a new refresh
     # token, so the age of this one is the time since this sign-in was last used.
-    if _as_utc(record.created_at) + timedelta(minutes=max(1, int(settings.session_idle_minutes))) < now:
+    from app.services import account_security
+
+    if _as_utc(record.created_at) + timedelta(minutes=account_security.idle_minutes(db)) < now:
         record.revoked_at = now
         db.flush()
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Signed out after a time without activity")

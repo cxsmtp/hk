@@ -64,6 +64,8 @@ export type AboutView = {
   changelog: string;
   notices: { name: string; text: string } | null;
   canUpdate: boolean;
+  /** Where the data is (Settings → Compliance). */
+  dataResidency?: { location: string; region: string; statement: string };
 };
 
 export const DEFAULT_BRANDING: BrandingView = {
