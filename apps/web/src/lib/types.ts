@@ -5712,7 +5712,10 @@ export type ScheduledJobRun = {
   started_at: string;
   finished_at: string;
   status: "success" | "fail";
+  /** For a job of the whole installation that failed: a plain line (when, and its reference), never the error's text. */
   error_message?: string | null;
+  reference?: string | null;
+  diagnostics_url?: string | null;
 };
 
 export type JobStatusItem = {

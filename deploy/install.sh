@@ -151,16 +151,69 @@ else
 fi
 
 # --- 4. Wait for the API ------------------------------------------------------------------------------------------
+# Self-recovery while installing (/settings/guide/troubleshooting#not-ready): when the API is not ready in time, the
+# logs say why; one fix is tried for what they say, then it waits once more. What happened is kept in the updater
+# folder (install-status.json, install.log), which the API's self-recovery reads and the diagnostics bundle carries.
+INSTALL_NOTES="$HAWK_DATA_DIR/updater"
+install_status() {
+  mkdir -p "$INSTALL_NOTES"
+  printf '{"at":"%s","state":"%s","reason":"%s","action":"%s","release":"%s"}\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$1" "$2" "$3" "${release:-source}" > "$INSTALL_NOTES/install-status.json.tmp"
+  chmod 0644 "$INSTALL_NOTES/install-status.json.tmp"
+  mv "$INSTALL_NOTES/install-status.json.tmp" "$INSTALL_NOTES/install-status.json"
+  cat "$INSTALL_NOTES/install-status.json" >> "$INSTALL_NOTES/install.log"
+}
+install_log() {
+  # The services' own lines are already redacted by Hawk AI's logging (app/core/log_config.py); the last 2000 are kept.
+  { printf '=== %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"; compose ps 2>&1 || true; compose logs --no-color --tail 60 migrate api 2>&1 || true; } >> "$INSTALL_NOTES/install.log"
+  tail -n 2000 "$INSTALL_NOTES/install.log" > "$INSTALL_NOTES/install.log.tmp" && mv "$INSTALL_NOTES/install.log.tmp" "$INSTALL_NOTES/install.log"
+  chmod 0644 "$INSTALL_NOTES/install.log"
+}
+wait_ready() {
+  local deadline=$((SECONDS + $1))
+  until compose exec -T api python -m app.cli.healthcheck /health/ready >/dev/null 2>&1; do
+    [ "$SECONDS" -ge "$deadline" ] && return 1
+    sleep 5
+  done
+}
+diagnose() {
+  local logs
+  logs="$(compose logs --no-color --tail 200 migrate api postgres 2>&1 || true)"
+  if printf '%s' "$logs" | grep -qi 'no space left on device'; then echo disk-full
+  elif compose ps -a migrate 2>/dev/null | grep -qiE 'exited \([1-9]'; then echo migrate-failed
+  elif printf '%s' "$logs" | grep -qiE 'could not connect to server|connection refused|the database system is starting up'; then echo database-not-ready
+  else echo api-not-ready
+  fi
+}
+recover() {
+  local up_flags="--build"
+  [ -n "$release" ] && up_flags="--no-build"
+  case "$1" in
+    disk-full) docker image prune -f >/dev/null 2>&1 || true; docker builder prune -f >/dev/null 2>&1 || true; echo "removed unused images and build cache" ;;
+    migrate-failed) compose up -d --force-recreate --no-deps migrate >/dev/null 2>&1 || true; compose up -d $up_flags >/dev/null 2>&1 || true; echo "ran the migrations again" ;;
+    database-not-ready) compose restart postgres >/dev/null 2>&1 || true; compose up -d $up_flags >/dev/null 2>&1 || true; echo "restarted the database" ;;
+    *) compose restart api >/dev/null 2>&1 || true; echo "restarted the api" ;;
+  esac
+}
+
 say "Waiting for the API to be ready (/health/ready)..."
-deadline=$((SECONDS + WAIT_SECONDS))
-until compose exec -T api python -m app.cli.healthcheck /health/ready >/dev/null 2>&1; do
-  if [ "$SECONDS" -ge "$deadline" ]; then
+if ! wait_ready "$WAIT_SECONDS"; then
+  reason="$(diagnose)"
+  install_log
+  say "! The API was not ready after ${WAIT_SECONDS} s ($reason). Trying to put it right..."
+  action="$(recover "$reason")"
+  say "  It $action; waiting once more."
+  if ! wait_ready "$WAIT_SECONDS"; then
+    install_log
+    install_status failed "$reason" "$action"
     compose ps || true
     compose logs --tail 40 api || true
-    fail "The API was not ready after ${WAIT_SECONDS} s. See: docker compose -f $DEPLOY_DIR/compose.yaml logs api"
+    fail "The API was not ready after ${WAIT_SECONDS} s, even after it $action. What happened is in $INSTALL_NOTES/install.log; once the API answers, Settings → Backups & health has the diagnostics bundle to send to the OEM. See: docker compose -f $DEPLOY_DIR/compose.yaml logs api"
   fi
-  sleep 5
-done
+  install_status recovered "$reason" "$action"
+  say "  It worked: the API is ready."
+else
+  install_status ok "" ""
+fi
 
 # --- 5. The first administrator ------------------------------------------------------------------------------------
 port="$(sed -n 's/^PORT=//p' "$ENV_FILE" | tail -n 1)"

@@ -28,7 +28,7 @@ export const selfCheck: GuideTopic = {
         },
         {
           kind: "p",
-          text: "A version installed less than a day ago that broke what worked before is put back to the previous version, once, when the updater looks after the services. An outage on the far side (a service down or slow) is never blamed on it.",
+          text: "A version installed less than a day ago that broke what worked before is put back to the previous version, once, when the updater looks after the services. An outage on the far side (a service down or slow) is never blamed on it. Next to it, self-recovery reads the error log and the failed jobs and fixes what it recognises, within limits, and tells you when it needs the OEM ([Self-recovery](/settings/guide/troubleshooting#self-recovery)).",
         },
       ],
     },

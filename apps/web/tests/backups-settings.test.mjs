@@ -96,3 +96,39 @@ test("the backup before every version switch is the updater's, and the page says
   assert.equal(beforeUpdateLine({ last: { at: "", ok: false, trigger: "Before the update to HK-00.03.00" } }), "");
   assert.equal(beforeUpdateLine({ last: null }), "");
 });
+
+async function loadRecovery() {
+  const result = ts.transpileModule(source("lib/self-recovery.ts"), {
+    compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+  });
+  return import(`data:text/javascript;base64,${Buffer.from(result.outputText).toString("base64")}`);
+}
+
+const view = (over = {}) => ({ scope: "installation", canRun: true, lastRunAt: "", everyMinutes: 5, issues: [], history: [], needsOem: false, needsOemReferences: [], prepared: null, signatures: [], ...over });
+
+test("self-recovery says when the OEM is needed, with the references, and what it is doing", async () => {
+  const { recoveryChip, historyLine, bundleFileName, STATUS_TONE, RESULT_WORDS } = await loadRecovery();
+  assert.equal(recoveryChip(null).label, "Not known");
+  assert.deepEqual(recoveryChip(view()), { tone: "ok", label: "Nothing to fix", text: "Hawk AI found nothing it needs to put right." });
+  assert.equal(recoveryChip(view({ issues: [{ status: "recovering" }] })).label, "Recovering");
+  const oem = recoveryChip(view({ needsOem: true, needsOemReferences: ["REC-1A2B3C4D"] }));
+  assert.equal(oem.tone, "bad");
+  assert.match(oem.text, /Download the diagnostics bundle and send it to the OEM with the reference REC-1A2B3C4D\./);
+  assert.equal(
+    historyLine({ at: "x", reference: "REC-1", title: "A background job failed", result: "needs_oem", detail: "3 attempts did not fix it." }, () => "26 Nov, 10:00"),
+    "26 Nov, 10:00 · REC-1 · A background job failed: Needs OEM help. 3 attempts did not fix it.",
+  );
+  assert.equal(bundleFileName('attachment; filename="hawk-ai-diagnostics-20261126T100000Z-REC-1.tar.gz"'), "hawk-ai-diagnostics-20261126T100000Z-REC-1.tar.gz");
+  assert.equal(bundleFileName('attachment; filename="../evil.sh"', new Date("2026-11-26T10:00:00Z")), "hawk-ai-diagnostics-2026-11-26.tar.gz");
+  assert.deepEqual(STATUS_TONE, { open: "warn", recovering: "warn", recovered: "ok", needs_oem: "bad" });
+  assert.equal(RESULT_WORDS["breaker-open"], "Paused (circuit breaker)");
+});
+
+test("Backups & health shows the issues, the self-recovery history and the diagnostics bundle", () => {
+  const page = source("app/settings/backups/page.tsx");
+  for (const text of ['id="diagnostics"', "Self-recovery <small>", "Self-recovery history", "Download diagnostics bundle", "Needs OEM help", "Try again", "Run self-recovery now", 'id="recovery-issues"', "api.getDiagnostics()", "api.downloadDiagnosticsBundle(prepared)"]) {
+    assert.ok(page.includes(text), text);
+  }
+  const api = source("lib/api.ts");
+  for (const route of ['"/diagnostics"', '"/diagnostics/bundle/prepared"', '"/diagnostics/bundle"', '"/diagnostics/recovery/run"', "/diagnostics/recovery/${encodeURIComponent(reference)}/retry"]) assert.ok(api.includes(route), route);
+});

@@ -377,6 +377,114 @@ def recent_error_lines(limit: int = 20) -> list[dict[str, Any]]:
 
 
 # ---------------------------------------------------------------------------------------------------------------------
+# The error journal: the last ERROR lines of the API, the worker and beat, on disk, for self-recovery and the
+# diagnostics bundle (app/services/self_recovery.py, app/services/diagnostics_bundle.py)
+# ---------------------------------------------------------------------------------------------------------------------
+
+#: Under the data folder (HAWK_DATA_DIR, shared by api, worker and beat): one file per service, kept small.
+JOURNAL_DIR = "logs"
+JOURNAL_MAX_BYTES = 1_000_000
+JOURNAL_MESSAGE_CHARS = 500
+JOURNAL_TRACE_CHARS = 3000
+
+
+def journal_dir(data_dir: Any = None) -> Any:
+    from pathlib import Path
+
+    if data_dir is None:
+        from app.core.config import settings
+
+        data_dir = settings.hawk_data_dir
+    return Path(str(data_dir)) / JOURNAL_DIR
+
+
+class ErrorJournalHandler(logging.Handler):
+    """ERROR lines (and worse) as JSON, one a line, in ``<data>/logs/errors-<service>.jsonl``. Redacted twice: the
+    secrets as every log line (``redact_text``), then emails and phone numbers (``redact_sensitive_text``); never a
+    prompt (the raw-material fields are omitted). At JOURNAL_MAX_BYTES the file moves to ``.1`` (one kept)."""
+
+    _hawk_handler = True
+
+    def __init__(self, *, service: str, data_dir: Any = None, max_bytes: int = JOURNAL_MAX_BYTES) -> None:
+        super().__init__(level=logging.ERROR)
+        self.service = re.sub(r"[^a-z0-9_-]", "", str(service or "api").lower()) or "api"
+        self.directory = journal_dir(data_dir)
+        self.max_bytes = max_bytes
+        self._file_lock = threading.Lock()
+
+    @property
+    def file(self) -> Any:
+        return self.directory / f"errors-{self.service}.jsonl"
+
+    def line_for(self, record: logging.LogRecord) -> dict[str, Any]:
+        message, fields = _record_fields(record)
+        line: dict[str, Any] = {
+            "at": _utc_iso(record.created),
+            "level": record.levelname,
+            "service": self.service,
+            "logger": record.name,
+            "message": redact_sensitive_text(message, max_len=JOURNAL_MESSAGE_CHARS),
+        }
+        for key in ("request_id", "task_id", "task_name", "tenant_id", "error_type", "route", "status"):
+            if fields.get(key) not in (None, ""):
+                line[key] = str(fields[key])[:128]
+        if record.exc_info and record.exc_info[0] is not None:
+            line["error_type"] = record.exc_info[0].__name__
+            try:
+                trace = logging.Formatter().formatException(record.exc_info)
+            except Exception:  # noqa: BLE001
+                trace = ""
+            # The last lines of the trace are where it failed; they are what is kept.
+            line["trace"] = redact_sensitive_text(redact_text(trace, max_len=100_000)[-JOURNAL_TRACE_CHARS:], max_len=JOURNAL_TRACE_CHARS)
+        return line
+
+    def emit(self, record: logging.LogRecord) -> None:
+        if record.levelno < self.level:
+            return
+        try:
+            text = json.dumps(self.line_for(record), default=str, ensure_ascii=False) + "\n"
+            with self._file_lock:
+                self.directory.mkdir(parents=True, exist_ok=True)
+                try:
+                    if self.file.stat().st_size > self.max_bytes:
+                        os.replace(self.file, self.file.with_name(self.file.name + ".1"))
+                except OSError:
+                    pass
+                with open(self.file, "a", encoding="utf-8") as out:
+                    out.write(text)
+        except Exception:  # noqa: BLE001 - the journal never breaks logging
+            pass
+
+
+def read_error_journal(data_dir: Any = None, *, since: datetime | None = None, limit: int = 500) -> list[dict[str, Any]]:
+    """The journal's lines, every service's, oldest first: at most ``limit``, the newest kept, none before ``since``."""
+
+    directory = journal_dir(data_dir)
+    lines: list[dict[str, Any]] = []
+    try:
+        files = sorted(directory.glob("errors-*.jsonl*"))
+    except OSError:
+        return []
+    for file in files:
+        try:
+            raw = file.read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError:
+            continue
+        for text in raw[-5000:]:
+            try:
+                value = json.loads(text)
+            except ValueError:
+                continue
+            if isinstance(value, dict) and value.get("at"):
+                lines.append(value)
+    if since is not None:
+        cutoff = since.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+        lines = [line for line in lines if str(line.get("at")) >= cutoff]
+    lines.sort(key=lambda line: str(line.get("at")))
+    return lines[-limit:] if limit > 0 else []
+
+
+# ---------------------------------------------------------------------------------------------------------------------
 # Set-up
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -435,6 +543,9 @@ def configure_logging(*, service: str | None = None, level: str | None = None, f
             root.removeHandler(handler)
         root.addHandler(build_handler(fmt=fmt, service=service))
         root.addHandler(recent_errors)
+        # The error journal on disk (self-recovery and the diagnostics bundle read it); never when it cannot be written.
+        if str(os.environ.get("ERROR_JOURNAL") or "on").strip().lower() != "off":
+            root.addHandler(ErrorJournalHandler(service=service))
         root.setLevel(getattr(logging, level_name, logging.INFO))
 
         # Uvicorn: its lines through the same handler, and its own access line off (app/main.py writes one per

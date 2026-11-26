@@ -166,6 +166,7 @@ x-hawk-environment: &hawk-environment
   # automatic support cases are to be forwarded (by an administrator: Hawk AI never sends outside by itself).
   WATCHDOG_EVERY_SECONDS: ${WATCHDOG_EVERY_SECONDS:-300}
   INBOX_EVERY_SECONDS: ${INBOX_EVERY_SECONDS:-120}
+  SELF_RECOVERY_EVERY_SECONDS: ${SELF_RECOVERY_EVERY_SECONDS:-300}
   MAINTAINER_EMAIL: ${MAINTAINER_EMAIL:-}
 
 x-hawk-secrets: &hawk-secrets
