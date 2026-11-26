@@ -87,6 +87,39 @@ export const install: GuideTopic = {
           kind: "p",
           text: "The other settings (HTTPS certificates, backups, email, updates, the self-check, the proxy) are described on their own pages of this guide.",
         },
+        {
+          kind: "table",
+          head: ["Setting", "Default", "What it does"],
+          rows: [
+            ["`HAWK_API_MEMORY`", "`2g`", "The most memory the api may use. Each service has its own cap: `HAWK_WORKER_MEMORY` (`3g`), `HAWK_POSTGRES_MEMORY` (`2g`), `HAWK_MIGRATE_MEMORY` (`2g`), `HAWK_WEB_MEMORY` (`1g`), `HAWK_REDIS_MEMORY` (`1g`), `HAWK_PROXY_MEMORY` (`512m`), `HAWK_BEAT_MEMORY` (`512m`), `HAWK_UPDATER_MEMORY` (`256m`). Raise one if its service is stopped for lack of memory (`docker compose -f deploy/compose.yaml ps` shows it restarting)."],
+          ],
+        },
+      ],
+    },
+    {
+      id: "hardening",
+      title: "How the installation is protected",
+      who: "Whoever runs the server",
+      blocks: [
+        {
+          kind: "p",
+          text: "The installer sets every service up to the CIS Docker Benchmark, with nothing to do on your side:",
+        },
+        {
+          kind: "list",
+          items: [
+            "Every service runs as a fixed user that is not root, with no Linux capabilities, no way to gain privileges, a read-only file system (only its data and a scratch folder can be written), a memory cap, a CPU share, at most 512 processes, a health check and a restart policy. Logs are rotated.",
+            "Only the proxy answers on the network (`BIND_ADDRESS`, `PORT`, `HTTP_REDIRECT_PORT`). PostgreSQL and Redis are on an internal network of their own: only the api, worker, beat and migrate services reach them, and they reach nothing outside this machine.",
+            "PostgreSQL accepts only SCRAM-SHA-256 passwords, over TLS (with a certificate the installer makes for it, in the `secrets` folder), and logs every connection and disconnection, schema changes and slow statements: `docker compose -f deploy/compose.yaml logs postgres`.",
+            "Redis needs its password, and the commands that would wipe, reconfigure or list the whole store are switched off.",
+            "PostgreSQL, Redis and every image Hawk AI is built on are pinned to an exact, checked version. Each published image carries a list of its components (an SBOM) and is scanned for known vulnerabilities before it is published.",
+            "The updater is the one service with access to Docker, which it needs to replace the others: it has no network at all, runs as an ordinary user in the Docker socket's group, and acts only on what an owner or admin asks from Settings → Updates.",
+          ],
+        },
+        {
+          kind: "p",
+          text: "At each run the installer also checks the machine itself (firewall, SSH, automatic security updates, time, disk encryption, the audit daemon) and prints Pass or Check for each; [Settings → Backups & health](/settings/backups) shows the same list under the self-check. It changes nothing on the machine.",
+        },
       ],
     },
     {

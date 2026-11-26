@@ -4,7 +4,7 @@
 It is the only container with the container engine's socket, which is as powerful as the engine itself, so it does
 one thing: it reads request.json in the updater folder it shares with the API (/updater) and replaces Hawk AI's
 services with the same services on the images asked for (hawk_updater/update.py), or restarts them. It listens on no
-port and takes no other instruction. It runs as root (for the socket), with nothing else.
+port and takes no other instruction. It runs as uid 1000 with the socket's group only, no network and no capabilities.
 
 Files in /updater (app/services/updates/companion.py is the API's side):
   updater.json   its heartbeat, every 30 s: it is there, it reaches the engine, what the services run;

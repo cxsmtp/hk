@@ -1,9 +1,14 @@
 # The front proxy of deploy/compose.yaml: one HTTPS origin for the console and the API.
 # Its configuration is written by the API (app/services/https_proxy.py, Settings → HTTPS) into /hawk-proxy, a volume
 # the proxy reads only: Caddy waits for it at the first start, then reloads it by itself whenever it changes (--watch).
-# TODO(owner): pin by digest, as infra/Dockerfile.api is; the tag is the one infra/Dockerfile.local-production-gateway
-# already uses, and no digest for it is recorded in this repository.
-FROM caddy:2.8.4-alpine AS base
+# Pinned by digest (the multi-platform index of caddy:2.11.9-alpine), as infra/Dockerfile.api is. Alpine's security fixes
+# released since that image was made are applied (apk upgrade), for the container scan (.github/workflows/security.yml).
+FROM caddy:2.11.9-alpine@sha256:003a97808e781aa9f7e75cc2f43d34d461099031faf5e20faefb9f61126836f0 AS base
+
+# Building behind a company proxy that inspects TLS: its CA certificate (deploy/install.sh: HAWK_BUILD_CA_FILE).
+RUN --mount=type=secret,id=ca,required=false \
+    if [ -s /run/secrets/ca ]; then cat /etc/ssl/certs/ca-certificates.crt /run/secrets/ca > /tmp/ca.pem && export SSL_CERT_FILE=/tmp/ca.pem; fi \
+    && apk upgrade --no-cache && rm -f /tmp/ca.pem
 
 # Runs as uid 1000 with no capabilities: the binary's own file capability (to bind ports below 1024) is dropped by
 # copying it, as it would stop the binary from starting under cap_drop ALL; it listens on 8443, 8080 and 8081 only.
@@ -14,7 +19,7 @@ RUN cp /usr/bin/caddy /tmp/caddy && mv /tmp/caddy /usr/bin/caddy \
 
 # ---- The file list: the Caddy binary this image ships, with its SHA-256 (/settings/guide/updates) --------------------------
 # It is built for each platform, so each platform's list differs; the release workflow signs each one.
-FROM --platform=$BUILDPLATFORM python:3.11-slim@sha256:9c900dea9e8fb7e16277c179b555cc72d29a352dbc33cff48ad5a0412fd5bfc7 AS integrity
+FROM --platform=$BUILDPLATFORM python:3.11-slim@sha256:61e01f72680f86a5279ad510818ab7b2ee9f049822589d4e34e33e044360356c AS integrity
 ARG HAWK_COMMIT=""
 ARG HAWK_REPOSITORY=""
 COPY infra/scripts/integrity.py /tool/infra/scripts/integrity.py

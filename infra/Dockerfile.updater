@@ -2,7 +2,7 @@
 # container with the container engine's socket, so it carries nothing but Python's standard library and its own
 # package, and runs no package manager. It updates and rolls back the whole stack on request from Settings → Updates.
 
-FROM python:3.11-slim@sha256:9c900dea9e8fb7e16277c179b555cc72d29a352dbc33cff48ad5a0412fd5bfc7 AS base
+FROM python:3.11-slim@sha256:61e01f72680f86a5279ad510818ab7b2ee9f049822589d4e34e33e044360356c AS base
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 # No package manager at run time.
 RUN python -m pip uninstall -y pip setuptools wheel 2>/dev/null || python -m pip uninstall -y pip
@@ -11,7 +11,7 @@ COPY apps/updater/hawk_updater /app/hawk_updater
 COPY VERSION /app/VERSION
 
 # ---- The file list: every file the updater ships, with its SHA-256 (/settings/guide/updates) -------------------------------
-FROM --platform=$BUILDPLATFORM python:3.11-slim@sha256:9c900dea9e8fb7e16277c179b555cc72d29a352dbc33cff48ad5a0412fd5bfc7 AS integrity
+FROM --platform=$BUILDPLATFORM python:3.11-slim@sha256:61e01f72680f86a5279ad510818ab7b2ee9f049822589d4e34e33e044360356c AS integrity
 ARG HAWK_COMMIT=""
 ARG HAWK_REPOSITORY=""
 COPY infra/scripts/integrity.py /tool/infra/scripts/integrity.py
@@ -22,6 +22,11 @@ RUN python /tool/infra/scripts/integrity.py write /app --image updater --commit 
 
 FROM base AS runtime
 COPY --from=integrity /app/integrity.json /app/integrity.json
-# Root, for the engine's socket (deploy/compose.yaml mounts it); it opens no port.
-USER root
+# It creates a container on more than one network by connecting the others after (deploy/install.sh starts no
+# updater without this label, as one made before could not put deploy/compose.yaml's services back).
+LABEL org.cxsmtp.hawk.updater.networks="many"
+# A fixed non-root user (CIS Docker 4.1): deploy/compose.yaml gives it the engine socket's group only. It opens no port.
+USER 1000:1000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD ["python", "-c", "import json,time,datetime as d;b=json.load(open('/updater/updater.json'));raise SystemExit(0 if time.time()-d.datetime.fromisoformat(b['at'].replace('Z','+00:00')).timestamp()<90 else 1)"]
 CMD ["python", "-m", "hawk_updater"]

@@ -32,12 +32,16 @@ export type SelfCheckProblem = {
 
 export type SelfCheckEvent = { at: string; kind: string; message: string; key?: string };
 
+/** This machine's own checks (CIS Linux benchmark items), made by deploy/install.sh at each run and only reported. */
+export type HostCheck = { id: string; status: "pass" | "warn"; title: string; detail: string };
+
 export type SelfCheckHealth = {
   lastCheckAt: string;
   everyMinutes: number;
   problems: SelfCheckProblem[];
   events: SelfCheckEvent[];
   maintainer: string;
+  host?: { checkedAt: string; checks: HostCheck[] } | null;
 };
 
 export type HandsOffView = {

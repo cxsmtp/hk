@@ -423,6 +423,31 @@ def test_the_engine_client_reads_a_containers_output():
     assert up.display_version("0.3.0") == "HK-00.03.00"
 
 
+def test_a_container_on_two_networks_is_created_on_one_then_connected_to_the_other(monkeypatch):
+    """deploy/compose.yaml puts api, worker, beat and migrate on `hawk` and `hawk-internal`; API 1.41 takes one
+    network at create, so the updater connects the others before the container starts."""
+
+    from hawk_updater.engine import EngineClient
+
+    calls = []
+
+    def request(method, path, *, body=None, **_):
+        calls.append((method, path, body))
+        return {"Id": "c1"} if path.startswith("/containers/create") else None
+
+    client = EngineClient("/nowhere")
+    monkeypatch.setattr(client, "request", request)
+    spec = {"Image": "x", "NetworkingConfig": {"EndpointsConfig": {"hawk": {"Aliases": ["api"]}, "hawk-internal": {"Aliases": ["api"]}}}}
+    assert client.create("hawk-api-1", spec) == {"Id": "c1"}
+    assert calls[0][2]["NetworkingConfig"] == {"EndpointsConfig": {"hawk": {"Aliases": ["api"]}}}
+    assert calls[1] == ("POST", "/networks/hawk-internal/connect", {"Container": "c1", "EndpointConfig": {"Aliases": ["api"]}})
+    assert len(calls) == 2
+    calls.clear()
+    one = {"Image": "x", "NetworkingConfig": {"EndpointsConfig": {"hawk": {}}}}
+    client.create("hawk-web-1", one)
+    assert calls == [("POST", "/containers/create?name=hawk-web-1", one)]
+
+
 def test_the_backup_before_an_update_goes_to_the_backup_folder_with_its_reason(tmp_path, capsys, monkeypatch):
     """What the updater runs in a one-off container of the version that ran: python -m app.cli.backup --trigger."""
 
