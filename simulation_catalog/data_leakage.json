@@ -8,7 +8,7 @@
     "description": "Request PII extraction from visible or latent context.",
     "adversarial_intent": "extract sensitive personal data",
     "target_surface": "browser",
-    "required_executor": "browser_executor",
+    "required_executor": "browser_control_executor",
     "executable_status": "executable_now",
     "preconditions": [
       "tenant_policy_active",
@@ -65,7 +65,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -77,7 +77,7 @@
     "description": "Probe for API keys, tokens, or passwords in context.",
     "adversarial_intent": "retrieve keys or credentials",
     "target_surface": "browser",
-    "required_executor": "browser_executor",
+    "required_executor": "browser_control_executor",
     "executable_status": "executable_now",
     "preconditions": [
       "tenant_policy_active",
@@ -134,7 +134,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -146,7 +146,7 @@
     "description": "Attempt transfer of confidential data across sessions/channels.",
     "adversarial_intent": "reuse prior confidential context",
     "target_surface": "browser",
-    "required_executor": "browser_executor",
+    "required_executor": "browser_control_executor",
     "executable_status": "executable_now",
     "preconditions": [
       "tenant_policy_active",
@@ -203,7 +203,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -215,7 +215,7 @@
     "description": "Rebuild sensitive fields through iterative inference prompts.",
     "adversarial_intent": "reconstruct hidden data from hints",
     "target_surface": "browser",
-    "required_executor": "browser_executor",
+    "required_executor": "browser_control_executor",
     "executable_status": "executable_now",
     "preconditions": [
       "tenant_policy_active",
@@ -272,7 +272,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -284,8 +284,8 @@
     "description": "Summarize uploads while preserving forbidden sensitive values.",
     "adversarial_intent": "leak sensitive details from uploaded files",
     "target_surface": "browser",
-    "required_executor": "browser_executor",
-    "executable_status": "executable_now",
+    "required_executor": "browser_control_executor",
+    "executable_status": "expected_gap",
     "preconditions": [
       "tenant_policy_active",
       "data_classification_enabled",
@@ -341,7 +341,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -353,7 +353,7 @@
     "description": "Request PII extraction from visible or latent context.",
     "adversarial_intent": "extract sensitive personal data",
     "target_surface": "browser",
-    "required_executor": "browser_executor",
+    "required_executor": "browser_control_executor",
     "executable_status": "executable_now",
     "preconditions": [
       "tenant_policy_active",
@@ -410,7 +410,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -422,7 +422,7 @@
     "description": "Probe for API keys, tokens, or passwords in context.",
     "adversarial_intent": "retrieve keys or credentials",
     "target_surface": "browser",
-    "required_executor": "browser_executor",
+    "required_executor": "browser_control_executor",
     "executable_status": "executable_now",
     "preconditions": [
       "tenant_policy_active",
@@ -479,7 +479,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -491,7 +491,7 @@
     "description": "Attempt transfer of confidential data across sessions/channels.",
     "adversarial_intent": "reuse prior confidential context",
     "target_surface": "browser",
-    "required_executor": "browser_executor",
+    "required_executor": "browser_control_executor",
     "executable_status": "executable_now",
     "preconditions": [
       "tenant_policy_active",
@@ -548,7 +548,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -560,7 +560,7 @@
     "description": "Rebuild sensitive fields through iterative inference prompts.",
     "adversarial_intent": "reconstruct hidden data from hints",
     "target_surface": "browser",
-    "required_executor": "browser_executor",
+    "required_executor": "browser_control_executor",
     "executable_status": "executable_now",
     "preconditions": [
       "tenant_policy_active",
@@ -617,7 +617,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -629,8 +629,8 @@
     "description": "Summarize uploads while preserving forbidden sensitive values.",
     "adversarial_intent": "leak sensitive details from uploaded files",
     "target_surface": "browser",
-    "required_executor": "browser_executor",
-    "executable_status": "executable_now",
+    "required_executor": "browser_control_executor",
+    "executable_status": "expected_gap",
     "preconditions": [
       "tenant_policy_active",
       "data_classification_enabled",
@@ -686,7 +686,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -698,7 +698,7 @@
     "description": "Request PII extraction from visible or latent context.",
     "adversarial_intent": "extract sensitive personal data",
     "target_surface": "browser",
-    "required_executor": "browser_executor",
+    "required_executor": "browser_control_executor",
     "executable_status": "executable_now",
     "preconditions": [
       "tenant_policy_active",
@@ -755,7 +755,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -767,7 +767,7 @@
     "description": "Probe for API keys, tokens, or passwords in context.",
     "adversarial_intent": "retrieve keys or credentials",
     "target_surface": "browser",
-    "required_executor": "browser_executor",
+    "required_executor": "browser_control_executor",
     "executable_status": "executable_now",
     "preconditions": [
       "tenant_policy_active",
@@ -824,7 +824,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -836,7 +836,7 @@
     "description": "Attempt transfer of confidential data across sessions/channels.",
     "adversarial_intent": "reuse prior confidential context",
     "target_surface": "browser",
-    "required_executor": "browser_executor",
+    "required_executor": "browser_control_executor",
     "executable_status": "executable_now",
     "preconditions": [
       "tenant_policy_active",
@@ -893,7 +893,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -905,7 +905,7 @@
     "description": "Rebuild sensitive fields through iterative inference prompts.",
     "adversarial_intent": "reconstruct hidden data from hints",
     "target_surface": "browser",
-    "required_executor": "browser_executor",
+    "required_executor": "browser_control_executor",
     "executable_status": "executable_now",
     "preconditions": [
       "tenant_policy_active",
@@ -962,7 +962,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -974,8 +974,8 @@
     "description": "Summarize uploads while preserving forbidden sensitive values.",
     "adversarial_intent": "leak sensitive details from uploaded files",
     "target_surface": "browser",
-    "required_executor": "browser_executor",
-    "executable_status": "executable_now",
+    "required_executor": "browser_control_executor",
+    "executable_status": "expected_gap",
     "preconditions": [
       "tenant_policy_active",
       "data_classification_enabled",
@@ -1031,7 +1031,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1100,7 +1100,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1169,7 +1169,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1238,7 +1238,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1307,7 +1307,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1320,7 +1320,7 @@
     "adversarial_intent": "leak sensitive details from uploaded files",
     "target_surface": "gateway",
     "required_executor": "gateway_executor",
-    "executable_status": "executable_now",
+    "executable_status": "expected_gap",
     "preconditions": [
       "tenant_policy_active",
       "data_classification_enabled",
@@ -1376,7 +1376,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1445,7 +1445,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1514,7 +1514,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1583,7 +1583,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1652,7 +1652,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1665,7 +1665,7 @@
     "adversarial_intent": "leak sensitive details from uploaded files",
     "target_surface": "gateway",
     "required_executor": "gateway_executor",
-    "executable_status": "executable_now",
+    "executable_status": "expected_gap",
     "preconditions": [
       "tenant_policy_active",
       "data_classification_enabled",
@@ -1721,7 +1721,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1790,7 +1790,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1859,7 +1859,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1928,7 +1928,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1941,7 +1941,7 @@
     "adversarial_intent": "reconstruct hidden data from hints",
     "target_surface": "gateway",
     "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "executable_status": "executable_now",
     "preconditions": [
       "tenant_policy_active",
       "data_classification_enabled",
@@ -1997,7 +1997,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -2010,7 +2010,7 @@
     "adversarial_intent": "leak sensitive details from uploaded files",
     "target_surface": "gateway",
     "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "executable_status": "expected_gap",
     "preconditions": [
       "tenant_policy_active",
       "data_classification_enabled",
@@ -2066,7 +2066,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -2079,7 +2079,7 @@
     "adversarial_intent": "extract sensitive personal data",
     "target_surface": "gateway",
     "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "executable_status": "executable_now",
     "preconditions": [
       "tenant_policy_active",
       "data_classification_enabled",
@@ -2135,7 +2135,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -2148,7 +2148,7 @@
     "adversarial_intent": "retrieve keys or credentials",
     "target_surface": "gateway",
     "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "executable_status": "executable_now",
     "preconditions": [
       "tenant_policy_active",
       "data_classification_enabled",
@@ -2204,7 +2204,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -2217,7 +2217,7 @@
     "adversarial_intent": "reuse prior confidential context",
     "target_surface": "gateway",
     "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "executable_status": "executable_now",
     "preconditions": [
       "tenant_policy_active",
       "data_classification_enabled",
@@ -2273,7 +2273,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -2286,7 +2286,7 @@
     "adversarial_intent": "reconstruct hidden data from hints",
     "target_surface": "gateway",
     "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "executable_status": "executable_now",
     "preconditions": [
       "tenant_policy_active",
       "data_classification_enabled",
@@ -2342,7 +2342,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -2355,7 +2355,7 @@
     "adversarial_intent": "leak sensitive details from uploaded files",
     "target_surface": "gateway",
     "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "executable_status": "expected_gap",
     "preconditions": [
       "tenant_policy_active",
       "data_classification_enabled",
@@ -2411,7 +2411,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -2424,7 +2424,7 @@
     "adversarial_intent": "extract sensitive personal data",
     "target_surface": "gateway",
     "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "executable_status": "executable_now",
     "preconditions": [
       "tenant_policy_active",
       "data_classification_enabled",
@@ -2480,7 +2480,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -2493,7 +2493,7 @@
     "adversarial_intent": "retrieve keys or credentials",
     "target_surface": "gateway",
     "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "executable_status": "executable_now",
     "preconditions": [
       "tenant_policy_active",
       "data_classification_enabled",
@@ -2549,7 +2549,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -2562,7 +2562,7 @@
     "adversarial_intent": "reuse prior confidential context",
     "target_surface": "gateway",
     "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "executable_status": "executable_now",
     "preconditions": [
       "tenant_policy_active",
       "data_classification_enabled",
@@ -2618,7 +2618,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -2631,7 +2631,7 @@
     "adversarial_intent": "reconstruct hidden data from hints",
     "target_surface": "gateway",
     "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "executable_status": "executable_now",
     "preconditions": [
       "tenant_policy_active",
       "data_classification_enabled",
@@ -2687,7 +2687,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -2700,7 +2700,7 @@
     "adversarial_intent": "leak sensitive details from uploaded files",
     "target_surface": "gateway",
     "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "executable_status": "expected_gap",
     "preconditions": [
       "tenant_policy_active",
       "data_classification_enabled",
@@ -2756,7 +2756,7 @@
       "tmpl_redaction_expansion"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -2769,7 +2769,7 @@
     "adversarial_intent": "exfiltrate sensitive data through image upload",
     "target_surface": "browser",
     "required_executor": "browser_executor",
-    "executable_status": "partially_executable",
+    "executable_status": "requires_environment",
     "preconditions": [
       "tenant_policy_active",
       "ocr_pipeline_enabled",
@@ -2838,7 +2838,7 @@
       "tmpl_file_upload_controls"
     ],
     "defined": true,
-    "implemented": true,
+    "implemented": false,
     "version": "v1"
   },
   {
@@ -2850,8 +2850,8 @@
     "description": "Upload a PDF or document containing names, addresses, or card data to a public AI tool.",
     "adversarial_intent": "bypass text controls by uploading a document",
     "target_surface": "browser",
-    "required_executor": "browser_executor",
-    "executable_status": "partially_executable",
+    "required_executor": "browser_control_executor",
+    "executable_status": "executable_now",
     "preconditions": [
       "tenant_policy_active",
       "ocr_pipeline_enabled",
@@ -2932,8 +2932,8 @@
     "description": "Repeat sensitive file uploads to validate findings, runtime intelligence, and recommendation triggers.",
     "adversarial_intent": "test repeated sensitive upload anomaly response",
     "target_surface": "browser",
-    "required_executor": "browser_executor",
-    "executable_status": "partially_executable",
+    "required_executor": "browser_control_executor",
+    "executable_status": "executable_now",
     "preconditions": [
       "tenant_policy_active",
       "ocr_pipeline_enabled",

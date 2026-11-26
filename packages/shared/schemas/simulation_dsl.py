@@ -95,6 +95,8 @@ class SimulationStep(BaseModel):
     kind: Literal[
         "llm_intercept",
         "mcp_authorize",
+        "agent_action_intercept",
+        "browser_interaction_eval",
         "shadow_event_ingest",
         "monitoring_signal",
         "auditor_snapshot",
@@ -347,6 +349,8 @@ def _fallback_validate_simulation_def(payload: dict[str, Any]) -> list[str]:
         if step.get("kind") not in {
             "llm_intercept",
             "mcp_authorize",
+            "agent_action_intercept",
+            "browser_interaction_eval",
             "shadow_event_ingest",
             "monitoring_signal",
             "auditor_snapshot",

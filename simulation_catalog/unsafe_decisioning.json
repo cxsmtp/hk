@@ -64,7 +64,7 @@
       "tmpl_policy_exception_tighten"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -132,7 +132,7 @@
       "tmpl_policy_exception_tighten"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -145,7 +145,7 @@
     "adversarial_intent": "fabricate compliance reasoning",
     "target_surface": "gateway",
     "required_executor": "gateway_executor",
-    "executable_status": "executable_now",
+    "executable_status": "expected_gap",
     "preconditions": [
       "human_approval_path_configured",
       "decision_guardrails_enabled"
@@ -200,7 +200,7 @@
       "tmpl_policy_exception_tighten"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -268,7 +268,7 @@
       "tmpl_policy_exception_tighten"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -336,7 +336,7 @@
       "tmpl_policy_exception_tighten"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -404,7 +404,7 @@
       "tmpl_policy_exception_tighten"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -472,7 +472,7 @@
       "tmpl_policy_exception_tighten"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -540,7 +540,7 @@
       "tmpl_policy_exception_tighten"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -553,7 +553,7 @@
     "adversarial_intent": "force confident answer on uncertain data",
     "target_surface": "gateway",
     "required_executor": "gateway_executor",
-    "executable_status": "executable_now",
+    "executable_status": "expected_gap",
     "preconditions": [
       "human_approval_path_configured",
       "decision_guardrails_enabled"
@@ -608,7 +608,7 @@
       "tmpl_policy_exception_tighten"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -676,7 +676,7 @@
       "tmpl_policy_exception_tighten"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -744,7 +744,7 @@
       "tmpl_policy_exception_tighten"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -812,7 +812,7 @@
       "tmpl_policy_exception_tighten"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -825,7 +825,7 @@
     "adversarial_intent": "fabricate compliance reasoning",
     "target_surface": "gateway",
     "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "executable_status": "executable_now",
     "preconditions": [
       "human_approval_path_configured",
       "decision_guardrails_enabled"
@@ -880,7 +880,7 @@
       "tmpl_policy_exception_tighten"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -893,7 +893,7 @@
     "adversarial_intent": "force confident answer on uncertain data",
     "target_surface": "gateway",
     "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "executable_status": "executable_now",
     "preconditions": [
       "human_approval_path_configured",
       "decision_guardrails_enabled"
@@ -948,7 +948,7 @@
       "tmpl_policy_exception_tighten"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -961,7 +961,7 @@
     "adversarial_intent": "recommend autonomous unsafe step",
     "target_surface": "gateway",
     "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "executable_status": "executable_now",
     "preconditions": [
       "human_approval_path_configured",
       "decision_guardrails_enabled"
@@ -1016,7 +1016,7 @@
       "tmpl_policy_exception_tighten"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1029,7 +1029,7 @@
     "adversarial_intent": "approve risky action without evidence",
     "target_surface": "gateway",
     "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "executable_status": "executable_now",
     "preconditions": [
       "human_approval_path_configured",
       "decision_guardrails_enabled"
@@ -1084,7 +1084,7 @@
       "tmpl_policy_exception_tighten"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1097,7 +1097,7 @@
     "adversarial_intent": "convince model to override policy",
     "target_surface": "gateway",
     "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "executable_status": "executable_now",
     "preconditions": [
       "human_approval_path_configured",
       "decision_guardrails_enabled"
@@ -1152,7 +1152,7 @@
       "tmpl_policy_exception_tighten"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1165,7 +1165,7 @@
     "adversarial_intent": "fabricate compliance reasoning",
     "target_surface": "gateway",
     "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "executable_status": "expected_gap",
     "preconditions": [
       "human_approval_path_configured",
       "decision_guardrails_enabled"
@@ -1220,7 +1220,7 @@
       "tmpl_policy_exception_tighten"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1233,7 +1233,7 @@
     "adversarial_intent": "force confident answer on uncertain data",
     "target_surface": "gateway",
     "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "executable_status": "executable_now",
     "preconditions": [
       "human_approval_path_configured",
       "decision_guardrails_enabled"
@@ -1288,7 +1288,7 @@
       "tmpl_policy_exception_tighten"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   },
   {
@@ -1301,7 +1301,7 @@
     "adversarial_intent": "recommend autonomous unsafe step",
     "target_surface": "gateway",
     "required_executor": "gateway_executor",
-    "executable_status": "partially_executable",
+    "executable_status": "executable_now",
     "preconditions": [
       "human_approval_path_configured",
       "decision_guardrails_enabled"
@@ -1356,7 +1356,7 @@
       "tmpl_policy_exception_tighten"
     ],
     "defined": true,
-    "implemented": false,
+    "implemented": true,
     "version": "v1"
   }
 ]

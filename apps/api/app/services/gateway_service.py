@@ -1066,6 +1066,47 @@ def _aggregate_guardian_decisions(decisions: list[str]) -> str:
     return "allow"
 
 
+def _context_budget_guardian(
+    *,
+    prompt: Any = None,
+    context_summary: Any = None,
+    tool_output: Any = None,
+    response_text: Any = None,
+) -> dict[str, Any] | None:
+    """Block a payload larger than the API accepts in one request (``max_request_body_bytes``, 2 MiB by default).
+
+    The HTTP layer already refuses such a body with 413, but in-process callers (SDK adapters, workers, simulations)
+    reach ``llm_intercept`` directly and were unbounded: a context-bloat payload was evaluated and allowed. Found by
+    the attack-simulation catalogue (SIM-RESOURCE context_bloat).
+    """
+    limit = max(1, int(getattr(settings, "max_request_body_bytes", 2_097_152) or 2_097_152))
+    sizes = {
+        "prompt": len(_as_text(prompt)),
+        "context": len(_as_text(context_summary)),
+        "tool_output": len(_as_text(tool_output)),
+        "response": len(_as_text(response_text)),
+    }
+    total = sum(sizes.values())
+    if total <= limit:
+        return None
+    return {
+        "guardian_contract_id": "gateway.context_budget",
+        "guardian_id": "context_budget_guard",
+        "decision": "block",
+        "confidence": 1.0,
+        "confidence_tier": "clear_positive",
+        "arbiter_invoked": False,
+        "matched_conditions": ["payload_characters_over_limit"],
+        "threat_types": ["resource_exhaustion"],
+        "actions_taken": {
+            "reason_code": "context_budget_exceeded",
+            "limit_characters": limit,
+            "total_characters": total,
+            "characters_by_field": sizes,
+        },
+    }
+
+
 def _apply_threat_detectors(
     *,
     final_decision: str,
@@ -1084,6 +1125,17 @@ def _apply_threat_detectors(
     never changes an existing decision; a detected threat escalates via the same
     ``_aggregate_guardian_decisions`` precedence used everywhere else.
     """
+    budget_guardian = _context_budget_guardian(
+        prompt=prompt,
+        context_summary=context_summary,
+        tool_output=tool_output,
+        response_text=response_text,
+    )
+    if budget_guardian is not None:
+        # An oversized payload is blocked before the detectors spend time scanning it.
+        guardian_results.append(budget_guardian)
+        final_actions["context_budget"] = dict(budget_guardian.get("actions_taken") or {})
+        return _aggregate_guardian_decisions([final_decision, "block"])
     try:
         detector_guardians = evaluate_threat_detectors(
             prompt=prompt,
