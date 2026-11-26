@@ -15,6 +15,7 @@ from app.main import app
 from app.services.ai_orchestration.remediation_guidance_service import build_simulation_failure_task
 from app.services.control_graph_service import infer_runtime_control_mapping, normalize_control_id
 from app.services.remediation import propose_remediation_from_finding
+from ai_system_approval_helpers import approve_ai_system
 
 
 PASSWORD = "Password123!"
@@ -102,7 +103,7 @@ def _create_ai_system(client: TestClient, *, headers: dict[str, str], name: str)
     )
     assert response.status_code == 200, response.text
     ai_system_id = str(response.json()["id"])
-    approved = client.patch(f"/ai-systems/{ai_system_id}", headers=headers, json={"status": "approved"})
+    approved = approve_ai_system(client, headers, ai_system_id)
     assert approved.status_code == 200, approved.text
     return ai_system_id
 

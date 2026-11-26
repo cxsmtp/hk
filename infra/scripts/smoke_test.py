@@ -103,6 +103,18 @@ def ensure(condition: bool, message: str) -> None:
         raise SmokeFailure(message)
 
 
+def _approve_through_policy(client, ai_system_id: str) -> dict:
+    """An AI system becomes active only through the approval policy (Settings → AI system approvals). The smoke
+    tenant has one person, so it lets one approver, who may be the requester, approve HIGH systems."""
+
+    client.request("PUT", "/settings/ai-system-approvals", body={"tiers": {"HIGH": {"min_approvers": 1, "allow_self_approval": True}}})
+    asked = client.request("POST", f"/ai-systems/{ai_system_id}/approval-requests", body={"scope": "time_bound", "target_status": "active"})
+    request_id = (asked.get("request") or {}).get("id")
+    ensure(bool(request_id), "approval request id missing")
+    decided = client.request("POST", f"/ai-system-approvals/{request_id}/decision", body={"decision": "approve"})
+    return {"status": decided.get("ai_system_status")}
+
+
 def find_in(items: list[dict[str, Any]], key: str, value: Any) -> dict[str, Any] | None:
     for item in items:
         if item.get(key) == value:
@@ -193,11 +205,7 @@ def main() -> int:
         ai_system_id = resolved["id"]
 
     print("[step] approve AI system (status=active)")
-    ai_system_updated = client.request(
-        "PATCH",
-        f"/ai-systems/{ai_system_id}",
-        body={"status": "active"},
-    )
+    ai_system_updated = _approve_through_policy(client, ai_system_id)
     if ai_system_updated.get("status") != "active":
         systems = client.request("GET", "/ai-systems")
         current = find_in(systems, "id", ai_system_id)

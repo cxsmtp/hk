@@ -18,6 +18,7 @@ from app.db.models.evidence import EvidenceNode
 from app.db.session import Base, get_db
 from app.main import app
 from app.services.rate_limit_service import tenant_rate_limiter
+from ai_system_approval_helpers import approve_ai_system
 
 
 def test_structured_error_level_is_observable_and_unknown_level_falls_back(monkeypatch):
@@ -102,7 +103,7 @@ def _create_ai_system(client: TestClient, *, headers: dict[str, str], name: str)
     )
     assert response.status_code == 200, response.text
     ai_system_id = response.json()["id"]
-    approved = client.patch(f"/ai-systems/{ai_system_id}", headers=headers, json={"status": "approved"})
+    approved = approve_ai_system(client, headers, ai_system_id)
     assert approved.status_code == 200, approved.text
     return ai_system_id
 

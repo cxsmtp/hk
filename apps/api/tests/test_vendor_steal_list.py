@@ -15,6 +15,7 @@ from app.db.session import Base, get_db
 from app.main import app
 from app.services.gateway_service import evaluate_guardians
 from app.services.guardians.threat_registry import THREAT_TYPE_TO_GUARDIAN_CONTRACTS, guardian_contract_to_threat_types
+from ai_system_approval_helpers import approve_ai_system
 
 
 PASSWORD = "Password123!"
@@ -70,7 +71,7 @@ def _create_ai_system(client: TestClient, *, headers: dict[str, str], risk_tier:
     )
     assert response.status_code == 200, response.text
     ai_system_id = response.json()["id"]
-    approved = client.patch(f"/ai-systems/{ai_system_id}", headers=headers, json={"status": "approved"})
+    approved = approve_ai_system(client, headers, ai_system_id)
     assert approved.status_code == 200, approved.text
     return ai_system_id
 

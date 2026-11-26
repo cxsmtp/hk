@@ -17,6 +17,7 @@ from app.db.session import get_db
 from app.services.audit_service import write_audit_log
 from app.services.action_integrity.approval_service import ApprovalRequestExpiredError, decide_approval_request_v2
 from app.services.action_integrity.signing import KmsHsmSigningKeyProvider
+from app.services.ai_system_approval_service import is_ai_system_approval_request
 
 
 router = APIRouter(prefix="/enforcement", tags=["enforcement"])
@@ -252,6 +253,12 @@ def decide_approval(
     )
     if not req:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Approval request not found")
+    if is_ai_system_approval_request(req):
+        # Distinct approvers, self-approval and scope are the AI system approval policy's: decided there only.
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="AI system approvals are decided at POST /ai-system-approvals/{id}/decision, under the approval policy.",
+        )
 
     is_v2_request = req.authority_schema_version == "2.0"
     is_v2_payload = isinstance(payload, ApprovalDecisionRequestV2)

@@ -12,7 +12,7 @@ from app.db.models.finding import Finding
 from app.db.models.user import UserTenantRole
 from app.services.audit_service import write_audit_log
 from app.services.evidence_service import create_evidence_node
-from app.services.simulation_scheduler_service import schedule_for_ai_system_approved, schedule_for_high_risk_tier
+from app.services.simulation_scheduler_service import schedule_for_high_risk_tier
 
 
 APPLICATION_STATUSES = {"discovered", "monitoring", "approved", "blocked"}
@@ -269,16 +269,17 @@ def promote_discovery_application(
             )
         )
 
+    # The AI system is approved only through the approval workflow (app/services/ai_system_approval_service.py):
+    # promoting the application registers it and asks for its approval, under its risk tier's policy.
     if ai_system is None:
         ai_system = AISystem(
             tenant_id=tenant_id,
             name=application.tool_name,
             description=f"Promoted from discovery application {application.id}",
             risk_tier=risk_tier,
-            status="approved",
+            status="draft",
             metadata_json={
-                "governance_state": "APPROVED",
-                "lifecycle_state": "ACTIVE",
+                "lifecycle_state": "PENDING_APPROVAL",
                 "discovery_application_id": application.id,
                 "discovery_tool_key": application.tool_key,
             },
@@ -287,16 +288,16 @@ def promote_discovery_application(
         db.flush()
     else:
         ai_system.risk_tier = risk_tier
-        ai_system.status = "approved"
         metadata = dict(ai_system.metadata_json or {})
-        metadata["governance_state"] = "APPROVED"
-        metadata["lifecycle_state"] = "ACTIVE"
         metadata["discovery_application_id"] = application.id
         metadata["discovery_tool_key"] = application.tool_key
         ai_system.metadata_json = metadata
 
     application.ai_system_id = ai_system.id
     application.status = "approved"
+    approval_request_id = _ask_for_ai_system_approval(
+        db, tenant_id=tenant_id, ai_system=ai_system, application=application, actor_user_id=actor_user_id
+    )
 
     write_audit_log(
         db,
@@ -310,6 +311,7 @@ def promote_discovery_application(
             "action": normalized_action,
             "ai_system_id": ai_system.id,
             "risk_tier": risk_tier,
+            "approval_request_id": approval_request_id,
         },
     )
     create_evidence_node(
@@ -325,12 +327,6 @@ def promote_discovery_application(
         },
     )
 
-    schedule_for_ai_system_approved(
-        db,
-        tenant_id=tenant_id,
-        ai_system_id=ai_system.id,
-        actor_user_id=actor_user_id,
-    )
     schedule_for_high_risk_tier(
         db,
         tenant_id=tenant_id,
@@ -341,6 +337,42 @@ def promote_discovery_application(
 
     db.flush()
     return application
+
+
+def _ask_for_ai_system_approval(
+    db: Session,
+    *,
+    tenant_id: str,
+    ai_system: AISystem,
+    application: DiscoveryApplication,
+    actor_user_id: str | None,
+) -> str | None:
+    """The approval request for a promoted application's AI system: the one waiting already, or a new one in the
+    promoter's name. None when the system is approved already, cannot be approved (its tier), or nobody signed in
+    promoted it."""
+
+    from app.services import ai_system_approval_service as approvals
+    from app.services.governance_resolution import ai_system_is_approved
+
+    if ai_system_is_approved(ai_system):
+        return None
+    pending = approvals.pending_request_for(db, tenant_id, ai_system.id)
+    if pending is not None:
+        return pending.id
+    if not actor_user_id:
+        return None
+    try:
+        request = approvals.request_approval(
+            db,
+            tenant_id=tenant_id,
+            ai_system_id=ai_system.id,
+            actor_user_id=actor_user_id,
+            reason=f"Promoted from discovery: {application.tool_name}",
+            origin="discovery_promotion",
+        )
+    except approvals.ApprovalWorkflowError:
+        return None
+    return request.id
 
 
 def block_discovery_application(

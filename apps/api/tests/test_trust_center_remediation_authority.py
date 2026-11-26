@@ -12,6 +12,7 @@ os.environ.setdefault("DATABASE_URL", "sqlite+pysqlite:///:memory:")
 from app.db.models.ai_system import AISystem
 from app.db.session import Base, get_db
 from app.main import app
+from ai_system_approval_helpers import approve_ai_system
 
 
 PASSWORD = "Password123!"
@@ -150,7 +151,7 @@ def test_existing_live_system_without_owner_is_downgraded_and_remediated(test_en
     _set_owner_metadata(session_local, ai_system_id=ai_system_id, owner_user_id=owner["user_id"])
     monkeypatch.setattr("app.api.routers.ai_systems.get_latest_policy_for_ai_system", lambda *args, **kwargs: object())
 
-    go_live = client.patch(f"/ai-systems/{ai_system_id}", headers=headers, json={"status": "live"})
+    go_live = approve_ai_system(client, headers, ai_system_id, status="live")
     assert go_live.status_code == 200, go_live.text
     assert go_live.json()["status"] == "live"
 
@@ -177,7 +178,7 @@ def test_risk_escalation_on_live_system_downgrades_and_notifies_auditor(test_env
     _set_owner_metadata(session_local, ai_system_id=ai_system_id, owner_user_id=owner["user_id"])
     monkeypatch.setattr("app.api.routers.ai_systems.get_latest_policy_for_ai_system", lambda *args, **kwargs: object())
 
-    go_live = client.patch(f"/ai-systems/{ai_system_id}", headers=headers, json={"status": "live"})
+    go_live = approve_ai_system(client, headers, ai_system_id, status="live")
     assert go_live.status_code == 200, go_live.text
     assert go_live.json()["status"] == "live"
 

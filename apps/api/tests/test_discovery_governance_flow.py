@@ -13,6 +13,7 @@ from app.db.models.audit import AuditLog
 from app.db.models.evidence import EvidenceNode
 from app.db.session import Base, get_db
 from app.main import app
+from ai_system_approval_helpers import allow_self_approval, approve_pending_request
 
 
 PASSWORD = "Password123!"
@@ -115,6 +116,9 @@ def test_discovered_application_moves_to_governed_and_enforced_without_manual_db
     assert keep_monitoring.json()["status"] == "monitoring"
     assert keep_monitoring.json()["provisional_risk_tier"] == "HIGH"
 
+    # Promoting registers the AI system and asks for its approval; it is governed (allowed through the gateway) once
+    # approved under the tenant's policy, here one approver who may be the promoter.
+    allow_self_approval(client, headers)
     promote = client.post(
         f"/discovery/applications/{app_id}/promote",
         headers=headers,
@@ -126,6 +130,21 @@ def test_discovered_application_moves_to_governed_and_enforced_without_manual_db
     assert promoted_body["status"] == "approved"
     assert promoted_body["ai_system_id"]
     ai_system_id = promoted_body["ai_system_id"]
+
+    blocked_before_approval = client.post(
+        "/gateway/llm/intercept",
+        headers=headers,
+        json={
+            "ai_system_id": ai_system_id,
+            "actor_type": "human",
+            "actor_id": owner["user_id"],
+            "prompt": "normal prompt",
+            "context_summary": "not approved yet",
+            "attachments_meta": [],
+        },
+    )
+    assert blocked_before_approval.status_code == 403, blocked_before_approval.text
+    approve_pending_request(client, headers, ai_system_id)
 
     list_systems = client.get("/ai-systems", headers=headers)
     assert list_systems.status_code == 200, list_systems.text

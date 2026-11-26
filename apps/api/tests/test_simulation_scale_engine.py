@@ -15,6 +15,7 @@ from app.db.session import Base, get_db
 from app.main import app
 from app.db.models.ai_system import AISystem
 from app.services.simulation_contract_service import validate_and_normalize_simulation_dsl
+from ai_system_approval_helpers import approve_ai_system
 
 
 PASSWORD = "Password123!"
@@ -114,11 +115,7 @@ def _create_ai_system(
     )
     assert response.status_code == 200, response.text
     ai_system_id = response.json()["id"]
-    activate = client.patch(
-        f"/ai-systems/{ai_system_id}",
-        headers=headers,
-        json={"status": "active"},
-    )
+    activate = approve_ai_system(client, headers, ai_system_id, status="active")
     assert activate.status_code == 200, activate.text
     if session_local is not None:
         with session_local() as db:

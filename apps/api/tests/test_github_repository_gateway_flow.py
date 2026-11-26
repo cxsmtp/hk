@@ -19,6 +19,7 @@ from app.db.session import Base, get_db
 from app.main import app
 from app.services.github_repository_access_service import persist_github_inventory_unit
 from app.services.policy_pack_platform.service import _normalize_assignment_targets
+from ai_system_approval_helpers import approve_ai_system
 
 PASSWORD = "Password123!"
 
@@ -63,7 +64,7 @@ def _ai_system_and_token(client: TestClient, headers: dict[str, str]) -> tuple[s
     system = client.post("/ai-systems", headers=headers, json={"name": "GitHub agent", "description": "", "risk_tier": "LOW"})
     assert system.status_code == 200, system.text
     ai_system_id = system.json()["id"]
-    assert client.patch(f"/ai-systems/{ai_system_id}", headers=headers, json={"status": "active"}).status_code == 200
+    assert approve_ai_system(client, headers, ai_system_id, status="active").status_code == 200
     agent = client.post("/ai-iam/agents", headers=headers, json={"name": "GitHub agent", "description": "", "max_chain_depth": 3, "capability_inheritance": True, "action_scope": ["REPOSITORY_PUSH"]})
     assert agent.status_code == 200, agent.text
     agent_id = agent.json()["id"]

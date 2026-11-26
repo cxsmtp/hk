@@ -32,6 +32,7 @@ from app.services.monitoring_service import (
     consume_runtime_intelligence_outputs,
     evaluate_scheduled_monitoring_remediation,
 )
+from ai_system_approval_helpers import approve_ai_system
 
 
 PASSWORD = "Password123!"
@@ -157,11 +158,7 @@ def _create_ai_system(client: TestClient, *, headers: dict[str, str], risk_tier:
     )
     assert response.status_code == 200, response.text
     ai_system_id = response.json()["id"]
-    activate = client.patch(
-        f"/ai-systems/{ai_system_id}",
-        headers=headers,
-        json={"status": "active"},
-    )
+    activate = approve_ai_system(client, headers, ai_system_id, status="active")
     assert activate.status_code == 200, activate.text
     return ai_system_id
 

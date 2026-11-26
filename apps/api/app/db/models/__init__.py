@@ -7,6 +7,7 @@ from app.db.models.agent_collective import (
 )
 from app.db.models.ai_orchestration import AIReasoningTrace
 from app.db.models.ai_system import AISystem
+from app.db.models.ai_system_approval import AISystemApprovalGrant, AISystemApprovalPolicy
 from app.db.models.ai_asset import (
     DiscoveryAIAsset,
     DiscoveryAICapability,
@@ -372,6 +373,8 @@ __all__ = [
     "DiscoveryCapabilityGenome",
     "DiscoveryCapabilityEvent",
     "AISystem",
+    "AISystemApprovalGrant",
+    "AISystemApprovalPolicy",
     "DiscoveryAIAsset",
     "DiscoveryAssetHypothesis",
     "DiscoveryAssetIdentityLink",

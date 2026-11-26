@@ -255,12 +255,26 @@ def run_golden_path_demo(
         ai_system_id = ai_system.get("id")
         ensure(ai_system_id, "govern: ai system id missing")
 
-        updated_ai_system, ai_system_update_correlation_id = client.request_json(
-            "PATCH",
-            f"/ai-systems/{ai_system_id}",
-            body={"status": "active", "risk_tier": "HIGH"},
+        # An AI system becomes active only through the approval policy (Settings → AI system approvals). The demo
+        # tenant has one person, so the demo lets one approver, who may be the requester, approve HIGH systems.
+        client.request_json(
+            "PUT",
+            "/settings/ai-system-approvals",
+            body={"tiers": {"HIGH": {"min_approvers": 1, "allow_self_approval": True}}},
         )
-        ensure(updated_ai_system.get("status") == "active", "govern: ai system status not active")
+        asked, _ = client.request_json(
+            "POST",
+            f"/ai-systems/{ai_system_id}/approval-requests",
+            body={"scope": "time_bound", "target_status": "active"},
+        )
+        approval_request_id = (asked.get("request") or {}).get("id")
+        ensure(approval_request_id, "govern: approval request id missing")
+        decided, ai_system_update_correlation_id = client.request_json(
+            "POST",
+            f"/ai-system-approvals/{approval_request_id}/decision",
+            body={"decision": "approve"},
+        )
+        ensure(decided.get("ai_system_status") == "active", "govern: ai system status not active")
 
         policy_pack, policy_pack_correlation_id = client.request_json(
             "POST",
