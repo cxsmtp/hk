@@ -31,7 +31,7 @@ DEFAULT_PROVIDER_ENDPOINTS = {
     "azure_openai": "https://localhost/openai/deployments",
 }
 
-_LOCAL_HOSTS = {"localhost", "127.0.0.1", "0.0.0.0", "::1"}
+_LOCAL_HOSTS = {"localhost", "127.0.0.1", "0.0.0.0", "::1"}  # nosec B104 - names to recognise, not a bind address
 
 
 def _normalized_provider(value: str) -> str:

@@ -177,7 +177,7 @@ def test_draft_ast_rejects_unknown_fields_and_accepts_bounded_blocks() -> None:
     (_pdf(), "terms.docx", "application/pdf"),
     (b"not a pdf", "terms.pdf", "application/pdf"),
     (_pdf(), "terms.pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
-])
+], ids=["pdf-bytes-docx-name", "text-bytes-pdf-name", "pdf-bytes-docx-mime"])  # _pdf() differs per run: stable ids keep parallel workers in step
 def test_parse_rejects_magic_extension_mime_mismatch(data: bytes, name: str, mime: str) -> None:
     with pytest.raises(DocumentCodecError):
         parse_document(data, file_name=name, mime_type=mime)

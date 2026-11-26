@@ -1,10 +1,7 @@
 name: Endpoint software checks
 
 on:
-  push:
-    paths:
-      - "apps/endpoint-agent/**"
-      - ".github/workflows/endpoint-tests.yml"
+  # Pull requests only (a macOS runner costs ten times the minutes of Linux on a private repository).
   pull_request:
     paths:
       - "apps/endpoint-agent/**"

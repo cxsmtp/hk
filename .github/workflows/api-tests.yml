@@ -1,14 +1,7 @@
 name: API Tests
 
 on:
-  push:
-    paths:
-      - "apps/api/**"
-      - ".github/workflows/api-tests.yml"
-      - "Makefile"
-      - "packages/**"
-      - "infra/scripts/**"
-      - "tools/dev/run_api_integration.py"
+  # Pull requests only: pushes to main run this through release.yml, so it never runs twice for one commit.
   pull_request:
     paths:
       - "apps/api/**"
@@ -52,8 +45,8 @@ jobs:
           PYTHONPATH: "${{ github.workspace }}:${{ github.workspace }}/apps/api"
           TEST_PROFILE: unit
           ENV: test
-          DATABASE_URL: "sqlite+pysqlite:///./hawk_ci_unit.db"
-          TEST_DATABASE_URL: "sqlite+pysqlite:///./hawk_ci_unit.db"
+          DATABASE_URL: "sqlite+pysqlite:///:memory:"
+          TEST_DATABASE_URL: "sqlite+pysqlite:///:memory:"
           SECRET_KEY: "ci-unit-ephemeral-not-for-production"
           SECRET_KEY_LOCK_ENABLED: "false"
           CONNECTOR_SECRETS_KEY: "ci-unit-ephemeral-connector-key-not-for-production"
@@ -71,7 +64,7 @@ jobs:
             sudo install -d -m 0700 -o "$(id -u)" -g "$(id -g)" /private/tmp
           fi
           # Complete the batch so one failure does not hide later regressions.
-          python -m pytest -vv --tb=short tests/ -m "not integration and not e2e and not acceptance" --ignore=tests/integration --ignore=tests/e2e 2>&1 | tee "$RUNNER_TEMP/unit-test-output.txt"
+          python -m pytest -n auto -q -rfE --tb=short -p no:cacheprovider tests/ -m "not integration and not e2e and not acceptance" --ignore=tests/integration --ignore=tests/e2e 2>&1 | tee "$RUNNER_TEMP/unit-test-output.txt"
           exit ${PIPESTATUS[0]}
 
       - name: Upload unit test output

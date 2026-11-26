@@ -10,7 +10,7 @@ import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from fastapi.testclient import TestClient
-from jose import jwt
+import jwt
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker
 

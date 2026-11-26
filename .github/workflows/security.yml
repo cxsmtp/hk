@@ -1,0 +1,96 @@
+name: Security checks
+
+# Secrets, known-vulnerable dependencies and risky code patterns. Runs on every pull request, on main, and once a week
+# (a dependency can become vulnerable without any change here).
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  secrets:
+    name: Secrets (gitleaks)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install gitleaks (checksum verified)
+        run: |
+          set -euo pipefail
+          curl -sSfL -o gitleaks.tgz https://github.com/gitleaks/gitleaks/releases/download/v8.28.0/gitleaks_8.28.0_linux_x64.tar.gz
+          echo "a65b5253807a68ac0cafa4414031fd740aeb55f54fb7e55f386acb52e6a840eb  gitleaks.tgz" | sha256sum -c -
+          tar xzf gitleaks.tgz gitleaks
+      - name: New commits carry no secrets
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: ./gitleaks git . --no-banner --redact --log-opts="$BASE..$HEAD"
+      - name: Whole history (report)
+        # Reported, not yet blocking: the history predates this check. Make it blocking once its findings are cleared.
+        continue-on-error: true
+        run: ./gitleaks git . --no-banner --redact
+
+  python-dependencies:
+    name: Python dependencies (pip-audit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.11"
+      - run: python -m pip install pip-audit==2.10.1
+      - name: API dependencies have no known vulnerability
+        run: pip-audit -r apps/api/requirements.lock --require-hashes --disable-pip --progress-spinner off
+
+  javascript-dependencies:
+    name: JavaScript dependencies (npm audit, shipped packages)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: [apps/web, extension, packages/hawk-mcp-proxy, packages/hawk-sdk]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "20.20.2"
+      - name: Production dependencies have no high or critical vulnerability
+        working-directory: ${{ matrix.dir }}
+        run: npm audit --omit=dev --audit-level=high
+
+  python-code:
+    name: Python code (bandit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.11"
+      - run: python -m pip install bandit==1.9.4
+      - name: No medium or high finding in the API
+        # Migrations build DDL from fixed names in the file itself; reviewed by hand instead.
+        run: bandit -q -r apps/api/app -ll -ii -x apps/api/app/db/migrations

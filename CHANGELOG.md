@@ -2,7 +2,15 @@
 
 Every release, newest first: the version shown bottom-left in the console (HK-xx.xx.xx, from the VERSION file), when it was merged, and what changed for the people using it. Updated with every change merged to main (CLAUDE.md).
 
-## HK-00.02.00 — pending · [#NN](https://github.com/cxsmtp/hk/pull/NN)
+## HK-00.02.01 — pending · [#NN](https://github.com/cxsmtp/hk/pull/NN)
+
+- **No known vulnerable component.** The console moves to Next.js 15.5.29 and sharp 0.35.5 (a critical remote-code-execution flaw and several image-library flaws fixed). The API's PDF reader, certificate bundle, DNS, ASN.1 and HTTP libraries move to their fixed versions, and sign-in tokens are now made and checked with PyJWT instead of python-jose, which has an unfixed advisory. Nothing changes for people signing in.
+- **Ticketing only over https.** Jira and ServiceNow addresses must be https (or this machine); a file: or cloud metadata address is refused.
+- **Every change is checked for security.** A new check on every pull request, on main and weekly: no secret in new commits, no known-vulnerable Python or JavaScript component that ships, and no medium or high finding in the API code.
+- **Faster, cheaper checks.** Tests run once per change instead of twice, and the API tests run in parallel.
+- **Status.** Not merged yet.
+
+## HK-00.02.00 — 2026-11-25 22:36 UTC · [#5](https://github.com/cxsmtp/hk/pull/5), [#7](https://github.com/cxsmtp/hk/pull/7), [#8](https://github.com/cxsmtp/hk/pull/8)
 
 - **Updates from the console.** Settings → Updates (owners and admins) lists every published version of Hawk AI, newest three first and ten more at a time, and installs a newer one or rolls back to an older one in one click.
 - **An update never loses the version that ran.** The new updater service takes a backup, installs every image, brings the database up to date and starts each service in order; if Hawk AI is not healthy within 150 seconds, it puts the previous version back by itself, with the database as it was before the update.
@@ -14,7 +22,7 @@ Every release, newest first: the version shown bottom-left in the console (HK-xx
 - **People, Teams and Roles & permissions, as in FTR Command Center.** Settings → People lists everyone in the teams you work in: add a person with a temporary password (and a welcome email), change their name, sign-in email (both addresses are told), role, team and manager, reset their password or two-step sign-in, unlock them, sign them out, turn access off or remove them, one at a time or many at once. Settings → Teams builds the team tree with its leaders; a leader manages the people of their team and the teams below it. Settings → Roles & permissions shows every role against every permission: tick, find a permission, show only the differences, make a new role from another, rename. Nobody gives more than they hold, only an Owner gives the Owner role, and there is always an active Owner. The five built-in roles hold exactly what they could do before: nobody gains or loses anything.
 - **People join by themselves; whoever manages people reviews them.** Off until an Owner or Admin turns it on (Settings → Sign-in): the email domains and the roles open to joining. People who join count against the activation code's users and set up two-step sign-in first when it is required; People lists them at the top to approve or turn off.
 - **Settings in one place, as in FTR Command Center.** "Settings" in the main menu opens its own menu beside the page — People, Licensing, Records and System — showing only what your role allows, and Jump to (Ctrl K) finds any page. New: General (platform mode, server address), Branding (name, logo up to 200 KB, browser icon up to 100 KB, look; shown in the menu, the browser tab and every email), Email (SMTP) (saved as you type and tested at once, the last settings that worked kept, the password encrypted; one email server for sign-in, people, support, hands-off and backups, falling back to SMTP_*) and About (version, licence, terms, what is new). The self-check now also looks at every connector that can sign in and read, and support emails go to everyone whose role holds "Answer support cases".
-- **Status.** Not merged yet: the test results and the load test comparison are added to this entry when it is.
+- **Status.** Merged with every API, console and image check passing; published and signed as HK-00.02.00. A fresh install, every Settings page, backup with restore, and update with rollback were checked by hand.
 
 ## HK-00.01.00 — 2026-11-25 13:56 UTC · [#2](https://github.com/cxsmtp/hk/pull/2)
 

@@ -113,7 +113,7 @@ RISK_TIER_STRICTNESS = {
     "CRITICAL": 2,
     "PROHIBITED": 2,
 }
-INTERNAL_ENDPOINT_HINTS = {"localhost", "127.0.0.1", "0.0.0.0", "internal", "intranet", "corp", "acme.ai"}
+INTERNAL_ENDPOINT_HINTS = {"localhost", "127.0.0.1", "0.0.0.0", "internal", "intranet", "corp", "acme.ai"}  # nosec B104 - names to recognise, not a bind address
 
 PROVIDER_ALIASES = {
     "openai": "openai",

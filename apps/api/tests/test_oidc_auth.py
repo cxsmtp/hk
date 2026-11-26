@@ -9,7 +9,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 
 import pytest
-from jose import jwt
+import jwt
 
 from app.core.config import settings
 from app.services import oidc_auth_service as oidc

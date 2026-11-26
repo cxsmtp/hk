@@ -1,13 +1,7 @@
 name: Component checks
 
 on:
-  push:
-    paths:
-      - "apps/web/**"
-      - "extension/**"
-      - "packages/**"
-      - "docs/**"
-      - ".github/workflows/component-tests.yml"
+  # Pull requests only: pushes to main run this through release.yml, so it never runs twice for one commit.
   pull_request:
     paths:
       - "apps/web/**"

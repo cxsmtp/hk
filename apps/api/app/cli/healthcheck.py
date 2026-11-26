@@ -16,7 +16,7 @@ def main() -> int:
     port = int(os.environ.get("HAWK_API_PORT") or 8000)
     path = sys.argv[1] if len(sys.argv) > 1 else "/health/ready"
     try:
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}{path}", timeout=4) as response:  # noqa: S310 - fixed loopback URL
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}{path}", timeout=4) as response:  # noqa: S310  # nosec B310 - fixed loopback http URL
             return 0 if response.status == 200 else 1
     except (urllib.error.URLError, OSError, ValueError):
         return 1
