@@ -1,5 +1,6 @@
 import { SETTINGS_GROUPS } from "@/lib/settings-menu";
 import { ADMIN, callApi, expect, signIn, test } from "./support/fixtures";
+import { measureLayout } from "./support/layout";
 
 /** Settings as the first administrator (Owner): every page of the menu, and the pages that change something. */
 
@@ -162,4 +163,29 @@ test("One workspace: its owner is the server's administrator and changes the who
   const compliance = await callApi(page, "GET", "/compliance");
   expect(compliance.status).toBe(200);
   expect(compliance.json.mayChange).toBe(true);
+});
+
+test("Compliance → Data requests: record one, open it with its trail, export it, and it fits a phone", async ({ page }) => {
+  await page.goto("/settings/compliance");
+  await expect(page.getByRole("heading", { level: 1, name: "Compliance" })).toBeVisible();
+  const made = await callApi(page, "POST", "/compliance/data-requests", { kind: "access", law: "pdpl", subjectEmail: ADMIN.email, channel: "email" });
+  expect(made.status).toBe(201);
+  await page.locator("[data-ui=compliance-tab-requests]").click();
+  const row = page.locator(`[data-ui=dsr-table] tr[data-request="${made.json.request.id}"]`);
+  await expect(row).toContainText("See their data");
+  await row.getByRole("button", { name: "Open" }).click();
+  const detail = page.locator("[data-ui=dsr-detail]");
+  await expect(detail.locator("[data-ui=dsr-timeline]")).toContainText("Recorded");
+  const download = page.waitForEvent("download");
+  await detail.locator("[data-ui=dsr-export]").click();
+  expect((await download).suggestedFilename()).toMatch(/^hawk-data-request-.*-export\.json$/);
+  await expect(detail.locator("[data-ui=dsr-timeline]")).toContainText("Export made");
+  // From a phone to a laptop, nothing scrolls sideways: the table becomes cards.
+  for (const width of [360, 768, 1280]) {
+    await page.setViewportSize({ width, height: 820 });
+    await page.waitForTimeout(250);
+    const report = await measureLayout(page);
+    expect(report.pageOverflow, `${width}px`).toBe(0);
+    expect(report.sideScrollers.filter((b) => !b.intended), `${width}px`).toEqual([]);
+  }
 });

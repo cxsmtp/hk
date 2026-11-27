@@ -14,7 +14,8 @@ One zip, every file at its top level:
 - ``settings.json``: the settings in force: sign-in and password rule, retention, data location, HTTPS, encryption
   at rest, detection (category toggles and thresholds, never word lists or fingerprints), the AI approval policy.
 - ``records.json``: licence acceptances, AI approvals granted or ended in the window, the AI system inventory (name,
-  tier, status), attestations, self-recovery, machine checks and detector coverage.
+  tier, status), attestations, self-recovery, machine checks and detector coverage; for packs that cite them, the
+  requests from data subjects (kind, dates, status, trail), never whom they are about.
 - ``README.txt``: what each file is and how to check it.
 
 Never in it: passwords or their hashes, two-step secrets, keys, connector credentials, prompt or response text,
@@ -168,7 +169,7 @@ def records(db: Session, tenant_id: str, *, since: dt.datetime, until: dt.dateti
         operations["machineChecks"] = SelfCheck().host_checks()
     except Exception as exc:  # noqa: BLE001
         operations["machineChecks"] = {"error": type(exc).__name__}
-    return {
+    out = {
         "termsAcceptances": [{k: v for k, v in terms_service.acceptance_view(a).items() if k != "userAgent"} for a in acceptances],
         "aiApprovals": [
             {
@@ -192,6 +193,14 @@ def records(db: Session, tenant_id: str, *, since: dt.datetime, until: dt.dateti
         "operations": operations,
         "detectorCoverage": [{k: r.get(k) for k in ("detector_id", "title", "threat_type", "severity", "decision", "owasp_llm", "owasp_agentic", "mitre_atlas")} for r in coverage_matrix()],
     }
+    # Requests from data subjects, for the packs whose requirements cite them (DPDP, UAE PDPL, ISO 27001): each request's
+    # kind, dates, status and trail, never whom it is about.
+    pack_def = compliance_packs.pack(pack_id)
+    if any("records:data_subject_requests" in req["evidence"] for req in pack_def["requirements"]):
+        from app.services import data_subject_requests
+
+        out["dataSubjectRequests"] = data_subject_requests.evidence_records(db, tenant_id, since=since, until=until, now=now)
+    return out
 
 
 README = """Hawk AI compliance pack evidence
@@ -212,7 +221,8 @@ controls.json        Each control the pack uses: status, reason, and where it is
 audit-entries.jsonl  The audit entries of the window that the requirements name, with sequence numbers and MACs.
 settings.json        The settings in force (sign-in, retention, encryption, detection, AI approval policy).
 records.json         Licence acceptances, AI approvals, the AI system inventory, records made on the Compliance page,
-                     self-recovery, machine checks and detector coverage.
+                     self-recovery, machine checks, detector coverage and, for privacy laws, requests from data
+                     subjects (kind, dates, status and trail; never whom they are about).
 
 Checking it
 -----------

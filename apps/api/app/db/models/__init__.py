@@ -62,6 +62,7 @@ from app.db.models.execution_effect import (
 )
 from app.db.models.access import ComplianceAttestation, CompliancePolicy, FirstRunState, SignInPolicy, TermsAcceptance, TermsCopyEmail, TermsTextRecord
 from app.db.models.activation import ActivationState
+from app.db.models.data_subject import DataSubjectRequest, DataSubjectRequestEvent, DataSubjectRequestSettings
 from app.db.models.audit import AuditChainHead, AuditLog
 from app.db.models.platform_records import ConnectorCall, SupportCounter, SupportSettings, SupportTicket, UserActivity
 from app.db.models.detection import DetectionSettings
@@ -320,6 +321,9 @@ __all__ = [
     "FirstRunState",
     "SignInPolicy",
     "ComplianceAttestation",
+    "DataSubjectRequest",
+    "DataSubjectRequestEvent",
+    "DataSubjectRequestSettings",
     "CompliancePolicy",
     "TermsAcceptance",
     "TermsCopyEmail",

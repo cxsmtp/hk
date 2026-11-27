@@ -671,8 +671,9 @@ def test_current_revision_is_the_sole_short_migration_head() -> None:
     scripts = ScriptDirectory.from_config(config)
     heads = scripts.get_heads()
 
-    assert heads == ["0106_installation_licence"]
+    assert heads == ["0107_data_subject_requests"]
     assert [revision.revision for revision in scripts.iterate_revisions(heads[0], "0089_provider_signal_lifecycle")] == [
+        "0107_data_subject_requests",
         "0106_installation_licence",
         "0105_compliance_packs",
         "0104_desc_controls",

@@ -2020,5 +2020,5 @@ def test_current_revision_is_the_sole_short_migration_head() -> None:
     config = Config(str(API_ROOT / "app/db/migrations/alembic.ini"))
     config.set_main_option("script_location", str(API_ROOT / "app/db/migrations"))
     heads = ScriptDirectory.from_config(config).get_heads()
-    assert heads == ["0106_installation_licence"]
+    assert heads == ["0107_data_subject_requests"]
     assert all(len(head) <= 128 for head in heads)
