@@ -407,3 +407,36 @@ def test_migration_0104_follows_0103_and_0105_follows_it():
     assert script.get_heads() == ["0105_compliance_packs"]
     assert script.get_revision("0104_desc_controls").down_revision == "0103_terms_acceptance"
     assert script.get_revision("0105_compliance_packs").down_revision == "0104_desc_controls"
+
+
+def test_policy_row_created_concurrently_is_read_not_failed(tmp_path):
+    """Two requests on first load both find no row; the loser reads the winner's row and its transaction stays usable."""
+
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+
+    from app.db.session import Base
+    from app.db.models.access import CompliancePolicy
+    from app.services import compliance_service
+
+    engine = create_engine(f"sqlite+pysqlite:///{tmp_path / 'race.sqlite3'}")
+    Base.metadata.create_all(bind=engine, tables=[CompliancePolicy.__table__])
+    make = sessionmaker(bind=engine)
+    first, second = make(), make()
+    assert first.get(CompliancePolicy, compliance_service.POLICY_ID) is None
+    assert second.get(CompliancePolicy, compliance_service.POLICY_ID) is None
+    compliance_service.policy(first)
+    first.commit()
+    # The second request looked before the first committed: its first lookup still says "no row", so its insert loses.
+    real_get = second.get
+    calls = {"n": 0}
+
+    def stale_get(*args, **kwargs):
+        calls["n"] += 1
+        return None if calls["n"] == 1 else real_get(*args, **kwargs)
+
+    second.get = stale_get
+    row = compliance_service.policy(second)
+    assert row is not None and row.id == compliance_service.POLICY_ID
+    second.execute(CompliancePolicy.__table__.select())  # the transaction is still usable
+    second.close(); first.close()

@@ -32,6 +32,7 @@ import time
 from typing import Any
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -86,9 +87,17 @@ def policy(db: Session) -> Any:
 
     row = db.get(CompliancePolicy, POLICY_ID)
     if row is None:
-        row = CompliancePolicy(id=POLICY_ID)
-        db.add(row)
-        db.flush()
+        # Two requests on first load can both find no row: create it in a savepoint and, if the other request won,
+        # read theirs instead of failing (and poisoning) this request's transaction.
+        try:
+            with db.begin_nested():
+                row = CompliancePolicy(id=POLICY_ID)
+                db.add(row)
+                db.flush()
+        except IntegrityError:
+            row = db.get(CompliancePolicy, POLICY_ID, populate_existing=True)
+            if row is None:
+                raise
     return row
 
 
