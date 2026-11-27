@@ -11,11 +11,13 @@ they have to; nothing that leaves the request does:
   non-breaking spaces (``4111 1111 1111 1111``, ``3782-822463-10005``, every digit spaced), that pass the Luhn check
   and start with a card-network digit (2-6 or 8: Mastercard, Amex / JCB / Diners, Visa, Discover / RuPay / UnionPay /
   Maestro, RuPay). Record ids (UUIDs) and hex digests are left as they are (``IDENTIFIER_RE``, the same rule as
-  app/services/privacy_sanitizer.py), so an id always matches its record and a digest still verifies.
+  app/services/privacy_sanitizer.py), so an id always matches its record and a digest still verifies. Phone numbers
+  written with ``+`` (at most 15 digits) and the digits after a decimal point are not card numbers either.
 * **Where it is enforced.** ``scrub_pan`` runs at every boundary where text leaves the request:
 
   - the database: every string and JSON column (and a JSON number that is a card number) of every row the ORM
-    writes, and the parameters of bulk ORM inserts / updates (``install_persistence_guard``: a ``before_flush`` hook,
+    writes, and the parameters and inline values of ORM-session inserts / updates (``install_persistence_guard``: a
+    ``before_flush`` hook,
     so the audit chain's MAC - computed in ``before_insert`` - covers what is stored, and ``do_orm_execute``);
   - the gateway's encrypted copy of a prompt (``encrypt_enforcement_prompt``): masked before it is encrypted;
   - the logs: every line, message and field (app/core/log_config.py ``redact_text`` / ``redact_value``), and so the
@@ -43,6 +45,7 @@ they have to; nothing that leaves the request does:
 from __future__ import annotations
 
 import base64
+import bisect
 import binascii
 import re
 import threading
@@ -113,7 +116,25 @@ def _identifier_spans(text: str) -> list[tuple[int, int]]:
 
 
 def _inside(spans: list[tuple[int, int]], start: int, end: int) -> bool:
-    return any(id_start <= start and end <= id_end for id_start, id_end in spans)
+    # ``spans`` come from one finditer: sorted and never overlapping, so only the last one starting at or before
+    # ``start`` can hold [start, end) (a scan of every span made many numbers among many ids quadratic).
+    index = bisect.bisect_right(spans, (start, float("inf"))) - 1
+    return index >= 0 and spans[index][0] <= start and end <= spans[index][1]
+
+
+def _not_a_card_run(text: str, start: int, digits: int) -> bool:
+    """The digit run at ``start`` (``digits`` digits) is an international phone number (``+86 139 1067 6024``: a ``+``
+    at the start of a value or a word, at most 15 digits, E.164) or the fraction of a decimal (``0.5044215558096435``,
+    how Python writes a float). About one in ten of those passed as a card number and was masked, changing the number.
+    A ``+`` after a letter, a digit or ``=`` / ``&`` may be a URL-encoded space (``note=hello+4111111111111111``), and a
+    16 to 19 digit number after ``+`` is no phone number: both are still masked."""
+
+    if start == 0:
+        return False
+    before = text[start - 1]
+    if before == "+":
+        return digits <= 15 and (start == 1 or text[start - 2] in " \t\r\n([{\"':,;")
+    return before == "." and start >= 2 and "0" <= text[start - 2] <= "9"
 
 
 def find_pans(text: str) -> list[tuple[int, int, str]]:
@@ -126,13 +147,15 @@ def find_pans(text: str) -> list[tuple[int, int, str]]:
     for run in _DIGIT_RUN_RE.finditer(text):
         groups = [(m.start() + run.start(), m.end() + run.start(), m.group(0)) for m in _GROUP_RE.finditer(run.group(0))]
         total_digits = sum(len(g[2]) for g in groups)
-        if total_digits < PAN_MIN_DIGITS:
+        if total_digits < PAN_MIN_DIGITS or _not_a_card_run(text, run.start(), total_digits):
             continue
         index = 0
         while index < len(groups):
             matched = False
-            # The longest card number starting at this group, then shorter ones.
-            for last in range(len(groups) - 1, index - 1, -1):
+            # The longest card number starting at this group, then shorter ones. Every group holds at least one digit,
+            # so a card number spans at most PAN_MAX_DIGITS groups: looking further made a long run of short groups
+            # ("1 2 3 …") cubic in its length, and every log line and stored row passes through here.
+            for last in range(min(len(groups) - 1, index + PAN_MAX_DIGITS - 1), index - 1, -1):
                 chosen = groups[index : last + 1]
                 digits = "".join(g[2] for g in chosen)
                 if len(digits) > PAN_MAX_DIGITS or len(digits) < PAN_MIN_DIGITS:
@@ -340,19 +363,38 @@ def _before_flush(session: Any, flush_context: Any, instances: Any) -> None:
         _scrub_instance(obj)
 
 
+def _scrub_inline_values(statement: Any) -> Any:
+    """``statement`` with card numbers masked in the values written inline (``update(Model).values(reason=text)``, an
+    ``insert(Model).values(...)``): those are part of the statement, not of the execute parameters."""
+
+    from sqlalchemy.sql.elements import BindParameter
+
+    values = getattr(statement, "_values", None)
+    if not values:
+        return statement
+    changes: dict[Any, Any] = {}
+    for key, bound in values.items():
+        if not isinstance(bound, BindParameter) or bound.callable is not None:
+            continue
+        scrubbed = scrub_pan_value(bound.value, boundary="db:bulk")
+        if scrubbed is not bound.value:
+            changes[key] = scrubbed
+    return statement.values(changes) if changes else statement
+
+
 def _before_orm_execute(orm_execute_state: Any) -> Any:
-    """Bulk ORM inserts and updates (``db.execute(insert(Model), rows)``) never pass through a flush: their parameters
-    are masked here and the statement run with them."""
+    """Bulk ORM inserts and updates (``db.execute(insert(Model), rows)``) and conditional updates
+    (``db.execute(update(Model).where(...).values(...))``) never pass through a flush: their parameters and inline
+    values are masked here and the statement run with them."""
 
     if not (orm_execute_state.is_insert or orm_execute_state.is_update):
         return None
+    statement = _scrub_inline_values(orm_execute_state.statement)
     params = orm_execute_state.parameters
-    if not params:
+    scrubbed = scrub_pan_value(params, boundary="db:bulk") if params else params
+    if statement is orm_execute_state.statement and scrubbed is params:
         return None
-    scrubbed = scrub_pan_value(params, boundary="db:bulk")
-    if scrubbed is params:
-        return None
-    return orm_execute_state.invoke_statement(params=scrubbed)
+    return orm_execute_state.invoke_statement(statement=statement, params=scrubbed)
 
 
 def install_persistence_guard() -> None:

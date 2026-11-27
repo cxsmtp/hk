@@ -30,7 +30,7 @@ import json
 import zipfile
 from typing import Any
 
-from sqlalchemy import or_, select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -142,7 +142,14 @@ def records(db: Session, tenant_id: str, *, since: dt.datetime, until: dt.dateti
     from app.services import self_recovery, terms_service
     from app.services.guardians.threat_detectors import coverage_matrix
 
-    acceptances = db.scalars(select(TermsAcceptance).where(or_(TermsAcceptance.tenant_id == tenant_id, TermsAcceptance.tenant_id.is_(None))).order_by(TermsAcceptance.accepted_at)).all()
+    # This tenant's acceptances, and the organisation's acceptance made for the whole installation (ACCEPT_TERMS, or
+    # before 0103 recorded the tenant). A person's own acceptance with no tenant (every one made before 0103) can be
+    # anyone's on this installation: their name, email and address stay out of another tenant's bundle.
+    acceptances = db.scalars(
+        select(TermsAcceptance)
+        .where(or_(TermsAcceptance.tenant_id == tenant_id, and_(TermsAcceptance.tenant_id.is_(None), TermsAcceptance.scope == "organisation")))
+        .order_by(TermsAcceptance.accepted_at)
+    ).all()
     grants = db.scalars(
         select(AISystemApprovalGrant)
         .where(AISystemApprovalGrant.tenant_id == tenant_id, or_(AISystemApprovalGrant.created_at.between(since, until), AISystemApprovalGrant.ended_at.between(since, until), AISystemApprovalGrant.state == "ACTIVE"))

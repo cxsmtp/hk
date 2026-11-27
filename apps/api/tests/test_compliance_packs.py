@@ -327,3 +327,31 @@ def test_evidence_window_and_unknown_pack(env):
     assert client.get("/compliance/packs/pci-dss/evidence?from=nonsense", headers=headers).status_code == 400
     assert client.get("/compliance/packs/nope/evidence", headers=headers).status_code == 404
     assert pack_evidence.MAX_WINDOW_DAYS == 366
+
+
+def test_evidence_records_keep_other_peoples_acceptances_out(env):
+    """A person's own acceptance recorded without a tenant (every one before migration 0103) can be anyone's on this
+    installation: it stays out of a tenant's evidence. The organisation's acceptance for the installation stays in."""
+
+    import datetime as dt
+
+    from app.db.models.access import TermsAcceptance
+
+    signed_in(env)
+    with env["db"]() as db:
+        tenant = db.scalar(select(Tenant).where(Tenant.slug == "acme"))
+        other = Tenant(name="Other", slug="other", is_active=True)
+        db.add(other)
+        db.flush()
+        common = {"version": "2.0", "text_hash": "0" * 64, "via": "page"}
+        db.add_all([
+            TermsAcceptance(scope="organisation", email="cio@acme.example", full_name="Installation Owner", tenant_id=None, ip="10.0.0.1", **common),
+            TermsAcceptance(scope="user", email="legacy@other.example", full_name="Legacy Other", tenant_id=None, ip="10.9.9.9", **common),
+            TermsAcceptance(scope="user", email="ana@other.example", full_name="Ana Other", tenant_id=other.id, ip="10.9.9.8", **common),
+            TermsAcceptance(scope="user", email="bo@acme.example", full_name="Bo Acme", tenant_id=tenant.id, ip="10.0.0.2", **common),
+        ])
+        db.commit()
+        now = dt.datetime.now(dt.timezone.utc)
+        out = pack_evidence.records(db, tenant.id, since=now - dt.timedelta(days=1), until=now, pack_id="pci-dss")
+    emails = sorted(a["email"] for a in out["termsAcceptances"])
+    assert emails == ["bo@acme.example", "cio@acme.example"]

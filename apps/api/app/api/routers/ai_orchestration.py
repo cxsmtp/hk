@@ -137,6 +137,21 @@ def _map_data_sensitivity(value: str | None) -> str:
     return "internal"
 
 
+_SENSITIVITY_RANK = {"public": 0, "internal": 1, "sensitive": 2, "restricted": 3}
+
+
+def _recorded_floor(requested: str | None, recorded: Any) -> str:
+    """The data sensitivity a task is routed with: what the caller asks for, never below what is recorded for the
+    finding or system. ``requested`` defaults to "internal", so ``requested or recorded`` sent a restricted finding
+    to the providers allowed for internal data, and a caller could lower it on purpose."""
+
+    asked = _map_data_sensitivity(requested)
+    if recorded is None or not str(recorded).strip():
+        return asked
+    kept = _map_data_sensitivity(str(recorded))
+    return asked if _SENSITIVITY_RANK[asked] >= _SENSITIVITY_RANK[kept] else kept
+
+
 def _severity_from_risk_tier(value: str | None) -> str:
     normalized = str(value or "").strip().lower()
     if normalized in {"critical", "restricted", "prohibited"}:
@@ -179,7 +194,7 @@ def _finding_task(
         issue_summary=summary,
         severity=row.severity,
         risk_tier=row.severity,
-        data_sensitivity=_map_data_sensitivity(overrides.data_sensitivity or row.data_classification),
+        data_sensitivity=_recorded_floor(overrides.data_sensitivity, row.data_classification),
         customer_region=overrides.customer_region,
         region_requirement=overrides.region_requirement or overrides.customer_region,
         residency_requirement=overrides.residency_requirement,
@@ -371,7 +386,7 @@ def _ai_system_task(
         issue_summary=summary,
         severity=_severity_from_risk_tier(row.risk_tier),
         risk_tier=str(row.risk_tier or "medium"),
-        data_sensitivity=_map_data_sensitivity(overrides.data_sensitivity or str(metadata.get("data_sensitivity") or "internal")),
+        data_sensitivity=_recorded_floor(overrides.data_sensitivity, metadata.get("data_sensitivity")),
         customer_region=overrides.customer_region,
         region_requirement=overrides.region_requirement or overrides.customer_region,
         residency_requirement=overrides.residency_requirement,
@@ -487,7 +502,7 @@ def _shadow_entity_task(
         issue_summary=summary,
         severity=_severity_from_risk_tier(row.provisional_risk_tier or "medium"),
         risk_tier=str(row.provisional_risk_tier or "medium"),
-        data_sensitivity=_map_data_sensitivity(overrides.data_sensitivity or str(metadata.get("data_sensitivity") or "internal")),
+        data_sensitivity=_recorded_floor(overrides.data_sensitivity, metadata.get("data_sensitivity")),
         customer_region=overrides.customer_region,
         region_requirement=overrides.region_requirement or overrides.customer_region,
         residency_requirement=overrides.residency_requirement,

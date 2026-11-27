@@ -3447,8 +3447,11 @@ def evaluate_browser_interaction_and_record(
         context={
             "actor_type": str(payload.get("actor_type") or "human"),
             "actor_user_id": actor_user_id,
-            "actor_role": payload.get("actor_role"),
-            "actor_department": payload.get("actor_department") or payload.get("department"),
+            # The extension's own role or department would be taken over the signed-in person's (policy_scope_service
+            # _resolve_actor_role): a rule scoped to a role or department could then be dodged by the extension saying
+            # so. For a signed-in person they are looked up here; only an anonymous report keeps the extension's hint.
+            "actor_role": None if actor_user_id else payload.get("actor_role"),
+            "actor_department": None if actor_user_id else (payload.get("actor_department") or payload.get("department")),
             "endpoint_id": payload.get("endpoint_id"),
             "source_surface": "browser",
             "action_type": ("file_upload" if file_meta else "prompt_input"),
