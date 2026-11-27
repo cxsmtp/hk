@@ -486,7 +486,7 @@ def test_terms_render_the_licensor_settings_into_a_versioned_hashed_text(monkeyp
     assert terms.hash == hashlib.sha256(terms.text.encode("utf-8")).hexdigest()
     assert "{{" not in terms.text
     # The defaults read sensibly: UAE law, DIAC arbitration seated onshore in Dubai, in English, one arbitrator.
-    assert "**the licensor named in your order or activation code** (address: as stated in your order or activation code)" in terms.text
+    assert "**call4counsel** (address: as stated in your order or activation code)" in terms.text
     assert "governed by the federal laws of the United Arab Emirates as applied in the Emirate of Dubai, without regard" in terms.text
     assert "Dubai International Arbitration Centre (DIAC)" in terms.text and "onshore Dubai, and not the Dubai International Financial Centre" in terms.text
     assert "five hundred UAE dirhams (AED 500)" in terms.text

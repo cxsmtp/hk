@@ -53,7 +53,7 @@ ON_PREMISE_NOTICE = (
 
 #: What the {{NAME}} placeholders in TERMS.md read when their setting is empty. Kept in this one place.
 TERMS_DEFAULTS: dict[str, str] = {
-    "LICENSOR_LEGAL_NAME": "the licensor named in your order or activation code",
+    "LICENSOR_LEGAL_NAME": "call4counsel",
     "LICENSOR_ADDRESS": "as stated in your order or activation code",
     "LICENSOR_NOTICE_EMAIL": "the notice email address stated in your order or activation code",
     "GOVERNING_LAW": "the federal laws of the United Arab Emirates as applied in the Emirate of Dubai",
