@@ -2,7 +2,11 @@
 
 Every release, newest first: the version shown bottom-left in the console (HK-xx.xx.xx, from the VERSION file), when it was merged, and what changed for the people using it. Updated with every change merged to main (CLAUDE.md).
 
-## HK-00.03.04 — pending · [#NN](https://github.com/cxsmtp/hk/pull/NN)
+## HK-00.03.05 — pending · [#NN](https://github.com/cxsmtp/hk/pull/NN)
+
+- **The licence agreement names call4counsel as the licensor.** Where the server's settings leave the licensor's name empty, the agreement shown, accepted and emailed at first sign-in now names call4counsel instead of "the licensor named in your order or activation code". Because the agreement's text changes, each administrator is asked to accept it again at their next sign-in. The address and notice email still come from the order or activation code until they are set.
+
+## HK-00.03.04 — 2026-11-27 16:40 UTC · [#13](https://github.com/cxsmtp/hk/pull/13)
 
 - **Settings that apply to the whole server are changed only by the server's administrators.** The password rule, idle sign-out, the sign-in notice and single sign-on, the compliance settings (how long activity is kept, the data location, the incident contact and the recommended baseline), the email server, branding, HTTPS, the network and proxy, updates, backups and restore, hands-off, activation codes and the evidence signing key can now be changed only by the Owners and Admins of the first workspace on the server. Owners and Admins of any other workspace still see these pages, read-only and marked "Set by the server's administrators", without the save buttons; a change they try anyway is refused and recorded in the audit log. Each workspace's own settings (its people, teams and roles, AI system approvals, detection settings and compliance records) stay with its own admins, and on a server with one workspace nothing changes.
 - **Card-number masking no longer mistakes other numbers for cards.** A number is now masked as a card only when it is written the way cards are (together, or in the 4-4-4-4, 4-4-4-4-3, Amex 4-6-5 or Diners 4-6-4 groups), starts with a real card network's prefix at a length that network issues, and passes the card checksum. IBANs, dates and timestamps, long record ids, phone numbers and numbers labelled as an order, invoice, reference or account number are left as they are, while a number labelled as a card is always masked. On test sets of each kind, wrongly masked numbers fell from up to 12% to under 0.5%, and every real card number in every layout is still masked.
