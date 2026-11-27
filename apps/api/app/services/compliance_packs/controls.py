@@ -708,6 +708,34 @@ def _email(c: Context) -> Result:
     return Result(GAP, "The email server has not been tested: set it up on Settings → Email so alerts and notices reach people.")
 
 
+def _data_requests(c: Context) -> Result:
+    from app.services import data_subject_requests as dsr
+
+    if not c.tenant_id:
+        return Result(NA, "Data requests are kept per workspace.")
+    counts = dsr.summary(c.db, c.tenant_id, c.now)
+    days = dsr.due_days(c.db, c.tenant_id)
+    text = (
+        f"Requests to see, correct or erase personal data, grievances and nominations are recorded with a due date ({days} days) "
+        f"and a trail; access is answered with an export and erasure by pseudonymisation. {counts['open']} open, {counts['completed']} completed, {counts['refused']} refused."
+    )
+    if counts["overdue"]:
+        return Result(GAP, text + f" {counts['overdue']} past their due date: answer them on Settings → Compliance → Data requests.", legacy="action")
+    if counts["dueSoon"]:
+        return Result(PARTLY, text + f" {counts['dueSoon']} due within {dsr.DUE_SOON_DAYS} days.", legacy="partial")
+    return Result(MET, text + " None overdue.")
+
+
+def _grievance_contact(c: Context) -> Result:
+    from app.services import data_subject_requests as dsr
+
+    if not c.tenant_id:
+        return Result(NA, "The grievance contact is set per workspace.")
+    if dsr.grievance_contact(c.db, c.tenant_id):
+        return Result(MET, "A grievance contact is named for questions and complaints about personal data (Settings → Compliance → Data requests).")
+    return Result(GAP, "Name the person who answers questions and grievances about personal data (DPDP s.8(9), R.9) on Settings → Compliance → Data requests.", legacy="action")
+
+
 def _planned(what: str) -> Callable[[Context], Result]:
     def check(c: Context) -> Result:
         return Result(GAP, f"Hawk AI does not do this yet: {what}")
@@ -766,9 +794,11 @@ CONTROLS: tuple[Control, ...] = (
     Control("ops.self_recovery", "Self-recovery and OEM escalation", "Known failures are fixed automatically; unknown ones are escalated with a signed diagnostics bundle.", "product", "/settings/backups", "Settings → Backups & health", _self_recovery),
     Control("host.hardening", "Hardened host", "The machine passes the installer's CIS Linux checks (firewall, SSH, updates, time, disk encryption, auditd).", "customer", "/settings/backups", "Settings → Backups & health", _host),
     Control("terms.accepted", "Licence terms accepted", "The licence agreement accepted for the organisation, each acceptance kept with the text's hash.", "administrator", "/settings/about", "Settings → About", _terms),
+    # Data subjects' rights (DPDP s.11-14, UAE PDPL Art. 13-15)
+    Control("privacy.data_subject_requests", "Requests from data subjects", "Requests to see, correct or erase personal data, grievances and nominations are recorded with a due date and a trail; access is answered with an export of what Hawk AI holds, erasure by pseudonymisation (the audit log is kept).", "administrator", "/settings/compliance", "Settings → Compliance → Data requests", _data_requests),
+    Control("privacy.grievance_contact", "Grievance contact named", "The person who answers questions and grievances about personal data is named for the workspace.", "administrator", "/settings/compliance", "Settings → Compliance → Data requests", _grievance_contact),
     Control("notify.email", "Notifications can be sent", "The email server is set up and tested, so alerts, approvals and incident notices reach people.", "administrator", "/settings/email", "Settings → Email (SMTP)", _email),
     # Capabilities Hawk AI does not have yet (each a gap until built)
-    Control("gap.data_subject_requests", "Requests from data subjects", "Find, export, correct or erase one person's records across Hawk AI (activity, approvals, discovery), with a record of the request.", "product", "/settings/compliance", "Not built yet", _planned("find, export or erase one person's records across Hawk AI on request (DPDP s.11-13, UAE PDPL Art. 13-17)."), planned=True),
     Control("gap.output_content_safety", "Harmful-content checks on AI answers", "Classify AI answers for violent, hateful, sexual or CBRN content and misinformation, and block or flag them.", "product", "/settings/compliance", "Not built yet", _planned("AI answers are not classified for harmful content (hate, violence, CBRN) or misinformation."), planned=True),
     Control("gap.ai_supply_chain", "AI bill of materials", "Record the models, datasets and plugins each AI system depends on, with their provenance and versions (AI-BOM).", "product", "/settings/compliance", "Not built yet", _planned("no AI bill of materials (models, datasets, plugins and their provenance) for the AI systems in the inventory."), planned=True),
     Control("gap.impact_assessment", "AI impact assessments", "Record an impact assessment (individuals, groups, society) for each AI system and review it on a schedule.", "product", "/settings/compliance", "Not built yet", _planned("no impact assessment record per AI system (it can be kept outside Hawk AI and attested here)."), planned=True),

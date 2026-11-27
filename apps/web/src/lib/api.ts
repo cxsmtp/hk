@@ -7,7 +7,7 @@ import type { HandsOffSettings, HandsOffView, LinkAnswer, SelfCheckHealth } from
 import type { ApprovalDecision, ApprovalGrantView, ApprovalPolicy, ApprovalPolicyView, ApprovalRequestView, ApprovalScope } from "@/lib/ai-system-approvals";
 import type { DiagnosticsView } from "@/lib/self-recovery";
 import type { AboutView, BrandingPatch, BrandingView, GeneralView, SettingsMe, SmtpSettings, SmtpView } from "@/lib/settings-console";
-import type { ComplianceSettings, ComplianceView, PacksOverview, PackView } from "@/lib/compliance";
+import type { ComplianceSettings, ComplianceView, DataRequestDetail, DataRequestKind, DataRequestLaw, DataRequestList, DataRequestSettings, DataRequestStatus, PacksOverview, PackView } from "@/lib/compliance";
 import type { AuditPage, AuditVerify, ConnectorActivity, EvidenceSigning, Emailed, NetworkCheck, NetworkInfo, SupportChannel, SupportKind, SupportList, SupportRequest, TrustDiagnosis, TrustedCertificate } from "@/lib/records";
 import { approvalStatusFilters, mergeApprovalStatusResults } from "@/lib/approval-workflow";
 import { demoFallbackRequest, isDemoFallbackEnabled } from "@/lib/demo-fallback";
@@ -904,6 +904,25 @@ export const api = {
     request<PackView>(`/compliance/packs/${encodeURIComponent(packId)}/requirements/${encodeURIComponent(requirementId)}/record`, { method: "DELETE" }),
   /** A pack's signed evidence bundle for a window: a zip whose manifest.json carries the evidence signature. */
   packEvidence: (id: string, query: string) => requestBlob(`/compliance/packs/${encodeURIComponent(id)}/evidence${query ? `?${query}` : ""}`),
+  // Requests from data subjects on Settings → Compliance → Data requests (apps/api/app/services/data_subject_requests.py).
+  listDataRequests: (query: string) => request<DataRequestList>(`/compliance/data-requests${query ? `?${query}` : ""}`),
+  createDataRequest: (body: { kind: DataRequestKind; law: DataRequestLaw; subjectEmail: string; subjectIdentifier?: string; receivedAt?: string; channel?: string; notes?: string }) =>
+    request<DataRequestDetail>("/compliance/data-requests", { method: "POST", body: JSON.stringify(body) }),
+  getDataRequest: (id: string) => request<DataRequestDetail>(`/compliance/data-requests/${encodeURIComponent(id)}`),
+  updateDataRequest: (id: string, body: { status?: DataRequestStatus; note?: string; refusalReason?: string; handledBy?: string }) =>
+    request<DataRequestDetail>(`/compliance/data-requests/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(body) }),
+  /** What Hawk AI holds about the person of an access request (JSON), and its detached evidence signature ('' when none). */
+  exportDataRequest: async (id: string) => {
+    let signature = "";
+    const blob = await requestBlob(`/compliance/data-requests/${encodeURIComponent(id)}/export`, { method: "POST" }, true, (res) => {
+      signature = res.headers.get("X-Hawk-Evidence-Signature") ?? "";
+    });
+    return { blob, signature };
+  },
+  eraseDataRequest: (id: string) =>
+    request<DataRequestDetail>(`/compliance/data-requests/${encodeURIComponent(id)}/erase`, { method: "POST", body: JSON.stringify({ confirm: true }) }),
+  saveDataRequestSettings: (body: { dueDays?: number; grievanceContact?: string }) =>
+    request<{ settings: DataRequestSettings; mayManage: boolean }>("/compliance/data-requests/settings", { method: "PUT", body: JSON.stringify(body) }),
   // Settings → Hands-off and the self-check (app/api/routers/hands_off.py); the emailed links need no sign-in.
   getHandsOff: () => request<HandsOffView>("/hands-off"),
   saveHandsOff: (body: { handsOff: Partial<Omit<HandsOffSettings, "statusTo">> & { statusTo?: string | string[] } }) =>

@@ -51,6 +51,8 @@ export type ComplianceView = {
   };
   settings: ComplianceSettings;
   dataLocation: string;
+  /** Requests from data subjects: open, overdue and due soon (the Data requests tab). */
+  dataRequests?: DataRequestSummary;
   mayChange: boolean;
   /** "Set by the server's administrators." for a workspace admin: the settings are the whole server's. */
   readOnlyNote?: string;
@@ -148,7 +150,7 @@ export type PackCounts = Record<RequirementStatus, number> & {
 
 export type PackSummary = { id: string; version: string; optional: boolean; framework: PackFramework; summary: string; counts: PackCounts };
 
-export type PacksOverview = { packs: PackSummary[]; disclaimer: string; evaluatedAt: string; mayRecord: boolean; mayExport: boolean };
+export type PacksOverview = { packs: PackSummary[]; disclaimer: string; evaluatedAt: string; mayRecord: boolean; mayExport: boolean; dataRequests?: DataRequestSummary };
 
 export type PackView = {
   id: string;
@@ -231,4 +233,151 @@ export function packLine(counts: PackCounts): string {
 /** The evidence bundle's window as a query (dates or times as given; the API defaults to the last 30 days). */
 export function evidenceQuery(from: string, to: string): string {
   return incidentQuery(from, to);
+}
+
+// ---- Requests from data subjects (Settings → Compliance → Data requests; apps/api/app/services/data_subject_requests.py)
+
+export type DataRequestKind = "access" | "correction" | "erasure" | "grievance" | "nomination";
+export type DataRequestStatus = "received" | "verifying" | "in_progress" | "completed" | "refused";
+export type DataRequestLaw = "dpdp" | "pdpl" | "other";
+
+export type DataRequest = {
+  id: string;
+  kind: DataRequestKind;
+  kindLabel: string;
+  law: DataRequestLaw;
+  subjectEmail: string;
+  subjectIdentifier: string;
+  subjectMatched: boolean;
+  channel: string;
+  receivedAt: string | null;
+  dueAt: string | null;
+  status: DataRequestStatus;
+  overdue: boolean;
+  dueSoon: boolean;
+  /** Whole days until it is due (negative: overdue); null once it is finished. */
+  daysLeft: number | null;
+  refusalReason: string;
+  handledBy: string;
+  notes: string;
+  completedAt: string | null;
+  createdBy: string;
+  createdAt: string | null;
+};
+
+export type DataRequestEvent = {
+  id: string;
+  at: string | null;
+  by: string;
+  kind: "created" | "status" | "note" | "assigned" | "exported" | "erased";
+  from: string;
+  to: string;
+  note: string;
+  details: Record<string, unknown>;
+};
+
+export type DataRequestSummary = { total: number; open: number; overdue: number; dueSoon: number; completed: number; refused: number; nextDueAt: string | null; dueSoonDays: number };
+
+export type DataRequestSettings = {
+  dueDays: number;
+  defaultDueDays: number;
+  minDueDays: number;
+  maxDueDays: number;
+  dueSoonDays: number;
+  grievanceContact: string;
+  updatedBy: string;
+  updatedAt: string | null;
+};
+
+export type DataRequestList = {
+  items: DataRequest[];
+  summary: DataRequestSummary;
+  settings: DataRequestSettings;
+  kinds: Array<{ id: DataRequestKind; label: string }>;
+  statuses: DataRequestStatus[];
+  mayManage: boolean;
+};
+
+export type DataRequestDetail = {
+  request: DataRequest;
+  events: DataRequestEvent[];
+  mayManage: boolean;
+  erasure?: { pseudonym: string; changed: Record<string, number>; auditEntriesKept: number };
+};
+
+export const DSR_KIND_LABELS: Record<DataRequestKind, string> = {
+  access: "See their data",
+  correction: "Correct their data",
+  erasure: "Erase their data",
+  grievance: "Grievance",
+  nomination: "Nominate someone",
+};
+
+export const DSR_LAW_LABELS: Record<DataRequestLaw, string> = { dpdp: "India DPDP", pdpl: "UAE PDPL", other: "Other" };
+
+export const DSR_STATUS_LABELS: Record<DataRequestStatus, string> = {
+  received: "Received",
+  verifying: "Verifying identity",
+  in_progress: "In progress",
+  completed: "Completed",
+  refused: "Refused",
+};
+
+export const DSR_STATUS_CHIP: Record<DataRequestStatus, string> = { received: "", verifying: "", in_progress: "", completed: "ok", refused: "" };
+
+/** The list filter: open (the default), overdue, everything, or the finished ones. */
+export type DataRequestFilter = "open" | "overdue" | "all" | "completed" | "refused";
+
+export const DSR_FILTERS: Array<{ key: DataRequestFilter; label: string }> = [
+  { key: "open", label: "Open" },
+  { key: "overdue", label: "Overdue" },
+  { key: "all", label: "All" },
+  { key: "completed", label: "Completed" },
+  { key: "refused", label: "Refused" },
+];
+
+/** The list's query string for a filter. */
+export function dataRequestQuery(filter: DataRequestFilter): string {
+  if (filter === "all") return "";
+  if (filter === "overdue") return "overdue=true";
+  return `status=${filter}`;
+}
+
+/** When a request is due, in words, and the chip it shows ("bad" overdue, "warn" due soon). */
+export function dueWords(request: Pick<DataRequest, "status" | "daysLeft" | "overdue" | "dueSoon" | "dueAt">): { text: string; chip: string } {
+  const day = request.dueAt ? request.dueAt.slice(0, 10) : "—";
+  if (request.status === "completed" || request.status === "refused" || request.daysLeft === null) return { text: `Due ${day}`, chip: "" };
+  if (request.overdue) {
+    const late = Math.max(1, -request.daysLeft);
+    return { text: `Overdue by ${late} day${late === 1 ? "" : "s"} (due ${day})`, chip: "bad" };
+  }
+  const left = request.daysLeft;
+  const words = left <= 0 ? "Due today" : `Due in ${left} day${left === 1 ? "" : "s"}`;
+  return { text: `${words} (${day})`, chip: request.dueSoon ? "warn" : "" };
+}
+
+/** The statuses a request may move to from where it is (none once it is finished). */
+export function nextStatuses(status: DataRequestStatus): DataRequestStatus[] {
+  if (status === "completed" || status === "refused") return [];
+  return (["verifying", "in_progress", "completed", "refused"] as DataRequestStatus[]).filter((s) => s !== status);
+}
+
+/** A step of the request's trail in words. */
+export function eventWords(event: DataRequestEvent): string {
+  const to = DSR_STATUS_LABELS[event.to as DataRequestStatus] ?? event.to;
+  const from = DSR_STATUS_LABELS[event.from as DataRequestStatus] ?? event.from;
+  switch (event.kind) {
+    case "created":
+      return "Recorded";
+    case "status":
+      return `${from} → ${to}`;
+    case "assigned":
+      return "Handler changed";
+    case "exported":
+      return "Export made";
+    case "erased":
+      return "Erased by pseudonymisation";
+    default:
+      return "Note";
+  }
 }

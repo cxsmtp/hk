@@ -77,6 +77,35 @@ export const compliance: GuideTopic = {
       ],
     },
     {
+      id: "data-requests",
+      title: "Data requests (DPDP, UAE PDPL)",
+      who: "Owners, admins and roles given “Answer data requests”; auditors read them",
+      blocks: [
+        {
+          kind: "p",
+          text: "[Settings → Compliance](/settings/compliance) → **Data requests** records what a person asks about their personal data: to see it, correct it or erase it, a grievance, or naming someone to act for them (India's DPDP Act s.11-14 and Rule 14; the UAE PDPL Art. 13-15). Each request is due 30 days after it was received unless you set another period, has a status (received, verifying identity, in progress, completed, refused with a reason) and a trail of every step. Overdue and due-soon requests are called out on every Compliance tab and make the DPDP and UAE PDPL requirements show as gaps until they are answered.",
+        },
+        {
+          kind: "table",
+          head: ["Request", "What Hawk AI does"],
+          rows: [
+            ["See their data", "**Download what Hawk AI holds**: the person's account, role, the audit entries they made, console activity, AI sessions and activity (masked prompts only, never raw ones), alerts, findings, devices and support cases in this workspace, as JSON with an evidence signature."],
+            ["Erase their data", "**Erase by pseudonymisation**: the account is switched off and the name, email and other personal fields in every record are replaced by a stable pseudonym; raw prompts are cleared. The audit log is never changed: its entries point at the pseudonymised account. The workspace's last active Owner, your own account, and an account another workspace shares are refused."],
+            ["Correct, grievance, nominate", "Do what is asked (names and emails on Settings → People), then **Complete** with a note of what was done."],
+          ],
+        },
+        {
+          kind: "p",
+          text: "Name the **grievance contact** on the same tab: the person who answers questions and complaints about personal data (DPDP s.8(9), R.9). Every step is in the audit log (`privacy.*`, naming the request, not the person) and goes into the DPDP, UAE PDPL and ISO 27001 evidence bundles without whom it is about.",
+        },
+        {
+          kind: "note",
+          tone: "warn",
+          text: "Check who is asking before you export or erase anything: record how you checked in the request's notes. Only this workspace's records are searched; free text that names the person in other people's records is not.",
+        },
+      ],
+    },
+    {
       id: "what-it-covers",
       title: "What the Compliance page shows",
       who: "Owners, admins and auditors",

@@ -1,6 +1,6 @@
 {
   "id": "dpdp-india",
-  "version": "2026.11.1",
+  "version": "2026.11.2",
   "order": 10,
   "optional": false,
   "framework": {
@@ -11,7 +11,7 @@
     "jurisdiction": "India",
     "url": "https://www.meity.gov.in/data-protection-framework"
   },
-  "summary": "The obligations of a Data Fiduciary under India's DPDP Act and Rules, and where Hawk AI supports them: security safeguards under Rule 6 (encryption and masking, access control, logs kept a year, backups), breach intimation, erasure, and checks on the AI software a Significant Data Fiduciary uses.",
+  "summary": "The obligations of a Data Fiduciary under India's DPDP Act and Rules, and where Hawk AI supports them: security safeguards under Rule 6 (encryption and masking, access control, logs kept a year, backups), breach intimation, data principals' requests (access, correction, erasure, grievances, nomination) with due dates, and checks on the AI software a Significant Data Fiduciary uses.",
   "scope": "Section and rule numbers of the Act and the Rules; titles are our own short wording. Hawk AI runs on the customer's server and holds personal data of the customer's staff (accounts, activity) and finds personal data in AI traffic. Most obligations apply about 18 months after the Rules were notified (from May 2027); the Board's provisions apply at once.",
   "sources": [
     {
@@ -284,29 +284,40 @@
       "applicability": "customer",
       "controls": [
         "log.retention",
-        "gap.data_subject_requests"
+        "privacy.data_subject_requests"
       ],
       "evidence": [
         "audit:audit",
         "settings:compliance",
+        "records:data_subject_requests",
+        "audit:privacy",
         "records:attestations"
       ]
     },
     {
       "id": "s.8(9) / R.9",
       "title": "Publish who answers questions about the processing",
-      "applicability": "organisational",
-      "controls": [],
+      "applicability": "customer",
+      "controls": [
+        "privacy.grievance_contact"
+      ],
       "evidence": [
+        "records:data_subject_requests",
+        "audit:privacy",
         "records:attestations"
       ]
     },
     {
       "id": "s.8(10)",
       "title": "Run an effective way to handle grievances",
-      "applicability": "organisational",
-      "controls": [],
+      "applicability": "customer",
+      "controls": [
+        "privacy.grievance_contact",
+        "privacy.data_subject_requests"
+      ],
       "evidence": [
+        "records:data_subject_requests",
+        "audit:privacy",
         "records:attestations"
       ]
     },
@@ -366,9 +377,11 @@
       "title": "Give a person a summary of their personal data and its processing on request",
       "applicability": "customer",
       "controls": [
-        "gap.data_subject_requests"
+        "privacy.data_subject_requests"
       ],
       "evidence": [
+        "records:data_subject_requests",
+        "audit:privacy",
         "records:attestations"
       ]
     },
@@ -377,27 +390,38 @@
       "title": "Correct, complete, update or erase a person's data on request",
       "applicability": "customer",
       "controls": [
-        "gap.data_subject_requests"
+        "privacy.data_subject_requests"
       ],
       "evidence": [
+        "records:data_subject_requests",
+        "audit:privacy",
         "records:attestations"
       ]
     },
     {
       "id": "s.13",
       "title": "Answer grievances within the period the Rules set",
-      "applicability": "organisational",
-      "controls": [],
+      "applicability": "customer",
+      "controls": [
+        "privacy.grievance_contact",
+        "privacy.data_subject_requests"
+      ],
       "evidence": [
+        "records:data_subject_requests",
+        "audit:privacy",
         "records:attestations"
       ]
     },
     {
       "id": "s.14",
       "title": "Let a person nominate someone to act for them",
-      "applicability": "organisational",
-      "controls": [],
+      "applicability": "customer",
+      "controls": [
+        "privacy.data_subject_requests"
+      ],
       "evidence": [
+        "records:data_subject_requests",
+        "audit:privacy",
         "records:attestations"
       ]
     },

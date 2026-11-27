@@ -515,3 +515,9 @@
 @media (max-width: 860px), (min-width: 1024px) and (max-width: 1180px) {
   .ftr-settings .grid.g2, .ftr .grid.g2 { grid-template-columns: 1fr; }
 }
+
+/* Compliance → Data requests: a request's trail, oldest first (components/compliance/data-requests.tsx). */
+.ftr-settings .timeline { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.ftr-settings .timeline li { border-left: 2px solid var(--line-hi); padding: 2px 0 2px 12px; font-size: 13px; min-width: 0; overflow-wrap: anywhere; }
+.ftr-settings .timeline .sub { display: block; color: var(--muted); margin-top: 2px; white-space: pre-wrap; }
+.ftr-settings .kv dd .chip { white-space: normal; }
