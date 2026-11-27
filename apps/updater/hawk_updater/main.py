@@ -14,6 +14,9 @@ Files in /updater (app/services/updates/companion.py is the API's side):
   ack.json       written by the API at every start: which version runs, and since when;
   images.env     the images the stack runs after an update, for deploy/install.sh.
 
+deploy/.env (DEPLOY_ENV_FILE, mounted on its own): its HAWK_API_IMAGE, HAWK_WEB_IMAGE and HAWK_PROXY_IMAGE are set to
+the images the stack runs after every update and rollback, so `docker compose up -d` never goes back to older ones.
+
 Environment: UPDATER_DIR (/updater), ENGINE_SOCKET (/var/run/docker.sock), TARGET_PROJECT (this container's own
 compose project), UPDATE_IMAGE (ghcr.io/cxsmtp/hk), UPDATE_REGISTRY_TOKEN, UPDATE_START_TIMEOUT_SECONDS (150),
 INTEGRITY_OFFLINE (allow: the file check alone when GitHub cannot be reached).
@@ -71,6 +74,7 @@ def config_from_env(engine: EngineClient, env=os.environ) -> Config:
         image_prefix=repository_of(env.get("UPDATE_IMAGE") or DEFAULT_IMAGE),
         start_timeout=timeout,
         offline_allowed=str(env.get("INTEGRITY_OFFLINE") or "").strip().lower() == "allow",
+        deploy_env=Path(env["DEPLOY_ENV_FILE"]) if env.get("DEPLOY_ENV_FILE") else None,
     )
 
 

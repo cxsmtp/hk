@@ -159,6 +159,8 @@ class Config:
     stop_seconds: int = 30
     settle: float = 15.0
     services: dict[str, str] = field(default_factory=lambda: dict(SERVICES))
+    #: deploy/.env, mounted into the updater (deploy/compose.yaml): kept pointing at the images that run.
+    deploy_env: Path | None = None
 
     def repository(self, kind: str) -> str:
         return f"{self.image_prefix}-{kind}".lower()
@@ -217,6 +219,57 @@ def failed_versions(updater_dir: Path) -> set[str]:
     """Versions that did not come up and were rolled back: never installed automatically again."""
 
     return {str(e.get("to")) for e in events(updater_dir) if e.get("type") == "rolled-back" and e.get("to")}
+
+
+#: The keys of deploy/.env that say which of Hawk AI's images compose runs (deploy/install.sh writes them too).
+DEPLOY_ENV_KEYS = {"api": "HAWK_API_IMAGE", "web": "HAWK_WEB_IMAGE", "proxy": "HAWK_PROXY_IMAGE"}
+
+
+def pinned_ref(image: dict[str, Any] | None, repository: str, fallback: str) -> str:
+    """``repository@sha256:…`` for an image (its RepoDigests), so a tag moved later never changes what runs."""
+
+    for entry in (image or {}).get("RepoDigests") or []:
+        text = str(entry)
+        if "@" in text and repository_of(text) == repository.lower() and DIGEST.match(text.split("@", 1)[1]):
+            return f"{repository.lower()}@{text.split('@', 1)[1]}"
+    return fallback
+
+
+def write_deploy_env(file: Path | None, images: dict[str, str]) -> bool:
+    """Point deploy/.env at the images the stack now runs, so a plain `docker compose -f deploy/compose.yaml up -d`
+    or `run` uses them and never an older one. Only HAWK_API_IMAGE, HAWK_WEB_IMAGE and HAWK_PROXY_IMAGE change; every
+    other line stays as it is. The file is bind-mounted on its own, so it is rewritten in place (not renamed over)."""
+
+    if file is None:
+        return False
+    file = Path(file)
+    try:
+        text = file.read_text(encoding="utf-8")
+    except OSError:
+        return False
+    lines = text.splitlines()
+    seen: set[str] = set()
+    for index, line in enumerate(lines):
+        key = line.split("=", 1)[0].strip()
+        for kind, name in DEPLOY_ENV_KEYS.items():
+            if key == name and kind in images:
+                lines[index] = f"{name}={images[kind]}"
+                seen.add(name)
+    missing = [f"{name}={images[kind]}" for kind, name in DEPLOY_ENV_KEYS.items() if kind in images and name not in seen]
+    if missing:
+        lines += ["# The images compose runs: written by deploy/install.sh and by the updater (Settings → Updates).", *missing]
+    new = "\n".join(lines) + "\n"
+    if new == text:
+        return True
+    try:
+        with open(file, "r+", encoding="utf-8") as handle:
+            handle.seek(0)
+            handle.write(new)
+            handle.truncate()
+    except OSError as error:
+        print(f"! [updater] Could not point {file} at the images that run ({error}): run deploy/install.sh before using docker compose up.", flush=True)
+        return False
+    return True
 
 
 def write_pins(updater_dir: Path, images: dict[str, str], version: str) -> None:
@@ -441,9 +494,12 @@ def full_update(
                 raise RuntimeError(f"The new {service} stopped (exit code {state.get('ExitCode', '?')}).")
     except _NothingChanged as error:
         _put_back(engine, stack, parked, created, step=step)
+        write_deploy_env(config.deploy_env, _previous_refs(config, stack, old_images))
         return {"state": "failed", "error": str(error), "from": from_version, "to": version}
     except Exception as error:  # noqa: BLE001 - whatever went wrong, the previous version comes back
         restored = _roll_back(engine, config, stack, old_images, parked, created, migrations_ran=migrations_ran, backup=backup, step=step)
+        # deploy/.env may name a tag that now points at the version that failed: name the images put back instead.
+        write_deploy_env(config.deploy_env, _previous_refs(config, stack, old_images))
         return {"state": "rolled-back", "error": str(error), "from": from_version, "to": version, "backup": backup, "databaseRestored": restored}
 
     # It runs: the previous containers are no longer needed (their images stay, to go back to from the page).
@@ -452,12 +508,24 @@ def full_update(
             engine.remove(f"{container_name(stack[service])}{PARKED}")
         except EngineError:
             pass
-    write_pins(config.updater_dir, images, version)
+    now_running = {kind: pinned_ref(pulled[kind], config.repository(kind), images[kind]) for kind in IMAGES}
+    write_pins(config.updater_dir, now_running, version)
+    write_deploy_env(config.deploy_env, now_running)
     return {"state": "done", "from": from_version, "to": version, "backup": backup, "checked": offline_note}
 
 
 class _NothingChanged(Exception):
     pass
+
+
+def _previous_refs(config: Config, stack: dict[str, dict[str, Any]], old_images: dict[str, Any]) -> dict[str, str]:
+    """The images the stack ran before (and runs again after a rollback), by digest where the engine knows it."""
+
+    out: dict[str, str] = {}
+    for kind, service in (("api", "api"), ("web", "web"), ("proxy", "proxy")):
+        container = stack.get(service) or {}
+        out[kind] = pinned_ref(old_images.get(service), config.repository(kind), str((container.get("Config") or {}).get("Image") or ""))
+    return {k: v for k, v in out.items() if v}
 
 
 def _inspect_image(engine, ref: Any) -> dict[str, Any] | None:

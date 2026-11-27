@@ -4,9 +4,13 @@
 #   sudo deploy/install.sh
 #
 # 1. checks Docker and its compose plugin;
-# 2. creates the data folder (0700) and, the first time only, its secrets (0600 files);
-# 3. builds the images from this checkout, or pulls the published ones (HAWK_RELEASE in deploy/.env: latest, stable or
-#    a version, with the updater that updates from Settings → Updates), and starts everything: docker compose up -d;
+# 2. creates the data folder (0700) and, the first time only, its secrets (0600 files); on a first install it asks for
+#    the address people type (HAWK_HOST, or give it: HAWK_HOST=hawk.example.com sudo deploy/install.sh);
+# 3. pulls the published images (HAWK_RELEASE in deploy/.env: latest, stable or a version, this checkout's version on a
+#    first install, with the updater that updates from Settings → Updates), or builds them from this checkout
+#    (HAWK_BUILD=1, an empty HAWK_RELEASE on a server already installed, or when the download fails on a first
+#    install), writes into deploy/.env what compose runs (so `docker compose up -d` and `run` use the same images),
+#    and starts everything: docker compose up -d;
 # 4. waits until the API answers /health/ready;
 # 5. prints the first administrator's sign-in from the API's log (once: the first start only).
 #
@@ -25,7 +29,7 @@ fail() { printf '! %s\n' "$*" >&2; exit 1; }
 # Secrets are made readable by the uid of the container that uses them, which needs root.
 if [ "$(id -u)" -ne 0 ]; then
   if command -v sudo >/dev/null 2>&1; then
-    exec sudo --preserve-env=HAWK_DATA_DIR,HAWK_WAIT_SECONDS,HAWK_BUILD_CA_FILE,HAWK_RELEASE bash "$0" "$@"
+    exec sudo --preserve-env=HAWK_DATA_DIR,HAWK_WAIT_SECONDS,HAWK_BUILD_CA_FILE,HAWK_RELEASE,HAWK_BUILD,HAWK_HOST bash "$0" "$@"
   fi
   fail "Run this as root (sudo deploy/install.sh)."
 fi
@@ -46,8 +50,20 @@ if [ ! -f "$ENV_FILE" ]; then
   data_dir="${HAWK_DATA_DIR:-/var/lib/hawk-ai}"
   sed "s|^HAWK_DATA_DIR=.*|HAWK_DATA_DIR=${data_dir}|" "$DEPLOY_DIR/.env.example" > "$ENV_FILE"
   chmod 0600 "$ENV_FILE"
-  say "Settings written to $ENV_FILE (edit it to change the address or port, then run this again)."
+  say "Settings written to $ENV_FILE (change any of them later, then run this again)."
 fi
+
+setting() { sed -n "s/^$1=//p" "$ENV_FILE" | tail -n 1; }
+# set_setting NAME VALUE: NAME=VALUE in deploy/.env, in place of the line that is there (else added at the end). The
+# file keeps its owner and mode.
+set_setting() {
+  local tmp
+  tmp="$(mktemp "$ENV_FILE.XXXXXX")"
+  awk -v k="$1" -v v="$2" 'index($0, k "=") == 1 { if (!done) print k "=" v; done = 1; next } { print } END { if (!done) print k "=" v }' "$ENV_FILE" > "$tmp"
+  cat "$tmp" > "$ENV_FILE"
+  rm -f "$tmp"
+}
+
 HAWK_DATA_DIR="$(sed -n 's/^HAWK_DATA_DIR=//p' "$ENV_FILE" | tail -n 1)"
 [ -n "$HAWK_DATA_DIR" ] || fail "HAWK_DATA_DIR is empty in $ENV_FILE."
 case "$HAWK_DATA_DIR" in
@@ -59,6 +75,51 @@ case "$HAWK_DATA_DIR/" in
 esac
 
 SECRETS="$HAWK_DATA_DIR/secrets"
+# A first install: no secrets yet (they are made once, below).
+first_install=0
+[ -s "$SECRETS/postgres_password" ] || first_install=1
+
+# The address people type (HAWK_HOST). Given as HAWK_HOST=… sudo deploy/install.sh, it is written to deploy/.env. On a
+# first install still on the default, asked here when someone is at the keyboard; otherwise deploy/.env says.
+this_address() {
+  local ip
+  ip="$(ip route get 1.1.1.1 2>/dev/null | awk '{for (i = 1; i < NF; i++) if ($i == "src") {print $(i + 1); exit}}')"
+  [ -n "$ip" ] || ip="$(hostname -I 2>/dev/null | awk '{print $1}')"
+  [ -n "$ip" ] || ip="$(hostname -f 2>/dev/null || hostname 2>/dev/null || true)"
+  printf '%s' "${ip:-localhost}"
+}
+valid_host() { printf '%s' "$1" | grep -Eq '^[A-Za-z0-9]([A-Za-z0-9.-]{0,251}[A-Za-z0-9])?$'; }
+use_host() {
+  set_setting HAWK_HOST "$1"
+  case "$1" in
+    localhost|127.*) ;;
+    *)
+      # Other machines can reach it only when it listens on more than this machine's own address.
+      if [ "$(setting BIND_ADDRESS)" = "127.0.0.1" ]; then
+        set_setting BIND_ADDRESS 0.0.0.0
+        say "  It answers other machines too: BIND_ADDRESS=0.0.0.0 in $ENV_FILE (allow port $(setting PORT) in the firewall)."
+      fi
+      ;;
+  esac
+  say "Address: https://$1:$(setting PORT) (HAWK_HOST in $ENV_FILE)."
+}
+if [ -n "${HAWK_HOST:-}" ]; then
+  valid_host "$HAWK_HOST" || fail "HAWK_HOST=$HAWK_HOST is not a name or an address."
+  [ "$(setting HAWK_HOST)" = "$HAWK_HOST" ] || use_host "$HAWK_HOST"
+elif [ "$first_install" = 1 ] && [ -t 0 ] && { [ -z "$(setting HAWK_HOST)" ] || [ "$(setting HAWK_HOST)" = localhost ]; }; then
+  suggested="$(this_address)"
+  say "Which name or address will people type in their browser to reach Hawk AI?"
+  say "  (Enter for $suggested; localhost keeps it to this machine only.)"
+  answer=""
+  for _ in 1 2 3; do
+    read -r -p "  Address [$suggested]: " answer || answer=""
+    answer="${answer:-$suggested}"
+    valid_host "$answer" && break
+    say "  $answer is not a name or an address (letters, digits, dots and dashes)."
+    answer=""
+  done
+  use_host "${answer:-$suggested}"
+fi
 umask 077
 mkdir -p "$SECRETS" "$HAWK_DATA_DIR/certs"
 chmod 0700 "$HAWK_DATA_DIR" "$SECRETS" "$HAWK_DATA_DIR/certs"
@@ -203,9 +264,48 @@ check_host || say "! The checks of this machine did not finish; installing anywa
 
 # --- 3. Start -----------------------------------------------------------------------------------------------------
 compose() { docker compose --project-directory "$DEPLOY_DIR" -f "$DEPLOY_DIR/compose.yaml" --env-file "$ENV_FILE" "$@"; }
-setting() { sed -n "s/^$1=//p" "$ENV_FILE" | tail -n 1; }
+
+# What compose runs is kept in deploy/.env itself, so a plain `docker compose -f deploy/compose.yaml up -d` (or `run`)
+# starts the same version as this script and never builds: the images (by digest), the updater's profile and the
+# socket's group. The updater sets the images again after each update or rollback from Settings → Updates.
+MANAGED_KEYS="HAWK_API_IMAGE HAWK_WEB_IMAGE HAWK_PROXY_IMAGE HAWK_UPDATER_IMAGE COMPOSE_PROFILES HAWK_DOCKER_GID"
+MANAGED_NOTE="# --- Kept by deploy/install.sh and the updater: what compose runs. Do not edit: change HAWK_RELEASE instead. ---"
+keep_managed() {
+  local name
+  grep -qxF "$MANAGED_NOTE" "$ENV_FILE" || printf '\n%s\n' "$MANAGED_NOTE" >> "$ENV_FILE"
+  for name in $MANAGED_KEYS; do
+    set_setting "$name" "${!name:-}"
+  done
+}
+# Building from this folder: compose's defaults (hawk-*:local), so any earlier published images are cleared.
+clear_managed() {
+  local name
+  for name in $MANAGED_KEYS; do
+    if grep -q "^$name=" "$ENV_FILE"; then set_setting "$name" ""; fi
+  done
+}
+# The image a tag points at now, by digest (repository@sha256:…), else the reference as it is.
+by_digest() {
+  local repo="${1%@*}"
+  repo="${repo%:*}"
+  docker image inspect -f '{{range .RepoDigests}}{{println .}}{{end}}' "$1" 2>/dev/null | grep -m 1 "^${repo}@sha256:" || printf '%s' "$1"
+}
+
 release="$(setting HAWK_RELEASE)"
 release="${HAWK_RELEASE:-$release}"
+# A first install with no HAWK_RELEASE runs the published images of this folder's version (VERSION), unless
+# HAWK_BUILD=1 asks to build them from the folder. Later runs keep what deploy/.env says.
+defaulted=0
+if [ -z "$release" ] && [ "$first_install" = 1 ] && [ "${HAWK_BUILD:-}" != 1 ]; then
+  checkout_version="$(tr -d ' \r\n' < "$REPO_DIR/VERSION" 2>/dev/null || true)"
+  if printf '%s' "$checkout_version" | grep -Eq '^[0-9]{1,4}\.[0-9]{1,4}\.[0-9]{1,4}$'; then
+    release="$checkout_version"
+    defaulted=1
+    say "Using the published images of Hawk AI $release (this folder's version). To build them from this folder instead: HAWK_BUILD=1 sudo deploy/install.sh"
+  fi
+fi
+[ "${HAWK_BUILD:-}" = 1 ] && release=""
+
 if [ -n "$release" ]; then
   # The published images (/settings/guide/updates): <UPDATE_IMAGE>-api, -web, -proxy and -updater at HAWK_RELEASE, and the
   # updater that updates and rolls back from Settings → Updates. After an update from that page the images it chose are
@@ -227,6 +327,7 @@ if [ -n "$release" ]; then
     done
     say "Keeping the version chosen under Settings → Updates ($(sed -n 's/^HAWK_RUNNING_VERSION=//p' "$pins" | tail -n 1)); delete $pins to use HAWK_RELEASE=$release."
   fi
+  export COMPOSE_PROFILES="" HAWK_DOCKER_GID=""
   if [ "$(setting HAWK_UPDATER)" != "off" ]; then
     export COMPOSE_PROFILES=updates
     # The updater runs as uid 1000 and reaches the Docker socket through the socket's group only.
@@ -234,16 +335,47 @@ if [ -n "$release" ]; then
     export HAWK_DOCKER_GID
   fi
   say "Downloading and starting Hawk AI ($release)..."
-  compose pull --quiet
+  if ! pull_log="$(compose pull --quiet 2>&1)"; then
+    printf '%s\n' "$pull_log" | tail -n 5 >&2
+    if [ "$defaulted" = 1 ]; then
+      say "! The published images of Hawk AI $release could not be downloaded (above). Building them from this folder instead: this takes several minutes."
+      release=""
+    else
+      fail "The published images of Hawk AI $release could not be downloaded (above). Check that this machine reaches $prefix (ghcr.io) over HTTPS, or empty HAWK_RELEASE in $ENV_FILE to build the images from this folder."
+    fi
+  fi
+fi
+
+if [ -n "$release" ]; then
+  set_setting HAWK_RELEASE "$release"
+  # Exactly the images just downloaded, by digest: a tag that moves later never changes what runs.
+  for name in HAWK_API_IMAGE HAWK_WEB_IMAGE HAWK_PROXY_IMAGE HAWK_UPDATER_IMAGE; do
+    export "$name=$(by_digest "${!name}")"
+  done
   # The api, worker, beat and migrate containers are on two networks (deploy/compose.yaml); an updater made before
   # that could not put them back after an update. Such an updater is not started: update with this script instead.
   if [ "${COMPOSE_PROFILES:-}" = updates ] && [ "$(docker image inspect -f '{{ index .Config.Labels "org.cxsmtp.hawk.updater.networks" }}' "$HAWK_UPDATER_IMAGE" 2>/dev/null)" != "many" ]; then
     say "! The updater in $release predates this folder's compose.yaml: Settings → Updates is off; update with deploy/install.sh."
-    compose rm --stop --force updater >/dev/null 2>&1 || true
-    unset COMPOSE_PROFILES
+    COMPOSE_PROFILES=updates compose rm --stop --force updater >/dev/null 2>&1 || true
+    export COMPOSE_PROFILES=""
+  fi
+  keep_managed
+  if [ "${COMPOSE_PROFILES:-}" = updates ]; then
+    # The updater rewrites the images in deploy/.env after an update: the file is the socket group's too, whose
+    # members already control Docker (and so this machine). Without the updater it stays root's alone.
+    chown "0:$HAWK_DOCKER_GID" "$ENV_FILE"
+    chmod 0660 "$ENV_FILE"
+  else
+    chown 0:0 "$ENV_FILE"
+    chmod 0600 "$ENV_FILE"
   fi
   compose up -d --no-build --remove-orphans
 else
+  unset HAWK_API_IMAGE HAWK_WEB_IMAGE HAWK_PROXY_IMAGE HAWK_UPDATER_IMAGE
+  export COMPOSE_PROFILES=""
+  clear_managed
+  chown 0:0 "$ENV_FILE"
+  chmod 0600 "$ENV_FILE"
   say "Building and starting Hawk AI (the first build takes several minutes)..."
   compose up -d --build --remove-orphans
 fi
