@@ -22,10 +22,12 @@ function firstOrUnknown(values: string[]): string {
   return values.length ? values.slice(0, 4).join(", ") : "Unknown — no verified data";
 }
 
-type SourceState = "loading" | "ready" | "stale" | "unavailable";
+// "off": Control Coverage is not enabled on this server (GET /system/features), so it is not asked for.
+type SourceState = "loading" | "ready" | "stale" | "unavailable" | "off";
 
 function sourceValue(state: SourceState, count: number): string {
   if (state === "loading") return "—";
+  if (state === "off") return "Not enabled";
   if (state === "unavailable") return "Unavailable";
   if (state === "stale") return count ? `${count.toLocaleString()} · stale` : "Stale";
   return count.toLocaleString();
@@ -33,6 +35,7 @@ function sourceValue(state: SourceState, count: number): string {
 
 function sourceLabel(state: SourceState): string {
   if (state === "loading") return "Loading source";
+  if (state === "off") return "Not enabled on this server";
   if (state === "unavailable") return "Unavailable";
   if (state === "stale") return "Stale source";
   return "Source ready";
@@ -53,10 +56,11 @@ export function AssetsWorkspace() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
+      const coverageOn = await api.systemFeatures().then((f) => f.control_coverage !== false, () => true);
       const [systemResult, identityResult, pathResult] = await Promise.allSettled([
         api.listAISystems(),
         api.listAIIAMIdentities({ page: 1, page_size: 100, lookback_hours: 168 }),
-        api.controlCoveragePaths("page=1&page_size=100"),
+        coverageOn ? api.controlCoveragePaths("page=1&page_size=100") : Promise.resolve(null),
       ]);
       if (systemResult.status === "fulfilled") {
         setSystems(systemResult.value.items || []);
@@ -71,7 +75,10 @@ export function AssetsWorkspace() {
       } else {
         setIdentityState(identities.length ? "stale" : "unavailable");
       }
-      if (pathResult.status === "fulfilled") {
+      if (!coverageOn) {
+        setPaths([]);
+        setPathState("off");
+      } else if (pathResult.status === "fulfilled" && pathResult.value) {
         setPaths(pathResult.value.items || []);
         setPathState("ready");
       } else {
@@ -149,7 +156,7 @@ export function AssetsWorkspace() {
                   { step: "01", title: "Owner", value: selected.owner || "Unknown — ownership not attested", note: "Accountable owner for this identity" },
                   { step: "02", title: "Delegated authority", value: firstOrUnknown(selected.permissions.actions), note: `${selected.token_control.active_token_count} active credential references` },
                   { step: "03", title: "Tools & data", value: firstOrUnknown([...selected.permissions.tools, ...selected.permissions.data]), note: `${selected.permissions.tools.length} tools · ${selected.permissions.data.length} data scopes` },
-                  { step: "04", title: "Risky path", value: pathState === "unavailable" ? "Unavailable — path source did not respond" : identityPaths.length ? `${identityPaths.length} observed path${identityPaths.length === 1 ? "" : "s"}${pathState === "stale" ? " · stale" : ""}` : "Unknown — no path evidence", note: uncovered.length ? `${uncovered.length} uncovered or unknown assertions` : pathState === "stale" ? "Retained from a stale source" : "No uncovered assertion in the loaded window" },
+                  { step: "04", title: "Risky path", value: pathState === "off" ? "Not enabled — Control Coverage is off on this server" : pathState === "unavailable" ? "Unavailable — path source did not respond" : identityPaths.length ? `${identityPaths.length} observed path${identityPaths.length === 1 ? "" : "s"}${pathState === "stale" ? " · stale" : ""}` : "Unknown — no path evidence", note: uncovered.length ? `${uncovered.length} uncovered or unknown assertions` : pathState === "stale" ? "Retained from a stale source" : "No uncovered assertion in the loaded window" },
                   { step: "05", title: "Recommended policy", value: recommendedPolicy, note: "Derived from missed controls and path assertions" },
                   { step: "06", title: "Evidence", value: identityPaths.length ? `${identityPaths.flatMap((path) => path.assertions).flatMap((assertion) => assertion.evidence_refs).length} evidence references` : "Unknown — no linked evidence", note: `Updated ${selected.updated_at ? new Date(selected.updated_at).toLocaleString() : "time unknown"}` },
                 ].map((item) => (

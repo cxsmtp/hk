@@ -4,8 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.rbac import require_permission
-from app.core.tenant import TenantContext
+from app.core.tenant import TenantContext, require_tenant
 from app.db.session import get_db
 from app.services.audit_service import write_audit_log
 from app.services.control_plane_health_service import control_plane_module_status, evaluate_control_plane_health
@@ -113,3 +114,15 @@ def update_platform_mode(
         tenant_id=ctx.tenant.id,
         platform_mode=row.platform_mode,
     )
+
+
+class FeaturesResponse(BaseModel):
+    # Control Coverage (app/api/routers/control_coverage.py), off unless CONTROL_COVERAGE_API_ENABLED: the console
+    # leaves its panels out instead of reporting it unavailable.
+    control_coverage: bool
+
+
+@router.get("/features", response_model=FeaturesResponse)
+def get_features(ctx: TenantContext = Depends(require_tenant)):
+    del ctx
+    return FeaturesResponse(control_coverage=bool(settings.control_coverage_api_enabled))

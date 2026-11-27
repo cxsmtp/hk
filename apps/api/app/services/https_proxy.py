@@ -110,6 +110,9 @@ def render_caddyfile(
         "\tskip_install_trust",
         "\tpersist_config off",
         "\tservers :8443 {",
+        # No HTTP/3: deploy/compose.yaml publishes TCP only, and Caddy would advertise h3 on the container's port
+        # (Alt-Svc: h3=":8443"), not the one people use.
+        "\t\tprotocols h1 h2",
     ]
     if secure:
         lines += ["\t\tlistener_wrappers {", "\t\t\thttp_redirect", "\t\t\ttls", "\t\t}"]

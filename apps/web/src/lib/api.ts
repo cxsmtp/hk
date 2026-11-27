@@ -657,6 +657,8 @@ export type CurrentUser = {
   licence?: AdminLicence | null;
   // A temporary password to change, and the terms of use, first (/settings/guide/install).
   must_change_password?: boolean;
+  // That password is the first administrator's, printed by the installer (not one an administrator set).
+  password_from_installer?: boolean;
   terms?: TermsState | null;
   version?: string;
   // Two-step sign-in for this person (/settings/guide/people-and-access).
@@ -2117,6 +2119,8 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ endpoint_id: endpointId, action }),
     }),
+  // Which optional parts of the API this server has on (Control Coverage is off unless CONTROL_COVERAGE_API_ENABLED).
+  systemFeatures: () => request<{ control_coverage: boolean }>("/system/features"),
   controlCoverage: (windowDays = 30) =>
     request<ControlCoverageSummary>(`/control-coverage?window_days=${encodeURIComponent(String(windowDays))}`),
   controlCoveragePaths: (query: string) =>

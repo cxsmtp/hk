@@ -14,7 +14,7 @@ container of the same image, and start again (/settings/guide/backups):
 
     docker compose -f deploy/compose.yaml stop api worker beat
     docker compose -f deploy/compose.yaml run --rm --no-deps api python -m app.cli.restore /backups/<file>.hkbackup --yes
-    docker compose -f deploy/compose.yaml up -d
+    sudo deploy/install.sh
 
 --force restores without looking at the lock: only when Hawk AI is certainly not running.
 
@@ -149,7 +149,7 @@ def main(
     for line in instructions:
         print(line)
     if not instructions:
-        print("Start Hawk AI again: docker compose -f deploy/compose.yaml up -d")
+        print("Start Hawk AI again: sudo deploy/install.sh")
     return 0
 
 

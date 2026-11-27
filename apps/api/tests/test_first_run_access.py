@@ -127,7 +127,7 @@ def test_first_start_creates_the_administrator_prints_it_once_and_keeps_it_in_an
     assert "  First start: an administrator was created. Sign in with:" in log
     assert "      Email:    admin@hawk.local" in log
     assert f"      Password: {outcome.password}" in log
-    assert any("docker compose exec api python -m app.cli.reset_admin" in line for line in log)
+    assert any("docker compose -f deploy/compose.yaml exec api python -m app.cli.reset_admin" in line for line in log)
 
     path = env["data_dir"] / "first-admin-password.txt"
     assert path.read_text() == f"{outcome.password}\n"
@@ -149,7 +149,7 @@ def test_first_start_creates_the_administrator_prints_it_once_and_keeps_it_in_an
     assert again.kind == "existing"
     assert env["log"] == [
         "[access] Users already set up in this database; an administrator is admin@hawk.local. Lost the password? Run: "
-        "python -m app.cli.reset_admin  (with Docker: docker compose exec api python -m app.cli.reset_admin)"
+        "python -m app.cli.reset_admin  (with Docker: docker compose -f deploy/compose.yaml exec api python -m app.cli.reset_admin)"
     ]
     with env["db"]() as db:
         assert db.scalar(select(func.count()).select_from(User)) == 1
@@ -168,6 +168,8 @@ def test_the_administrator_signs_in_must_change_the_password_first_and_the_file_
     assert me.status_code == 200
     assert me.json()["must_change_password"] is True
     assert me.json()["version"] == APP_VERSION
+    # The console says it is the password the installer printed (not one an administrator set).
+    assert me.json()["password_from_installer"] is True
 
     wrong = client.post("/auth/me/password", headers=bearer(tokens), json={"current": "nope", "next": NEW_PASSWORD})
     assert wrong.status_code == 400 and wrong.json()["detail"] == "Your current password is wrong."
@@ -389,6 +391,7 @@ def test_reset_admin_sets_a_temporary_password_on_a_running_server(env, capsys):
 
     again = sign_in(client, "admin@hawk.local", password)
     assert again["must_change_password"] is True
+    assert client.get("/auth/me", headers=bearer(again)).json()["password_from_installer"] is False
     assert client.get("/auth/tenants", headers=bearer(again)).json()["code"] == "password_change_required"
     with env["db"]() as db:
         reasons = [row.payload.get("reason") for row in db.scalars(select(AuditLog))]

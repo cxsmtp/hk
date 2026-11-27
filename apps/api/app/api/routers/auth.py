@@ -137,6 +137,8 @@ class MeResponse(BaseModel):
     licence: dict[str, Any] | None = None
     # Choose a new password first (app/core/access_gate.py).
     must_change_password: bool = False
+    # That password is the first administrator's, printed by deploy/install.sh (not one an administrator set).
+    password_from_installer: bool = False
     # Where this person stands with the terms of use (TERMS.md): {version, organisationAccepted, accepted,
     # canAcceptForOrganisation}.
     terms: dict[str, Any] | None = None
@@ -537,6 +539,7 @@ def me(current_user: Annotated[User, Depends(get_current_user)], db: Session = D
         tenants=[TenantMembershipResponse(**tenant_row) for tenant_row in tenants],
         licence=licence,
         must_change_password=bool(current_user.must_change_password),
+        password_from_installer=first_run_service.holds_installer_password(current_user),
         terms=terms_service.describe(db, current_user),
         two_step=two_step,
     )

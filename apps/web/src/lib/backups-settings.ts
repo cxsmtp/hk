@@ -26,6 +26,8 @@ export type BackupsStatus = {
   sealed: boolean;
   sealedBy: "environment" | "key" | "";
   dir: string;
+  // Where the backups are on the server (BACKUP_DIR, default HAWK_DATA_DIR/backups); "" when not known.
+  hostDir?: string;
   separate: boolean;
   last: { at: string; ok: boolean; error?: string; name?: string; trigger?: string } | null;
   recovered: { at: string; target: string; action: string; details: { backup: string; kept: string } }[];

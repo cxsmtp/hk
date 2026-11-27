@@ -9,6 +9,7 @@ from __future__ import annotations
 import datetime as dt
 import hashlib
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -290,6 +291,61 @@ def test_a_version_that_does_not_come_up_in_time_is_rolled_back_and_its_database
     assert sorted(engine.names()) == sorted(f"hawk-{s}-1" for s in up.SERVICES), "the previous containers are back under their names"
     assert not (cfg.updater_dir / "images.env").exists()
     assert "Restoring the database from the backup taken before the update" in steps
+
+
+ENV_BEFORE = (
+    "HAWK_RELEASE=latest\nSMTP_PASS=keep-me\n"
+    "# --- Kept by deploy/install.sh and the updater: what compose runs. Do not edit: change HAWK_RELEASE instead. ---\n"
+    f"HAWK_API_IMAGE={ref('api', '0.2.0')}\nHAWK_WEB_IMAGE={ref('web', '0.2.0')}\nHAWK_PROXY_IMAGE={ref('proxy', '0.2.0')}\n"
+    "HAWK_UPDATER_IMAGE=ghcr.io/cxsmtp/hk-updater@sha256:" + "a" * 64 + "\nCOMPOSE_PROFILES=updates\n"
+)
+
+
+def test_deploy_env_follows_an_update_so_compose_up_never_starts_an_older_version(world, tmp_path):
+    engine, cfg = world
+    env_file = tmp_path / "deploy.env"
+    env_file.write_text(ENV_BEFORE)
+    cfg.deploy_env = env_file
+    result, _ = run(engine, cfg, request())
+    assert result["state"] == "done", result
+    after = env_file.read_text()
+    for kind in ("api", "web", "proxy"):
+        assert f"HAWK_{kind.upper()}_IMAGE={ref(kind, '0.3.0')}\n" in after
+        assert ref(kind, "0.2.0") not in after
+    # Everything else is left as it was, in its place.
+    assert after.startswith("HAWK_RELEASE=latest\nSMTP_PASS=keep-me\n") and "COMPOSE_PROFILES=updates\n" in after
+    assert "HAWK_UPDATER_IMAGE=ghcr.io/cxsmtp/hk-updater@sha256:" in after and after.count("HAWK_API_IMAGE=") == 1
+
+
+def test_deploy_env_names_the_version_put_back_after_a_rollback(world, tmp_path):
+    engine, cfg = world
+    engine.crashing_versions.add("0.3.0")
+    env_file = tmp_path / "deploy.env"
+    # A tag in deploy/.env may now point at the version that failed: the images put back are named by digest.
+    env_file.write_text(ENV_BEFORE.replace(ref("api", "0.2.0"), "ghcr.io/cxsmtp/hk-api:latest"))
+    cfg.deploy_env = env_file
+    result, _ = run(engine, cfg, request())
+    assert result["state"] == "rolled-back", result
+    after = env_file.read_text()
+    assert f"HAWK_API_IMAGE={ref('api', '0.2.0')}\n" in after and ":latest" not in after
+    assert ref("api", "0.3.0") not in after
+
+
+def test_deploy_env_keys_missing_are_added_and_an_unwritable_file_is_said(tmp_path, capsys):
+    env_file = tmp_path / "deploy.env"
+    env_file.write_text("PORT=3000")
+    images = {k: ref(k, "0.3.0") for k in ("api", "web", "proxy")}
+    assert up.write_deploy_env(env_file, images)
+    text = env_file.read_text()
+    assert text.startswith("PORT=3000\n# The images compose runs") and f"HAWK_PROXY_IMAGE={images['proxy']}\n" in text
+    assert up.write_deploy_env(None, images) is False and up.write_deploy_env(tmp_path / "missing", images) is False
+    env_file.chmod(0o400)
+    try:
+        if not os.access(env_file, os.W_OK):  # root writes anyway
+            assert up.write_deploy_env(env_file, {**images, "api": ref("api", "0.2.0")}) is False
+            assert "run deploy/install.sh before using docker compose up" in capsys.readouterr().out
+    finally:
+        env_file.chmod(0o600)
 
 
 def test_a_crash_or_failed_migration_rolls_back_too(world, tmp_path):

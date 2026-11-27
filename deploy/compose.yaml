@@ -3,6 +3,9 @@
 # which creates the data folder and its secrets, then runs `docker compose up -d` from this folder.
 # The first start prints the administrator's sign-in in the API's log:
 #   docker compose logs api
+# With the published images, install.sh also writes into .env the images it runs (HAWK_API_IMAGE…, by digest) and
+# COMPOSE_PROFILES=updates, and the updater keeps those images current after every update or rollback, so a plain
+# `docker compose -f deploy/compose.yaml up -d` or `run --rm api …` uses the same version and never builds.
 #
 # Services: proxy (one HTTPS address), web (console), api, worker and beat (Celery), migrate (once per start),
 # postgres and redis; and, when Hawk AI runs the published images (HAWK_RELEASE in .env), the updater that updates and
@@ -129,6 +132,8 @@ x-hawk-environment: &hawk-environment
   # BACKUP_INTERVAL_HOURS. Encrypted with BACKUP_PASSPHRASE, else the server's own backup key (Settings → Backups &
   # health); BACKUP_ENCRYPTION=off keeps them plain.
   BACKUP_DIR: /backups
+  # Where that is on this machine, for Settings → Backups & health to say (the containers only see /backups).
+  BACKUP_DIR_ON_HOST: ${BACKUP_DIR:-${HAWK_DATA_DIR}/backups}
   BACKUP_KEEP: ${BACKUP_KEEP:-14}
   BACKUP_INTERVAL_HOURS: ${BACKUP_INTERVAL_HOURS:-24}
   BACKUP_PASSPHRASE: ${BACKUP_PASSPHRASE:-}
@@ -440,9 +445,17 @@ services:
       UPDATE_REGISTRY_TOKEN: ${UPDATE_REGISTRY_TOKEN:-}
       UPDATE_START_TIMEOUT_SECONDS: ${UPDATE_START_TIMEOUT_SECONDS:-150}
       INTEGRITY_OFFLINE: ${INTEGRITY_OFFLINE:-}
+      DEPLOY_ENV_FILE: /deploy/.env
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${HAWK_DATA_DIR}/updater:/updater
+      # deploy/.env (root and the Docker socket's group, 0660: install.sh): after every update or rollback the
+      # updater sets its HAWK_*_IMAGE lines to what runs, so `docker compose up -d` never starts an older version.
+      - type: bind
+        source: ./.env
+        target: /deploy/.env
+        bind:
+          create_host_path: false
     network_mode: none
     healthcheck:
       test: ["CMD", "python", "-c", "import json,time,datetime as d;b=json.load(open('/updater/updater.json'));raise SystemExit(0 if time.time()-d.datetime.fromisoformat(b['at'].replace('Z','+00:00')).timestamp()<90 else 1)"]

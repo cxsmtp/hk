@@ -359,7 +359,9 @@ def test_the_caddyfile_for_each_mode():
     assert "@acme path /.well-known/acme-challenge/*" in https_only
     assert "trusted_proxies static 10.0.0.0/8" in https_only
     assert "admin off" in https_only and "auto_https off" in https_only
-    both = render_caddyfile(mode="both", cert_file="/p/c.crt", key_file="/p/c.key")
+    # No HTTP/3 advertised on the container's own port (compose publishes TCP only).
+    assert "servers :8443 {\n\t\tprotocols h1 h2\n" in https_only
+    both =render_caddyfile(mode="both", cert_file="/p/c.crt", key_file="/p/c.key")
     assert "http_redirect" in both and "redir https" not in both and "http://:8080 {\n\timport hawk" in both
     assert "Strict-Transport-Security" not in both
     plain = render_caddyfile(mode="http", cert_file=None, key_file=None)

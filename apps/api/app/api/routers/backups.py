@@ -92,6 +92,7 @@ def _view(cfg: backup_service.BackupConfig) -> dict[str, Any]:
         "sealed": encryption["encrypted"],
         "sealedBy": "environment" if encryption["source"] == "passphrase" else "key" if encryption["source"] == "key" else "",
         "dir": str(cfg.dir),
+        "hostDir": backup_service.host_dir(),
         "separate": not cfg.same_disk,
         "last": backup_service.last_backup(cfg),
         "recovered": _recovered(cfg.data_dir),
@@ -248,7 +249,8 @@ def readiness(facts: dict[str, Any], now: float | None = None) -> dict[str, Any]
     last = facts["backups"][0] if facts["backups"] else None
     age = now - dt.datetime.fromisoformat(last["at"].replace("Z", "+00:00")).timestamp() if last else float("inf")
     add("backup.recent", "A backup in the last day", "ok" if age <= 26 * 3600 else "todo", f"The newest is from {last['at'][:16].replace('T', ' ')} UTC." if last else "There is no backup yet: take one now.", "/settings/backups")
-    add("backup.separate", "Backups kept away from the data", "ok" if facts["backupSeparate"] else "todo", "They go to their own place (BACKUP_DIR)." if facts["backupSeparate"] else "They are in the data volume itself: losing that disk loses both. Mount a second volume or a share and set BACKUP_DIR.", "/settings/backups")
+    where = f" ({facts['backupHostDir']})" if facts.get("backupHostDir") else ""
+    add("backup.separate", "Backups kept away from the data", "ok" if facts["backupSeparate"] else "todo", f"They go to their own place{where}." if facts["backupSeparate"] else f"They are on the same disk as the data{where}: losing that disk loses both. Mount a second disk or a network share and set BACKUP_DIR in deploy/.env to it.", "/settings/backups")
     add("backup.sealed", "Backups sealed with a passphrase", "ok" if facts["backupSealed"] else "todo", "A backup cannot be read without its passphrase." if facts["backupSealed"] else "Anyone who gets a backup file can read it. Turn backup encryption on.", "/settings/backups")
     restores = int(facts["restores"])
     add("backup.restored", "A restore tried", "ok" if restores else "note", f"{_plural(restores, 'restore')} in the audit log." if restores else "No restore is in the audit log. Try one of your backups on a second copy of the server, so the first time is not the day it is needed.", "/settings/backups")
@@ -299,6 +301,7 @@ def _facts(db: Session, ctx: TenantContext, cfg: backup_service.BackupConfig) ->
     return {
         "backups": archive.list_backups(cfg.dir),
         "backupSeparate": not cfg.same_disk,
+        "backupHostDir": backup_service.host_dir(),
         "backupSealed": store.status()["encrypted"],
         "restores": int(restores or 0),
         "https": https,

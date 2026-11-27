@@ -113,7 +113,7 @@ export const backups: GuideTopic = {
           lines: [
             "docker compose -f deploy/compose.yaml stop api worker beat",
             "docker compose -f deploy/compose.yaml run --rm --no-deps api python -m app.cli.restore /backups/<file>.hkbackup --yes",
-            "docker compose -f deploy/compose.yaml up -d",
+            "sudo deploy/install.sh",
           ],
         },
         {
@@ -140,7 +140,7 @@ export const backups: GuideTopic = {
           items: [
             "On [Settings → Backups & health](/settings/backups), under **Restore**, choose a `.hkbackup` file (200 MB at most; larger ones are restored on the server) and its passphrase or backup key if it came from another server.",
             "**Check and restore** shows when it was made and what it holds, and asks before going on.",
-            "It is then staged: it is applied at the next start, before anything else runs. Restart the services on the server: `docker compose -f deploy/compose.yaml stop api worker beat`, then `docker compose -f deploy/compose.yaml up -d`.",
+            "It is then staged: it is applied at the next start, before anything else runs. Restart the services on the server: `docker compose -f deploy/compose.yaml stop api worker beat`, then `sudo deploy/install.sh`: it starts the same version again (built from the folder or downloaded with `HAWK_RELEASE`) and waits until it is ready.",
             "Changed your mind before the restart? **Cancel it** on the same page.",
           ],
         },

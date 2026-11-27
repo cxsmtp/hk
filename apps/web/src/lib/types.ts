@@ -5644,7 +5644,7 @@ export type DecisionExplanation = {
 export type PilotHealthState = {
   tenant_id: string;
   generated_at: string;
-  overall_status: "ok" | "degraded" | string;
+  overall_status: "ok" | "degraded" | "not_connected" | string;
   api_reachable: boolean;
   schema_health: {
     healthy: boolean;

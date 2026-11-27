@@ -167,7 +167,7 @@ export default function BackupsSettingsPage() {
       const { backup: info } = await api.restoreBackup(file, pass, true);
       if (!window.confirm(restoreQuestion(info, dateTime))) return;
       const r = await api.restoreBackup(file, pass, false);
-      setRsres(r.staged ? "Checked and staged. Restart the server to restore it (docker compose -f deploy/compose.yaml stop api worker beat, then up -d): it is applied before anything else starts." : "Restored. Restart the server to read it.");
+      setRsres(r.staged ? "Checked and staged. Restart the server to restore it (docker compose -f deploy/compose.yaml stop api worker beat, then sudo deploy/install.sh): it is applied before anything else starts." : "Restored. Restart the server to read it.");
       setPass("");
       if (fileRef.current) fileRef.current.value = "";
       await load();
@@ -275,13 +275,13 @@ export default function BackupsSettingsPage() {
                     ) : (
                       sealed.text
                     )}{" "}
-                    Kept in <span className="mono">{b.dir}</span>.
+                    Kept in <span className="mono">{b.hostDir || b.dir}</span>{b.hostDir ? " on the server" : ""}.
                   </p>
                   {b.separate ? (
-                    <div className="callout">Backups go to their own place (BACKUP_DIR), away from the data: losing one disk does not lose both.</div>
+                    <div className="callout">Backups go to their own place (BACKUP_DIR{b.hostDir ? `: ${b.hostDir}` : ""}), away from the data: losing one disk does not lose both.</div>
                   ) : (
                     <div className="callout warn">
-                      Backups are in the data volume itself. Mount a second volume or a network share and set <b>BACKUP_DIR</b> to it, so losing one disk does not lose both.
+                      Backups are kept {b.hostDir ? <>in <span className="mono">{b.hostDir}</span>, </> : null}on the same disk as Hawk AI&apos;s data. Mount a second disk or a network share and set <b>BACKUP_DIR</b> in deploy/.env to it, so losing one disk does not lose both.
                     </div>
                   )}
                   {b.last && !b.last.ok ? (

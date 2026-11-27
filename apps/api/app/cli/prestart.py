@@ -49,7 +49,7 @@ def main(argv: list[str] | None = None, *, cfg: backup_service.BackupConfig | No
         lock = lock_factory(cfg.database_url)
         try:
             if not lock.try_acquire():
-                say("! [data] A restore is staged, but Hawk AI is still running (api, worker or beat): it was not applied. Stop them and start again: docker compose -f deploy/compose.yaml stop api worker beat, then docker compose -f deploy/compose.yaml up -d")
+                say("! [data] A restore is staged, but Hawk AI is still running (api, worker or beat): it was not applied. Stop them and start again: docker compose -f deploy/compose.yaml stop api worker beat, then sudo deploy/install.sh")
             else:
                 try:
                     restored = backup_service.apply_pending_restore(cfg, **restore_options)
