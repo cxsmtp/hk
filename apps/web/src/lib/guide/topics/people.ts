@@ -33,7 +33,7 @@ export const people: GuideTopic = {
           kind: "list",
           items: [
             "Owner and Admin are locked: they always hold every permission.",
-            "Seven permissions are for Owners and Admins only and cannot be put in any other role: Settings (General, Branding, Email, Hands-off, Get help), HTTPS and certificates, Sign-in and single sign-on, Updates and integrity, Backups and restore, Activation codes, and Network and proxy.",
+            "Seven permissions are for Owners and Admins only and cannot be put in any other role: Settings (General, Branding, Email, Hands-off, Get help), HTTPS and certificates, Sign-in and single sign-on, Updates and integrity, Backups and restore, Licence, and Network and proxy.",
             "Nobody gives more than they hold: a role is given, built or changed only by someone holding every one of its permissions. People see only the roles they could give.",
             "There is always at least one active Owner.",
           ],
@@ -54,7 +54,7 @@ export const people: GuideTopic = {
           items: [
             "Sign-in: who may reset a password by email, the password rule, idle sign-out, the sign-in notice, requiring two-step sign-in and single sign-on ([Settings → Sign-in](/settings/signin), [Single sign-on](/settings/sso)).",
             "Compliance: how long activity is kept, the data location, the incident contact and the recommended baseline ([Settings → Compliance](/settings/compliance)).",
-            "The email server, branding, HTTPS and certificates, the network, proxy and trusted certificates, updates, backups and restore, hands-off, activation codes and the evidence signing key ([Email](/settings/email), [Branding](/settings/branding), [HTTPS](/settings/https), [Network & proxy](/settings/network), [Updates](/settings/updates), [Backups & health](/settings/backups), [Hands-off](/settings/hands-off), [Activation codes](/settings/activation)).",
+            "The email server, branding, HTTPS and certificates, the network, proxy and trusted certificates, updates, backups and restore, hands-off, the licence and the evidence signing key ([Email](/settings/email), [Branding](/settings/branding), [HTTPS](/settings/https), [Network & proxy](/settings/network), [Updates](/settings/updates), [Backups & health](/settings/backups), [Hands-off](/settings/hands-off), [Licence](/settings/activation)).",
           ],
         },
         {
@@ -98,7 +98,7 @@ export const people: GuideTopic = {
         },
         {
           kind: "p",
-          text: "Whoever asks gets an email with a link that works once, for 30 minutes. People who join count against the activation code's users, set up two-step sign-in first when it is required, and are listed at the top of [Settings → People](/settings/people) for someone who manages people to approve or turn off.",
+          text: "Whoever asks gets an email with a link that works once, for 30 minutes. People who join count against the licence's cap of active users, set up two-step sign-in first when it is required, and are listed at the top of [Settings → People](/settings/people) for someone who manages people to approve or turn off.",
         },
       ],
     },

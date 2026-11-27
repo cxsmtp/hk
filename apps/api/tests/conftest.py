@@ -12,17 +12,16 @@ apply_test_settings()
 def _licence_out_of_the_way(request, monkeypatch):
     """Keep the product licence and the tenant caps (/settings/guide/licence) out of tests about other things.
 
-    Without this, every test would start failing after 31 January 2027, when the built-in product date passes, and
-    tests that register several owners (each with a tenant of their own) would be refused for want of a tenants
-    activation code. Tests marked ``real_licence`` (tests/test_activation_licence.py) exercise the real dates,
-    caps and gate with an injected clock instead.
+    Without this, tests that move the clock more than 3 days past a test database's first use would find the trial
+    over, and tests that register several owners (each with a tenant of their own) would be refused for want of a
+    licence for several tenants. Tests marked ``real_licence`` (tests/test_activation_licence.py) exercise the real
+    trial, licences, caps and gate with an injected clock instead.
     """
 
     if request.node.get_closest_marker("real_licence"):
         return
     from app.services import activation_service
 
-    monkeypatch.setattr(activation_service, "PRODUCT_DEADLINE", "9999-12-31T00:00:00.000Z")
     monkeypatch.setattr(activation_service, "licence_active", lambda now=None: True)
     monkeypatch.setattr(activation_service, "assert_may_add_tenant", lambda db: None)
     monkeypatch.setattr(activation_service, "assert_may_add_member", lambda db, tenant_id: None)

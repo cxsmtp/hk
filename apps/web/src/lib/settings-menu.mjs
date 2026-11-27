@@ -27,7 +27,7 @@ export const SETTINGS_GROUPS = [
   {
     label: "Licensing",
     items: [
-      { href: "/settings/activation", label: "Activation codes" },
+      { href: "/settings/activation", label: "Licence" },
     ],
   },
   {

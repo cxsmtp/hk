@@ -36,7 +36,7 @@ def main(argv: list[str] | None = None, *, session_factory: Callable[[], Session
         except first_run_service.AccessError as error:
             print(f"! {error}", file=sys.stderr)
             return 1
-        except HTTPException as error:  # the activation codes' caps (app/services/activation_service.py)
+        except HTTPException as error:  # the licence's caps (app/services/activation_service.py)
             print(f"! {error.detail}", file=sys.stderr)
             return 1
         db.commit()

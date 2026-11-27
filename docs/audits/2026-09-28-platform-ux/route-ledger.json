@@ -1727,7 +1727,7 @@
       "unavailable": "not-observed",
       "stale": "not-observed"
     },
-    "notes": "Settings → Activation codes (docs/activation-codes.md), added with product licensing. Covered by apps/web/tests/licence.test.mjs (pure view logic and source checks) and the API tests in apps/api/tests/test_activation_licence.py; not yet observed in a browser.",
+    "notes": "Settings → Licence: the installation ID, the 3-day trial and the .hawkai licence import (first added as Activation codes with product licensing). Covered by apps/web/tests/licence.test.mjs (pure view logic and source checks) and the API tests in apps/api/tests/test_activation_licence.py; not yet observed in a browser.",
     "desktop": "not-observed",
     "mobile": "not-observed"
   },

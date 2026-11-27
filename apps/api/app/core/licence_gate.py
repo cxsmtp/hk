@@ -1,9 +1,10 @@
 """The licence gate (app/services/activation_service.py, /settings/guide/licence).
 
-After the end of 31 January 2027 (UTC), or a product code's date if later, Hawk AI stops: every request is refused
-with the message that it has been deactivated, and the console shows the deactivation page with a field for the
-activation code. Only the health checks, the licence itself and the route that takes a code stay open. Nothing is
-deleted.
+Once an installation's 3-day trial is over without a licence, or its licence has expired, Hawk AI stops: every
+request is refused with the message that it has been deactivated, and the console shows the deactivation page,
+where an owner or admin of the installation signs in and imports a ``.hawkai`` licence file. Only the health
+checks, the licence routes, first-run setup and signing in stay open (a token got this way reaches nothing else).
+Nothing is deleted.
 """
 
 from __future__ import annotations
@@ -21,7 +22,17 @@ LICENCE_OPEN = frozenset(
         "/health/ready",
         "/health/schema",
         "/licence",
-        "/licence/activate",
+        "/licence/status",
+        "/licence/request",
+        "/licence/import",
+        # First-run setup (app/api/routers/access.py): an installation nobody has set up yet can still be.
+        "/setup",
+        # Signing in, so an owner or admin can import a licence on the deactivation page.
+        "/auth/login",
+        "/auth/two-step",
+        "/auth/refresh",
+        "/auth/refresh/sign-out",
+        "/auth/sign-in-options",
     }
 )
 

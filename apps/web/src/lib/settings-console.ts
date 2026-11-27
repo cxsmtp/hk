@@ -62,7 +62,7 @@ export type AboutView = {
   appName: string;
   version: string;
   versionLabel: string;
-  licence: { active: boolean; until: string; daysLeft: number; activation: { org: string; expires: string; at?: string } | null; message: string };
+  licence: { active: boolean; until: string; daysLeft: number; trial?: boolean; installationId?: string; activation: { org: string; expires: string; at?: string } | null; message: string };
   terms: { version: string; accepted: boolean; at: string | null; acceptanceId?: string | null; scope?: "organisation" | "user" | null; canManage?: boolean };
   organisationName: string;
   changelog: string;
@@ -142,7 +142,7 @@ export function useBranding(): BrandingView {
 /**
  * What GET /settings/me answers: the person's role and permissions in this workspace, and whether they are one of the
  * server's administrators (the owners and admins of its first workspace), who alone change the settings of the whole
- * server (sign-in rules, compliance, email, HTTPS, network, updates, backups, hands-off, branding, activation codes).
+ * server (sign-in rules, compliance, email, HTTPS, network, updates, backups, hands-off, branding, the licence).
  */
 export type SettingsMe = { role: string; permissions: string[]; installationAdmin?: boolean; readOnlyNote?: string };
 

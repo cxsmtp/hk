@@ -20,10 +20,13 @@ from app.db.models.user import User
 from app.services import terms_service
 
 
+#: The licence (app/api/routers/licence.py): an administrator can import one on the deactivation page before
+#: choosing a new password or accepting the terms (the routes check who may themselves).
+LICENCE_ROUTES = frozenset({"/licence/status", "/licence/request", "/licence/import"})
 #: Routes someone who must change their password may still use.
-PASSWORD_CHANGE_ROUTES = frozenset({"/auth/me", "/auth/me/password"})
-#: Routes usable before the terms of use are accepted: reading and accepting them, and one's own account.
-TERMS_ROUTES = frozenset({"/auth/me", "/auth/me/password", "/terms", "/terms/accept"})
+PASSWORD_CHANGE_ROUTES = frozenset({"/auth/me", "/auth/me/password", *LICENCE_ROUTES})
+#: Routes usable before the terms of use are accepted: reading and accepting them, one's own account, the licence.
+TERMS_ROUTES = frozenset({"/auth/me", "/auth/me/password", "/terms", "/terms/accept", *LICENCE_ROUTES})
 
 PASSWORD_CHANGE_REQUIRED = "password_change_required"
 TERMS_REQUIRED = "terms_required"

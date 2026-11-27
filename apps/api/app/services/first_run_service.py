@@ -13,8 +13,8 @@ When the API starts on a database with no users (settings.first_run_access, on i
 
 On a database that already has users, the log names an administrator and gives the reset command.
 
-Hawk is multi-tenant: the first administrator gets a tenant of their own, as its owner, within what the activation
-codes allow (app/services/activation_service.py). Several API processes may start at once: a PostgreSQL advisory lock
+Hawk is multi-tenant: the first administrator gets a tenant of their own, as its owner, within what the licence
+allows (app/services/activation_service.py). Several API processes may start at once: a PostgreSQL advisory lock
 (a process lock on SQLite) makes sure only one of them creates the administrator.
 """
 
@@ -156,7 +156,7 @@ def create_administrator(
     must_change_password: bool = True,
     organisation_name: str | None = None,
 ) -> tuple[User, Tenant]:
-    """A tenant owner with their own tenant, within the activation codes' caps (the caller commits)."""
+    """A tenant owner with their own tenant, within the licence's caps (the caller commits)."""
 
     email = normalize_email(email)
     if not _EMAIL.match(email) or len(email) > 320:

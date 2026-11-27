@@ -263,7 +263,8 @@ export default function AboutSettingsPage() {
                     <dt>Licence</dt>
                     <dd>
                       Proprietary ·{" "}
-                      {licence.active ? (licence.activation ? `activated for ${licence.activation.org}, until ${date(licence.until)}` : `works until ${date(licence.until)} without an activation code`) : licence.message || "deactivated"}
+                      {licence.active ? (licence.trial ? `3-day trial, until ${date(licence.until)}` : licence.activation ? `licensed to ${licence.activation.org}, until ${date(licence.until)}` : `works until ${date(licence.until)}`) : licence.message || "deactivated"}
+                      {licence.installationId ? ` · installation ${licence.installationId}` : ""}
                     </dd>
                   </div>
                   <div>
@@ -289,7 +290,7 @@ export default function AboutSettingsPage() {
                   <h3>Licence agreement &amp; terms of use</h3>
                   <p className="muted small">
                     The End User Licence Agreement every owner or admin accepts for the organisation, and the terms of use every other person accepts, before using {view.appName}: version {view.terms.version}
-                    {terms?.licensor ? `, licensed by ${terms.licensor}` : ""}. The activation codes that keep it working are under Settings → Activation codes.
+                    {terms?.licensor ? `, licensed by ${terms.licensor}` : ""}. The licence that keeps this installation working is under Settings → Licence.
                   </p>
                   <div className="flex">
                     <button type="button" className="primary" onClick={() => termsDialog.current?.showModal()} disabled={!terms}>

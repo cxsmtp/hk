@@ -126,7 +126,7 @@ PERMISSIONS: tuple[Permission, ...] = (
     _p("security.sso", "Administration", "Sign-in and single sign-on", "Who may reset a forgotten password by email, two-step sign-in for everyone, single sign-on, the email server for links. Admin only.", MANAGE, True),
     _p("system.update", "Administration", "Updates and integrity", "Install new versions (checked against their checksums), roll back, and the software integrity check. Admin only.", MANAGE, True),
     _p("backup.manage", "Administration", "Backups and restore", "Take, download and restore backups (they hold every record and key). Admin only.", MANAGE, True),
-    _p("activation.manage", "Administration", "Activation codes", "Apply the activation codes that set what the installation may use. Admin only.", MANAGE, True),
+    _p("activation.manage", "Administration", "Licence", "Import the .hawkai licence that keeps the installation working and sets how many tenants it may have. Admin only.", MANAGE, True),
     _p("network.manage", "Administration", "Network and proxy", "The proxy and the hosts the server may call. Admin only.", MANAGE, True),
 )
 

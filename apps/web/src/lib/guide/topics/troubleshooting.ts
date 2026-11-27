@@ -13,7 +13,7 @@ export const troubleshooting: GuideTopic = {
       blocks: [
         {
           kind: "p",
-          text: "The API answers under `/api` on Hawk AI's address. These need no sign-in and stay open even when the licence has ended:",
+          text: "The API answers under `/api` on Hawk AI's address. These need no sign-in and stay open even when the trial or the licence has ended:",
         },
         {
           kind: "table",
@@ -167,7 +167,7 @@ export const troubleshooting: GuideTopic = {
       blocks: [
         {
           kind: "p",
-          text: "The licence has ended. Nothing is deleted: enter a product activation code on that page and everything comes back ([Licence](/settings/guide/licence)).",
+          text: "The 3-day trial is over without a licence, or the licence has expired. Nothing is deleted: an owner or admin of the server signs in on that page and uploads the `.hawkai` licence made for the installation ID it shows, and everything comes back ([Licence](/settings/guide/licence)).",
         },
       ],
     },
