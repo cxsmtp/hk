@@ -405,4 +405,4 @@ def test_migration_0104_is_the_head():
     config.set_main_option("script_location", str(Path(__file__).resolve().parents[1] / "app/db/migrations"))
     script = ScriptDirectory.from_config(config)
     assert script.get_heads() == ["0104_desc_controls"]
-    assert script.get_revision("0104_desc_controls").down_revision == "0101_github_agent_controls"
+    assert script.get_revision("0104_desc_controls").down_revision == "0103_terms_acceptance"
