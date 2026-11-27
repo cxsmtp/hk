@@ -6,7 +6,7 @@ import type { SelfCheckHealth } from "@/lib/hands-off-settings";
 const dateTime = (iso?: string | null) => (iso ? new Date(iso).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "—");
 
 /** The self-check box: what is wrong now, when the last check ran, the last events, and Check now (MZ's .ho-health). */
-export function SelfCheckBox({ health, onCheck, busy }: { health: SelfCheckHealth | null; onCheck: () => void; busy: boolean }) {
+export function SelfCheckBox({ health, onCheck, busy, readOnly = false }: { health: SelfCheckHealth | null; onCheck: () => void; busy: boolean; readOnly?: boolean }) {
   const chip = healthChip(health);
   return (
     <>
@@ -59,11 +59,14 @@ export function SelfCheckBox({ health, onCheck, busy }: { health: SelfCheckHealt
         Every {health?.everyMinutes ?? 5} minutes Hawk AI checks its database, Redis, the worker and the scheduler, the email server, its Checkmarx One connections, its automatic runs and its error rate. It puts right what it can, each repair once while a problem lasts, and tells the administrators after two checks in a row.
         {health?.maintainer ? ` Support cases it raises by itself go to the administrators, to forward to ${health.maintainer}.` : ""}
       </p>
-      <div className="flex">
-        <button type="button" className="ghost sm" id="ho-check" disabled={busy} onClick={onCheck}>
-          Check now
-        </button>
-      </div>
+      {/* Running the checks acts on the whole server: its administrators only. */}
+      {readOnly ? null : (
+        <div className="flex">
+          <button type="button" className="ghost sm" id="ho-check" disabled={busy} onClick={onCheck}>
+            Check now
+          </button>
+        </div>
+      )}
     </>
   );
 }

@@ -58,6 +58,8 @@ test("a viewer cannot see the admin-only Settings items", async ({ page, watch }
   const me = await callApi(page, "GET", "/settings/me");
   expect(me.status).toBe(200);
   expect(me.json.role).toBe("viewer");
+  // Not one of the server's administrators (app/core/installation.py): the whole server's settings are not theirs.
+  expect(me.json.installationAdmin).toBe(false);
   const allowed: string[] = settingsNav(me.json.permissions).flatMap((group: { items: Array<{ label: string }> }) => group.items.map((i) => i.label));
 
   await page.goto("/settings/people");

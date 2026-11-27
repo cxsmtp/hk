@@ -6,8 +6,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { ServerSettingNote } from "@/components/server-setting-note";
 import { INTEGRITY_NOTICE_CHANGED_EVENT } from "@/components/integrity-notice";
 import { api } from "@/lib/api";
+import { useInstallationAdmin } from "@/lib/settings-console";
 import { errorMessageFrom } from "@/lib/licence";
 import {
   available,
@@ -57,6 +59,8 @@ function save(blob: Blob, name: string) {
  * Owners and admins only.
  */
 export default function UpdatesSettingsPage() {
+  // The whole server's settings: a workspace admin who is not one of its administrators reads them only.
+  const readOnly = useInstallationAdmin() === false;
   const [u, setU] = useState<UpdatesStatus | null>(null);
   const [loadError, setLoadError] = useState("");
   const [shown, setShown] = useState(3);
@@ -231,7 +235,8 @@ export default function UpdatesSettingsPage() {
           ) : null}
           {u && integ && settings && !switching ? (
             <>
-              <div className="saved-banner">✓ Changes save as you type.</div>
+              {readOnly ? <ServerSettingNote readOnly /> : <div className="saved-banner">✓ Changes save as you type.</div>}
+              <fieldset className="ro-fieldset" disabled={readOnly}>
               <div className="panel">
                 <h2>Update &amp; recovery</h2>
                 <div className="ur-cards">
@@ -512,6 +517,7 @@ export default function UpdatesSettingsPage() {
                   )}
                 </div>
               </div>
+              </fieldset>
             </>
           ) : null}
         </div>

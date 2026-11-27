@@ -257,7 +257,7 @@ export default function CompliancePage() {
                     Save
                   </button>
                 ) : (
-                  <p className="small muted">Owners and admins change these.</p>
+                  <p className="small muted" data-ui="compliance-read-only">{view.readOnlyNote || "Owners and admins change these."}</p>
                 )}
               </form>
               <div className="panel">

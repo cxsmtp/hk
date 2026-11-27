@@ -4,7 +4,8 @@
   directions, each with its status and where its evidence is; the clock; encryption at rest; the settings below.
   Owners, admins and auditors (audit.view).
 - PUT /compliance/settings: how long the user activity and connector API activity are kept (180 days at least), the
-  data location statement and the incident contact. Owners and admins (settings.manage); recorded in the audit log.
+  data location statement and the incident contact. Kept once for the whole server: its administrators only (the
+  owners and admins of the first tenant, app/core/installation.py); recorded in the audit log.
 - GET /compliance/incident-report?from=…&to=…: the security events of a time window, for a report to DESC or to
   CERT-In within 6 hours, as JSON with an evidence signature (audit.export); recorded in the audit log.
 
@@ -29,6 +30,7 @@ from fastapi import APIRouter, Body, Depends, Query
 from fastapi.responses import JSONResponse, Response
 from sqlalchemy.orm import Session
 
+from app.core.installation import SET_BY_SERVER, is_installation_admin, require_installation_admin
 from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.session import get_db
@@ -59,7 +61,7 @@ def _audit(db: Session, ctx: TenantContext, action: str, payload: dict[str, Any]
     )
 
 
-def view(db: Session, *, may_change: bool, tenant_id: str | None = None) -> dict[str, Any]:
+def view(db: Session, *, may_change: bool, tenant_id: str | None = None, read_only_note: str = "") -> dict[str, Any]:
     clock = compliance_service.time_status(db)
     items = compliance_service.controls(db, time_view=clock, tenant_id=tenant_id)
     return {
@@ -70,20 +72,24 @@ def view(db: Session, *, may_change: bool, tenant_id: str | None = None) -> dict
         "encryption": compliance_service.encryption_status(),
         "settings": compliance_service.settings_view(db),
         "dataLocation": compliance_service.data_location(db),
+        # The settings (retention, data location, incident contact) and the recommended baseline are the whole
+        # server's: only its administrators change them (app/core/installation.py).
         "mayChange": may_change,
+        "readOnlyNote": "" if may_change else read_only_note,
     }
 
 
 @router.get("/compliance")
 def get_compliance(ctx: TenantContext = Depends(require_permission("audit.view")), db: Session = Depends(get_db)):
-    result = view(db, may_change="settings.manage" in ctx.permissions, tenant_id=ctx.tenant.id)
+    manages = "settings.manage" in ctx.permissions
+    result = view(db, may_change=manages and is_installation_admin(db, ctx), tenant_id=ctx.tenant.id, read_only_note=SET_BY_SERVER if manages else "")
     db.commit()
     return JSONResponse(result, headers=NO_STORE)
 
 
 @router.put("/compliance/settings")
 def put_compliance_settings(
-    ctx: TenantContext = Depends(require_permission("settings.manage")),
+    ctx: TenantContext = Depends(require_installation_admin("settings.manage")),
     body: Annotated[dict[str, Any] | None, Body()] = None,
     db: Session = Depends(get_db),
 ):

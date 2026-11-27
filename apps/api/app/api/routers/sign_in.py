@@ -34,6 +34,7 @@ from app.core import session_cookies
 from app.core.auth import get_current_user
 from app.core.config import settings
 from app.core.log_config import mask_email
+from app.core.installation import SET_BY_SERVER, is_installation_admin, require_installation_admin
 from app.core.rbac import require_permission
 from app.core.security import get_password_hash, verify_password
 from app.core.tenant import TenantContext
@@ -454,6 +455,9 @@ def password_reset_confirm(
 
 
 AdminContext = Annotated[TenantContext, Depends(require_permission("security.sso"))]
+#: The sign-in rules are kept once for the whole server (sign_in_policy): only its administrators change them
+#: (app/core/installation.py); a tenant's admins read them and still look after their own people below.
+InstallationAdminContext = Annotated[TenantContext, Depends(require_installation_admin("security.sso"))]
 
 
 def _audit_admin(db: Session, ctx: TenantContext, *, action: str, reason: str, payload: dict[str, Any] | None = None) -> None:
@@ -480,6 +484,13 @@ def _providers_view() -> list[dict[str, str]]:
         {"key": p.key, "kind": p.kind, "label": p.display_name, "workspace": p.workspace_slug, "issuer": p.issuer, "clientId": p.client_id}
         for p in rows
     ]
+
+
+def _may_change(db: Session, ctx: TenantContext) -> dict[str, Any]:
+    """Whether the person may change these rules (the server's administrators), and the note shown otherwise."""
+
+    may = is_installation_admin(db, ctx)
+    return {"mayChange": may, "readOnlyNote": "" if may else SET_BY_SERVER}
 
 
 def settings_view(db: Session) -> dict[str, Any]:
@@ -521,13 +532,13 @@ def settings_view(db: Session) -> dict[str, Any]:
 
 @router.get("/sign-in-settings")
 def get_sign_in_settings(ctx: AdminContext, db: Session = Depends(get_db)):
-    view = settings_view(db)
+    view = {**settings_view(db), **_may_change(db, ctx)}
     db.commit()
     return _no_store(view)
 
 
 @router.put("/sign-in-settings")
-def put_sign_in_settings(ctx: AdminContext, body: Annotated[dict[str, Any] | None, Body()] = None, db: Session = Depends(get_db)):
+def put_sign_in_settings(ctx: InstallationAdminContext, body: Annotated[dict[str, Any] | None, Body()] = None, db: Session = Depends(get_db)):
     body = body or {}
     row = account_security.policy(db)
     changes: list[str] = []
@@ -629,11 +640,11 @@ def put_sign_in_settings(ctx: AdminContext, body: Annotated[dict[str, Any] | Non
     for reason in changes:
         _audit_admin(db, ctx, action="auth.sign_in_policy.changed", reason=reason)
     db.commit()
-    return _no_store(settings_view(db))
+    return _no_store({**settings_view(db), **_may_change(db, ctx)})
 
 
 @router.post("/sign-in-settings/test-email")
-def test_email(ctx: AdminContext, background: BackgroundTasks, db: Session = Depends(get_db)):
+def test_email(ctx: InstallationAdminContext, background: BackgroundTasks, db: Session = Depends(get_db)):
     """Send a test email to oneself with the email server in force (Settings → Email (SMTP), else SMTP_*): once it arrives, password reset links may be sent with
     exactly these settings (CxMissionZero's isVerified)."""
 
@@ -655,7 +666,7 @@ def test_email(ctx: AdminContext, background: BackgroundTasks, db: Session = Dep
     from app.services import terms_copy_service
 
     background.add_task(terms_copy_service.deliver_with, db.get_bind())
-    return _no_store({"message": f"A test message was sent to {to}.", **settings_view(db)})
+    return _no_store({"message": f"A test message was sent to {to}.", **settings_view(db), **_may_change(db, ctx)})
 
 
 def _target(db: Session, ctx: TenantContext, user_id: str) -> tuple[User, UserTenantRole] | JSONResponse:

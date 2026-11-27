@@ -23,6 +23,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.core.installation import require_installation_admin
 from app.core.rbac import holds, require_permission
 from app.core.tenant import TenantContext, require_tenant
 from app.db.models.audit import AuditLog
@@ -35,6 +36,8 @@ from app.services.state_file import read_state, write_state
 
 router = APIRouter(tags=["backups"])
 admin_only = require_permission("backup.manage")
+#: Writes change the whole server: only its administrators (app/core/installation.py).
+installation_admin = require_installation_admin("backup.manage")
 
 #: A backup uploaded on the page: 200 MB at most (a larger one is restored on the server, /settings/guide/install).
 MAX_RESTORE_UPLOAD_BYTES = 200 * 1024 * 1024
@@ -120,7 +123,7 @@ def backups_notice(ctx: TenantContext = Depends(require_tenant)):
 
 
 @router.post("/backups")
-async def backups_now(db: Session = Depends(get_db), ctx: TenantContext = Depends(admin_only)):
+async def backups_now(db: Session = Depends(get_db), ctx: TenantContext = Depends(installation_admin)):
     """Back up now (FTR's "Back up now"; CxMissionZero's "Back up to folder now")."""
 
     cfg = backup_service.config()
@@ -134,7 +137,7 @@ async def backups_now(db: Session = Depends(get_db), ctx: TenantContext = Depend
 
 
 @router.post("/backups/key/show")
-def backup_key_show(db: Session = Depends(get_db), ctx: TenantContext = Depends(admin_only)):
+def backup_key_show(db: Session = Depends(get_db), ctx: TenantContext = Depends(installation_admin)):
     """The server's own backup key, shown on request only; each showing is audited (never the key)."""
 
     store = backup_service.key_store()
@@ -147,7 +150,7 @@ def backup_key_show(db: Session = Depends(get_db), ctx: TenantContext = Depends(
 
 
 @router.post("/backups/key/confirm")
-def backup_key_confirm(db: Session = Depends(get_db), ctx: TenantContext = Depends(admin_only)):
+def backup_key_confirm(db: Session = Depends(get_db), ctx: TenantContext = Depends(installation_admin)):
     """"I have saved it": an admin kept the backup key somewhere other than this server."""
 
     store = backup_service.key_store()
@@ -158,7 +161,7 @@ def backup_key_confirm(db: Session = Depends(get_db), ctx: TenantContext = Depen
 
 
 @router.post("/backups/encryption")
-def backup_encryption(body: dict[str, Any] | None = Body(default=None), db: Session = Depends(get_db), ctx: TenantContext = Depends(admin_only)):
+def backup_encryption(body: dict[str, Any] | None = Body(default=None), db: Session = Depends(get_db), ctx: TenantContext = Depends(installation_admin)):
     """Turn backup encryption on, on an installation whose backups were plain: the server makes its backup key now."""
 
     if not isinstance(body, dict) or body.get("on") is not True:
@@ -175,7 +178,7 @@ def backup_encryption(body: dict[str, Any] | None = Body(default=None), db: Sess
 
 
 @router.post("/backups/restore")
-async def backup_restore(request: Request, check: str = "", db: Session = Depends(get_db), ctx: TenantContext = Depends(admin_only)):
+async def backup_restore(request: Request, check: str = "", db: Session = Depends(get_db), ctx: TenantContext = Depends(installation_admin)):
     """Upload a backup. ?check=1 only reads it and says what it holds. Otherwise it is staged and applied at the next
     start: a running Hawk AI would write over a database and files restored under it."""
 
@@ -214,7 +217,7 @@ async def backup_restore(request: Request, check: str = "", db: Session = Depend
 
 
 @router.delete("/backups/restore")
-def backup_restore_cancel(db: Session = Depends(get_db), ctx: TenantContext = Depends(admin_only)):
+def backup_restore_cancel(db: Session = Depends(get_db), ctx: TenantContext = Depends(installation_admin)):
     pending = backup_service.config().data_dir / archive.PENDING_RESTORE
     if pending.exists():
         pending.unlink(missing_ok=True)
@@ -312,7 +315,7 @@ def backups_readiness(db: Session = Depends(get_db), ctx: TenantContext = Depend
 
 
 @router.put("/backups/readiness/{check_id}")
-def backups_readiness_accept(check_id: str, body: dict[str, Any] | None = Body(default=None), db: Session = Depends(get_db), ctx: TenantContext = Depends(admin_only)):
+def backups_readiness_accept(check_id: str, body: dict[str, Any] | None = Body(default=None), db: Session = Depends(get_db), ctx: TenantContext = Depends(installation_admin)):
     """"As meant" (shown as ready until what was found changes), or "Ask again"."""
 
     cfg = backup_service.config()
@@ -336,7 +339,7 @@ _NAME = re.compile(r"^hawk-ai-[\w-]+\.hkbackup$")
 
 
 @router.get("/backups/{name}")
-def backup_download(name: str, db: Session = Depends(get_db), ctx: TenantContext = Depends(admin_only)):
+def backup_download(name: str, db: Session = Depends(get_db), ctx: TenantContext = Depends(installation_admin)):
     """One of the backups, to download (as it is: encrypted when it was made encrypted)."""
 
     cfg = backup_service.config()

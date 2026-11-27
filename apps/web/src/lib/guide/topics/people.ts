@@ -41,6 +41,29 @@ export const people: GuideTopic = {
       ],
     },
     {
+      id: "server-settings",
+      title: "Settings of the whole server",
+      who: "Server administrators",
+      blocks: [
+        {
+          kind: "p",
+          text: "Roles belong to a workspace, but some settings are kept once for the whole server and apply to every workspace on it. Only the server's administrators change them: the Owners and Admins of the first workspace set up on the server, the same people who get the whole installation's diagnostics bundle. With one workspace (the usual case) that is simply its Owners and Admins, and nothing changes for them.",
+        },
+        {
+          kind: "list",
+          items: [
+            "Sign-in: who may reset a password by email, the password rule, idle sign-out, the sign-in notice, requiring two-step sign-in and single sign-on ([Settings → Sign-in](/settings/signin), [Single sign-on](/settings/sso)).",
+            "Compliance: how long activity is kept, the data location, the incident contact and the recommended baseline ([Settings → Compliance](/settings/compliance)).",
+            "The email server, branding, HTTPS and certificates, the network, proxy and trusted certificates, updates, backups and restore, hands-off, activation codes and the evidence signing key ([Email](/settings/email), [Branding](/settings/branding), [HTTPS](/settings/https), [Network & proxy](/settings/network), [Updates](/settings/updates), [Backups & health](/settings/backups), [Hands-off](/settings/hands-off), [Activation codes](/settings/activation)).",
+          ],
+        },
+        {
+          kind: "p",
+          text: "The Owners and Admins of any other workspace see these pages read-only, marked **Set by the server's administrators.**, without the save buttons. A change they try anyway is refused and recorded in the audit log. Their own workspace's settings stay theirs: people, teams and roles, people who join by themselves, AI system approvals, detection settings, Get help and their framework pack records.",
+        },
+      ],
+    },
+    {
       id: "people-and-teams",
       title: "People and teams",
       who: "People who manage people or teams",

@@ -20,6 +20,7 @@ from fastapi import APIRouter, Body, Depends
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
 
+from app.core.installation import require_installation_admin
 from app.core.rbac import holds, require_permission
 from app.core.tenant import TenantContext, require_tenant
 from app.services.integrity.service import IntegrityService, audit_system
@@ -29,6 +30,8 @@ from app.version import APP_VERSION
 
 router = APIRouter(tags=["updates"])
 admin_only = require_permission("system.update")
+#: Writes change the whole server: only its administrators (app/core/installation.py).
+installation_admin = require_installation_admin("system.update")
 STARTED = time.time()
 
 #: Injected by tests; otherwise made for each request (they read their state from files).
@@ -66,7 +69,7 @@ def updates_status(ctx: TenantContext = Depends(admin_only)):
 
 
 @router.post("/updates/check")
-async def updates_check(ctx: TenantContext = Depends(admin_only)):
+async def updates_check(ctx: TenantContext = Depends(installation_admin)):
     del ctx
     updates = updates_service()
     await run_in_threadpool(updates.check)
@@ -74,7 +77,7 @@ async def updates_check(ctx: TenantContext = Depends(admin_only)):
 
 
 @router.post("/updates/install")
-async def updates_install(body: dict[str, Any] = Body(default_factory=dict), ctx: TenantContext = Depends(admin_only)):
+async def updates_install(body: dict[str, Any] = Body(default_factory=dict), ctx: TenantContext = Depends(installation_admin)):
     """Update now, or Roll back to this: one version for every image, checked, then installed by the updater."""
 
     ref = str(body.get("version") or body.get("ref") or "").strip()
@@ -91,7 +94,7 @@ async def updates_install(body: dict[str, Any] = Body(default_factory=dict), ctx
 
 
 @router.put("/updates/settings")
-def updates_settings(body: dict[str, Any] = Body(default_factory=dict), ctx: TenantContext = Depends(admin_only)):
+def updates_settings(body: dict[str, Any] = Body(default_factory=dict), ctx: TenantContext = Depends(installation_admin)):
     """Auto-update on or off, its hour (0 to 23, or any time) and the channel it follows; saved as they change."""
 
     updates = updates_service()
@@ -126,7 +129,7 @@ def updates_settings(body: dict[str, Any] = Body(default_factory=dict), ctx: Ten
 
 
 @router.post("/updates/restart")
-def updates_restart(ctx: TenantContext = Depends(admin_only)):
+def updates_restart(ctx: TenantContext = Depends(installation_admin)):
     updates = updates_service()
     try:
         return updates.restart(by=_by(ctx))
@@ -196,7 +199,7 @@ def integrity_status(ctx: TenantContext = Depends(admin_only)):
 
 
 @router.post("/integrity/check")
-async def integrity_check(ctx: TenantContext = Depends(admin_only)):
+async def integrity_check(ctx: TenantContext = Depends(installation_admin)):
     service = integrity_service()
     last = service.last
     recent = False
