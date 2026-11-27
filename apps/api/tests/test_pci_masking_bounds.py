@@ -102,3 +102,20 @@ def test_inline_update_and_insert_values_are_masked(session) -> None:
     session.execute(update(Tenant).where(Tenant.slug == "acme").values(name=Tenant.slug + "-renamed"))
     session.commit()
     assert session.scalar(select(Tenant.name).where(Tenant.slug == "acme")) == "acme-renamed"
+
+
+def test_identifiers_with_digit_runs_are_never_masked():
+    """An endpoint id like ep_36d477d8344175220107336d75fb holds a Luhn-valid digit run; masking it broke lookups
+    (a duplicate insert and a fail-closed gateway answer about once in a thousand ids)."""
+
+    import hashlib
+    import os
+
+    from app.services.pci_controls import scrub_pan
+
+    assert scrub_pan("ep_36d477d8344175220107336d75fb") == "ep_36d477d8344175220107336d75fb"
+    for _ in range(20000):
+        value = "ep_" + hashlib.sha256(os.urandom(8)).hexdigest()[:28]
+        assert scrub_pan(value) == value
+    assert scrub_pan("pan:4111111111111111") == "pan:[card ending 1111]"
+    assert scrub_pan('{"pan":"4111-1111-1111-1111"}') == '{"pan":"[card ending 1111]"}'

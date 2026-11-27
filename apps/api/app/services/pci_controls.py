@@ -63,7 +63,9 @@ PAN_MIN_DIGITS = 13
 PAN_MAX_DIGITS = 19
 
 # A run of ASCII digits, optionally grouped by one separator between groups (space, dash, no-break or thin space).
-_DIGIT_RUN_RE = re.compile(r"(?<![0-9])[0-9]+(?:[ \-   ][0-9]+)*(?![0-9])")
+# Standing on its own: digits inside a word or an identifier (``ep_36d477d8344175220107336d75fb``) belong to that token,
+# not a card number; masking them would make the identifier stop matching its record.
+_DIGIT_RUN_RE = re.compile(r"(?<![0-9A-Za-z_])[0-9]+(?:[ \-   ][0-9]+)*(?![0-9A-Za-z_])")
 _GROUP_RE = re.compile(r"[0-9]+")
 # Record ids (UUIDs) and hex digests (32 hex characters or more): never a card number (privacy_sanitizer.IDENTIFIER_RE).
 IDENTIFIER_RE = re.compile(
