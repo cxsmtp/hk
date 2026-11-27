@@ -715,21 +715,28 @@ export const api = {
   iamJoinSettings: () => request<IamJoinSettings>("/iam/join-settings"),
   iamSaveJoinSettings: (body: Record<string, unknown>) =>
     request<IamJoinSettings>("/iam/join-settings", { method: "PUT", body: JSON.stringify(body) }),
-  joinAvailable: (workspace: string) =>
-    request<{ available: boolean; domains: string[] }>(`/auth/join?workspace=${encodeURIComponent(workspace)}`, undefined, false),
+  // Without a workspace: the installation's only one (the sign-in page has no workspace box).
+  joinAvailable: (workspace = "") =>
+    request<{ available: boolean; domains: string[]; workspace?: string }>(`/auth/join${workspace ? `?workspace=${encodeURIComponent(workspace)}` : ""}`, undefined, false),
   askToJoin: (workspace: string, email: string) =>
     request<{ message: string }>("/auth/join", { method: "POST", body: JSON.stringify({ workspace, email }) }, false),
   checkJoinLink: (token: string) => request<JoinLink>("/auth/join/check", { method: "POST", body: JSON.stringify({ token }) }, false),
   confirmJoin: (body: Record<string, unknown>) =>
     request<LoginResponse | { ok: boolean; twoStep: true; message: string }>("/auth/join/confirm", { method: "POST", body: JSON.stringify(body) }, false),
-  oidcProviders: (workspace: string) =>
-    request<OIDCProviderList>(`/auth/oidc/providers?workspace=${encodeURIComponent(workspace)}`, undefined, false),
-  oidcStart: (providerKey: string, workspace: string) =>
+  oidcProviders: (workspace = "") =>
+    request<OIDCProviderList>(`/auth/oidc/providers${workspace ? `?workspace=${encodeURIComponent(workspace)}` : ""}`, undefined, false),
+  oidcDiscover: (email: string) =>
+    request<OIDCProviderList>("/auth/oidc/discover", { method: "POST", body: JSON.stringify({ email }) }, false),
+  oidcStart: (providerKey: string, workspace = "") =>
     request<{ authorization_url: string }>(
-      `/auth/oidc/${encodeURIComponent(providerKey)}/start?workspace=${encodeURIComponent(workspace)}`,
+      `/auth/oidc/${encodeURIComponent(providerKey)}/start${workspace ? `?workspace=${encodeURIComponent(workspace)}` : ""}`,
       undefined,
       false,
     ),
+  // The workspaces the person belongs to, and opening another (new session cookies for it).
+  myTenants: () => request<{ items: Array<{ id: string; name: string; role: string }> }>("/auth/tenants"),
+  selectTenant: (tenantId: string) =>
+    request<LoginResponse>("/auth/select-tenant", { method: "POST", body: JSON.stringify({ tenant_id: tenantId }) }),
   oidcComplete: (ticket: string) =>
     request<LoginResponse>("/auth/oidc/complete", { method: "POST", body: JSON.stringify({ ticket }) }, false),
   me: () => request<CurrentUser>("/auth/me"),

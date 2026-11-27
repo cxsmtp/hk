@@ -14,6 +14,10 @@ export const firstSignIn: GuideTopic = {
           kind: "p",
           text: "Open the address the installer printed: `https://HAWK_HOST:PORT` (for example `https://localhost:3000`), or `PUBLIC_URL` when it is set. Until a certificate of your own is in use, the browser warns once (\"Your connection is not private\": Advanced, then continue). [HTTPS](/settings/guide/https) explains how to put a trusted certificate in place.",
         },
+        {
+          kind: "p",
+          text: "Sign in with your email and password: there is no workspace to type, since an email address belongs to one account on the installation. The page is light; anyone can switch to dark, or to their device's setting, under **Appearance** in the account menu (top right), and the choice is kept in that browser. An Owner or Admin sets everyone's default look on [Settings → Branding](/settings/branding).",
+        },
       ],
     },
     {

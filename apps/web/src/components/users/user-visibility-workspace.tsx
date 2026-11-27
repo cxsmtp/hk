@@ -595,7 +595,7 @@ export function UserVisibilityWorkspace() {
         </div>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto border-b border-[#263149] pb-3" role="tablist" aria-label="User visibility views">
+      <div className="flex flex-wrap gap-2 border-b border-[#263149] pb-3" role="tablist" aria-label="User visibility views">
         {VIEWS.map((item) => {
           const active = view === item.id;
           return (

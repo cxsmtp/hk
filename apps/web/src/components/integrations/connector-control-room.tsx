@@ -183,7 +183,7 @@ function ConnectorFleet({
         </div>
       </div>
 
-      <div className="mt-4 flex gap-2 overflow-x-auto pb-1" aria-label="Connector categories">
+      <div className="mt-4 flex flex-wrap gap-2 pb-1" aria-label="Connector categories">
         {categories.map((category) => (
           <button
             key={category}

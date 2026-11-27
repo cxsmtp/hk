@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 import { passwordProblem } from "@/lib/access";
 import { refusalFrom, resetLinkToken } from "@/lib/sign-in";
+import { SignInFrame } from "@/components/sign-in-frame";
 
 /**
  * Choose a new password from the emailed link (/settings/guide/people-and-access, CxMissionZero's showReset): /login/reset#reset=<token>.
@@ -76,7 +77,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-4">
+    <SignInFrame>
       <Card className="w-full max-w-md" data-ui="login-reset">
         <CardHeader>
           <CardTitle>Choose a new password</CardTitle>
@@ -108,6 +109,6 @@ export default function ResetPasswordPage() {
           </p>
         </CardContent>
       </Card>
-    </main>
+    </SignInFrame>
   );
 }

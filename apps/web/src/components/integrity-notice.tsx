@@ -38,7 +38,7 @@ export function IntegrityNotice() {
   const text = integrityNoticeText(notice);
   if (!text) return null;
   return (
-    <div role="alert" data-ui="integrity-notice" className="border-b border-red-900/60 bg-red-950/40 px-4 py-2.5 text-sm text-red-200 sm:px-6">
+    <div role="alert" data-ui="integrity-notice" className="border-b border-red-900/60 bg-red-950/40 px-4 py-2 text-[13px] leading-5 text-red-200 sm:px-6 sm:py-2.5 sm:text-sm">
       {text}{" "}
       <a href="/settings/updates" className="font-medium underline">
         Settings → Updates

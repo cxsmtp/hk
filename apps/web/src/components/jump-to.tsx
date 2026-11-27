@@ -68,14 +68,15 @@ export function JumpTo() {
         type="button"
         onClick={() => setOpen(true)}
         title="Jump to a page"
-        className="hidden h-10 items-center gap-2 rounded-md border border-[#2a3348] px-3 text-sm text-slate-400 transition-colors hover:border-brand-500/40 hover:text-slate-200 md:inline-flex"
+        aria-label="Jump to a page"
+        className="inline-flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-md border border-[#2a3348] text-sm text-slate-400 transition-colors hover:border-brand-500/40 hover:text-slate-200 md:w-auto md:justify-start md:px-3"
       >
         <Search className="h-4 w-4" />
-        <span>Jump to…</span>
-        <kbd className="rounded border border-[#2a3348] px-1.5 py-0.5 font-mono text-[10px] text-slate-500">Ctrl K</kbd>
+        <span className="hidden md:inline">Jump to…</span>
+        <kbd className="hidden rounded border border-[#2a3348] px-1.5 py-0.5 font-mono text-[10px] text-slate-500 xl:inline">Ctrl K</kbd>
       </button>
       {open ? (
-        <div className="fixed inset-0 z-[80] flex items-start justify-center bg-[#030612]/60 px-4 pt-[12vh] backdrop-blur-sm" onMouseDown={(event) => event.target === event.currentTarget && close()}>
+        <div className="hawk-overlay fixed inset-0 z-[80] flex items-start justify-center bg-[#030612]/60 px-4 pt-[max(12vh,env(safe-area-inset-top))] backdrop-blur-sm" onMouseDown={(event) => event.target === event.currentTarget && close()}>
           <div role="dialog" aria-label="Jump to" className="w-[min(620px,94vw)] overflow-hidden rounded-2xl border border-[#263047] bg-[#0b1220] shadow-2xl">
             <div className="flex items-center gap-2 border-b border-[#1e2433] px-4 py-3">
               <Search className="h-4 w-4 text-slate-500" />

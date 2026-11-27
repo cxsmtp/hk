@@ -71,8 +71,8 @@ function signOut() {
 
 function Screen({ children, wide = false }: { children: React.ReactNode; wide?: boolean }) {
   return (
-    <div data-ui="access-gate" className="grid min-h-screen place-items-center bg-[#07090d] px-4 py-6 text-slate-100">
-      <main className={`w-full ${wide ? "max-w-[760px]" : "max-w-[520px]"} rounded-2xl border border-white/[0.08] bg-[#0a0f16] px-6 py-7 shadow-2xl`}>
+    <div data-ui="access-gate" className="hawk-signin grid min-h-screen place-items-center bg-[#07090d] px-3 py-6 text-slate-100 sm:px-4">
+      <main className={`w-full ${wide ? "max-w-[760px]" : "max-w-[520px]"} rounded-2xl border border-white/[0.08] bg-[#0a0f16] px-5 py-6 shadow-2xl sm:px-7 sm:py-7`}>
         <div className="mb-4 text-sm font-semibold text-slate-400">Hawk AI</div>
         {children}
       </main>

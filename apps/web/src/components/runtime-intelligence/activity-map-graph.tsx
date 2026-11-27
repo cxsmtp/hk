@@ -353,7 +353,7 @@ export function RuntimeActivityMapGraph({
   }
 
   return (
-    <div className="h-[620px] overflow-hidden rounded-lg border border-[#2a3348] bg-[#0b1220]">
+    <div className="h-[min(620px,75dvh)] min-h-[360px] overflow-hidden rounded-lg border border-[#2a3348] bg-[#0b1220]">
       <ReactFlow
         nodes={derived.nodes}
         edges={derived.edges}

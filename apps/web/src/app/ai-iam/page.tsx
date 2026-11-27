@@ -1405,7 +1405,7 @@ export default function AIIAMPage() {
                     </div>
                   </div>
 
-                  <div className="flex min-w-0 flex-wrap gap-3 overflow-x-auto pb-1">
+                  <div className="flex min-w-0 flex-wrap gap-3 pb-1">
                     <Button asChild variant="outline">
                       <Link href={`/ai-iam/agents/${encodeURIComponent(selectedAgent.id)}`}>Open Agent Detail</Link>
                     </Button>

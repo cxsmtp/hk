@@ -160,7 +160,7 @@ export function AssetsWorkspace() {
                 ))}
               </div>
             </div>
-          ) : <div className="grid min-h-[30rem] place-items-center text-sm text-slate-600">Select an identity to inspect its authority path.</div>}
+          ) : <div className="grid min-h-[8rem] place-items-center p-6 text-center text-sm text-slate-500 lg:min-h-[30rem]">Select an identity to inspect its authority path.</div>}
         </div>
       </section>
 

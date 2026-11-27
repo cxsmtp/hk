@@ -146,3 +146,70 @@ def test_metadata_requires_exact_issuer_origin_for_all_endpoints(monkeypatch):
     monkeypatch.setattr(oidc, "_request", lambda *args, **kwargs: FakeResponse({"issuer": provider.issuer, "authorization_endpoint": "https://evil.example/authorize", "token_endpoint": provider.issuer + "/token", "jwks_uri": provider.issuer + "/keys"}))
     with pytest.raises(oidc.OIDCError):
         oidc.provider_metadata(provider)
+
+
+def _two_workspaces(monkeypatch, *, domains=True):
+    providers = [
+        {"key": "acme-entra", "kind": "entra", "display_name": "Acme Microsoft", "workspace_slug": "acme", "issuer": "https://login.microsoftonline.com/acme/v2.0", "client_id": "a", "tenant_id": "t1"},
+        {"key": "globex-okta", "kind": "okta", "display_name": "Globex Okta", "workspace_slug": "globex", "issuer": "https://globex.okta.com/oauth2/default", "client_id": "g", "tenant_id": "t2"},
+    ]
+    if domains:
+        providers[0]["domains"] = ["acme.test", "@acme-group.test"]
+        providers[1]["domains"] = "globex.test"
+    monkeypatch.setattr(settings, "company_sso_enabled", True)
+    monkeypatch.setattr(settings, "oidc_providers_json", json.dumps(providers))
+    oidc._CACHE.clear()
+
+
+def test_sign_in_page_lists_providers_without_a_workspace_when_there_is_one(monkeypatch):
+    configure(monkeypatch)
+    answer = oidc.sign_in_providers()
+    assert answer["byEmail"] is False
+    assert {row["key"] for row in answer["providers"]} == {"entra", "okta"}
+    # With one workspace, any address finds them (no domains need listing).
+    assert {row["key"] for row in oidc.discover_providers("someone@anything.test")} == {"entra", "okta"}
+    monkeypatch.setattr(settings, "company_sso_enabled", False)
+    assert oidc.sign_in_providers() == {"providers": [], "byEmail": False}
+    assert oidc.discover_providers("someone@acme.test") == []
+
+
+def test_several_workspaces_ask_for_the_email_and_find_providers_by_its_domain_only(monkeypatch):
+    _two_workspaces(monkeypatch)
+    assert oidc.sign_in_providers() == {"providers": [], "byEmail": True}
+    assert [row["key"] for row in oidc.discover_providers("ana@acme.test")] == ["acme-entra"]
+    assert [row["key"] for row in oidc.discover_providers("Bo@ACME-GROUP.test ")] == ["acme-entra"]
+    assert [row["key"] for row in oidc.discover_providers("cy@globex.test")] == ["globex-okta"]
+    # Unknown domain, or not an address: nothing, and never a hint about who has an account.
+    for email in ("someone@gmail.com", "not-an-address", "a@b", ""):
+        assert oidc.discover_providers(email) == []
+    # No domains listed and several workspaces: nothing can be worked out from the address.
+    _two_workspaces(monkeypatch, domains=False)
+    assert oidc.discover_providers("ana@acme.test") == []
+
+
+def test_start_without_a_workspace_uses_the_providers_own(monkeypatch):
+    _two_workspaces(monkeypatch)
+    redis = FakeRedis()
+    monkeypatch.setattr(oidc, "provider_metadata", lambda provider: {"issuer": provider.issuer, "authorization_endpoint": provider.issuer + "/authorize", "token_endpoint": provider.issuer + "/token", "jwks_uri": provider.issuer + "/keys"})
+    url, _browser = oidc.start(provider_key="globex-okta", redis=redis)
+    assert url.startswith("https://globex.okta.com/oauth2/default/authorize?")
+    state = next(iter(redis.values.values()))
+    from app.services.connector_secret_service import decrypt_connector_secrets
+    assert decrypt_connector_secrets(state)["workspace"] == "globex"
+    # A workspace given must still match the provider's.
+    with pytest.raises(oidc.OIDCError):
+        oidc.start(provider_key="globex-okta", workspace_slug="acme", redis=redis)
+
+
+def test_discovery_endpoint_answers_the_same_for_any_address_at_a_domain(monkeypatch):
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    _two_workspaces(monkeypatch)
+    client = TestClient(app)
+    known = client.post("/auth/oidc/discover", json={"email": "admin@acme.test"})
+    unknown = client.post("/auth/oidc/discover", json={"email": "nobody-at-all-1234@acme.test"})
+    assert known.status_code == unknown.status_code == 200
+    assert known.json() == unknown.json() == {"providers": [{"key": "acme-entra", "display_name": "Acme Microsoft", "kind": "entra"}]}
+    assert client.get("/auth/oidc/providers").json() == {"providers": [], "byEmail": True}
+    assert client.get("/auth/oidc/providers", params={"workspace": "globex"}).json() == {"providers": [{"key": "globex-okta", "display_name": "Globex Okta", "kind": "okta"}], "byEmail": False}

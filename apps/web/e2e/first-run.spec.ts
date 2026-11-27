@@ -14,6 +14,9 @@ test("the sign-in page renders", async ({ page }) => {
   await expect(page.locator("input[autocomplete=current-password]")).toBeVisible();
   await expect(page.getByRole("button", { name: "Sign In", exact: true })).toBeEnabled();
   await expect(page.locator("[data-ui=onprem-note]")).toContainText("Runs on your own servers");
+  // On-premises: an email and a password, no workspace to type (an email belongs to one account).
+  await expect(page.getByLabel("Workspace", { exact: true })).toHaveCount(0);
+  await expect(page.locator("input[autocomplete=organization]")).toHaveCount(0);
   await expectNoTokensInBrowserStorage(page);
 });
 

@@ -13,6 +13,9 @@ import { ADMIN } from "./e2e/support/accounts";
  *   E2E_SKIP_BUILD=1 npm run test:e2e     reuses an existing build made with NEXT_PUBLIC_API_URL=/api
  *   E2E_PYTHON=/path/to/python            the Python with the API's dependencies (default python3)
  *   PW_CHROMIUM_PATH=/path/to/chrome      a Chromium already on the machine instead of Playwright's download
+ *   E2E_EXTRA_BROWSERS=webkit,firefox     also run the responsive checks (e2e/responsive.spec.ts) in WebKit (Safari's
+ *                                         engine) and Firefox, where those browsers are installed (npx playwright
+ *                                         install webkit firefox); CI runs Chromium only
  *
  * The tests share one installation and run in order, one worker: the first signs in as the first administrator,
  * changes the temporary password and accepts the terms of use; the others build on that.
@@ -25,6 +28,11 @@ const origin = `http://127.0.0.1:${port}`;
 const stateDir = process.env.E2E_STATE_DIR || join(tmpdir(), `hawk-e2e-${apiPort}`);
 const python = process.env.E2E_PYTHON || "python3";
 const chromiumPath = process.env.PW_CHROMIUM_PATH || "";
+const extraBrowsers = (process.env.E2E_EXTRA_BROWSERS || "")
+  .split(",")
+  .map((name) => name.trim())
+  .filter((name): name is "webkit" | "firefox" => name === "webkit" || name === "firefox");
+const extraDevice = { webkit: devices["Desktop Safari"], firefox: devices["Desktop Firefox"] };
 
 const apiEnv: Record<string, string> = {
   ENV: "test",
@@ -72,6 +80,13 @@ export default defineConfig({
     // A new installation's first sign-in, once: every other test signs in with the password chosen there.
     { name: "first-run", testMatch: /first-run\.spec\.ts$/, use: { browserName: "chromium" } },
     { name: "console", testIgnore: /first-run\.spec\.ts$/, dependencies: ["first-run"], use: { browserName: "chromium" } },
+    // Optional: the same responsive checks in Safari's and Firefox's engines (after the Chromium ones, one at a time).
+    ...extraBrowsers.map((name) => ({
+      name: `responsive-${name}`,
+      testMatch: /responsive\.spec\.ts$/,
+      dependencies: ["console"],
+      use: { ...extraDevice[name], browserName: name, launchOptions: {} },
+    })),
   ],
   webServer: [
     {
