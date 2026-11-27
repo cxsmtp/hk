@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import base64
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
@@ -158,7 +158,12 @@ def add_member(env, email: str, role: str, *, slug: str | None = None, must_chan
     """A person in the installation's first tenant (or a new tenant ``slug``), straight in the database."""
     with env["db"]() as db:
         if slug:
+            # Clearly after the installation's first tenant: tenants made in the same second would otherwise be ordered
+            # by their random ids, and the "first" tenant would be chance.
+            first = db.scalars(select(Tenant).order_by(Tenant.created_at, Tenant.id)).first()
             tenant = Tenant(name=slug.title(), slug=slug, is_active=True)
+            if first is not None and first.created_at is not None:
+                tenant.created_at = first.created_at + timedelta(minutes=1)
             db.add(tenant)
             db.flush()
         else:
