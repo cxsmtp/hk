@@ -31,7 +31,7 @@ import { brandingImage, useBranding } from "@/lib/settings-console";
 
 const SIDEBAR_COLLAPSE_KEY = "hawk_ui_sidebar_collapsed";
 
-const ICONS: Record<(typeof LIFECYCLE_NAV_ITEMS)[number]["label"], LucideIcon> = {
+export const NAV_ICONS: Record<(typeof LIFECYCLE_NAV_ITEMS)[number]["label"], LucideIcon> = {
   Overview: Home,
   Inventory: Boxes,
   Activity,
@@ -123,7 +123,7 @@ export function Sidebar() {
 
       <nav className="mt-5 space-y-1" aria-label="Customer areas">
         {LIFECYCLE_NAV_ITEMS.map((item) => {
-          const Icon = ICONS[item.label];
+          const Icon = NAV_ICONS[item.label];
           const active = isLifecycleItemActive(pathname, item);
           const parentCurrent = isLifecyclePathActive(pathname, item.href);
           return (

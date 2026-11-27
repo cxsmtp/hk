@@ -8,6 +8,7 @@ import type { FormEvent } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { FrameworkPacks } from "@/components/compliance/framework-packs";
 import { api } from "@/lib/api";
 import { clockSentence, incidentQuery, OWNER_LABELS, retentionDays, STATUS_CHIP, STATUS_LABELS } from "@/lib/compliance";
 import type { ComplianceView, ControlStatus } from "@/lib/compliance";
@@ -32,6 +33,10 @@ function save(blob: Blob, name: string) {
  * activity is kept, the data location and the incident contact (owners and admins change them); and the incident
  * report for a time window. The organisation's own processes (an ISMS, risk assessment, HR security, suppliers, the
  * incident response plan, business continuity) are not software: the page says so.
+ *
+ * The first tab is the framework packs (components/compliance/framework-packs.tsx): one per law or standard, each
+ * requirement with the Hawk AI controls behind it, their live status, records of the organisation's own processes and
+ * the signed evidence bundle.
  */
 export default function CompliancePage() {
   const [view, setView] = useState<ComplianceView | null>(null);
@@ -40,6 +45,7 @@ export default function CompliancePage() {
   const [form, setForm] = useState({ activity: "", connector: "", location: "", contact: "" });
   const [windowFrom, setWindowFrom] = useState("");
   const [windowTo, setWindowTo] = useState("");
+  const [tab, setTab] = useState<"packs" | "desc">("packs");
 
   const show = useCallback((next: ComplianceView) => {
     setView(next);
@@ -114,10 +120,10 @@ export default function CompliancePage() {
           <div>
             <h1 className="serif">Compliance</h1>
             <p>
-              How this installation stands against the controls of Dubai&apos;s Information Security Regulation (DESC ISR), the UAE Information Assurance Standard and India&apos;s CERT-In directions that the software takes part in. Each row says what is in force now and where to change it. See <Link href="/settings/guide/compliance">Guide → Compliance</Link>.
+              Framework packs for the laws and standards you work to (India&apos;s DPDP, the UAE PDPL, DESC ISR, ISO 27001 and 42001, PCI DSS, CIS, NIST, Saudi NCA and SAMA, Australia&apos;s, OWASP, MITRE ATLAS and the EU AI Act): each requirement, the Hawk AI controls behind it, their status now worked out from the settings in force, and signed evidence. The DESC / UAE IA / CERT-In view keeps the clock, retention, residency and the incident report. Packs support compliance: they do not by themselves make you compliant or certified. See <Link href="/settings/guide/compliance">Guide → Compliance</Link>.
             </p>
           </div>
-          {view?.mayChange ? (
+          {view?.mayChange && tab === "desc" ? (
             <div className="flex">
               <button className="btn" type="button" disabled={busy} onClick={baseline} data-ui="compliance-baseline">
                 Apply the recommended baseline
@@ -132,8 +138,21 @@ export default function CompliancePage() {
             </div>
           </div>
         ) : null}
-        {!view && !loadError ? <p className="muted">Loading…</p> : null}
-        {view ? (
+        <div className="seg" role="tablist" aria-label="Compliance views" data-ui="compliance-tabs">
+          <button type="button" role="tab" aria-selected={tab === "packs"} className={tab === "packs" ? "primary" : ""} onClick={() => setTab("packs")}>
+            Framework packs
+          </button>
+          <button type="button" role="tab" aria-selected={tab === "desc"} className={tab === "desc" ? "primary" : ""} onClick={() => setTab("desc")}>
+            DESC / UAE IA / CERT-In, clock and records
+          </button>
+        </div>
+        {tab === "packs" ? (
+          <div className="mt">
+            <FrameworkPacks />
+          </div>
+        ) : null}
+        {tab === "desc" && !view && !loadError ? <p className="muted">Loading…</p> : null}
+        {tab === "desc" && view ? (
           <>
             <div className="kpis">
               {ORDER.map((status) => (

@@ -1,0 +1,177 @@
+{
+  "id": "owasp-llm-top10",
+  "version": "2026.11.1",
+  "order": 110,
+  "optional": false,
+  "framework": {
+    "name": "OWASP Top 10 for LLM Applications 2025",
+    "short": "OWASP LLM Top 10",
+    "version": "2025",
+    "publisher": "OWASP GenAI Security Project",
+    "jurisdiction": "International",
+    "url": "https://genai.owasp.org/llm-top-10/"
+  },
+  "summary": "The ten LLM risks and Hawk AI's detectors for each, read from the threat registry's tags (every detector carries its OWASP reference), plus the DLP, rate limits and tool checks that address them.",
+  "scope": "Risk ids LLM01-LLM10 with our own short wording. A risk shows met when Hawk AI has detectors tagged with it and detection is on; risks with no detector yet show as a gap.",
+  "sources": [
+    {
+      "title": "OWASP Top 10 for LLM Applications 2025",
+      "url": "https://genai.owasp.org/llm-top-10/"
+    }
+  ],
+  "notes": [],
+  "requirements": [
+    {
+      "id": "LLM01",
+      "title": "Prompt injection",
+      "applicability": "product",
+      "controls": [
+        "detect.coverage:owasp_llm:LLM01",
+        "injection.detection"
+      ],
+      "evidence": [
+        "records:detector_coverage",
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "LLM02",
+      "title": "Sensitive information disclosure",
+      "applicability": "product",
+      "controls": [
+        "dlp.personal_data",
+        "dlp.payment_cards",
+        "dlp.secrets",
+        "ai.gateway_in_use"
+      ],
+      "evidence": [
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "LLM03",
+      "title": "Supply chain",
+      "applicability": "product",
+      "controls": [
+        "gap.ai_supply_chain",
+        "ai.mcp_tool_scan",
+        "ai.discovery"
+      ],
+      "evidence": [
+        "records:attestations",
+        "records:detector_coverage",
+        "audit:gateway",
+        "records:ai_inventory"
+      ]
+    },
+    {
+      "id": "LLM04",
+      "title": "Data and model poisoning",
+      "applicability": "product",
+      "controls": [
+        "detect.coverage:owasp_llm:LLM04",
+        "gap.ai_supply_chain"
+      ],
+      "evidence": [
+        "records:detector_coverage",
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "LLM05",
+      "title": "Improper output handling",
+      "applicability": "product",
+      "controls": [
+        "detect.coverage:owasp_llm:LLM05"
+      ],
+      "evidence": [
+        "records:detector_coverage",
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "LLM06",
+      "title": "Excessive agency",
+      "applicability": "product",
+      "controls": [
+        "detect.coverage:owasp_llm:LLM06",
+        "ai.mcp_tool_scan",
+        "ai.human_oversight"
+      ],
+      "evidence": [
+        "records:detector_coverage",
+        "settings:detection",
+        "audit:gateway",
+        "settings:approvals",
+        "records:approvals",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "LLM07",
+      "title": "System prompt leakage",
+      "applicability": "product",
+      "controls": [
+        "detect.coverage:owasp_llm:LLM07"
+      ],
+      "evidence": [
+        "records:detector_coverage",
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "LLM08",
+      "title": "Vector and embedding weaknesses",
+      "applicability": "product",
+      "controls": [
+        "detect.coverage:owasp_llm:LLM08"
+      ],
+      "evidence": [
+        "records:detector_coverage",
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "LLM09",
+      "title": "Misinformation",
+      "applicability": "product",
+      "controls": [
+        "detect.coverage:owasp_llm:LLM09",
+        "gap.output_content_safety"
+      ],
+      "evidence": [
+        "records:detector_coverage",
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "LLM10",
+      "title": "Unbounded consumption",
+      "applicability": "product",
+      "controls": [
+        "detect.coverage:owasp_llm:LLM10",
+        "ai.rate_limits"
+      ],
+      "evidence": [
+        "records:detector_coverage",
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    }
+  ]
+}

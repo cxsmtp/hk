@@ -412,7 +412,7 @@ export function ObserveWorkspace() {
         {auditUnavailable ? <p className="border-t border-amber-400/10 px-4 py-3 text-xs text-amber-200">Optional enrichment is unavailable; the activity list remains usable.</p> : null}
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <section className="grid grid-cols-2 gap-3 xl:grid-cols-5">
         {[
           { label: "Visible sessions", value: loading ? "—" : runtimeState === "error" ? "Unavailable" : sessions.length.toLocaleString(), icon: Activity, note: "Current filter" },
           { label: "Governed", value: loading ? "—" : runtimeState === "error" ? "Unavailable" : governedCount.toLocaleString(), icon: ShieldCheck, note: "All proof requirements met" },
@@ -422,12 +422,12 @@ export function ObserveWorkspace() {
         ].map((item) => {
           const Icon = item.icon;
           return (
-            <div key={item.label} className="rounded-[20px] border border-white/[0.07] bg-[#0c1016] p-4">
-              <div className="flex items-center justify-between">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">{item.label}</p>
-                <Icon className="h-4 w-4 text-orange-300/70" />
+            <div key={item.label} className="min-w-0 rounded-[20px] border border-white/[0.07] bg-[#0c1016] p-3.5 sm:p-4">
+              <div className="flex items-center justify-between gap-2">
+                <p className="min-w-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">{item.label}</p>
+                <Icon className="h-4 w-4 shrink-0 text-orange-300/70" />
               </div>
-              <p className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-white">{item.value}</p>
+              <p className="mt-2.5 text-xl font-semibold tracking-[-0.03em] text-white sm:mt-3 sm:text-2xl">{item.value}</p>
               <p className="mt-1 text-[11px] text-slate-600">{item.note}</p>
             </div>
           );

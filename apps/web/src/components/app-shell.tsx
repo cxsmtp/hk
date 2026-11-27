@@ -12,6 +12,7 @@ import { BackupNotice } from "@/components/backup-notice";
 import { IntegrityNotice } from "@/components/integrity-notice";
 import { MobileLifecycleNav } from "@/components/mobile-lifecycle-nav";
 import { SettingsNav } from "@/components/settings-nav";
+import { ResponsiveTables } from "@/components/responsive-tables";
 import { useBranding } from "@/lib/settings-console";
 import { getSession, SESSION_CHANGE_EVENT } from "@/lib/auth";
 import { useDevRouteWarmup } from "@/hooks/use-dev-route-warmup";
@@ -53,24 +54,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   if (!hasSession) return null;
 
   return (
-    <div className="min-h-screen overflow-x-clip bg-transparent lg:flex">
+    <div className="hawk-shell min-h-screen overflow-x-clip bg-transparent lg:flex">
+      <ResponsiveTables />
       <Sidebar />
       <main className="min-w-0 flex-1 overflow-x-clip">
         <LicenceBanner />
         <BackupNotice />
         <IntegrityNotice />
-        <Topbar />
-        <MobileLifecycleNav />
+        <Topbar leading={<MobileLifecycleNav />} />
         {inSettings ? (
           // FTR's .set-wrap: the menu in a column of its own (188 px, 164 px up to 1360 px wide), above the page up to 900 px.
           <div className="set-wrap min-w-0 items-start min-[901px]:grid min-[901px]:grid-cols-[164px_minmax(0,1fr)] min-[1361px]:grid-cols-[188px_minmax(0,1fr)]">
             <div className="ftr-settings set-side min-[901px]:sticky min-[901px]:top-0">
               <SettingsNav />
             </div>
-            <div className="set-main mx-auto w-full min-w-0 max-w-[1800px] px-4 pb-8 pt-6 sm:px-6">{children}</div>
+            <div className="set-main hawk-page mx-auto w-full min-w-0 max-w-[1800px] px-4 pb-8 pt-4 sm:px-6 sm:pt-6">{children}</div>
           </div>
         ) : (
-          <div className="mx-auto w-full max-w-[1800px] px-4 pb-8 pt-6 sm:px-6">{children}</div>
+          <div className="hawk-page mx-auto w-full min-w-0 max-w-[1800px] px-4 pb-8 pt-4 sm:px-6 sm:pt-6">{children}</div>
         )}
       </main>
     </div>

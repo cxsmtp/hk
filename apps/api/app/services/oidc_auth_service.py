@@ -136,16 +136,66 @@ def provider_for(key: str, *, workspace_slug: str | None = None) -> OIDCProvider
     raise OIDCError("OIDC provider unavailable", "provider")
 
 
-def public_provider_rows(*, workspace_slug: str) -> list[dict[str, str]]:
-    if not settings.company_sso_enabled:
-        return []
+def _public_rows(found: list[OIDCProvider]) -> list[dict[str, str]]:
     rows: list[dict[str, str]] = []
-    for provider in providers(workspace_slug=workspace_slug):
+    for provider in found:
         safe_key = re.sub(r"[^a-zA-Z0-9_-]", "", provider.key)[:64]
         safe_name = "".join(char for char in provider.display_name if char.isprintable())[:100]
         if safe_key and safe_name:
             rows.append({"key": safe_key, "display_name": safe_name, "kind": provider.kind})
     return rows
+
+
+def public_provider_rows(*, workspace_slug: str) -> list[dict[str, str]]:
+    if not settings.company_sso_enabled:
+        return []
+    return _public_rows(providers(workspace_slug=workspace_slug))
+
+
+def _provider_domains() -> dict[str, set[str]]:
+    """Each provider's email domains, from its optional "domains" list in OIDC_PROVIDERS_JSON."""
+    out: dict[str, set[str]] = {}
+    for row in _provider_rows():
+        raw = row.get("domains") or []
+        if isinstance(raw, str):
+            raw = [raw]
+        if not isinstance(raw, list):
+            raise OIDCError("OIDC configuration unavailable", "setup")
+        out[str(row.get("key", "")).strip()] = {str(d).strip().lower().lstrip("@") for d in raw if str(d).strip()}
+    return out
+
+
+def sign_in_providers() -> dict[str, Any]:
+    """The single sign-on buttons for the sign-in page, which has no workspace box (an on-premises installation).
+
+    Every provider when they all belong to one workspace; otherwise none, and the page asks for the email address
+    first (discover_providers)."""
+    if not settings.company_sso_enabled:
+        return {"providers": [], "byEmail": False}
+    found = providers()
+    if len({p.workspace_slug.lower() for p in found}) <= 1:
+        return {"providers": _public_rows(found), "byEmail": False}
+    return {"providers": [], "byEmail": True}
+
+
+def discover_providers(email: str) -> list[dict[str, str]]:
+    """The providers for an email address's domain: those whose "domains" list it, or, with one workspace only, all.
+
+    Decided by the domain alone, never by whether anyone has that address: the same answer for every address at a
+    domain, so it cannot be used to find out who has an account."""
+    if not settings.company_sso_enabled:
+        return []
+    domain = email.strip().lower().rpartition("@")[2].strip()
+    if not domain or "." not in domain:
+        return []
+    found = providers()
+    domains = _provider_domains()
+    matched = [p for p in found if domain in domains.get(p.key, set())]
+    if matched:
+        return _public_rows(matched)
+    if len({p.workspace_slug.lower() for p in found}) <= 1:
+        return _public_rows(found)
+    return []
 
 
 def _secret_rows() -> dict[str, Any]:
@@ -277,10 +327,12 @@ def build_authorization_url(provider: OIDCProvider, *, state: str, nonce: str, v
     return f"{metadata['authorization_endpoint']}?{urlencode(query)}"
 
 
-def start(*, provider_key: str, workspace_slug: str, redis: Any | None = None) -> tuple[str, str]:
+def start(*, provider_key: str, workspace_slug: str | None = None, redis: Any | None = None) -> tuple[str, str]:
     if not settings.company_sso_enabled:
         raise OIDCError("OIDC unavailable", "off")
-    provider = provider_for(provider_key, workspace_slug=workspace_slug)
+    # Provider keys are unique across the installation: without a workspace, the provider's own is used.
+    provider = provider_for(provider_key, workspace_slug=workspace_slug or None)
+    workspace_slug = provider.workspace_slug
     metadata = provider_metadata(provider)
     state = _b64(secrets.token_bytes(32))
     nonce = _b64(secrets.token_bytes(32))

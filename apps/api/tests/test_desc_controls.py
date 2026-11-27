@@ -296,12 +296,13 @@ def test_ntp_offset_from_a_local_server():
     server.bind(("127.0.0.1", 0))
     port = server.getsockname()[1]
 
-    def answer():
-        _, address = server.recvfrom(64)
+    def answer(echo: bool = True):
+        request, address = server.recvfrom(64)
         now = time.time() + 2.0 + 2_208_988_800  # two seconds ahead
         seconds, fraction = int(now), int((now % 1) * 2**32)
         reply = bytearray(48)
         reply[0], reply[1] = 0x24, 2
+        reply[24:32] = request[40:48] if echo else b"\x01" * 8  # originate = the client's transmit timestamp
         reply[32:48] = struct.pack("!IIII", seconds, fraction, seconds, fraction)
         server.sendto(bytes(reply), address)
 
@@ -311,9 +312,18 @@ def test_ntp_offset_from_a_local_server():
         result = compliance_service.ntp_offset("127.0.0.1", port=port)
     finally:
         thread.join(5)
-        server.close()
     assert result["ok"] is True and result["stratum"] == 2
     assert 1.5 < result["offsetSeconds"] < 2.5
+
+    # An answer that does not echo this request's timestamp (spoofed or stale) is not used.
+    thread = threading.Thread(target=answer, kwargs={"echo": False})
+    thread.start()
+    try:
+        result = compliance_service.ntp_offset("127.0.0.1", port=port)
+    finally:
+        thread.join(5)
+        server.close()
+    assert result["ok"] is False and "does not match" in result["reason"]
 
 
 # --- Settings → Compliance, About, CEF and the incident report -------------------------------------------------------
@@ -395,7 +405,7 @@ def test_audit_export_cef_and_incident_report(env):
         assert db.scalar(select(AuditLog).where(AuditLog.action == "compliance.incident_report")) is not None
 
 
-def test_migration_0104_is_the_head():
+def test_migration_0104_follows_0103_and_0105_follows_it():
     from pathlib import Path
 
     from alembic.config import Config
@@ -404,5 +414,39 @@ def test_migration_0104_is_the_head():
     config = Config()
     config.set_main_option("script_location", str(Path(__file__).resolve().parents[1] / "app/db/migrations"))
     script = ScriptDirectory.from_config(config)
-    assert script.get_heads() == ["0104_desc_controls"]
+    assert script.get_heads() == ["0105_compliance_packs"]
     assert script.get_revision("0104_desc_controls").down_revision == "0103_terms_acceptance"
+    assert script.get_revision("0105_compliance_packs").down_revision == "0104_desc_controls"
+
+
+def test_policy_row_created_concurrently_is_read_not_failed(tmp_path):
+    """Two requests on first load both find no row; the loser reads the winner's row and its transaction stays usable."""
+
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+
+    from app.db.session import Base
+    from app.db.models.access import CompliancePolicy
+    from app.services import compliance_service
+
+    engine = create_engine(f"sqlite+pysqlite:///{tmp_path / 'race.sqlite3'}")
+    Base.metadata.create_all(bind=engine, tables=[CompliancePolicy.__table__])
+    make = sessionmaker(bind=engine)
+    first, second = make(), make()
+    assert first.get(CompliancePolicy, compliance_service.POLICY_ID) is None
+    assert second.get(CompliancePolicy, compliance_service.POLICY_ID) is None
+    compliance_service.policy(first)
+    first.commit()
+    # The second request looked before the first committed: its first lookup still says "no row", so its insert loses.
+    real_get = second.get
+    calls = {"n": 0}
+
+    def stale_get(*args, **kwargs):
+        calls["n"] += 1
+        return None if calls["n"] == 1 else real_get(*args, **kwargs)
+
+    second.get = stale_get
+    row = compliance_service.policy(second)
+    assert row is not None and row.id == compliance_service.POLICY_ID
+    second.execute(CompliancePolicy.__table__.select())  # the transaction is still usable
+    second.close(); first.close()

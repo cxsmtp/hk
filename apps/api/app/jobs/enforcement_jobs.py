@@ -182,15 +182,25 @@ def ocr_extract_text(
         return ""
     import base64
 
+    from app.services.enforcement_payload_crypto_service import (
+        PROMPT_ENCRYPTION_PREFIX,
+        decrypt_transient_payload,
+        encrypt_transient_payload,
+    )
     from app.services.sensitive_data_detection_service import extract_text_from_binary_for_ocr_task
 
+    # The file arrives encrypted (it can hold a card number, PCI DSS 3.3/3.4); the text goes back encrypted the same
+    # way, so neither the broker nor the result backend holds it in the clear.
+    encrypted = content_b64.startswith(PROMPT_ENCRYPTION_PREFIX)
     try:
-        content = base64.b64decode(content_b64.encode("utf-8"), validate=False)
+        raw_b64 = decrypt_transient_payload(content_b64) if encrypted else content_b64
+        content = base64.b64decode(raw_b64.encode("utf-8"), validate=False)
     except Exception:
         return ""
 
-    return extract_text_from_binary_for_ocr_task(
+    text = extract_text_from_binary_for_ocr_task(
         file_name=file_name,
         mime_type=mime_type,
         content_bytes=content,
     )
+    return encrypt_transient_payload(text) if encrypted and text else text

@@ -12,7 +12,8 @@ Context: what happens during a request or a Celery task carries its request_id /
 no help from the code that logs (``bind_log_context``; app/main.py and app/jobs/task_logging.py bind them).
 
 Never a secret: every line goes through ``redact_text`` / ``redact_fields`` (Authorization and Cookie headers, bearer
-tokens, JWTs, passwords, API keys, connector secrets, prompt text), which reuse app/services/privacy_sanitizer.py.
+tokens, JWTs, passwords, API keys, connector secrets, prompt text), which reuse app/services/privacy_sanitizer.py, and
+never a full card number (``scrub_pan``, app/services/pci_controls.py).
 """
 
 from __future__ import annotations
@@ -38,6 +39,7 @@ from app.services.privacy_sanitizer import (
     _normalized_key,
     redact_sensitive_text,
 )
+from app.services.pci_controls import scrub_pan, scrub_pan_value
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Context: request_id, task_id, tenant_id, user_id on every line
@@ -144,6 +146,8 @@ def redact_text(value: Any, *, max_len: int = MAX_MESSAGE_CHARS) -> str:
     text = _URL_SECRET_PARAM_RE.sub(lambda m: f"{m.group(1)}{REDACTED}", text)
     text = _KNOWN_KEY_RE.sub("[secret]", text)
     text = SECRET_ASSIGNMENT_RE.sub("[secret]", text)
+    # A card number is never written to a log line in full (PCI DSS 3.4, 10): [card ending 1111].
+    text = scrub_pan(text, boundary="logs")
     if len(text) > max_len:
         return f"{text[:max_len]}...[truncated]"
     return text
@@ -185,6 +189,8 @@ def redact_value(key: str, value: Any, *, depth: int = 0) -> Any:
         return REDACTED
     if _raw_material_key(key):
         return OMITTED
+    if isinstance(value, int) and not isinstance(value, bool):
+        return scrub_pan_value(value, boundary="logs")
     if value is None or isinstance(value, (bool, int, float)):
         return value
     if depth >= 4:

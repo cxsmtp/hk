@@ -847,3 +847,30 @@ def test_another_tenants_admin_sees_only_their_own_tenants_acceptances(env, outb
     # The installation's admins (its first tenant's) see every tenant's.
     everyone = client.get("/terms/acceptances", headers=bearer(owner)).json()["acceptances"]
     assert sorted(item["email"] for item in everyone) == ["olivia@acme.example", "oscar@other.example"]
+
+
+@pytest.mark.terms_gate
+def test_a_copy_another_worker_already_sent_is_not_sent_again(env, outbox, monkeypatch):
+    """The scheduler and the request that queued a copy can deliver at once: only the one whose claim on the row lands
+    sends it (Checkmarx PR 12, the terms_jobs race)."""
+
+    from app.db.models.access import TermsCopyEmail
+
+    client = env["client"]
+    owner = _owner(env)
+    assert client.post("/terms/accept", headers=bearer(owner), json=_full()).status_code == 200
+    assert outbox.sent == []  # the mail server is not tested yet: the copy waits
+
+    def verified_while_another_worker_sends(db, smtp):
+        # Between this worker reading the queue and sending, another one sent the copy.
+        from sqlalchemy import update
+
+        db.execute(update(TermsCopyEmail).values(status="sent", attempts=TermsCopyEmail.attempts + 1))
+        return True
+
+    monkeypatch.setattr(mailer, "verified", verified_while_another_worker_sends)
+    with env["db"]() as db:
+        counts = terms_copy_service.deliver_due(db)
+        db.commit()
+        assert db.scalar(select(TermsCopyEmail.attempts)) == 1
+    assert counts["sent"] == 0 and outbox.sent == []

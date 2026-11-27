@@ -70,7 +70,7 @@ function LogoMark() {
 export default function HomePage() {
   return (
     <main className="min-h-screen overflow-hidden bg-[#030913] text-slate-100">
-      <section className="grid min-h-screen grid-cols-1 lg:grid-cols-[260px_minmax(520px,1fr)_minmax(620px,1.15fr)]">
+      <section className="grid min-h-screen grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)_minmax(0,1.15fr)] xl:grid-cols-[260px_minmax(0,1fr)_minmax(0,1.15fr)]">
         <aside className="border-b border-cyan-200/10 bg-[#07131e] px-7 py-8 lg:border-b-0 lg:border-r">
           <Telescope className="h-11 w-11 text-slate-100" strokeWidth={1.8} aria-hidden="true" />
           <p className="mt-10 text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">3. Observatory</p>

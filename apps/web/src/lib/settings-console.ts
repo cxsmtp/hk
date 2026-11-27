@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/api-url";
 import { getSession, SESSION_CHANGE_EVENT } from "@/lib/auth";
+import { applyTheme, currentTheme } from "@/lib/theme";
 
 export type BrandingView = {
   appName: string;
@@ -73,7 +74,7 @@ export const DEFAULT_BRANDING: BrandingView = {
   tagline: "AI control plane",
   organisationName: "",
   accent: "",
-  mode: "dark",
+  mode: "light",
   logo: null,
   icon: null,
   logoBytes: 0,
@@ -92,8 +93,8 @@ let brandingLoad: Promise<BrandingView> | null = null;
 export function applyBranding(b: BrandingView): void {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
-  const dark = b.mode === "system" ? window.matchMedia?.("(prefers-color-scheme: dark)").matches !== false : b.mode !== "light";
-  root.dataset.theme = dark ? "dark" : "light";
+  // This browser's own choice (the account menu) comes first; the organisation's look is the default (lib/theme.ts).
+  applyTheme(currentTheme(b.mode));
   if (b.accent) root.style.setProperty("--brand-accent", b.accent);
   else root.style.removeProperty("--brand-accent");
   const icon = brandingImage(b.icon);

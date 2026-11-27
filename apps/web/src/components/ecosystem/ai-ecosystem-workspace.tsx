@@ -382,7 +382,7 @@ export function AIEcosystemWorkspace() {
         </div>
       </header>
 
-      <div className="flex gap-2 overflow-x-auto border-b border-white/[0.08] pb-3" role="tablist" aria-label="AI Ecosystem visual modes">
+      <div className="flex flex-wrap gap-2 border-b border-white/[0.08] pb-3" role="tablist" aria-label="AI Ecosystem visual modes">
         {VIEWS.map((item) => {
           const active = view === item.id;
           return <button key={item.id} type="button" role="tab" aria-selected={active} onClick={() => setView(item.id)} className={`shrink-0 rounded-xl border px-3 py-2 text-left transition ${active ? "border-cyan-300/35 bg-cyan-300/[0.08] text-cyan-100" : "border-transparent text-slate-500 hover:border-white/[0.08] hover:bg-white/[0.03] hover:text-slate-200"}`}><span className="block text-sm font-medium">{item.label}</span><span className="mt-0.5 block font-mono text-[8px] uppercase tracking-[0.12em] opacity-70">{item.note}</span></button>;

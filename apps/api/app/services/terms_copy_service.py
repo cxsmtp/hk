@@ -25,7 +25,7 @@ import re
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
@@ -246,6 +246,18 @@ def deliver_due(db: Session, *, now: datetime | None = None) -> dict[str, int]:
             row.status = "failed"
             row.last_error = "The accepted text is no longer available."
             counts["failed"] += 1
+            continue
+        # Claim the copy first: the scheduler and the request that queued it (or two workers) can run this at once,
+        # and only the one whose conditional update lands sends it. The row stays locked until that one commits; the
+        # other then finds it no longer queued as it was, and leaves it.
+        claimed = db.execute(
+            update(TermsCopyEmail)
+            .where(TermsCopyEmail.id == row.id, TermsCopyEmail.status == "queued", TermsCopyEmail.attempts == row.attempts)
+            .values(attempts=row.attempts)
+            .execution_options(synchronize_session=False)
+        )
+        if claimed.rowcount != 1:
+            db.expire(row)
             continue
         try:
             mailer.send(build_message(acceptance, text), row.to_email, smtp=smtp)

@@ -16,6 +16,7 @@ import { setSession } from "@/lib/auth";
 import type { JoinLink } from "@/lib/iam";
 import { defaultRouteForRole } from "@/lib/navigation";
 import type { LoginResponse } from "@/lib/types";
+import { SignInFrame } from "@/components/sign-in-frame";
 
 /**
  * Join (FTR Command Center CC-01.116.00, public/js/auth.js viewJoin): someone with a work address of the domains an
@@ -96,7 +97,7 @@ export default function JoinPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-4">
+    <SignInFrame>
       <Card className="ftr w-full max-w-md" data-ui="join">
         {token && link ? (
           <>
@@ -200,6 +201,6 @@ export default function JoinPage() {
           </>
         )}
       </Card>
-    </main>
+    </SignInFrame>
   );
 }

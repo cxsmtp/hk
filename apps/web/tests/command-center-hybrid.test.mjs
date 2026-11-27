@@ -244,8 +244,11 @@ test("Command Center health polling remains single-shot per interval", () => {
   assert.doesNotMatch(source, /setInterval\(\(\) => \{\s*loadPilotHealth\(\)\.catch\(\(\) => undefined\);\s*loadPilotHealth\(\)\.catch/);
 });
 
-test("shared top bar stacks safely on narrow screens", () => {
-  assert.match(topbarSource, /flex flex-col items-stretch gap-3[^"]*sm:flex-row/);
-  assert.match(topbarSource, /max-w-\[9rem\][^"]*truncate[^"]*sm:max-w-none/);
+test("shared top bar stays one row on narrow screens", () => {
+  // One row at every width: the menu button and the name on the left, the actions on the right; the tenant id only
+  // from the desktop width (it is in the account menu on a phone).
+  assert.match(topbarSource, /hawk-topbar sticky top-0[^"]*flex items-center justify-between/);
+  assert.match(topbarSource, /min-w-0 flex-1 items-center/);
+  assert.match(topbarSource, /hidden min-w-0 lg:block/);
   assert.match(topbarSource, /hidden[^"]*lg:inline/);
 });

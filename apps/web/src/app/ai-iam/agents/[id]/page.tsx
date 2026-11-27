@@ -186,7 +186,7 @@ export default function AgentDetailPage() {
 
         <nav
           aria-label="Agent investigation domains"
-          className="flex gap-2 overflow-x-auto rounded-xl border border-[#2a3348] bg-[#0b1220] p-2"
+          className="flex flex-wrap gap-2 rounded-xl border border-[#2a3348] bg-[#0b1220] p-2"
         >
           <a className="whitespace-nowrap rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-[#171d2b] hover:text-white" href="#overview">Overview</a>
           <a className="whitespace-nowrap rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-[#171d2b] hover:text-white" href="#runtime">Runtime</a>

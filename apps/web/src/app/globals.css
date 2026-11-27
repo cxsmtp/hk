@@ -1,11 +1,24 @@
 @import "../styles/theme.css";
+@import "../styles/light-theme.generated.css";
 @import "reactflow/dist/style.css";
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  color-scheme: dark;
+}
+
 body {
+  overflow-wrap: break-word;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* With viewport-fit=cover (layout.tsx), keep clear of a phone's notch in landscape. */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
   background:
     radial-gradient(circle at 20% 0%, rgba(249, 115, 22, 0.14) 0, transparent 45%),
     radial-gradient(circle at 90% 5%, rgba(59, 130, 246, 0.12) 0, transparent 45%),
@@ -13,58 +26,59 @@ body {
   color: hsl(var(--foreground));
   font-family: "Syne", "Manrope", system-ui, sans-serif;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 * {
   border-color: hsl(var(--border));
 }
 
-/* Global visual alignment for existing pages that still use slate + white utility classes. */
-.text-slate-900 {
+/* Dark look: pages that still use slate + white utility classes (written for a light page) are brought in line. */
+:root:not([data-theme="light"]) .text-slate-900 {
   color: #f1f5f9 !important;
 }
 
-.text-slate-800 {
+:root:not([data-theme="light"]) .text-slate-800 {
   color: #e2e8f0 !important;
 }
 
-.text-slate-700,
-.text-slate-600,
-.text-slate-500,
-.text-slate-400 {
+:root:not([data-theme="light"]) .text-slate-700,
+:root:not([data-theme="light"]) .text-slate-600,
+:root:not([data-theme="light"]) .text-slate-500,
+:root:not([data-theme="light"]) .text-slate-400 {
   color: #94a3b8 !important;
 }
 
-.bg-white {
+:root:not([data-theme="light"]) .bg-white {
   background-color: #13161f !important;
 }
 
-.bg-white\/80,
-.bg-white\/90 {
+:root:not([data-theme="light"]) .bg-white\/80,
+:root:not([data-theme="light"]) .bg-white\/90 {
   background-color: rgba(19, 22, 31, 0.9) !important;
 }
 
-.bg-slate-100 {
+:root:not([data-theme="light"]) .bg-slate-100 {
   background-color: #0e1018 !important;
 }
 
-.bg-slate-50 {
+:root:not([data-theme="light"]) .bg-slate-50 {
   background-color: #101524 !important;
 }
 
-.border-slate-200 {
+:root:not([data-theme="light"]) .border-slate-200 {
   border-color: #2a3348 !important;
 }
 
 /* Boost contrast on custom dark-border utilities used across cards/tables. */
-.border-\[\#1e2433\],
-.border-\[\#20283a\] {
+:root:not([data-theme="light"]) .border-\[\#1e2433\],
+:root:not([data-theme="light"]) .border-\[\#20283a\] {
   border-color: #2a3348 !important;
 }
 
-.hover\:bg-brand-50:hover,
-.hover\:bg-brand-50\/60:hover,
-.hover\:bg-brand-100:hover {
+:root:not([data-theme="light"]) .hover\:bg-brand-50:hover,
+:root:not([data-theme="light"]) .hover\:bg-brand-50\/60:hover,
+:root:not([data-theme="light"]) .hover\:bg-brand-100:hover {
   background-color: rgba(249, 115, 22, 0.12) !important;
 }
 
@@ -110,4 +124,301 @@ body {
   .hawk-evidence-river .react-flow__edge.animated path {
     animation: none !important;
   }
+}
+
+/* ---- Responsive foundations (every page, every browser) ------------------------------------------------------------ */
+
+/* Grid items may shrink below their content's widest word or table (the usual cause of a page wider than a phone). */
+:where(.grid, .inline-grid) > * {
+  min-width: 0;
+}
+
+/* Media and long words never push the page wider than the window. */
+img,
+video,
+canvas,
+iframe {
+  max-width: 100%;
+}
+/* break-word, not anywhere: a long id still wraps, but a table's columns keep their natural widths. */
+code,
+kbd,
+samp,
+pre,
+.font-mono,
+td,
+dd {
+  overflow-wrap: break-word;
+}
+pre {
+  white-space: pre-wrap;
+}
+
+/* Text for screen readers only (Tailwind's sr-only) is placed absolutely where it would have been: inside a wide
+   table that scrolls, that can be past the window's edge, and an absolute box is not cut off by a scroll box that is
+   not itself positioned, so the whole page scrolled sideways. Pinned to its container's corner instead (anything
+   focusable keeps Tailwind's placement, so focusing it never jumps the page). */
+.sr-only:not(:is(a, button, input, select, textarea, [tabindex])) {
+  left: 0;
+  top: 0;
+}
+
+/* A visible focus ring for keyboard users wherever a control has not drawn its own. */
+:where(a, button, summary, [role="button"], [tabindex]):focus-visible {
+  outline: 2px solid rgba(251, 146, 60, 0.9);
+  outline-offset: 2px;
+}
+
+/* Form controls: the same look in Safari, Chrome, Edge and Firefox. */
+:where(input[type="search"]) {
+  -webkit-appearance: none;
+  appearance: none;
+}
+:where(input[type="search"])::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+:where(input[type="date"], input[type="datetime-local"], input[type="time"]) {
+  min-height: 2.5rem;
+  color-scheme: dark;
+}
+:where(input, select, textarea, button) {
+  max-width: 100%;
+}
+
+/* The top bar's frosted glass (Safari needs the prefixed property). */
+.hawk-topbar {
+  padding-top: max(0.625rem, env(safe-area-inset-top));
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+@media (min-width: 1024px) {
+  .hawk-topbar {
+    padding-top: max(0.875rem, env(safe-area-inset-top));
+  }
+}
+.hawk-drawer {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.hawk-page {
+  padding-bottom: max(2rem, calc(env(safe-area-inset-bottom) + 1rem));
+}
+
+/* Dialogs fit the window, scroll inside themselves, and keep clear of the notch and the home bar. */
+dialog {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  max-width: calc(100vw - 1rem);
+  max-height: calc(100vh - 1rem);
+  max-height: calc(100dvh - 1rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
+
+@media (max-width: 767.98px) {
+  /* iOS Safari zooms into any field whose text is under 16 px: keep them at 16 on a phone. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Tables become cards wherever they would not fit (always on a phone): one card a row, each cell under its column's
+   name. components/responsive-tables.tsx decides (data-cards="stack" or "table") and gives the names; a table that
+   must stay a grid says data-table="scroll" and keeps its own scroll box. */
+table[data-cards="stack"] {
+  display: block;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100%;
+  border-collapse: separate;
+}
+table[data-cards="stack"] > thead,
+table[data-cards="stack"] tr[data-card-head] {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+table[data-cards="stack"] > tbody,
+table[data-cards="stack"] > tfoot,
+table[data-cards="stack"] > caption {
+  display: block;
+  width: 100%;
+}
+table[data-cards="stack"] > tbody > tr,
+table[data-cards="stack"] > tfoot > tr {
+  display: block;
+  width: 100%;
+  margin: 0 0 0.625rem;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid rgba(148, 163, 184, 0.16) !important;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.022);
+}
+table[data-cards="stack"] > tbody > tr:first-child {
+  margin-top: 0.75rem;
+}
+table[data-cards="stack"] > tbody > tr:last-child {
+  margin-bottom: 0;
+}
+table[data-cards="stack"] > tbody > tr > :is(td, th),
+table[data-cards="stack"] > tfoot > tr > :is(td, th) {
+  position: relative;
+  display: block;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  height: auto !important;
+  min-height: 2rem;
+  padding: 0.4rem 0 0.4rem calc(min(38%, 9.5rem) + 0.75rem) !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08) !important;
+  text-align: left !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  background: transparent;
+}
+table[data-cards="stack"] > tbody > tr > :is(td, th):last-child {
+  border-bottom: 0 !important;
+}
+table[data-cards="stack"] > tbody > tr > :is(td, th)::before {
+  content: attr(data-label);
+  position: absolute;
+  left: 0;
+  top: 0.5rem;
+  width: min(38%, 9.5rem);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #8a97ab;
+  overflow-wrap: break-word;
+}
+/* No column name (a tick box, an actions cell) or a cell across the whole row: the full width of the card. */
+table[data-cards="stack"] > tbody > tr > :is(td, th):not([data-label]),
+table[data-cards="stack"] > tbody > tr > :is(td, th)[data-label=""],
+table[data-cards="stack"] > tbody > tr > :is(td, th)[colspan]:not([colspan="1"]) {
+  padding-left: 0 !important;
+}
+table[data-cards="stack"] > tbody > tr > :is(td, th):not([data-label])::before,
+table[data-cards="stack"] > tbody > tr > :is(td, th)[data-label=""]::before,
+table[data-cards="stack"] > tbody > tr > :is(td, th)[colspan]:not([colspan="1"])::before {
+  content: none;
+}
+/* A cell with nothing in it and no column name (an unused tick box, an empty actions cell) is left out. */
+table[data-cards="stack"] > tbody > tr > :is(td, th):not([data-label]):empty,
+table[data-cards="stack"] > tbody > tr > :is(td, th)[data-label=""]:empty {
+  display: none;
+}
+/* An empty cell says so rather than leaving a gap. */
+table[data-cards="stack"] > tbody > tr > :is(td, th)[data-label]:not([data-label=""]):empty::after {
+  content: "—";
+  color: #64748b;
+}
+/* A box that only existed to scroll a wide table sideways has nothing left to scroll: it never scrolls (clip where
+   the browser has it, hidden before Safari 16). */
+:is(div, section):has(> table[data-cards="stack"]) {
+  overflow-x: hidden !important;
+  overflow-x: clip !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* The pages before the console: the full height of the window on iOS Safari too, clear of the notch. */
+.hawk-signin {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-top: max(2.5rem, env(safe-area-inset-top));
+  padding-bottom: max(2.5rem, env(safe-area-inset-bottom));
+}
+
+/* ---- The light look (the default; lib/theme.ts). The pages' own colour classes are turned light by
+   ../styles/light-theme.generated.css; what follows is the frame around them. ---------------------------------- */
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+:root[data-theme="light"] body {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(249, 115, 22, 0.07) 0, transparent 42%),
+    radial-gradient(circle at 92% 4%, rgba(59, 130, 246, 0.06) 0, transparent 42%),
+    #f4f6f9;
+  color: #0f172a;
+}
+:root[data-theme="light"] :where(input[type="date"], input[type="datetime-local"], input[type="time"]) {
+  color-scheme: light;
+}
+/* Soft shadows: depth without the dark look's heavy ones. */
+:root[data-theme="light"] .shadow-panel,
+:root[data-theme="light"] .shadow-sm {
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 4px 14px rgba(15, 23, 42, 0.05);
+}
+:root[data-theme="light"] .shadow-xl,
+:root[data-theme="light"] .shadow-2xl {
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12), 0 2px 6px rgba(15, 23, 42, 0.06);
+}
+:root[data-theme="light"] [class*="shadow-[0_0"],
+:root[data-theme="light"] [class*="shadow-[inset"] {
+  box-shadow: none;
+}
+/* The top bar and the side menu: white glass on the light page. */
+:root[data-theme="light"] .hawk-topbar {
+  background-color: rgba(255, 255, 255, 0.86);
+}
+:root[data-theme="light"] .hawk-drawer,
+:root[data-theme="light"] aside[aria-label="Primary navigation"] {
+  background-color: #ffffff;
+}
+/* Active navigation and the primary accent: the brand orange, dark enough to read on white. */
+:root[data-theme="light"] [aria-current="page"].bg-orange-400\/\[0\.11\],
+:root[data-theme="light"] .bg-orange-400\/\[0\.11\] {
+  background-color: #fff3e6;
+  box-shadow: inset 0 0 0 1px rgba(234, 88, 12, 0.22);
+}
+/* Tables as cards on a phone. */
+@media all {
+  :root[data-theme="light"] table[data-cards="stack"] > tbody > tr,
+  :root[data-theme="light"] table[data-cards="stack"] > tfoot > tr {
+    border-color: #e2e8f0 !important;
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+  :root[data-theme="light"] table[data-cards="stack"] > tbody > tr > :is(td, th) {
+    border-bottom-color: #f1f5f9 !important;
+  }
+  :root[data-theme="light"] table[data-cards="stack"] > tbody > tr > :is(td, th)::before {
+    color: #64748b;
+  }
+}
+/* Charts and graphs drawn for the dark look. */
+:root[data-theme="light"] .recharts-cartesian-grid line {
+  stroke: #e2e8f0;
+}
+:root[data-theme="light"] .recharts-cartesian-axis-tick-value,
+:root[data-theme="light"] .recharts-text {
+  fill: #475569;
+}
+:root[data-theme="light"] .recharts-default-tooltip {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a;
+}
+:root[data-theme="light"] .react-flow__controls-button {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  color: #0f172a;
+  fill: #0f172a;
+}
+:root[data-theme="light"] .react-flow__minimap {
+  background: #f8fafc;
 }

@@ -1,0 +1,516 @@
+{
+  "id": "mitre-atlas",
+  "version": "2026.11.1",
+  "order": 111,
+  "optional": false,
+  "framework": {
+    "name": "MITRE ATLAS (techniques and mitigations for LLM and agent systems)",
+    "short": "MITRE ATLAS",
+    "version": "ATLAS data 2026.07 (format 6.0.0)",
+    "publisher": "MITRE",
+    "jurisdiction": "International",
+    "url": "https://atlas.mitre.org/"
+  },
+  "summary": "The ATLAS techniques that target LLM and agent systems, with Hawk AI's detectors for each (from the threat registry's ATLAS tags), and the ATLAS mitigations Hawk AI implements.",
+  "scope": "ATLAS technique (AML.T) and mitigation (AML.M) ids with their ATLAS names. Only techniques and mitigations relevant to an organisation's use of LLMs and agents are listed.",
+  "sources": [
+    {
+      "title": "MITRE ATLAS",
+      "url": "https://atlas.mitre.org/"
+    },
+    {
+      "title": "ATLAS data release 2026.07 (YAML)",
+      "url": "https://atlas.mitre.org/atlas-data/dist/v6/ATLAS-2026.07.yaml"
+    }
+  ],
+  "notes": [],
+  "requirements": [
+    {
+      "id": "AML.T0051",
+      "title": "LLM Prompt Injection (direct and indirect)",
+      "applicability": "product",
+      "controls": [
+        "detect.coverage:mitre_atlas:AML.T0051",
+        "injection.detection"
+      ],
+      "evidence": [
+        "records:detector_coverage",
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.T0054",
+      "title": "LLM Jailbreak",
+      "applicability": "product",
+      "controls": [
+        "detect.coverage:mitre_atlas:AML.T0054",
+        "injection.detection"
+      ],
+      "evidence": [
+        "records:detector_coverage",
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.T0056",
+      "title": "Extract LLM System Prompt",
+      "applicability": "product",
+      "controls": [
+        "detect.coverage:mitre_atlas:AML.T0056"
+      ],
+      "evidence": [
+        "records:detector_coverage",
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.T0068",
+      "title": "LLM Prompt Obfuscation",
+      "applicability": "product",
+      "controls": [
+        "detect.coverage:mitre_atlas:AML.T0068"
+      ],
+      "evidence": [
+        "records:detector_coverage",
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.T0053",
+      "title": "AI Agent Tool Invocation",
+      "applicability": "product",
+      "controls": [
+        "detect.coverage:mitre_atlas:AML.T0053",
+        "ai.mcp_tool_scan",
+        "ai.human_oversight"
+      ],
+      "evidence": [
+        "records:detector_coverage",
+        "settings:detection",
+        "audit:gateway",
+        "settings:approvals",
+        "records:approvals",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.T0071",
+      "title": "False RAG Entry Injection",
+      "applicability": "product",
+      "controls": [
+        "detect.coverage:mitre_atlas:AML.T0071"
+      ],
+      "evidence": [
+        "records:detector_coverage",
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.T0057",
+      "title": "LLM Data Leakage",
+      "applicability": "product",
+      "controls": [
+        "dlp.personal_data",
+        "dlp.payment_cards",
+        "dlp.secrets"
+      ],
+      "evidence": [
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.T0024",
+      "title": "Exfiltration via AI Inference API",
+      "applicability": "product",
+      "controls": [
+        "dlp.personal_data",
+        "dlp.secrets",
+        "ai.rate_limits"
+      ],
+      "evidence": [
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.T0086",
+      "title": "Exfiltration via AI Agent Tool Invocation",
+      "applicability": "product",
+      "controls": [
+        "dlp.personal_data",
+        "dlp.secrets",
+        "ai.mcp_tool_scan"
+      ],
+      "evidence": [
+        "settings:detection",
+        "audit:gateway",
+        "records:detector_coverage",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.T0110",
+      "title": "AI Agent Tool Poisoning",
+      "applicability": "product",
+      "controls": [
+        "ai.mcp_tool_scan"
+      ],
+      "evidence": [
+        "records:detector_coverage",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.T0080",
+      "title": "AI Agent Context Poisoning",
+      "applicability": "product",
+      "controls": [
+        "detect.coverage:mitre_atlas:AML.T0051",
+        "injection.detection"
+      ],
+      "evidence": [
+        "records:detector_coverage",
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ],
+      "note": "Hawk AI catches poisoned context as indirect prompt injection (AML.T0051.001); no detector is tagged AML.T0080 itself yet."
+    },
+    {
+      "id": "AML.T0029",
+      "title": "Denial of AI Service",
+      "applicability": "product",
+      "controls": [
+        "ai.rate_limits"
+      ],
+      "evidence": [
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.T0034",
+      "title": "Cost Harvesting",
+      "applicability": "product",
+      "controls": [
+        "ai.rate_limits"
+      ],
+      "evidence": [
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.T0010",
+      "title": "AI Supply Chain Compromise",
+      "applicability": "customer",
+      "controls": [
+        "gap.ai_supply_chain",
+        "ai.mcp_tool_scan"
+      ],
+      "evidence": [
+        "records:attestations",
+        "records:detector_coverage",
+        "audit:gateway"
+      ]
+    },
+    {
+      "id": "AML.T0020",
+      "title": "Training Data Poisoning",
+      "applicability": "customer",
+      "controls": [
+        "gap.ai_supply_chain"
+      ],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.T0012",
+      "title": "Valid Accounts",
+      "applicability": "product",
+      "controls": [
+        "auth.two_step",
+        "auth.lockout",
+        "access.dormant_accounts"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "settings:sign_in",
+        "audit:people",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.T0055",
+      "title": "Unsecured Credentials",
+      "applicability": "product",
+      "controls": [
+        "dlp.secrets"
+      ],
+      "evidence": [
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.M0004",
+      "title": "Limit AI Service Query Volume and Rate",
+      "applicability": "product",
+      "controls": [
+        "ai.rate_limits"
+      ],
+      "evidence": [
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.M0005",
+      "title": "Control Access to AI Models and Data at Rest",
+      "applicability": "customer",
+      "controls": [
+        "access.roles",
+        "crypto.disk"
+      ],
+      "evidence": [
+        "audit:people",
+        "settings:sign_in",
+        "settings:encryption",
+        "audit:settings",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.M0012",
+      "title": "Encrypt Sensitive Information",
+      "applicability": "product",
+      "controls": [
+        "crypto.transit",
+        "crypto.backups",
+        "crypto.disk"
+      ],
+      "evidence": [
+        "settings:encryption",
+        "audit:settings",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.M0013",
+      "title": "Code Signing",
+      "applicability": "product",
+      "controls": [
+        "software.integrity"
+      ],
+      "evidence": [
+        "audit:updates",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.M0016",
+      "title": "Vulnerability Scanning",
+      "applicability": "customer",
+      "controls": [
+        "host.hardening",
+        "software.integrity"
+      ],
+      "evidence": [
+        "records:operations",
+        "audit:updates",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.M0018",
+      "title": "User Training",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.M0019",
+      "title": "Control Access to AI Models and Data in Production",
+      "applicability": "product",
+      "controls": [
+        "access.roles",
+        "ai.approval_policy",
+        "auth.two_step"
+      ],
+      "evidence": [
+        "audit:people",
+        "settings:sign_in",
+        "settings:approvals",
+        "records:approvals",
+        "audit:approvals",
+        "audit:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.M0020",
+      "title": "Generative AI Guardrails",
+      "applicability": "product",
+      "controls": [
+        "injection.detection",
+        "dlp.personal_data",
+        "dlp.secrets"
+      ],
+      "evidence": [
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.M0021",
+      "title": "Generative AI Guidelines",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.M0023",
+      "title": "AI Bill of Materials",
+      "applicability": "customer",
+      "controls": [
+        "gap.ai_supply_chain"
+      ],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.M0024",
+      "title": "AI Telemetry Logging",
+      "applicability": "product",
+      "controls": [
+        "log.audit_chain",
+        "ai.gateway_in_use"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.M0026",
+      "title": "Privileged AI Agent Permissions Configuration",
+      "applicability": "customer",
+      "controls": [
+        "ai.mcp_tool_scan",
+        "access.roles"
+      ],
+      "evidence": [
+        "records:detector_coverage",
+        "audit:gateway",
+        "audit:people",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.M0028",
+      "title": "AI Agent Tools Permissions Configuration",
+      "applicability": "customer",
+      "controls": [
+        "ai.mcp_tool_scan"
+      ],
+      "evidence": [
+        "records:detector_coverage",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.M0029",
+      "title": "Human In-the-Loop for AI Agent Actions",
+      "applicability": "product",
+      "controls": [
+        "ai.human_oversight"
+      ],
+      "evidence": [
+        "settings:approvals",
+        "settings:detection",
+        "records:approvals",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.M0030",
+      "title": "Restrict AI Agent Tool Invocation on Untrusted Data",
+      "applicability": "product",
+      "controls": [
+        "injection.detection",
+        "detect.coverage:mitre_atlas:AML.T0051"
+      ],
+      "evidence": [
+        "settings:detection",
+        "audit:gateway",
+        "records:detector_coverage",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.M0033",
+      "title": "Input and Output Validation for AI Agent Components",
+      "applicability": "product",
+      "controls": [
+        "injection.detection",
+        "detect.coverage:owasp_llm:LLM05"
+      ],
+      "evidence": [
+        "settings:detection",
+        "audit:gateway",
+        "records:detector_coverage",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.M0035",
+      "title": "AI Red Team",
+      "applicability": "customer",
+      "controls": [
+        "ai.adversarial_testing"
+      ],
+      "evidence": [
+        "records:operations",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AML.M0036",
+      "title": "Limit AI Workload Resource Consumption",
+      "applicability": "product",
+      "controls": [
+        "ai.rate_limits"
+      ],
+      "evidence": [
+        "audit:gateway",
+        "records:attestations"
+      ]
+    }
+  ]
+}

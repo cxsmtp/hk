@@ -60,7 +60,7 @@ from app.db.models.execution_effect import (
     EffectReservationV2,
     ExecutionPermitEffectBindingV2,
 )
-from app.db.models.access import CompliancePolicy, FirstRunState, SignInPolicy, TermsAcceptance, TermsCopyEmail, TermsTextRecord
+from app.db.models.access import ComplianceAttestation, CompliancePolicy, FirstRunState, SignInPolicy, TermsAcceptance, TermsCopyEmail, TermsTextRecord
 from app.db.models.activation import ActivationState
 from app.db.models.audit import AuditChainHead, AuditLog
 from app.db.models.platform_records import ConnectorCall, SupportCounter, SupportSettings, SupportTicket, UserActivity
@@ -301,6 +301,11 @@ from app.db.models.snapshot import AuditorSnapshot
 from app.db.models.tenant import Tenant
 from app.db.models.user import RefreshToken, User, UserTenantRole
 from app.db.models.iam import IamJoinSettings, IamRole, IamTeam
+from app.services.pci_controls import install_persistence_guard
+
+# Card numbers are masked in every row the ORM writes (PCI DSS 3.3 / 3.4): registered after the models' own
+# before_flush hooks, so the rows they add are masked too.
+install_persistence_guard()
 
 __all__ = [
     "Tenant",
@@ -314,6 +319,7 @@ __all__ = [
     "ActivationState",
     "FirstRunState",
     "SignInPolicy",
+    "ComplianceAttestation",
     "CompliancePolicy",
     "TermsAcceptance",
     "TermsCopyEmail",

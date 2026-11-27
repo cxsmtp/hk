@@ -793,13 +793,24 @@ def _note_ip(ip: str) -> None:
 
 @router.get("/auth/join")
 def join_available(workspace: str = Query(default="", max_length=100), db: Session = Depends(get_db)):
-    tenant = _tenant_by_slug(db, workspace)
+    # The sign-in page has no workspace box: without one, the installation's only workspace (none when there are
+    # several; joining them is by an invitation link, /join?workspace=…).
+    tenant = _tenant_by_slug(db, workspace) if clean(workspace, 100) else _only_tenant(db)
     if tenant is None:
         return _no_store({"available": False, "domains": []})
     rules = join_rules(db, tenant.id)
     available = join_ready(db, tenant.id)["ready"]
     db.commit()
-    return _no_store({"available": available, "domains": rules["domains"] if available else []})
+    answer: dict[str, Any] = {"available": available, "domains": rules["domains"] if available else []}
+    if available:
+        answer["workspace"] = tenant.slug
+    return _no_store(answer)
+
+
+def _only_tenant(db: Session) -> Tenant | None:
+    """The one active workspace of an installation that has only one; None when it has several."""
+    tenants = db.scalars(select(Tenant).where(Tenant.is_active.is_(True)).limit(2)).all()
+    return tenants[0] if len(tenants) == 1 else None
 
 
 def _join_email(db: Session, tenant: Tenant, email: str, ip: str) -> tuple[Any, str] | None:

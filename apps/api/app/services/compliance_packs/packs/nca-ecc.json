@@ -1,0 +1,335 @@
+{
+  "id": "nca-ecc",
+  "version": "2026.11.1",
+  "order": 90,
+  "optional": false,
+  "framework": {
+    "name": "Saudi NCA Essential Cybersecurity Controls ECC-2:2024 (selected controls)",
+    "short": "NCA ECC",
+    "version": "ECC-2:2024",
+    "publisher": "National Cybersecurity Authority, Kingdom of Saudi Arabia",
+    "jurisdiction": "Saudi Arabia",
+    "url": "https://nca.gov.sa/en/regulatory-documents/controls-list/ecc/"
+  },
+  "summary": "The ECC-2:2024 controls Hawk AI takes part in: identity and access (2-2-3), protection of systems (2-3-3), data protection (2-7), cryptography (2-8-3), backups (2-9-3), event logs kept 12 months (2-12-3), incidents (2-13-3), web application security (2-15-3), continuity (3-1-3), third parties and cloud (4-1, 4-2).",
+  "scope": "Control numbers (domain-subdomain-control) with our own short paraphrase: the NCA's text is its own. Only controls Hawk AI takes part in are listed; governance (domain 1) is mostly the entity's.",
+  "sources": [
+    {
+      "title": "NCA ECC-2:2024 (English, PDF)",
+      "url": "https://cdn.nca.gov.sa/api/files/public/upload/86e09090-44e4-481f-bc28-355673607654_ECC--2024-EN.pdf"
+    }
+  ],
+  "notes": [],
+  "requirements": [
+    {
+      "id": "1-3-1",
+      "title": "Cybersecurity policies and procedures defined and approved",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "1-5-1",
+      "title": "Cybersecurity risk management methodology",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "1-6-2",
+      "title": "Security in IT projects: vulnerability assessment and secure configuration before go-live",
+      "applicability": "customer",
+      "controls": [
+        "software.integrity",
+        "host.hardening"
+      ],
+      "evidence": [
+        "audit:updates",
+        "records:operations",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "1-7-1",
+      "title": "Comply with national cybersecurity laws and regulations",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "1-8-1",
+      "title": "Periodic cybersecurity review and audit",
+      "applicability": "organisational",
+      "controls": [
+        "evidence.signing"
+      ],
+      "evidence": [
+        "audit:audit",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "1-9-4",
+      "title": "Cybersecurity during employment (awareness, access)",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "1-10-2",
+      "title": "Awareness programme implemented",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "2-1-1",
+      "title": "Asset management (AI tools and services included)",
+      "applicability": "customer",
+      "controls": [
+        "ai.inventory",
+        "ai.discovery"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "2-2-3",
+      "title": "IAM minimum: MFA for remote and privileged access, least privilege, privileged access management, periodic access review",
+      "applicability": "product",
+      "controls": [
+        "auth.password_rule",
+        "auth.two_step",
+        "auth.admin_mfa",
+        "access.roles",
+        "access.dormant_accounts"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "settings:sign_in",
+        "audit:people",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "2-3-3",
+      "title": "System protection: malware, patching, central clock synchronisation",
+      "applicability": "customer",
+      "controls": [
+        "host.hardening",
+        "software.integrity",
+        "log.clock"
+      ],
+      "evidence": [
+        "records:operations",
+        "audit:updates",
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "2-5-3",
+      "title": "Network security: segmentation, secure and restricted internet browsing",
+      "applicability": "customer",
+      "controls": [
+        "host.hardening",
+        "ai.gateway_in_use"
+      ],
+      "evidence": [
+        "records:operations",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "2-7-1",
+      "title": "Data and information protected by classification and privacy",
+      "applicability": "customer",
+      "controls": [
+        "dlp.personal_data",
+        "dlp.payment_cards",
+        "dlp.secrets",
+        "ai.local_detection"
+      ],
+      "evidence": [
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "2-8-3",
+      "title": "Cryptography: approved standards, key management, encryption in transit and at rest",
+      "applicability": "product",
+      "controls": [
+        "crypto.transit",
+        "crypto.backups",
+        "crypto.disk",
+        "evidence.signing"
+      ],
+      "evidence": [
+        "settings:encryption",
+        "audit:settings",
+        "audit:audit",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "2-9-3",
+      "title": "Backups: scope, quick recovery, periodic restore tests",
+      "applicability": "product",
+      "controls": [
+        "backup.schedule",
+        "crypto.backups",
+        "backup.restore_tested"
+      ],
+      "evidence": [
+        "audit:backups",
+        "settings:encryption",
+        "audit:settings",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "2-10-3",
+      "title": "Vulnerability management",
+      "applicability": "customer",
+      "controls": [
+        "software.integrity",
+        "host.hardening"
+      ],
+      "evidence": [
+        "audit:updates",
+        "records:operations",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "2-11-1",
+      "title": "Penetration testing requirements",
+      "applicability": "customer",
+      "controls": [
+        "ai.adversarial_testing"
+      ],
+      "evidence": [
+        "records:operations",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "2-12-3",
+      "title": "Event logs: critical assets and privileged accounts logged, SIEM, continuous monitoring, kept 12 months",
+      "applicability": "product",
+      "controls": [
+        "log.audit_chain",
+        "log.siem",
+        "log.retention_year"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "2-13-3",
+      "title": "Incidents: response plans, classification, reporting to the NCA, threat intelligence",
+      "applicability": "customer",
+      "controls": [
+        "ir.incident_report",
+        "notify.email"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "audit:settings",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "2-14-1",
+      "title": "Physical security",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "2-15-3",
+      "title": "Web application security: WAF, multi-tier design, HTTPS, usage policy, user authentication",
+      "applicability": "product",
+      "controls": [
+        "crypto.transit",
+        "auth.two_step",
+        "auth.sign_in_notice"
+      ],
+      "evidence": [
+        "settings:encryption",
+        "audit:settings",
+        "audit:sign_in",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "3-1-3",
+      "title": "Continuity of cybersecurity systems and disaster recovery",
+      "applicability": "customer",
+      "controls": [
+        "backup.schedule",
+        "ops.self_recovery"
+      ],
+      "evidence": [
+        "audit:backups",
+        "settings:encryption",
+        "records:operations",
+        "audit:updates",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "4-1-2",
+      "title": "Cybersecurity requirements for third parties (AI providers included)",
+      "applicability": "customer",
+      "controls": [
+        "ai.inventory",
+        "ai.approval_policy"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "settings:approvals",
+        "records:approvals",
+        "audit:approvals",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "4-2-3",
+      "title": "Cloud and hosting: data hosted in the Kingdom, classification, data returned at exit",
+      "applicability": "customer",
+      "controls": [
+        "data.residency",
+        "ai.discovery"
+      ],
+      "evidence": [
+        "settings:compliance",
+        "records:ai_inventory",
+        "records:attestations"
+      ]
+    }
+  ]
+}

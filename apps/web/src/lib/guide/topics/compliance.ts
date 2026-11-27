@@ -6,9 +6,76 @@ import type { GuideTopic } from "../types";
  */
 export const compliance: GuideTopic = {
   slug: "compliance",
-  title: "Compliance (DESC, UAE, India)",
-  summary: "Where Hawk AI stands against Dubai's Information Security Regulation, the UAE IA Standard and India's CERT-In directions: the recommended sign-in baseline, the clock, retention, data location, SIEM export and the incident report.",
+  title: "Compliance (framework packs, DESC, UAE, India)",
+  summary: "Framework packs for DPDP, UAE PDPL, DESC ISR, ISO 27001 and 42001, PCI DSS, CIS, NIST, NCA, SAMA, Australia's frameworks, OWASP, MITRE ATLAS and the EU AI Act, with signed evidence; and for DESC, the UAE IA Standard and CERT-In: the sign-in baseline, the clock, retention, data location, SIEM export and the incident report.",
   sections: [
+    {
+      id: "framework-packs",
+      title: "Framework packs",
+      who: "Owners, admins and auditors",
+      blocks: [
+        {
+          kind: "p",
+          text: "[Settings → Compliance](/settings/compliance) opens on **Framework packs**: one pack per law or standard. Each lists the framework's requirements by their own reference (an article, a clause, a control number) with a short description in our words, who does it, the Hawk AI controls behind it and their status now, worked out from the settings in force and the records kept.",
+        },
+        {
+          kind: "table",
+          head: ["Pack", "What it covers"],
+          rows: [
+            ["DPDP", "India's Digital Personal Data Protection Act 2023 and Rules 2025: Rule 6 safeguards, breach intimation, erasure, Significant Data Fiduciaries' checks on AI software."],
+            ["UAE PDPL", "Federal Decree-Law 45 of 2021, with notes on the DIFC and ADGM laws."],
+            ["DESC ISR", "Dubai's Information Security Regulation v3 (with the UAE IA Standard and CERT-In): the checklist of the second tab plus the entity's own duties."],
+            ["ISO 27001, ISO 42001", "Annex A technological controls; the AI management system's Annex A controls."],
+            ["PCI DSS", "v4.0.1 requirements where Hawk AI takes part: card numbers kept out of AI chats, authentication, logs kept 12 months."],
+            ["CIS Controls, NIST CSF", "CIS v8.1 safeguards and CSF 2.0 outcomes Hawk AI supports."],
+            ["NIST AI RMF, NIST GAI Profile", "All 72 AI RMF subcategories; the 12 generative AI risks of NIST AI 600-1."],
+            ["NCA ECC, SAMA CSF", "Saudi Arabia's Essential Cybersecurity Controls (ECC-2:2024) and SAMA's Cyber Security Framework."],
+            ["Essential Eight, CPS 234, AU AI Safety Standard", "Australia: ASD's eight strategies, APRA's CPS 234 and the 10 voluntary AI guardrails."],
+            ["OWASP LLM Top 10, MITRE ATLAS", "From the tags every detector carries: which risks and techniques Hawk AI detects, and which it does not yet."],
+            ["EU AI Act", "Optional: a deployer's view of Regulation (EU) 2024/1689."],
+          ],
+        },
+        {
+          kind: "table",
+          head: ["Status", "Meaning"],
+          rows: [
+            ["Met", "Every Hawk AI control behind it is in force now."],
+            ["Partly met", "Some are; each control says what is left."],
+            ["Gap", "None is in force yet. **Next step** links to the setting that closes it; some gaps are features Hawk AI does not have yet, and say so."],
+            ["Your process", "No Hawk AI control covers it: a policy, training, a contract. Owners and admins **Record** it as in place, with where its evidence is."],
+            ["Recorded in place, Not applicable", "What an owner or admin recorded. A record lasts a year, then is due for review; every change is in the audit log."],
+          ],
+        },
+        {
+          kind: "p",
+          text: "Filter by who does it (**Hawk AI**, **You, with Hawk AI**, **Your organisation**) and by status to see the gaps first.",
+        },
+        {
+          kind: "note",
+          tone: "warn",
+          text: "Packs support compliance work: they show where Hawk AI's controls stand and gather the evidence. They do not by themselves make your organisation compliant or certified; your auditor or regulator decides that.",
+        },
+      ],
+    },
+    {
+      id: "pack-evidence",
+      title: "Signed evidence for a pack",
+      who: "People who may export the audit log",
+      blocks: [
+        {
+          kind: "p",
+          text: "**Download signed evidence** on a pack gives one zip for a time window (the last 30 days by default, at most a year): each requirement's status, the controls behind it, the settings in force, the audit entries of the window with their sequence numbers and chain codes, licence acceptances, AI approvals, the AI system inventory and your records. `manifest.json` lists every file with its SHA-256 and is signed with this installation's evidence key. Passwords, secrets, keys and prompt text are never in it. Each download is in the audit log.",
+        },
+        {
+          kind: "steps",
+          items: [
+            "Save the public keys from `/.well-known/hawk-evidence-keys.json` (or Settings → Audit log → Evidence signing).",
+            "Unzip the bundle into a folder.",
+            "Run `python3 tools/verify_evidence.py manifest.json --keys hawk-evidence-keys.json` there: it checks the signature and that no file changed.",
+          ],
+        },
+      ],
+    },
     {
       id: "what-it-covers",
       title: "What the Compliance page shows",
@@ -16,7 +83,7 @@ export const compliance: GuideTopic = {
       blocks: [
         {
           kind: "p",
-          text: "[Settings → Compliance](/settings/compliance) lists each control of the Dubai Electronic Security Center's Information Security Regulation (DESC ISR), the UAE Information Assurance Standard and India's CERT-In directions that the software takes part in, with its status worked out from the settings in force and a link to where it is set or shown.",
+          text: "The second tab of [Settings → Compliance](/settings/compliance) lists each control of the Dubai Electronic Security Center's Information Security Regulation (DESC ISR), the UAE Information Assurance Standard and India's CERT-In directions that the software takes part in, with its status worked out from the settings in force and a link to where it is set or shown.",
         },
         {
           kind: "table",

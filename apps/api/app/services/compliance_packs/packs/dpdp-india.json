@@ -1,0 +1,417 @@
+{
+  "id": "dpdp-india",
+  "version": "2026.11.1",
+  "order": 10,
+  "optional": false,
+  "framework": {
+    "name": "India Digital Personal Data Protection Act 2023 and DPDP Rules 2025",
+    "short": "DPDP",
+    "version": "Act No. 22 of 2023; Rules notified 13-14 November 2025",
+    "publisher": "Ministry of Electronics and Information Technology (MeitY)",
+    "jurisdiction": "India",
+    "url": "https://www.meity.gov.in/data-protection-framework"
+  },
+  "summary": "The obligations of a Data Fiduciary under India's DPDP Act and Rules, and where Hawk AI supports them: security safeguards under Rule 6 (encryption and masking, access control, logs kept a year, backups), breach intimation, erasure, and checks on the AI software a Significant Data Fiduciary uses.",
+  "scope": "Section and rule numbers of the Act and the Rules; titles are our own short wording. Hawk AI runs on the customer's server and holds personal data of the customer's staff (accounts, activity) and finds personal data in AI traffic. Most obligations apply about 18 months after the Rules were notified (from May 2027); the Board's provisions apply at once.",
+  "sources": [
+    {
+      "title": "MeitY: Digital Personal Data Protection Act 2023 and Rules 2025",
+      "url": "https://www.meity.gov.in/data-protection-framework"
+    },
+    {
+      "title": "PIB: DPDP Rules 2025 notified (17 November 2025)",
+      "url": "https://static.pib.gov.in/WriteReadData/specificdocs/documents/2025/nov/doc20251117695301.pdf"
+    },
+    {
+      "title": "DPDP Rules 2025, Rule 6 (reasonable security safeguards), clauses (a)-(g)",
+      "url": "https://www.dpdpa.com/dpdparules/rule6.html"
+    },
+    {
+      "title": "DPDP Rules 2025, Rule 13 (Significant Data Fiduciary)",
+      "url": "https://www.dpdpa.com/dpdparules/rule13.html"
+    }
+  ],
+  "notes": [
+    {
+      "id": "commencement",
+      "title": "When it applies",
+      "text": "Rules 1, 2 and 17-21 (the Board) applied from notification; Rule 4 (consent managers) after 12 months; the Fiduciary's obligations (Rules 3, 5-16, 22, 23) about 18 months after notification, in May 2027."
+    },
+    {
+      "id": "cert-in",
+      "title": "CERT-In directions (28 April 2022)",
+      "text": "Separate from DPDP: report cyber incidents to CERT-In within 6 hours, keep ICT logs 180 days in India and synchronise clocks. These are on the DESC / CERT-In pack and in the incident report."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "s.4",
+      "title": "Process personal data only for a lawful purpose, with consent or for a legitimate use",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "s.5 / R.3",
+      "title": "Give a clear, itemised notice when asking for consent",
+      "applicability": "customer",
+      "controls": [
+        "auth.sign_in_notice"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "settings:sign_in",
+        "records:attestations"
+      ],
+      "note": "For Hawk AI's own users, the sign-in notice can say AI use is monitored; notices to customers' own data principals are the customer's."
+    },
+    {
+      "id": "s.6",
+      "title": "Consent that is free, specific, informed and can be withdrawn as easily as given",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "s.7",
+      "title": "Rely on a legitimate use only where the Act lists one",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "s.8(1)",
+      "title": "Stay responsible for processing done by Data Processors",
+      "applicability": "organisational",
+      "controls": [
+        "data.residency"
+      ],
+      "evidence": [
+        "settings:compliance",
+        "records:attestations"
+      ],
+      "note": "Hawk AI processes on the customer's own server; nothing is sent to the vendor."
+    },
+    {
+      "id": "s.8(3)",
+      "title": "Keep personal data complete and accurate when it drives a decision",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "s.8(4)",
+      "title": "Put in place technical and organisational measures to comply",
+      "applicability": "customer",
+      "controls": [
+        "access.roles",
+        "log.audit_chain",
+        "ai.approval_policy"
+      ],
+      "evidence": [
+        "audit:people",
+        "settings:sign_in",
+        "audit:audit",
+        "settings:compliance",
+        "settings:approvals",
+        "records:approvals",
+        "audit:approvals",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "s.8(5)",
+      "title": "Protect personal data with reasonable security safeguards",
+      "applicability": "product",
+      "controls": [
+        "crypto.transit",
+        "crypto.backups",
+        "auth.two_step",
+        "access.roles",
+        "log.audit_chain",
+        "dlp.personal_data"
+      ],
+      "evidence": [
+        "settings:encryption",
+        "audit:settings",
+        "audit:sign_in",
+        "settings:sign_in",
+        "audit:people",
+        "audit:audit",
+        "settings:compliance",
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "R.6(1)(a)",
+      "title": "Encrypt, obfuscate, mask or tokenise personal data",
+      "applicability": "product",
+      "controls": [
+        "crypto.transit",
+        "crypto.backups",
+        "crypto.disk",
+        "dlp.personal_data"
+      ],
+      "evidence": [
+        "settings:encryption",
+        "audit:settings",
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ],
+      "note": "DLP redacts personal identifiers before prompts reach an AI service."
+    },
+    {
+      "id": "R.6(1)(b)",
+      "title": "Control access to the computer systems that process it",
+      "applicability": "product",
+      "controls": [
+        "auth.password_rule",
+        "auth.two_step",
+        "auth.lockout",
+        "auth.idle_signout",
+        "access.roles",
+        "access.dormant_accounts"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "settings:sign_in",
+        "audit:people",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "R.6(1)(c)",
+      "title": "Log, monitor and review access to detect and investigate misuse",
+      "applicability": "product",
+      "controls": [
+        "log.audit_chain",
+        "log.siem",
+        "log.clock"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "R.6(1)(d)",
+      "title": "Keep processing going if data is lost or destroyed (backups)",
+      "applicability": "product",
+      "controls": [
+        "backup.schedule",
+        "crypto.backups",
+        "backup.restore_tested",
+        "ops.self_recovery"
+      ],
+      "evidence": [
+        "audit:backups",
+        "settings:encryption",
+        "audit:settings",
+        "records:operations",
+        "audit:updates",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "R.6(1)(e)",
+      "title": "Keep logs and personal data a year to detect and investigate breaches",
+      "applicability": "product",
+      "controls": [
+        "log.retention_year",
+        "log.audit_chain"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "R.6(1)(f)",
+      "title": "Put security safeguards in contracts with Data Processors",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "R.6(1)(g)",
+      "title": "Make sure the safeguards are actually followed",
+      "applicability": "customer",
+      "controls": [
+        "log.audit_chain",
+        "evidence.signing"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "s.8(6) / R.7",
+      "title": "Tell the Board and each affected person of a breach (full report to the Board within 72 hours)",
+      "applicability": "customer",
+      "controls": [
+        "ir.incident_report",
+        "notify.email",
+        "log.audit_chain"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "audit:settings",
+        "settings:compliance",
+        "audit:audit",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "s.8(7) / R.8",
+      "title": "Erase personal data once its purpose is served, unless a law requires keeping it",
+      "applicability": "customer",
+      "controls": [
+        "log.retention",
+        "gap.data_subject_requests"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "s.8(9) / R.9",
+      "title": "Publish who answers questions about the processing",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "s.8(10)",
+      "title": "Run an effective way to handle grievances",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "s.9 / R.10",
+      "title": "Verifiable parental consent for children; no tracking or targeted ads at them",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "s.10 / R.13(1)",
+      "title": "Significant Data Fiduciary: yearly impact assessment and audit",
+      "applicability": "organisational",
+      "controls": [
+        "gap.impact_assessment"
+      ],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "R.13(3)",
+      "title": "Significant Data Fiduciary: check that algorithmic software it uses does not risk people's rights",
+      "applicability": "customer",
+      "controls": [
+        "ai.inventory",
+        "ai.approval_policy",
+        "ai.adversarial_testing",
+        "gap.impact_assessment"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "settings:approvals",
+        "records:approvals",
+        "audit:approvals",
+        "records:operations",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "R.13(4)",
+      "title": "Significant Data Fiduciary: keep specified data in India where required",
+      "applicability": "customer",
+      "controls": [
+        "data.residency"
+      ],
+      "evidence": [
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "s.11 / R.14",
+      "title": "Give a person a summary of their personal data and its processing on request",
+      "applicability": "customer",
+      "controls": [
+        "gap.data_subject_requests"
+      ],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "s.12",
+      "title": "Correct, complete, update or erase a person's data on request",
+      "applicability": "customer",
+      "controls": [
+        "gap.data_subject_requests"
+      ],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "s.13",
+      "title": "Answer grievances within the period the Rules set",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "s.14",
+      "title": "Let a person nominate someone to act for them",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "s.16 / R.15",
+      "title": "Transfer outside India only as the Government allows",
+      "applicability": "customer",
+      "controls": [
+        "data.residency"
+      ],
+      "evidence": [
+        "settings:compliance",
+        "records:attestations"
+      ]
+    }
+  ]
+}

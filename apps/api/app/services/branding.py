@@ -31,7 +31,7 @@ DEFAULT_BRANDING: dict[str, Any] = {
     "tagline": "AI control plane",
     "organisationName": "",
     "accent": "",
-    "mode": "dark",
+    "mode": "light",
     "logo": None,
     "icon": None,
 }

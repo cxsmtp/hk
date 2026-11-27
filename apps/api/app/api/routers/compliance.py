@@ -7,6 +7,16 @@
   data location statement and the incident contact. Owners and admins (settings.manage); recorded in the audit log.
 - GET /compliance/incident-report?from=…&to=…: the security events of a time window, for a report to DESC or to
   CERT-In within 6 hours, as JSON with an evidence signature (audit.export); recorded in the audit log.
+
+Framework packs (app/services/compliance_packs):
+
+- GET /compliance/packs: every pack with its counts (audit.view).
+- GET /compliance/packs/{id}: one pack, each requirement with its status, controls and record (audit.view).
+- GET /compliance/controls: the control registry with each control's status now (audit.view).
+- GET /compliance/packs/{id}/evidence?from=…&to=…: the signed evidence bundle (zip) for a window of at most a year,
+  30 days by default (audit.export); recorded in the audit log.
+- PUT / DELETE /compliance/packs/{id}/requirements/{requirement}/record: record that a requirement is in place (the
+  organisation's own process, where its evidence is) or not applicable (settings.manage); recorded in the audit log.
 """
 
 from __future__ import annotations
@@ -22,7 +32,8 @@ from sqlalchemy.orm import Session
 from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.session import get_db
-from app.services import compliance_service, evidence_signing
+from app.services import compliance_packs, compliance_service, evidence_signing
+from app.services.compliance_packs import evidence as pack_evidence
 from app.services.audit_service import write_audit_log
 
 router = APIRouter(tags=["compliance"])
@@ -48,9 +59,9 @@ def _audit(db: Session, ctx: TenantContext, action: str, payload: dict[str, Any]
     )
 
 
-def view(db: Session, *, may_change: bool) -> dict[str, Any]:
+def view(db: Session, *, may_change: bool, tenant_id: str | None = None) -> dict[str, Any]:
     clock = compliance_service.time_status(db)
-    items = compliance_service.controls(db, time_view=clock)
+    items = compliance_service.controls(db, time_view=clock, tenant_id=tenant_id)
     return {
         "standards": compliance_service.STANDARDS,
         "controls": items,
@@ -65,7 +76,7 @@ def view(db: Session, *, may_change: bool) -> dict[str, Any]:
 
 @router.get("/compliance")
 def get_compliance(ctx: TenantContext = Depends(require_permission("audit.view")), db: Session = Depends(get_db)):
-    result = view(db, may_change="settings.manage" in ctx.permissions)
+    result = view(db, may_change="settings.manage" in ctx.permissions, tenant_id=ctx.tenant.id)
     db.commit()
     return JSONResponse(result, headers=NO_STORE)
 
@@ -95,7 +106,7 @@ def put_compliance_settings(
     for reason in changes:
         _audit(db, ctx, "compliance.settings.changed", {"outcome": "info", "reason": reason})
     db.commit()
-    return JSONResponse(view(db, may_change=True), headers=NO_STORE)
+    return JSONResponse(view(db, may_change=True, tenant_id=ctx.tenant.id), headers=NO_STORE)
 
 
 def _moment(value: str, *, end: bool = False) -> dt.datetime | None:
@@ -144,3 +155,115 @@ def incident_report(
         **evidence_signing.service().header_for(data, artifact="incident_report.json"),
     }
     return Response(data, media_type="application/json; charset=utf-8", headers=headers)
+
+
+# ---- Framework packs ------------------------------------------------------------------------------------------------
+
+
+def _pack_refused(error: compliance_packs.PackError) -> JSONResponse:
+    return _refused(error.status_code, error.message)
+
+
+@router.get("/compliance/packs")
+def list_packs(ctx: TenantContext = Depends(require_permission("audit.view")), db: Session = Depends(get_db)):
+    result = compliance_packs.overview(db, ctx.tenant.id)
+    result["mayRecord"] = "settings.manage" in ctx.permissions
+    result["mayExport"] = "audit.export" in ctx.permissions
+    db.commit()
+    return JSONResponse(result, headers=NO_STORE)
+
+
+@router.get("/compliance/controls")
+def list_controls(ctx: TenantContext = Depends(require_permission("audit.view")), db: Session = Depends(get_db)):
+    result = compliance_packs.control_registry(db, ctx.tenant.id)
+    db.commit()
+    return JSONResponse(result, headers=NO_STORE)
+
+
+@router.get("/compliance/packs/{pack_id}")
+def get_pack(pack_id: str, ctx: TenantContext = Depends(require_permission("audit.view")), db: Session = Depends(get_db)):
+    try:
+        result = compliance_packs.evaluate_pack(db, ctx.tenant.id, pack_id)
+    except compliance_packs.PackError as error:
+        return _pack_refused(error)
+    result["mayRecord"] = "settings.manage" in ctx.permissions
+    result["mayExport"] = "audit.export" in ctx.permissions
+    db.commit()
+    return JSONResponse(result, headers=NO_STORE)
+
+
+@router.put("/compliance/packs/{pack_id}/requirements/{requirement_id}/record")
+def record_requirement(
+    pack_id: str,
+    requirement_id: str,
+    body: Annotated[dict[str, Any] | None, Body()] = None,
+    ctx: TenantContext = Depends(require_permission("settings.manage")),
+    db: Session = Depends(get_db),
+):
+    try:
+        _, reason = compliance_packs.save_attestation(
+            db, tenant_id=ctx.tenant.id, pack_id=pack_id, requirement_id=requirement_id, body=body,
+            user_id=ctx.user.id if ctx.user else None, email=ctx.user.email if ctx.user else "",
+        )
+    except compliance_packs.PackError as error:
+        db.rollback()
+        return _pack_refused(error)
+    _audit(db, ctx, "compliance.pack.recorded", {"outcome": "changed", "reason": reason, "pack": pack_id, "requirement": requirement_id})
+    db.commit()
+    return get_pack(pack_id, ctx, db)
+
+
+@router.delete("/compliance/packs/{pack_id}/requirements/{requirement_id}/record")
+def remove_requirement_record(pack_id: str, requirement_id: str, ctx: TenantContext = Depends(require_permission("settings.manage")), db: Session = Depends(get_db)):
+    try:
+        reason = compliance_packs.delete_attestation(db, tenant_id=ctx.tenant.id, pack_id=pack_id, requirement_id=requirement_id)
+    except compliance_packs.PackError as error:
+        db.rollback()
+        return _pack_refused(error)
+    _audit(db, ctx, "compliance.pack.record_removed", {"outcome": "changed", "reason": reason, "pack": pack_id, "requirement": requirement_id})
+    db.commit()
+    return get_pack(pack_id, ctx, db)
+
+
+@router.get("/compliance/packs/{pack_id}/evidence")
+def pack_evidence_bundle(
+    pack_id: str,
+    since: str = Query(default="", alias="from"),
+    until: str = Query(default="", alias="to"),
+    ctx: TenantContext = Depends(require_permission("audit.export")),
+    db: Session = Depends(get_db),
+):
+    now = dt.datetime.now(dt.timezone.utc)
+    end = _moment(until, end=True) if until else now
+    start = _moment(since) if since else now - dt.timedelta(days=30)
+    if start is None or end is None:
+        return _refused(400, "Give the window as dates (2026-11-26) or times (2026-11-26T08:00:00Z).")
+    who = ctx.user.email if ctx.user else "system"
+    try:
+        data, manifest = pack_evidence.build(db, tenant_id=ctx.tenant.id, pack_id=pack_id, since=start, until=end, generated_by=who)
+    except compliance_packs.PackError as error:
+        return _pack_refused(error)
+    except evidence_signing.EvidenceSigningError as error:
+        return _refused(503, f"The evidence could not be signed: {error}")
+    signature = manifest[evidence_signing.SIGNATURE_FIELD]
+    _audit(
+        db,
+        ctx,
+        "compliance.pack.evidence",
+        {
+            "outcome": "info",
+            "reason": f"Signed evidence for {manifest['pack']['framework']} ({pack_id} {manifest['pack']['version']}) made for {manifest['window']['from']} to {manifest['window']['to']} ({manifest['auditEntries']} audit entries).",
+            "pack": pack_id,
+            "rows": manifest["auditEntries"],
+            "kid": signature["kid"],
+            "digest": signature["digest"],
+        },
+    )
+    db.commit()
+    stamp = now.strftime("%Y-%m-%dT%H%MZ")
+    headers = {
+        "Content-Disposition": f'attachment; filename="hawk-{pack_id}-evidence-{stamp}.zip"',
+        **NO_STORE,
+        evidence_signing.STATUS_HEADER: "signed",
+    }
+    return Response(data, media_type="application/zip", headers=headers)

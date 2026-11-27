@@ -32,6 +32,7 @@ import time
 from typing import Any
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -86,9 +87,17 @@ def policy(db: Session) -> Any:
 
     row = db.get(CompliancePolicy, POLICY_ID)
     if row is None:
-        row = CompliancePolicy(id=POLICY_ID)
-        db.add(row)
-        db.flush()
+        # Two requests on first load can both find no row: create it in a savepoint and, if the other request won,
+        # read theirs instead of failing (and poisoning) this request's transaction.
+        try:
+            with db.begin_nested():
+                row = CompliancePolicy(id=POLICY_ID)
+                db.add(row)
+                db.flush()
+        except IntegrityError:
+            row = db.get(CompliancePolicy, POLICY_ID, populate_existing=True)
+            if row is None:
+                raise
     return row
 
 
@@ -230,20 +239,26 @@ def kernel_clock() -> dict[str, Any]:
 def ntp_offset(server: str, *, timeout: float = 2.0, port: int = 123) -> dict[str, Any]:
     """The offset of this clock from an NTP server (one SNTP request, RFC 4330): positive when this clock is behind."""
 
-    packet = b"\x23" + 47 * b"\0"  # LI 0, version 4, mode 3 (client)
     ntp_epoch = 2_208_988_800
+    # A random transmit timestamp the server must echo as its originate timestamp, and a connected socket (the kernel
+    # drops datagrams from any other address): an answer not from that server to this request is not used.
+    nonce = os.urandom(8)
+    packet = b"\x23" + 39 * b"\0" + nonce  # LI 0, version 4, mode 3 (client); transmit timestamp = nonce
     try:
         address = socket.getaddrinfo(server, port, type=socket.SOCK_DGRAM)[0][4]
         with socket.socket(socket.AF_INET6 if ":" in address[0] else socket.AF_INET, socket.SOCK_DGRAM) as sock:
             sock.settimeout(timeout)
+            sock.connect(address)
             sent = time.time()
-            sock.sendto(packet, address)
-            data, _ = sock.recvfrom(512)
+            sock.send(packet)
+            data = sock.recv(512)
             received = time.time()
     except OSError as exc:
         return {"server": server, "ok": False, "reason": type(exc).__name__}
     if len(data) < 48 or data[1] == 0:
         return {"server": server, "ok": False, "reason": "no usable answer (stratum 0)"}
+    if data[24:32] != nonce or (data[0] & 0x07) != 4:
+        return {"server": server, "ok": False, "reason": "the answer does not match the request"}
     rx_sec, rx_frac, tx_sec, tx_frac = struct.unpack("!IIII", data[32:48])
     server_rx = rx_sec - ntp_epoch + rx_frac / 2**32
     server_tx = tx_sec - ntp_epoch + tx_frac / 2**32
@@ -329,10 +344,6 @@ def encryption_status() -> dict[str, Any]:
 # ---- The controls ----------------------------------------------------------------------------------------------------
 
 
-def _control(cid: str, title: str, refs: list[str], status: str, detail: str, owner: str, href: str, label: str) -> dict[str, Any]:
-    return {"id": cid, "title": title, "refs": refs, "status": status, "detail": detail, "owner": owner, "evidence": {"href": href, "label": label}}
-
-
 def _https_view() -> dict[str, Any]:
     try:
         from app.services import https_runtime
@@ -353,129 +364,14 @@ def _integrity_state() -> str:
     return str((last or {}).get("state") or "unknown")
 
 
-def controls(db: Session, *, time_view: dict[str, Any] | None = None) -> list[dict[str, Any]]:
-    """Every control the software takes part in, its status now and where its evidence is."""
+def controls(db: Session, *, time_view: dict[str, Any] | None = None, tenant_id: str | None = None) -> list[dict[str, Any]]:
+    """Every control the software takes part in under DESC ISR / UAE IA / CERT-In, its status now and where its
+    evidence is: read from the control registry (app/services/compliance_packs/controls.py), where each has its
+    ``legacy_id`` (AC-01 … AI-01)."""
 
-    from app.services import account_security, password_policy
+    from app.services.compliance_packs import controls as registry
 
-    sign_in = account_security.policy(db)
-    rule = password_policy.rule(db)
-    base = password_policy.BASELINE
-    idle = account_security.idle_minutes(db)
-    sso_only = bool(settings.company_sso_enabled and sign_in.sso_password_admins_only)
-    time_view = time_view or time_status(db, ask_server=False)
-    enc = encryption_status()
-    https = _https_view()
-    integrity = _integrity_state()
-    row = policy(db)
-    out: list[dict[str, Any]] = []
-
-    strong = rule.min_length >= base["minLength"] and rule.classes >= base["classes"] and rule.history >= base["history"] and 0 < rule.max_age_days <= base["maxAgeDays"]
-    out.append(_control(
-        "AC-01", "Password rule", ["DESC ISR: Access Control", "UAE IAS: T5 Access control"],
-        "met" if strong else "action",
-        f"In force: {password_policy.describe(rule)}." + ("" if strong else " Apply the recommended baseline or set your entity's own rule."),
-        "administrator", "/settings/signin", "Settings → Sign-in",
-    ))
-    out.append(_control(
-        "AC-02", "Two-step sign-in or company single sign-on", ["DESC ISR: Access Control", "UAE IAS: T5 Access control"],
-        "met" if (sign_in.two_step_required or sso_only) else "action",
-        "Required for everyone who signs in with a password." if sign_in.two_step_required else ("Single sign-on only (passwords for Admins)." if sso_only else "Each person chooses: require two-step sign-in, or use single sign-on with passwords for Admins only."),
-        "administrator", "/settings/signin", "Settings → Sign-in",
-    ))
-    out.append(_control(
-        "AC-03", "Lock after wrong passwords; limit per address", ["DESC ISR: Access Control", "UAE IAS: T5 Access control"],
-        "met", f"{account_security.MAX_FAILED} wrong passwords or codes lock the account for {account_security.LOCK_SECONDS // 60} minutes; at most {account_security.SIGN_IN_LIMIT} attempts per {account_security.SIGN_IN_WINDOW_SECONDS // 60} minutes from one address.",
-        "product", "/settings/signin", "Settings → Sign-in",
-    ))
-    out.append(_control(
-        "AC-04", "Idle sign-out", ["DESC ISR: Access Control", "UAE IAS: T5 Access control"],
-        "met" if idle <= base["sessionIdleMinutes"] else ("partial" if idle <= 30 else "action"),
-        f"Signed out after {idle} minutes without activity." + ("" if idle <= base["sessionIdleMinutes"] else f" The recommended baseline is {base['sessionIdleMinutes']} minutes."),
-        "administrator", "/settings/signin", "Settings → Sign-in",
-    ))
-    out.append(_control(
-        "AC-05", "Notice before sign-in", ["DESC ISR: Access Control", "UAE IAS: T5 Access control"],
-        "met" if (sign_in.banner_text or "").strip() else "action",
-        "Shown on the sign-in page." if (sign_in.banner_text or "").strip() else "No notice yet: write the authorised-use and monitoring notice your entity requires.",
-        "administrator", "/settings/signin", "Settings → Sign-in",
-    ))
-    out.append(_control(
-        "AC-06", "Roles and least privilege", ["DESC ISR: Access Control", "UAE IAS: T5 Access control"],
-        "met", "People, teams and roles with per-permission grants; nobody gives more than they hold; there is always an active Owner; every change is in the audit log.",
-        "product", "/settings/roles", "Settings → Roles & permissions",
-    ))
-    out.append(_control(
-        "LG-01", "Tamper-evident audit log", ["DESC ISR: Operations, Systems and Communications Management", "UAE IAS: T3 Operations management"],
-        "met", "Every entry is chained with an HMAC; entries are never updated or deleted; the chain can be checked from the page and exported with a signature.",
-        "product", "/settings/audit", "Settings → Audit log (Verify)",
-    ))
-    keep_ok = activity_keep_days(db) >= MIN_RETENTION_DAYS and connector_keep_days(db) >= MIN_RETENTION_DAYS
-    out.append(_control(
-        "LG-02", "Log retention (180 days at least)", ["CERT-In direction (iv)", "DESC ISR: Compliance and Audit", "DPDP Rules: one-year logs"],
-        "met" if keep_ok else "action",
-        f"Audit log: kept for good. User activity: {activity_keep_days(db)} days. Connector API activity: {connector_keep_days(db)} days. The services' own log lines are kept by Docker by size: forward them to your SIEM to keep them longer.",
-        "product", "/settings/compliance", "Settings → Compliance",
-    ))
-    synced = time_view.get("synchronized")
-    out.append(_control(
-        "LG-03", "Clock synchronised (NTP)", ["CERT-In direction (i)", "DESC ISR: Operations, Systems and Communications Management"],
-        "met" if synced else ("action" if synced is False else "customer"),
-        "Synchronised." if synced else ("; ".join(time_view.get("problems") or []) or "Could not be read here: confirm that the host runs chrony or systemd-timesyncd (in India, against NIC or NPL servers)."),
-        "customer", "/settings/compliance", "Settings → Compliance (Clock)",
-    ))
-    out.append(_control(
-        "LG-04", "Security events to a SIEM", ["DESC ISR: Incident and Problem Management", "UAE IAS: T3 Operations management"],
-        "partial",
-        "The audit log exports as CEF (ArcSight, QRadar, Sentinel, Splunk), CSV or signed JSON Lines for any time window; the services write JSON log lines a syslog or Docker logging driver can forward. A built-in continuous syslog sender is not there yet.",
-        "product", "/settings/audit", "Settings → Audit log (Export)",
-    ))
-    out.append(_control(
-        "IR-01", "Incident report (DESC, CERT-In within 6 hours)", ["CERT-In direction (ii), (iii)", "DESC ISR: Incident and Problem Management", "UAE IAS: T8 Incident management"],
-        "met" if (row.incident_contact or "").strip() else "action",
-        "The incident report gathers a time window's security events, the clock and the installation's identity, signed." + ("" if (row.incident_contact or "").strip() else " Name the incident contact (CERT-In's point of contact) first."),
-        "administrator", "/settings/compliance", "Settings → Compliance (Incident report)",
-    ))
-    mode = https["mode"]
-    out.append(_control(
-        "CR-01", "Encryption in transit", ["DESC ISR: Operations, Systems and Communications Management", "UAE IAS: T4 Communications"],
-        "met" if mode == "on" and https.get("minVersion") in ("TLSv1.2", "TLSv1.3") else "action",
-        f"HTTPS: {mode}; at least {https.get('minVersion') or 'TLS 1.2'}." + ("" if mode == "on" else " Choose HTTPS only."),
-        "administrator", "/settings/https", "Settings → HTTPS",
-    ))
-    backups = enc["backups"]
-    out.append(_control(
-        "CR-02", "Backups encrypted", ["DESC ISR: Business Continuity Planning", "UAE IAS: T9 Continuity"],
-        "met" if backups.get("encrypted") else "action",
-        "Every backup is encrypted (" + ("BACKUP_PASSPHRASE" if backups.get("source") == "passphrase" else "this server's backup key") + ")." if backups.get("encrypted") else "Backups are plain: turn encryption on.",
-        "administrator", "/settings/backups", "Settings → Backups & health",
-    ))
-    out.append(_control(
-        "CR-03", "Disk encrypted at rest", ["DESC ISR: Information and Information Assets Management", "UAE IAS: T1 Asset management"],
-        "met" if enc["disk"]["confirmed"] else "customer",
-        "The customer confirmed full-disk encryption (DISK_ENCRYPTION_CONFIRMED)." if enc["disk"]["confirmed"] else enc["disk"]["what"],
-        "customer", "/settings/compliance", "Settings → Compliance (Encryption)",
-    ))
-    out.append(_control(
-        "SI-01", "Genuine, signed software", ["DESC ISR: Information Systems Acquisition, Development and Management", "UAE IAS: T7 Acquisition, development and maintenance"],
-        "met" if integrity == "genuine" else ("action" if integrity in ("tampered", "not-genuine") else "partial"),
-        f"Last check: {integrity}. Images are built and signed by the release workflow; files are checked at start and every few hours; updates roll back by themselves.",
-        "product", "/settings/updates", "Settings → Updates",
-    ))
-    location = data_location(db)
-    resident = bool(location) and location not in ("local-development", "on-premise")
-    out.append(_control(
-        "DR-01", "Data residency statement", ["DESC ISR: Cloud Security (data residency)", "UAE PDPL", "CERT-In direction (iv)"],
-        "met" if resident else "action",
-        f"Data location: {location or 'not stated'}. Hawk AI stores and processes everything on this server; nothing is sent to the vendor." + ("" if resident else " State where this server is (city and country)."),
-        "administrator", "/settings/compliance", "Settings → Compliance",
-    ))
-    out.append(_control(
-        "AI-01", "AI use controls (sensitive data, prompt attacks)", ["Dubai AI Security Policy", "UAE National AI Security Policy"],
-        "met", "Sensitive data and prompt-injection checks run on this server, with no outside AI service, in the LLM and MCP gateways, the browser extension and the desktop guard.",
-        "product", "/settings/guide/compliance", "Guide → Compliance",
-    ))
-    return out
+    return registry.legacy_controls(registry.Context(db, tenant_id, time_view=time_view or time_status(db, ask_server=False)))
 
 
 def summary(items: list[dict[str, Any]]) -> dict[str, int]:

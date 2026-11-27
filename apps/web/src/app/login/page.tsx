@@ -16,9 +16,11 @@ import { api } from "@/lib/api";
 import { cleanSetupCode, passwordProblem } from "@/lib/access";
 import { errorMessageFrom } from "@/lib/licence";
 import { defaultRouteForRole } from "@/lib/navigation";
+import { rememberWorkspace, rememberedWorkspace, workspaceFromAddress, workspaceToOpen } from "@/lib/workspace";
 import { isTwoStepChallenge, refusalFrom, ssoRefusal, twoStepHint } from "@/lib/sign-in";
 import type { TwoStepChallenge } from "@/lib/sign-in";
 import type { LoginResponse } from "@/lib/types";
+import { SignInFrame } from "@/components/sign-in-frame";
 
 /** What the sign-in page shows (/settings/guide/people-and-access, CxMissionZero's public/app/session.js). */
 type Box = "signin" | "forgot" | "twostep" | "recovery";
@@ -29,8 +31,13 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [workspace, setWorkspace] = useState("acme");
+  // No workspace box: an email belongs to one account on the installation. ?workspace= in the address is an optional
+  // pre-fill (an invitation, single sign-on for one workspace), never needed.
+  const [workspace, setWorkspace] = useState("");
   const [oidcProviders, setOidcProviders] = useState<Array<{ key: string; display_name: string }>>([]);
+  // Several workspaces with single sign-on: the email's domain finds the right one (POST /auth/oidc/discover).
+  const [ssoByEmail, setSsoByEmail] = useState(false);
+  const [ssoStatus, setSsoStatus] = useState("");
   // First start with FIRST_ADMIN=setup-code (/settings/guide/install): nobody has access yet.
   const [setup, setSetup] = useState(false);
   const [setupCode, setSetupCode] = useState("");
@@ -78,10 +85,14 @@ export default function LoginPage() {
 
   // Joining by oneself (FTR CC-01.116.00): offered only where an Admin turned it on for this workspace.
   const [joinDomains, setJoinDomains] = useState<string[]>([]);
+  const [joinWorkspace, setJoinWorkspace] = useState("");
+  useEffect(() => setWorkspace(workspaceFromAddress(window.location.search)), []);
   useEffect(() => {
     let active = true;
     api.joinAvailable(workspace).then((r) => {
-      if (active) setJoinDomains(r.available ? r.domains : []);
+      if (!active) return;
+      setJoinDomains(r.available ? r.domains : []);
+      setJoinWorkspace(r.available ? r.workspace || workspace : "");
     }).catch(() => undefined);
     return () => { active = false; };
   }, [workspace]);
@@ -89,7 +100,9 @@ export default function LoginPage() {
   useEffect(() => {
     let active = true;
     api.oidcProviders(workspace).then((result) => {
-      if (active) setOidcProviders(result.providers || []);
+      if (!active) return;
+      setOidcProviders(result.providers || []);
+      setSsoByEmail(Boolean(result.byEmail));
     }).catch(() => {
       if (active) setOidcProviders([]);
     });
@@ -107,13 +120,42 @@ export default function LoginPage() {
     }
   }
 
+  // Several workspaces with single sign-on: the address's domain picks the provider (and so the workspace).
+  async function discoverSSO() {
+    const address = email.trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(address)) {
+      setSsoStatus("Enter your work email first, then continue with single sign-on.");
+      return;
+    }
+    setSsoStatus("Looking up your organisation's single sign-on…");
+    try {
+      const found = (await api.oidcDiscover(address)).providers || [];
+      if (found.length === 1) {
+        await startOIDC(found[0].key);
+        return;
+      }
+      setOidcProviders(found);
+      setSsoStatus(found.length ? "Choose how your organisation signs in." : "No single sign-on is set up for this address: sign in with your password.");
+    } catch {
+      setSsoStatus("Single sign-on is unavailable.");
+    }
+  }
+
   function signedIn(result: LoginResponse) {
-    const tenantId = result.selected_tenant_id || result.tenants?.[0]?.id;
+    // Someone in several workspaces opens the one used last in this browser (lib/workspace.ts); the account menu
+    // changes it.
+    const tenantId = workspaceToOpen(result.tenants, result.selected_tenant_id, rememberedWorkspace());
     if (!tenantId) throw new Error("No tenant in login response");
     const tenantRole = result.tenants?.find((item) => item.id === tenantId)?.role;
     // The tokens are HttpOnly cookies the API set (apps/api/app/core/session_cookies.py); only who signed in is
     // remembered here.
     setSession({ tenantId, userRole: tenantRole, user: result.user });
+    rememberWorkspace(tenantId);
+    if (tenantId !== result.selected_tenant_id) {
+      // Cookies for that workspace, then the console.
+      void api.selectTenant(tenantId).catch(() => undefined).finally(() => router.push(defaultRouteForRole(tenantRole)));
+      return;
+    }
     router.push(defaultRouteForRole(tenantRole));
   }
 
@@ -229,7 +271,7 @@ export default function LoginPage() {
 
   if (setup) {
     return (
-      <main className="flex min-h-screen items-center justify-center p-4">
+      <SignInFrame>
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Create the first administrator</CardTitle>
@@ -265,13 +307,13 @@ export default function LoginPage() {
             </form>
           </CardContent>
         </Card>
-      </main>
+      </SignInFrame>
     );
   }
 
   if (box === "recovery" && recoveryCodes) {
     return (
-      <main className="flex min-h-screen items-center justify-center p-4">
+      <SignInFrame>
         <Card className="ftr w-full max-w-md" data-ui="login-recovery-codes">
           <CardHeader>
             <CardTitle>Recovery codes</CardTitle>
@@ -286,13 +328,13 @@ export default function LoginPage() {
             </Button>
           </CardContent>
         </Card>
-      </main>
+      </SignInFrame>
     );
   }
 
   if (box === "twostep" && challenge) {
     return (
-      <main className="flex min-h-screen items-center justify-center p-4">
+      <SignInFrame>
         <Card className="ftr w-full max-w-md" data-ui="login-two-step">
           <CardHeader>
             <CardTitle>Two-step sign-in</CardTitle>
@@ -335,13 +377,13 @@ export default function LoginPage() {
             </form>
           </CardContent>
         </Card>
-      </main>
+      </SignInFrame>
     );
   }
 
   if (box === "forgot") {
     return (
-      <main className="flex min-h-screen items-center justify-center p-4">
+      <SignInFrame>
         <Card className="w-full max-w-md" data-ui="login-forgot">
           <CardHeader>
             <CardTitle>Forgot your password?</CardTitle>
@@ -363,12 +405,12 @@ export default function LoginPage() {
             </form>
           </CardContent>
         </Card>
-      </main>
+      </SignInFrame>
     );
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-4">
+    <SignInFrame>
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Enterprise Sign In</CardTitle>
@@ -382,16 +424,12 @@ export default function LoginPage() {
           ) : null}
           <form className="space-y-4" onSubmit={onSubmit}>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Workspace</label>
-              <Input value={workspace} onChange={(e) => setWorkspace(e.target.value)} autoComplete="organization" />
+              <label className="text-sm font-medium" htmlFor="login-email">Email</label>
+              <Input id="login-email" inputMode="email" autoCapitalize="none" spellCheck={false} value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" />
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Email</label>
-              <Input value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" />
-            </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Password</label>
-              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
+              <label className="text-sm font-medium" htmlFor="login-password">Password</label>
+              <Input id="login-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
             </div>
             <Button className="w-full" disabled={loading}>
               {loading ? "Signing in..." : "Sign In"}
@@ -409,27 +447,33 @@ export default function LoginPage() {
             {joinDomains.length ? (
               <p data-ui="join-in" className="text-sm text-slate-400">
                 New here, or no password yet?{" "}
-                <Link className="text-sky-300 hover:underline" href={`/join?workspace=${encodeURIComponent(workspace)}`}>
+                <Link className="text-sky-300 hover:underline" href={`/join?workspace=${encodeURIComponent(joinWorkspace)}`}>
                   Join with your {joinDomains.map((d) => `@${d}`).join(" or ")} email
                 </Link>
               </p>
             ) : null}
-            <p data-ui="onprem-note" className="text-xs text-emerald-400">
+            <p data-ui="onprem-note" className="rounded-lg border border-emerald-900/50 bg-emerald-950/30 px-3 py-2 text-xs leading-5 text-emerald-300/90">
               Runs on your own servers and sends your data to no one: it connects only to the services you connect it to. No telemetry, no analytics, nothing calls home. Use of Hawk AI is subject to its terms of use.
             </p>
-            {oidcProviders.length > 0 && (
-              <div className="space-y-2 border-t pt-4">
+            {oidcProviders.length > 0 || ssoByEmail ? (
+              <div className="space-y-2 border-t pt-4" data-ui="sso">
                 <p className="text-sm font-medium">Company sign in</p>
                 {oidcProviders.map((provider) => (
                   <Button key={provider.key} type="button" variant="outline" className="w-full" disabled={loading} onClick={() => startOIDC(provider.key)}>
                     Continue with {provider.display_name}
                   </Button>
                 ))}
+                {ssoByEmail && !oidcProviders.length ? (
+                  <Button type="button" variant="outline" className="w-full" disabled={loading} onClick={() => void discoverSSO()} data-ui="sso-by-email">
+                    Continue with single sign-on
+                  </Button>
+                ) : null}
+                {ssoStatus ? <p role="status" aria-live="polite" className="text-sm text-slate-400">{ssoStatus}</p> : null}
               </div>
-            )}
+            ) : null}
           </form>
         </CardContent>
       </Card>
-    </main>
+    </SignInFrame>
   );
 }

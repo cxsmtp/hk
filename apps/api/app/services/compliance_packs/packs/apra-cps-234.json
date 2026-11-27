@@ -1,0 +1,257 @@
+{
+  "id": "apra-cps-234",
+  "version": "2026.11.1",
+  "order": 101,
+  "optional": false,
+  "framework": {
+    "name": "APRA Prudential Standard CPS 234 Information Security",
+    "short": "CPS 234",
+    "version": "CPS 234 (July 2019)",
+    "publisher": "Australian Prudential Regulation Authority",
+    "jurisdiction": "Australia (APRA-regulated entities)",
+    "url": "https://www.apra.gov.au/standards/cps-234-information-security"
+  },
+  "summary": "CPS 234's requirements (paragraphs 13-36) and where Hawk AI supports an APRA-regulated entity: controls over AI use, detection and response, control testing, and the evidence for notifying APRA within 72 hours of a material incident.",
+  "scope": "Paragraph numbers of CPS 234 with our own short wording.",
+  "sources": [
+    {
+      "title": "APRA CPS 234 (July 2019, PDF)",
+      "url": "https://apra.gov.au/sites/default/files/cps_234_july_2019_for_public_release.pdf"
+    },
+    {
+      "title": "APRA CPG 234 Information Security (guidance)",
+      "url": "https://www.apra.gov.au/sites/default/files/cpg_234_information_security_june_2019.pdf"
+    }
+  ],
+  "notes": [],
+  "requirements": [
+    {
+      "id": "13",
+      "title": "The Board is ultimately responsible for information security",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "14",
+      "title": "Information security roles and responsibilities defined",
+      "applicability": "customer",
+      "controls": [
+        "access.roles"
+      ],
+      "evidence": [
+        "audit:people",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "15",
+      "title": "Information security capability matched to the threats",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "16",
+      "title": "Third parties' information security capability assessed",
+      "applicability": "customer",
+      "controls": [
+        "ai.inventory",
+        "ai.discovery"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "17",
+      "title": "Capability kept up as threats change",
+      "applicability": "customer",
+      "controls": [
+        "injection.detection",
+        "ai.adversarial_testing"
+      ],
+      "evidence": [
+        "settings:detection",
+        "audit:gateway",
+        "records:operations",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "18",
+      "title": "Information security policy framework",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "20",
+      "title": "Information assets classified by criticality and sensitivity",
+      "applicability": "customer",
+      "controls": [
+        "ai.inventory",
+        "dlp.personal_data"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "21",
+      "title": "Controls protect information assets, matched to their criticality",
+      "applicability": "product",
+      "controls": [
+        "auth.two_step",
+        "access.roles",
+        "crypto.transit",
+        "crypto.backups",
+        "dlp.personal_data",
+        "injection.detection"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "settings:sign_in",
+        "audit:people",
+        "settings:encryption",
+        "audit:settings",
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "22",
+      "title": "Controls of third parties evaluated",
+      "applicability": "customer",
+      "controls": [
+        "ai.approval_policy"
+      ],
+      "evidence": [
+        "settings:approvals",
+        "records:approvals",
+        "audit:approvals",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "23",
+      "title": "Incidents detected and responded to in time",
+      "applicability": "product",
+      "controls": [
+        "log.audit_chain",
+        "log.siem",
+        "injection.detection",
+        "ai.gateway_in_use"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "24",
+      "title": "Plans to respond to incidents",
+      "applicability": "organisational",
+      "controls": [
+        "ir.incident_report"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "audit:settings",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "26",
+      "title": "Response plans reviewed and tested every year",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "27",
+      "title": "Control effectiveness tested systematically",
+      "applicability": "customer",
+      "controls": [
+        "ai.adversarial_testing",
+        "backup.restore_tested"
+      ],
+      "evidence": [
+        "records:operations",
+        "audit:backups",
+        "settings:encryption",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "30",
+      "title": "Testing done by independent, skilled people",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "32",
+      "title": "Internal audit reviews information security controls",
+      "applicability": "customer",
+      "controls": [
+        "log.audit_chain",
+        "evidence.signing"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "35",
+      "title": "Notify APRA within 72 hours of a material incident",
+      "applicability": "customer",
+      "controls": [
+        "ir.incident_report",
+        "notify.email"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "audit:settings",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "36",
+      "title": "Notify APRA within 10 business days of a material control weakness",
+      "applicability": "customer",
+      "controls": [
+        "ir.incident_report"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "audit:settings",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    }
+  ]
+}

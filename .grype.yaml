@@ -20,3 +20,24 @@ ignore:
   # packaging commands, never imported by Hawk AI at run time.
   - package:
       location: "/usr/local/lib/python3.11/site-packages/setuptools/_vendor/**"
+  # PAM in the Redis image (Debian 12): CVE-2025-6020 is a local privilege escalation through pam_namespace during a
+  # PAM login. Nothing in the Redis container ever runs a PAM login (no login, su or sshd; Redis starts as uid 999
+  # with no-new-privileges, all capabilities dropped and a read-only root), and no newer redis:7.4 image carries
+  # Debian's fixed PAM yet (checked 2026-11-27: every 7.4 tag is the pinned digest). Bump the redis digest in
+  # deploy/compose.yaml and remove this entry as soon as an image with libpam 1.5.2-6+deb12u3 or later exists.
+  - vulnerability: CVE-2025-6020
+    package:
+      name: libpam0g
+      type: deb
+  - vulnerability: CVE-2025-6020
+    package:
+      name: libpam-modules
+      type: deb
+  - vulnerability: CVE-2025-6020
+    package:
+      name: libpam-modules-bin
+      type: deb
+  - vulnerability: CVE-2025-6020
+    package:
+      name: libpam-runtime
+      type: deb

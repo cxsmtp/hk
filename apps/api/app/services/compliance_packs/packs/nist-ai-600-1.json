@@ -1,0 +1,179 @@
+{
+  "id": "nist-ai-600-1",
+  "version": "2026.11.1",
+  "order": 81,
+  "optional": false,
+  "framework": {
+    "name": "NIST AI 600-1 Generative AI Profile",
+    "short": "NIST GAI Profile",
+    "version": "NIST AI 600-1 (July 2024)",
+    "publisher": "US National Institute of Standards and Technology",
+    "jurisdiction": "United States (voluntary, used internationally)",
+    "url": "https://www.nist.gov/publications/artificial-intelligence-risk-management-framework-generative-artificial-intelligence"
+  },
+  "summary": "The 12 risks the Generative AI Profile names (section 2.1-2.12) and the Hawk AI controls that address each for the generative AI an organisation uses.",
+  "scope": "Risk section numbers of NIST AI 600-1 with our own short wording. The profile's suggested actions build on the AI RMF pack.",
+  "sources": [
+    {
+      "title": "NIST AI 600-1 Generative AI Profile (PDF)",
+      "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf"
+    }
+  ],
+  "notes": [],
+  "requirements": [
+    {
+      "id": "2.1",
+      "title": "CBRN information or capabilities",
+      "applicability": "customer",
+      "controls": [
+        "gap.output_content_safety"
+      ],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "2.2",
+      "title": "Confabulation (confident wrong answers)",
+      "applicability": "customer",
+      "controls": [
+        "gap.output_content_safety",
+        "ai.human_oversight"
+      ],
+      "evidence": [
+        "records:attestations",
+        "settings:approvals",
+        "settings:detection",
+        "records:approvals"
+      ]
+    },
+    {
+      "id": "2.3",
+      "title": "Dangerous, violent or hateful content",
+      "applicability": "customer",
+      "controls": [
+        "gap.output_content_safety"
+      ],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "2.4",
+      "title": "Data privacy (leakage of personal data)",
+      "applicability": "product",
+      "controls": [
+        "dlp.personal_data",
+        "dlp.secrets",
+        "ai.gateway_in_use"
+      ],
+      "evidence": [
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "2.5",
+      "title": "Environmental impacts",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "2.6",
+      "title": "Harmful bias and homogenisation",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "2.7",
+      "title": "Human-AI configuration (over-reliance, misplaced trust)",
+      "applicability": "customer",
+      "controls": [
+        "ai.human_oversight",
+        "ai.approval_policy"
+      ],
+      "evidence": [
+        "settings:approvals",
+        "settings:detection",
+        "records:approvals",
+        "audit:approvals",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "2.8",
+      "title": "Information integrity (misinformation, disinformation)",
+      "applicability": "customer",
+      "controls": [
+        "gap.output_content_safety"
+      ],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "2.9",
+      "title": "Information security (prompt injection, attacks made easier)",
+      "applicability": "product",
+      "controls": [
+        "injection.detection",
+        "ai.mcp_tool_scan",
+        "detect.coverage:owasp_llm:LLM01"
+      ],
+      "evidence": [
+        "settings:detection",
+        "audit:gateway",
+        "records:detector_coverage",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "2.10",
+      "title": "Intellectual property",
+      "applicability": "customer",
+      "controls": [
+        "ai.local_detection"
+      ],
+      "evidence": [
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ],
+      "note": "Document categories (source code, financial statements, legal privilege) flag protected material sent to AI services."
+    },
+    {
+      "id": "2.11",
+      "title": "Obscene, degrading or abusive content",
+      "applicability": "customer",
+      "controls": [
+        "gap.output_content_safety"
+      ],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "2.12",
+      "title": "Value chain and component integration",
+      "applicability": "customer",
+      "controls": [
+        "gap.ai_supply_chain",
+        "ai.inventory",
+        "ai.mcp_tool_scan"
+      ],
+      "evidence": [
+        "records:attestations",
+        "records:ai_inventory",
+        "records:detector_coverage",
+        "audit:gateway"
+      ]
+    }
+  ]
+}

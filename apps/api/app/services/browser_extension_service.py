@@ -3160,8 +3160,14 @@ def evaluate_browser_interaction_and_record(
     raw_prompt = str(payload.get("raw_prompt") or payload.get("prompt_text") or "")
     file_meta = [item for item in (payload.get("file_meta") or []) if isinstance(item, dict)]
     policy_sync = build_extension_policy_sync(db, tenant_id=tenant_id)
-    actor_user_email = _payload_text(payload, "user_email", "email") or _resolve_actor_user_email(db, actor_user_id)
-    event_user_id = _payload_text(payload, "user_id") or actor_user_id
+    # For a signed-in person the event is theirs: the extension's own user id or email would let one person's report
+    # be filed (and policy-scoped) as someone else's. Only an anonymous report keeps the extension's hints.
+    if actor_user_id:
+        actor_user_email = _resolve_actor_user_email(db, actor_user_id) or _payload_text(payload, "user_email", "email")
+        event_user_id = actor_user_id
+    else:
+        actor_user_email = _payload_text(payload, "user_email", "email")
+        event_user_id = _payload_text(payload, "user_id")
     machine_id = _payload_text(payload, "machine_id", "endpoint_id", "device_id")
     endpoint_id = _payload_text(payload, "endpoint_id", "device_id")
     browser_type = _payload_text(payload, "browser_type", "browser") or "chrome"
@@ -3447,8 +3453,11 @@ def evaluate_browser_interaction_and_record(
         context={
             "actor_type": str(payload.get("actor_type") or "human"),
             "actor_user_id": actor_user_id,
-            "actor_role": payload.get("actor_role"),
-            "actor_department": payload.get("actor_department") or payload.get("department"),
+            # The extension's own role or department would be taken over the signed-in person's (policy_scope_service
+            # _resolve_actor_role): a rule scoped to a role or department could then be dodged by the extension saying
+            # so. For a signed-in person they are looked up here; only an anonymous report keeps the extension's hint.
+            "actor_role": None if actor_user_id else payload.get("actor_role"),
+            "actor_department": None if actor_user_id else (payload.get("actor_department") or payload.get("department")),
             "endpoint_id": payload.get("endpoint_id"),
             "source_surface": "browser",
             "action_type": ("file_upload" if file_meta else "prompt_input"),

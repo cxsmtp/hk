@@ -285,7 +285,7 @@ export function RuntimeContextGraphView({
   }
 
   return (
-    <div className="h-[660px] overflow-hidden rounded-lg border border-[#2a3348] bg-[#0b1220]">
+    <div className="h-[min(660px,75dvh)] min-h-[360px] overflow-hidden rounded-lg border border-[#2a3348] bg-[#0b1220]">
       <ReactFlow
         nodes={derived.nodes}
         edges={derived.edges}

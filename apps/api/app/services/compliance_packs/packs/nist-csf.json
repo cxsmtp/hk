@@ -1,0 +1,508 @@
+{
+  "id": "nist-csf",
+  "version": "2026.11.1",
+  "order": 82,
+  "optional": false,
+  "framework": {
+    "name": "NIST Cybersecurity Framework 2.0 (selected subcategories)",
+    "short": "NIST CSF",
+    "version": "CSF 2.0 (February 2024)",
+    "publisher": "US National Institute of Standards and Technology",
+    "jurisdiction": "United States (voluntary, used internationally)",
+    "url": "https://www.nist.gov/cyberframework"
+  },
+  "summary": "The CSF 2.0 outcomes Hawk AI supports across Govern, Identify, Protect, Detect, Respond and Recover: supplier and AI inventories, identity and access, data protection in use and in transit, logs, monitoring of AI use, incident evidence and backups.",
+  "scope": "Subcategory ids of CSF 2.0 with our own short wording; only those Hawk AI takes part in.",
+  "sources": [
+    {
+      "title": "NIST CSF 2.0 (NIST CSWP 29)",
+      "url": "https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf"
+    }
+  ],
+  "notes": [],
+  "requirements": [
+    {
+      "id": "GV.OC-03",
+      "title": "Legal and regulatory requirements understood",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "GV.RR-02",
+      "title": "Cybersecurity roles and authorities set",
+      "applicability": "customer",
+      "controls": [
+        "access.roles"
+      ],
+      "evidence": [
+        "audit:people",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "GV.PO-01",
+      "title": "Cybersecurity risk policy established",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "GV.SC-04",
+      "title": "Suppliers known and prioritised (AI providers included)",
+      "applicability": "customer",
+      "controls": [
+        "ai.inventory",
+        "ai.discovery"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "GV.SC-07",
+      "title": "Supplier risks assessed before and during the relationship",
+      "applicability": "customer",
+      "controls": [
+        "ai.approval_policy"
+      ],
+      "evidence": [
+        "settings:approvals",
+        "records:approvals",
+        "audit:approvals",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "ID.AM-02",
+      "title": "Inventory of software, services and systems",
+      "applicability": "customer",
+      "controls": [
+        "ai.inventory",
+        "ai.discovery"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "ID.AM-04",
+      "title": "Inventory of services provided by suppliers",
+      "applicability": "customer",
+      "controls": [
+        "ai.inventory",
+        "ai.discovery"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "ID.AM-07",
+      "title": "Inventory of data and its metadata",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "ID.RA-01",
+      "title": "Vulnerabilities in assets identified",
+      "applicability": "customer",
+      "controls": [
+        "software.integrity",
+        "host.hardening"
+      ],
+      "evidence": [
+        "audit:updates",
+        "records:operations",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "ID.IM-02",
+      "title": "Improvements found through tests and exercises",
+      "applicability": "customer",
+      "controls": [
+        "ai.adversarial_testing"
+      ],
+      "evidence": [
+        "records:operations",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "PR.AA-01",
+      "title": "Identities and credentials managed",
+      "applicability": "product",
+      "controls": [
+        "access.roles",
+        "auth.password_rule",
+        "access.dormant_accounts"
+      ],
+      "evidence": [
+        "audit:people",
+        "settings:sign_in",
+        "audit:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "PR.AA-02",
+      "title": "Identities proofed and bound to credentials",
+      "applicability": "customer",
+      "controls": [
+        "auth.sso"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "PR.AA-03",
+      "title": "Users authenticated",
+      "applicability": "product",
+      "controls": [
+        "auth.two_step",
+        "auth.lockout",
+        "auth.idle_signout"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "PR.AA-05",
+      "title": "Access permissions with least privilege",
+      "applicability": "product",
+      "controls": [
+        "access.roles",
+        "ai.approval_policy"
+      ],
+      "evidence": [
+        "audit:people",
+        "settings:sign_in",
+        "settings:approvals",
+        "records:approvals",
+        "audit:approvals",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "PR.AT-01",
+      "title": "Awareness and training",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "PR.DS-01",
+      "title": "Data at rest protected",
+      "applicability": "customer",
+      "controls": [
+        "crypto.disk",
+        "crypto.backups"
+      ],
+      "evidence": [
+        "settings:encryption",
+        "audit:settings",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "PR.DS-02",
+      "title": "Data in transit protected",
+      "applicability": "product",
+      "controls": [
+        "crypto.transit",
+        "dlp.personal_data",
+        "dlp.secrets"
+      ],
+      "evidence": [
+        "settings:encryption",
+        "audit:settings",
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "PR.DS-10",
+      "title": "Data in use protected",
+      "applicability": "product",
+      "controls": [
+        "dlp.personal_data",
+        "dlp.payment_cards",
+        "dlp.secrets",
+        "injection.detection"
+      ],
+      "evidence": [
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "PR.DS-11",
+      "title": "Backups made, protected, kept and tested",
+      "applicability": "product",
+      "controls": [
+        "backup.schedule",
+        "crypto.backups",
+        "backup.restore_tested"
+      ],
+      "evidence": [
+        "audit:backups",
+        "settings:encryption",
+        "audit:settings",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "PR.PS-01",
+      "title": "Configuration management",
+      "applicability": "customer",
+      "controls": [
+        "host.hardening"
+      ],
+      "evidence": [
+        "records:operations",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "PR.PS-02",
+      "title": "Software maintained, replaced and removed by risk",
+      "applicability": "product",
+      "controls": [
+        "software.integrity"
+      ],
+      "evidence": [
+        "audit:updates",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "PR.PS-04",
+      "title": "Log records generated for continuous monitoring",
+      "applicability": "product",
+      "controls": [
+        "log.audit_chain",
+        "log.retention"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "PR.PS-06",
+      "title": "Secure software development",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "PR.IR-01",
+      "title": "Networks protected from unauthorised access",
+      "applicability": "customer",
+      "controls": [
+        "host.hardening",
+        "crypto.transit"
+      ],
+      "evidence": [
+        "records:operations",
+        "settings:encryption",
+        "audit:settings",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "PR.IR-03",
+      "title": "Resilience in normal and adverse situations",
+      "applicability": "product",
+      "controls": [
+        "ops.self_recovery",
+        "backup.schedule"
+      ],
+      "evidence": [
+        "records:operations",
+        "audit:updates",
+        "audit:backups",
+        "settings:encryption",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "DE.CM-03",
+      "title": "Personnel activity and technology use monitored",
+      "applicability": "product",
+      "controls": [
+        "ai.gateway_in_use",
+        "log.audit_chain"
+      ],
+      "evidence": [
+        "audit:gateway",
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "DE.CM-06",
+      "title": "External service provider activity monitored",
+      "applicability": "product",
+      "controls": [
+        "ai.gateway_in_use",
+        "ai.discovery"
+      ],
+      "evidence": [
+        "audit:gateway",
+        "records:ai_inventory",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "DE.CM-09",
+      "title": "Hardware, software and runtime environments monitored",
+      "applicability": "product",
+      "controls": [
+        "software.integrity",
+        "ops.self_recovery"
+      ],
+      "evidence": [
+        "audit:updates",
+        "records:operations",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "DE.AE-02",
+      "title": "Adverse events analysed",
+      "applicability": "customer",
+      "controls": [
+        "log.siem",
+        "injection.detection"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "DE.AE-03",
+      "title": "Information correlated from several sources",
+      "applicability": "customer",
+      "controls": [
+        "log.siem"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "RS.MA-01",
+      "title": "Incident response plan executed with third parties",
+      "applicability": "organisational",
+      "controls": [
+        "ir.incident_report"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "audit:settings",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "RS.AN-03",
+      "title": "Analysis establishes what happened",
+      "applicability": "customer",
+      "controls": [
+        "log.audit_chain",
+        "evidence.signing"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "RS.AN-06",
+      "title": "Investigation actions recorded, integrity preserved",
+      "applicability": "product",
+      "controls": [
+        "log.audit_chain",
+        "evidence.signing"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "RS.CO-02",
+      "title": "Stakeholders notified of incidents",
+      "applicability": "customer",
+      "controls": [
+        "ir.incident_report",
+        "notify.email"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "audit:settings",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "RC.RP-01",
+      "title": "Recovery plan executed",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "RC.RP-03",
+      "title": "Backups checked before restoring",
+      "applicability": "product",
+      "controls": [
+        "backup.restore_tested",
+        "crypto.backups"
+      ],
+      "evidence": [
+        "audit:backups",
+        "settings:encryption",
+        "audit:settings",
+        "records:attestations"
+      ]
+    }
+  ]
+}
