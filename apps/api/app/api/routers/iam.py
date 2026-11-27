@@ -306,7 +306,7 @@ def add_person(
         existing = account_security.find_by_email(db, address)
         if existing is not None and db.scalar(select(UserTenantRole.id).where(UserTenantRole.user_id == existing.id, UserTenantRole.tenant_id == ctx.tenant.id)) is not None:
             raise Refused(409, "Someone with that email already has access.")
-        # The activation code's limit of active users in each tenant (/settings/guide/licence).
+        # The licence's limit of active users in each tenant (/settings/guide/licence).
         activation_service.assert_may_add_member(db, ctx.tenant.id)
         temporary = None
         if existing is None:
@@ -951,7 +951,7 @@ def confirm_join(request: Request, body: Annotated[dict[str, Any] | None, Body()
         problem = password_policy.problem(db, password)
         if problem:
             raise Refused(400, problem)
-        # The activation code's limit of active users in each tenant (/settings/guide/licence).
+        # The licence's limit of active users in each tenant (/settings/guide/licence).
         activation_service.assert_may_add_member(db, tenant.id)
         # The link is spent first: a second press of the button cannot make a second person.
         if not sign_in_store.store().take(f"join:{_key(str(body.get('token') or ''))}"):

@@ -1713,6 +1713,25 @@
     "mobile": "blocked"
   },
   {
+    "route": "/settings",
+    "file": "apps/web/src/app/settings/page.tsx",
+    "owner": "W2",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "not-observed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-applicable",
+      "ready-populated": "not-applicable",
+      "ready-empty": "not-applicable",
+      "unavailable": "not-applicable",
+      "stale": "not-applicable"
+    },
+    "notes": "2026-11-27: redirect only, to Settings' first page (/settings/people, open to every role); typed by hand it was a 404.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
+  },
+  {
     "route": "/settings/activation",
     "file": "apps/web/src/app/settings/activation/page.tsx",
     "owner": "W3",
@@ -1727,7 +1746,7 @@
       "unavailable": "not-observed",
       "stale": "not-observed"
     },
-    "notes": "Settings → Activation codes (docs/activation-codes.md), added with product licensing. Covered by apps/web/tests/licence.test.mjs (pure view logic and source checks) and the API tests in apps/api/tests/test_activation_licence.py; not yet observed in a browser.",
+    "notes": "Settings → Licence: the installation ID, the 3-day trial and the .hawkai licence import (first added as Activation codes with product licensing). Covered by apps/web/tests/licence.test.mjs (pure view logic and source checks) and the API tests in apps/api/tests/test_activation_licence.py; not yet observed in a browser.",
     "desktop": "not-observed",
     "mobile": "not-observed"
   },

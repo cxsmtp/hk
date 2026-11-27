@@ -4085,6 +4085,10 @@ def get_pilot_health_state(db: Session, *, tenant_id: str) -> dict[str, Any]:
     overall_status = "ok" if (api_reachable and schema_ok and policy_ok and telemetry_ok and hardening_ok) else "degraded"
     if hardening_failed:
         overall_status = "degraded"
+    # Nothing was ever connected (no browser extension has reported, no browser telemetry): a new installation to set
+    # up, not a degraded one.
+    if overall_status == "degraded" and schema_ok and not hardening_failed and policy_sync_status == "missing" and telemetry_status == "missing":
+        overall_status = "not_connected"
 
     payload = {
         "tenant_id": tenant_id,

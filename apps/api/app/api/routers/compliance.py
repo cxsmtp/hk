@@ -18,6 +18,21 @@ Framework packs (app/services/compliance_packs):
   30 days by default (audit.export); recorded in the audit log.
 - PUT / DELETE /compliance/packs/{id}/requirements/{requirement}/record: record that a requirement is in place (the
   organisation's own process, where its evidence is) or not applicable (settings.manage); recorded in the audit log.
+
+Requests from data subjects (app/services/data_subject_requests.py; DPDP s.11-14, UAE PDPL Art. 13-15): read by those
+who hold compliance.dsr.manage or audit.view, changed by compliance.dsr.manage alone; every change, export and erasure
+is in the audit log (``privacy.*``), naming the request, never the person.
+
+- GET /compliance/data-requests?status=open|received|…&overdue=true&kind=…: the tenant's requests, with their counts.
+- POST /compliance/data-requests: record a request (kind, the person's email or identifier, when it was received).
+- GET / PUT /compliance/data-requests/settings: the days a request has (30 by default) and the grievance contact.
+- GET /compliance/data-requests/{id}: one request with its trail.
+- PATCH /compliance/data-requests/{id}: move it on (verifying, in progress, completed, refused with a reason), add a
+  note, or give it to someone.
+- POST /compliance/data-requests/{id}/export: for an access request, what Hawk AI holds about the person (JSON, with
+  an evidence signature).
+- POST /compliance/data-requests/{id}/erase: for an erasure request, pseudonymise the person's records; the audit log
+  is kept; never the last active Owner.
 """
 
 from __future__ import annotations
@@ -26,15 +41,16 @@ import datetime as dt
 import json
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Body, Depends, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse, Response
 from sqlalchemy.orm import Session
 
 from app.core.installation import SET_BY_SERVER, is_installation_admin, require_installation_admin
-from app.core.rbac import require_permission
-from app.core.tenant import TenantContext
+from app.core.rbac import REFUSED, holds, require_permission
+from app.core.tenant import TenantContext, require_tenant
 from app.db.session import get_db
 from app.services import compliance_packs, compliance_service, evidence_signing
+from app.services import data_subject_requests as dsr
 from app.services.compliance_packs import evidence as pack_evidence
 from app.services.audit_service import write_audit_log
 
@@ -71,6 +87,8 @@ def view(db: Session, *, may_change: bool, tenant_id: str | None = None, read_on
         "clock": clock,
         "encryption": compliance_service.encryption_status(),
         "settings": compliance_service.settings_view(db),
+        # Requests from data subjects: open, overdue and due soon (Settings → Compliance → Data requests).
+        "dataRequests": dsr.summary(db, tenant_id),
         "dataLocation": compliance_service.data_location(db),
         # The settings (retention, data location, incident contact) and the recommended baseline are the whole
         # server's: only its administrators change them (app/core/installation.py).
@@ -173,6 +191,7 @@ def _pack_refused(error: compliance_packs.PackError) -> JSONResponse:
 @router.get("/compliance/packs")
 def list_packs(ctx: TenantContext = Depends(require_permission("audit.view")), db: Session = Depends(get_db)):
     result = compliance_packs.overview(db, ctx.tenant.id)
+    result["dataRequests"] = dsr.summary(db, ctx.tenant.id)
     result["mayRecord"] = "settings.manage" in ctx.permissions
     result["mayExport"] = "audit.export" in ctx.permissions
     db.commit()
@@ -273,3 +292,196 @@ def pack_evidence_bundle(
         evidence_signing.STATUS_HEADER: "signed",
     }
     return Response(data, media_type="application/zip", headers=headers)
+
+
+# ---- Requests from data subjects ------------------------------------------------------------------------------------
+
+DSR_MANAGE = "compliance.dsr.manage"
+DSR_READ = (DSR_MANAGE, "audit.view")
+
+
+def _may_read_requests(ctx: TenantContext = Depends(require_tenant)) -> TenantContext:
+    """Those who answer data requests, and those who read the audit log (auditors), may read them."""
+
+    if any(holds(ctx, pid) for pid in DSR_READ):
+        return ctx
+    raise HTTPException(status_code=403, detail=REFUSED)
+
+
+_may_read_requests.permissions_any = DSR_READ  # type: ignore[attr-defined]  # read by tests
+
+
+def _dsr_refused(error: dsr.DsrError) -> JSONResponse:
+    return _refused(error.status_code, error.message)
+
+
+def _dsr_audit(db: Session, ctx: TenantContext, action: str, request_id: str, payload: dict[str, Any]) -> None:
+    write_audit_log(
+        db,
+        tenant_id=ctx.tenant.id,
+        actor_user_id=ctx.user.id if ctx.user else None,
+        actor_type="human",
+        action=action,
+        resource_type="data_subject_request",
+        resource_id=request_id[:128],
+        payload=payload,
+    )
+
+
+def _dsr_detail(db: Session, ctx: TenantContext, row: Any) -> dict[str, Any]:
+    return {
+        "request": dsr.view(row),
+        "events": [dsr.event_view(e) for e in dsr.events(db, row)],
+        "mayManage": DSR_MANAGE in ctx.permissions,
+    }
+
+
+@router.get("/compliance/data-requests")
+def list_data_requests(
+    status: str = Query(default=""),
+    overdue: bool = Query(default=False),
+    kind: str = Query(default=""),
+    ctx: TenantContext = Depends(_may_read_requests),
+    db: Session = Depends(get_db),
+):
+    try:
+        rows = dsr.list_requests(db, ctx.tenant.id, status=status, overdue=overdue, kind=kind)
+    except dsr.DsrError as error:
+        return _dsr_refused(error)
+    result = {
+        "items": [dsr.view(r) for r in rows],
+        "summary": dsr.summary(db, ctx.tenant.id),
+        "settings": dsr.settings_view(db, ctx.tenant.id),
+        "kinds": [{"id": k, "label": dsr.KIND_LABELS[k]} for k in dsr.KINDS],
+        "statuses": list(dsr.STATUSES),
+        "mayManage": DSR_MANAGE in ctx.permissions,
+    }
+    return JSONResponse(result, headers=NO_STORE)
+
+
+@router.post("/compliance/data-requests")
+def create_data_request(
+    body: Annotated[dict[str, Any] | None, Body()] = None,
+    ctx: TenantContext = Depends(require_permission(DSR_MANAGE)),
+    db: Session = Depends(get_db),
+):
+    try:
+        row = dsr.create(db, ctx.tenant.id, body, actor=ctx.user)
+    except dsr.DsrError as error:
+        db.rollback()
+        return _dsr_refused(error)
+    _dsr_audit(
+        db, ctx, "privacy.request.created", row.id,
+        {"outcome": "changed", "reason": f"Data request {row.id} recorded: {row.kind} ({row.law}), due {dsr.view(row)['dueAt']}.", "kind": row.kind, "law": row.law},
+    )
+    db.commit()
+    return JSONResponse(_dsr_detail(db, ctx, row), status_code=201, headers=NO_STORE)
+
+
+@router.get("/compliance/data-requests/settings")
+def get_data_request_settings(ctx: TenantContext = Depends(_may_read_requests), db: Session = Depends(get_db)):
+    return JSONResponse({"settings": dsr.settings_view(db, ctx.tenant.id), "mayManage": DSR_MANAGE in ctx.permissions}, headers=NO_STORE)
+
+
+@router.put("/compliance/data-requests/settings")
+def put_data_request_settings(
+    body: Annotated[dict[str, Any] | None, Body()] = None,
+    ctx: TenantContext = Depends(require_permission(DSR_MANAGE)),
+    db: Session = Depends(get_db),
+):
+    try:
+        changes = dsr.save_settings(db, ctx.tenant.id, body, email=ctx.user.email if ctx.user else "")
+    except dsr.DsrError as error:
+        db.rollback()
+        return _dsr_refused(error)
+    for reason in changes:
+        _dsr_audit(db, ctx, "privacy.settings.changed", "settings", {"outcome": "changed", "reason": reason})
+    db.commit()
+    return JSONResponse({"settings": dsr.settings_view(db, ctx.tenant.id), "mayManage": True}, headers=NO_STORE)
+
+
+@router.get("/compliance/data-requests/{request_id}")
+def get_data_request(request_id: str, ctx: TenantContext = Depends(_may_read_requests), db: Session = Depends(get_db)):
+    try:
+        row = dsr.get(db, ctx.tenant.id, request_id)
+    except dsr.DsrError as error:
+        return _dsr_refused(error)
+    return JSONResponse(_dsr_detail(db, ctx, row), headers=NO_STORE)
+
+
+@router.patch("/compliance/data-requests/{request_id}")
+def update_data_request(
+    request_id: str,
+    body: Annotated[dict[str, Any] | None, Body()] = None,
+    ctx: TenantContext = Depends(require_permission(DSR_MANAGE)),
+    db: Session = Depends(get_db),
+):
+    try:
+        row, changes = dsr.update(db, ctx.tenant.id, request_id, body, actor=ctx.user)
+    except dsr.DsrError as error:
+        db.rollback()
+        return _dsr_refused(error)
+    _dsr_audit(
+        db, ctx, "privacy.request.updated", row.id,
+        {"outcome": "changed", "reason": f"Data request {row.id} ({row.kind}): {'; '.join(changes)}.", "kind": row.kind, "status": row.status},
+    )
+    db.commit()
+    return JSONResponse(_dsr_detail(db, ctx, row), headers=NO_STORE)
+
+
+@router.post("/compliance/data-requests/{request_id}/export")
+def export_data_request(request_id: str, ctx: TenantContext = Depends(require_permission(DSR_MANAGE)), db: Session = Depends(get_db)):
+    who = ctx.user.email if ctx.user else "system"
+    try:
+        row = dsr.get(db, ctx.tenant.id, request_id)
+        report = dsr.access_export(db, row, generated_by=who)
+    except dsr.DsrError as error:
+        return _dsr_refused(error)
+    data = (json.dumps(report, indent=2, ensure_ascii=False, default=str) + "\n").encode("utf-8")
+    signature = evidence_signing.service().header_for(data, artifact="data_subject_access_export.json")
+    rows = sum(report["counts"].values())
+    dsr.add_event(
+        db, row, kind="exported", actor=ctx.user, note=f"What Hawk AI holds about the person was exported ({rows} records).",
+        details={"counts": report["counts"], "bytes": len(data), "signed": signature.get(evidence_signing.STATUS_HEADER) == "signed"},
+    )
+    _dsr_audit(db, ctx, "privacy.request.exported", row.id, {"outcome": "info", "reason": f"Data request {row.id}: access export made ({rows} records).", "rows": rows})
+    db.commit()
+    headers = {
+        "Content-Disposition": f'attachment; filename="hawk-data-request-{row.id[:8]}-export.json"',
+        **NO_STORE,
+        **signature,
+    }
+    return Response(data, media_type="application/json; charset=utf-8", headers=headers)
+
+
+@router.post("/compliance/data-requests/{request_id}/erase")
+def erase_data_request(
+    request_id: str,
+    body: Annotated[dict[str, Any] | None, Body()] = None,
+    ctx: TenantContext = Depends(require_permission(DSR_MANAGE)),
+    db: Session = Depends(get_db),
+):
+    try:
+        row = dsr.get(db, ctx.tenant.id, request_id)
+    except dsr.DsrError as error:
+        return _dsr_refused(error)
+    if not isinstance(body, dict) or body.get("confirm") is not True:
+        return _refused(400, "Confirm the erasure: it cannot be undone.")
+    try:
+        result = dsr.erase(db, row, actor=ctx.user)
+    except dsr.DsrError as error:
+        db.rollback()
+        _dsr_audit(db, ctx, "privacy.request.erase_refused", row.id, {"outcome": "refused", "reason": f"Data request {row.id}: erasure refused. {error.message}"})
+        db.commit()
+        return _dsr_refused(error)
+    changed = sum(result["changed"].values())
+    _dsr_audit(
+        db, ctx, "privacy.request.erased", row.id,
+        {
+            "outcome": "changed",
+            "reason": f"Data request {row.id}: personal fields pseudonymised as {result['pseudonym']} ({changed} records); {result['auditEntriesKept']} audit entries kept unchanged.",
+            "rows": changed,
+        },
+    )
+    db.commit()
+    return JSONResponse({**_dsr_detail(db, ctx, row), "erasure": result}, headers=NO_STORE)

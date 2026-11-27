@@ -133,10 +133,12 @@ class MeResponse(BaseModel):
     full_name: str
     tenants: list[TenantMembershipResponse]
     # The product licence's end, for the admins' banner in its last 30 days (/settings/guide/licence): only for
-    # someone who is an owner or admin of a tenant, as they may enter activation codes.
+    # someone who is an owner or admin of a tenant, as they may import the licence.
     licence: dict[str, Any] | None = None
     # Choose a new password first (app/core/access_gate.py).
     must_change_password: bool = False
+    # That password is the first administrator's, printed by deploy/install.sh (not one an administrator set).
+    password_from_installer: bool = False
     # Where this person stands with the terms of use (TERMS.md): {version, organisationAccepted, accepted,
     # canAcceptForOrganisation}.
     terms: dict[str, Any] | None = None
@@ -302,7 +304,7 @@ def register(payload: RegisterRequest, request: Request, response: Response, db:
         db.add(user)
         db.flush()
 
-        # Several tenants need a tenants activation code (/settings/guide/licence).
+        # Several tenants need a licence for several tenants (/settings/guide/licence).
         activation_service.assert_may_add_tenant(db)
         tenant = Tenant(name=f"{payload.full_name} Org", slug=f"{payload.email.split('@')[0]}-org", is_active=True)
         db.add(tenant)
@@ -537,6 +539,7 @@ def me(current_user: Annotated[User, Depends(get_current_user)], db: Session = D
         tenants=[TenantMembershipResponse(**tenant_row) for tenant_row in tenants],
         licence=licence,
         must_change_password=bool(current_user.must_change_password),
+        password_from_installer=first_run_service.holds_installer_password(current_user),
         terms=terms_service.describe(db, current_user),
         two_step=two_step,
     )

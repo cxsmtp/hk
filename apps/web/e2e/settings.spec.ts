@@ -1,5 +1,6 @@
 import { SETTINGS_GROUPS } from "@/lib/settings-menu";
 import { ADMIN, callApi, expect, signIn, test } from "./support/fixtures";
+import { measureLayout } from "./support/layout";
 
 /** Settings as the first administrator (Owner): every page of the menu, and the pages that change something. */
 
@@ -98,19 +99,55 @@ test("Two-step sign-in: setting it up shows a QR code", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Turn on two-step sign-in" })).toBeVisible();
 });
 
-test("Activation codes shows the licence end date", async ({ page }) => {
+test("Licence shows the installation ID and the trial, gives the licence request and refuses a file that is not a licence", async ({ page, watch }) => {
+  // The refused upload is expected here.
+  watch.allow(400, /^\/api\/licence\/import$/);
   await page.goto("/settings/activation");
-  await expect(page.getByRole("heading", { level: 1, name: "Activation codes" })).toBeVisible();
-  const activation = await callApi(page, "GET", "/activation");
-  expect(activation.status).toBe(200);
-  const until = Date.parse(activation.json.product.until);
-  expect(Number.isFinite(until)).toBe(true);
-  // The last day the licence covers, as the page writes it (src/lib/licence.ts lastDayOf).
-  const lastDay = new Date(until - 1).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
-  await expect(page.locator("[data-ui=licence-product]")).toContainText(`Until the end of ${lastDay} (UTC)`);
-  // The server's administrator may enter a code: the field is there, without the read-only note.
-  expect(activation.json.canManage).toBe(true);
-  await expect(page.locator("#activation-code")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Licence" })).toBeVisible();
+  const status = await callApi(page, "GET", "/licence/status");
+  expect(status.status).toBe(200);
+  // A fresh installation: its own ID, and the 3-day trial from its first start.
+  expect(status.json.installationId).toMatch(/^HK-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/);
+  expect(status.json.trial.active).toBe(true);
+  expect(Date.parse(status.json.trial.end) - Date.parse(status.json.trial.start)).toBe(72 * 60 * 60 * 1000);
+  await expect(page.locator("[data-ui=installation-id] code")).toHaveText(status.json.installationId);
+  await expect(page.locator("[data-ui=licence-product]")).toContainText("Hawk AI · Trial · Until");
+  // The admins' banner shows the time left.
+  await expect(page.locator("[data-ui=licence-banner]")).toContainText("Hawk AI trial:");
+  // The server's administrator gets the request and the upload, without the read-only note.
+  expect(status.json.canManage).toBe(true);
+  const download = page.waitForEvent("download");
+  await page.locator("[data-ui=licence-request]").click();
+  const file = await download;
+  expect(file.suggestedFilename()).toBe(`hawk-ai-${status.json.installationId}.hawkai-request`);
+  await expect(page.locator("#licence-file")).toHaveAttribute("accept", ".hawkai");
+  await page.locator("#licence-file").setInputFiles({ name: "not-a-licence.hawkai", mimeType: "application/octet-stream", buffer: Buffer.from("{}") });
+  await page.getByRole("button", { name: "Upload .hawkai licence" }).click();
+  await expect(page.locator("[data-ui=licence-upload] [role=status]")).toHaveText("This file is not a Hawk AI licence.");
+  // Still in the trial: nothing changed.
+  expect((await callApi(page, "GET", "/licence")).json.trial).toBe(true);
+});
+
+test("The deactivation page shows the installation ID and, signed in as the administrator, the upload, on a phone too", async ({ page }) => {
+  // The trial has not ended here: the licence's answer is made to say so for this page only.
+  await page.route(/\/api\/licence$/, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ active: false, until: "2026-11-28T12:00:00.000Z", trial: false, installationId: "HK-TEST-TEST-TEST-TEST", message: "The product has been deactivated. Please reach out to Bhawani Singh." }),
+    }),
+  );
+  await page.setViewportSize({ width: 375, height: 800 });
+  await page.goto("/settings/activation");
+  const screen = page.locator("[data-ui=licence-deactivated]");
+  await expect(screen.getByRole("heading", { level: 1, name: "The product has been deactivated." })).toBeVisible();
+  const status = await callApi(page, "GET", "/licence/status");
+  await expect(screen.locator("[data-ui=installation-id] code")).toHaveText(status.json.installationId);
+  await expect(screen.getByRole("button", { name: "Copy" })).toBeVisible();
+  await expect(screen.locator("[data-ui=licence-request]")).toBeVisible();
+  await expect(screen.getByRole("button", { name: "Upload .hawkai licence" })).toBeVisible();
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(0);
 });
 
 test("One workspace: its owner is the server's administrator and changes the whole server's settings", async ({ page }) => {
@@ -126,4 +163,29 @@ test("One workspace: its owner is the server's administrator and changes the who
   const compliance = await callApi(page, "GET", "/compliance");
   expect(compliance.status).toBe(200);
   expect(compliance.json.mayChange).toBe(true);
+});
+
+test("Compliance → Data requests: record one, open it with its trail, export it, and it fits a phone", async ({ page }) => {
+  await page.goto("/settings/compliance");
+  await expect(page.getByRole("heading", { level: 1, name: "Compliance" })).toBeVisible();
+  const made = await callApi(page, "POST", "/compliance/data-requests", { kind: "access", law: "pdpl", subjectEmail: ADMIN.email, channel: "email" });
+  expect(made.status).toBe(201);
+  await page.locator("[data-ui=compliance-tab-requests]").click();
+  const row = page.locator(`[data-ui=dsr-table] tr[data-request="${made.json.request.id}"]`);
+  await expect(row).toContainText("See their data");
+  await row.getByRole("button", { name: "Open" }).click();
+  const detail = page.locator("[data-ui=dsr-detail]");
+  await expect(detail.locator("[data-ui=dsr-timeline]")).toContainText("Recorded");
+  const download = page.waitForEvent("download");
+  await detail.locator("[data-ui=dsr-export]").click();
+  expect((await download).suggestedFilename()).toMatch(/^hawk-data-request-.*-export\.json$/);
+  await expect(detail.locator("[data-ui=dsr-timeline]")).toContainText("Export made");
+  // From a phone to a laptop, nothing scrolls sideways: the table becomes cards.
+  for (const width of [360, 768, 1280]) {
+    await page.setViewportSize({ width, height: 820 });
+    await page.waitForTimeout(250);
+    const report = await measureLayout(page);
+    expect(report.pageOverflow, `${width}px`).toBe(0);
+    expect(report.sideScrollers.filter((b) => !b.intended), `${width}px`).toEqual([]);
+  }
 });

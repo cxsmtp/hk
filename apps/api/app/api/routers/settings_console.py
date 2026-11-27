@@ -76,7 +76,7 @@ def _organisation(db: Session) -> str:
 @router.get("/settings/me")
 def settings_me(ctx: TenantContext = Depends(require_tenant), db: Session = Depends(get_db)):
     # installationAdmin: whether the settings of the whole server (sign-in rules, compliance, email, HTTPS, network,
-    # updates, backups, hands-off, branding, activation codes) may be changed, or only read (app/core/installation.py).
+    # updates, backups, hands-off, branding, the licence) may be changed, or only read (app/core/installation.py).
     installation = is_installation_admin(db, ctx)
     return JSONResponse(
         {"role": ctx.role_key, "permissions": sorted(ctx.permissions), "installationAdmin": installation, "readOnlyNote": "" if installation else SET_BY_SERVER},
@@ -326,6 +326,8 @@ def about(ctx: TenantContext = Depends(require_tenant), db: Session = Depends(ge
             "active": product["active"],
             "until": product["until"],
             "daysLeft": product["daysLeft"],
+            "trial": product["trial"],
+            "installationId": product["installationId"],
             "activation": product["activation"],
             "message": product["message"],
         },

@@ -63,6 +63,7 @@ EVIDENCE_SOURCES = {
     "audit:approvals": ("ai_system", "approval"),
     "audit:audit": ("audit.",),
     "audit:terms": ("terms.",),
+    "audit:privacy": ("privacy.",),
     "settings:sign_in": (),
     "settings:compliance": (),
     "settings:detection": (),
@@ -74,6 +75,7 @@ EVIDENCE_SOURCES = {
     "records:attestations": (),
     "records:operations": (),
     "records:detector_coverage": (),
+    "records:data_subject_requests": (),
 }
 _PACK_ID = re.compile(r"^[a-z0-9][a-z0-9-]{1,47}$")
 _REQ_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 .:()/_\-]{0,63}$")

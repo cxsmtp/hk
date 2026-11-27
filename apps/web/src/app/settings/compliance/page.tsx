@@ -8,6 +8,7 @@ import type { FormEvent } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { DataRequests } from "@/components/compliance/data-requests";
 import { FrameworkPacks } from "@/components/compliance/framework-packs";
 import { api } from "@/lib/api";
 import { clockSentence, incidentQuery, OWNER_LABELS, retentionDays, STATUS_CHIP, STATUS_LABELS } from "@/lib/compliance";
@@ -36,7 +37,9 @@ function save(blob: Blob, name: string) {
  *
  * The first tab is the framework packs (components/compliance/framework-packs.tsx): one per law or standard, each
  * requirement with the Hawk AI controls behind it, their live status, records of the organisation's own processes and
- * the signed evidence bundle.
+ * the signed evidence bundle. The third is the data requests (components/compliance/data-requests.tsx): people's
+ * requests to see, correct or erase their personal data, grievances and nominations (DPDP, UAE PDPL), each with its due
+ * date and trail; overdue and due-soon requests are called out above every tab.
  */
 export default function CompliancePage() {
   const [view, setView] = useState<ComplianceView | null>(null);
@@ -45,7 +48,7 @@ export default function CompliancePage() {
   const [form, setForm] = useState({ activity: "", connector: "", location: "", contact: "" });
   const [windowFrom, setWindowFrom] = useState("");
   const [windowTo, setWindowTo] = useState("");
-  const [tab, setTab] = useState<"packs" | "desc">("packs");
+  const [tab, setTab] = useState<"packs" | "desc" | "requests">("packs");
 
   const show = useCallback((next: ComplianceView) => {
     setView(next);
@@ -58,10 +61,17 @@ export default function CompliancePage() {
   }, []);
 
   useEffect(() => {
+    // A link may open a tab (/settings/compliance?tab=requests): read once, in the browser.
+    const wanted = new URLSearchParams(window.location.search).get("tab");
+    if (wanted === "requests" || wanted === "desc") setTab(wanted);
     api
       .getCompliance()
       .then(show)
-      .catch((error) => setLoadError(message(error)));
+      .catch((error) => {
+        setLoadError(message(error));
+        // Someone who answers data requests without seeing the audit log has only that tab.
+        setTab("requests");
+      });
   }, [show]);
 
   async function saveSettings(event: FormEvent) {
@@ -131,7 +141,15 @@ export default function CompliancePage() {
             </div>
           ) : null}
         </div>
-        {loadError ? (
+        {view?.dataRequests && (view.dataRequests.overdue || view.dataRequests.dueSoon) && tab !== "requests" ? (
+          <div className="callout warn" data-ui="compliance-dsr-due">
+            Data requests: {view.dataRequests.overdue} overdue, {view.dataRequests.dueSoon} due within {view.dataRequests.dueSoonDays} days.{" "}
+            <button className="btn sm" type="button" onClick={() => setTab("requests")}>
+              Open data requests
+            </button>
+          </div>
+        ) : null}
+        {loadError && tab !== "requests" ? (
           <div className="panel">
             <div className="empty">
               <b>{loadError}</b>
@@ -145,7 +163,16 @@ export default function CompliancePage() {
           <button type="button" role="tab" aria-selected={tab === "desc"} className={tab === "desc" ? "primary" : ""} onClick={() => setTab("desc")}>
             DESC / UAE IA / CERT-In, clock and records
           </button>
+          <button type="button" role="tab" aria-selected={tab === "requests"} className={tab === "requests" ? "primary" : ""} onClick={() => setTab("requests")} data-ui="compliance-tab-requests">
+            Data requests
+            {view?.dataRequests?.overdue ? ` · ${view.dataRequests.overdue} overdue` : ""}
+          </button>
         </div>
+        {tab === "requests" ? (
+          <div className="mt">
+            <DataRequests />
+          </div>
+        ) : null}
         {tab === "packs" ? (
           <div className="mt">
             <FrameworkPacks />

@@ -12,7 +12,7 @@ const labels = (groups) => groups.map((g) => [g.label, g.items.map((i) => i.labe
 test("the Settings menu has FTR's groups and items, in FTR's order, with Licensing where FTR has Pricing", () => {
   assert.deepEqual(labels(settingsNav(ALL)), [
     ["People", ["People", "Teams", "Roles & permissions", "Sign-in"]],
-    ["Licensing", ["Activation codes"]],
+    ["Licensing", ["Licence"]],
     ["Records", ["Audit log", "Connector API activity", "Compliance"]],
     ["Workflow", ["AI system approvals"]],
     ["System", ["General", "Branding", "Email (SMTP)", "Single sign-on", "HTTPS", "Updates", "Backups & health", "Hands-off", "Network & proxy", "Get help", "Guide", "About"]],

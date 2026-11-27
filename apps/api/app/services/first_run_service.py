@@ -13,8 +13,8 @@ When the API starts on a database with no users (settings.first_run_access, on i
 
 On a database that already has users, the log names an administrator and gives the reset command.
 
-Hawk is multi-tenant: the first administrator gets a tenant of their own, as its owner, within what the activation
-codes allow (app/services/activation_service.py). Several API processes may start at once: a PostgreSQL advisory lock
+Hawk is multi-tenant: the first administrator gets a tenant of their own, as its owner, within what the licence
+allows (app/services/activation_service.py). Several API processes may start at once: a PostgreSQL advisory lock
 (a process lock on SQLite) makes sure only one of them creates the administrator.
 """
 
@@ -50,7 +50,7 @@ DEFAULT_ADMIN_EMAIL = "admin@hawk.local"
 FIRST_ADMIN_FILE_NAME = "first-admin-password.txt"
 #: The same lock infra/scripts/production_bootstrap.py takes: one first administrator, however many processes start.
 BOOTSTRAP_LOCK_ID = 7_269_001_010
-RESET_COMMAND = "python -m app.cli.reset_admin  (with Docker: docker compose exec api python -m app.cli.reset_admin)"
+RESET_COMMAND = "python -m app.cli.reset_admin  (with Docker: docker compose -f deploy/compose.yaml exec api python -m app.cli.reset_admin)"
 ADMIN_ROLES = ("owner", "admin")
 #: The first administrator's tenant, until the organisation's name is given (ORGANISATION_NAME, or with the terms).
 DEFAULT_TENANT_NAME = "My organisation"
@@ -107,6 +107,26 @@ def _write_owner_only(path: Path, content: str) -> None:
         os.close(fd)
 
 
+def holds_installer_password(user: User) -> bool:
+    """Whether this person still signs in with the first administrator's generated password (printed by the
+    installer), not one an administrator set for them: the console says which when it asks for their own."""
+
+    if not getattr(user, "must_change_password", False):
+        return False
+    try:
+        generated = first_admin_file().read_text(encoding="utf-8").strip()
+    except OSError:
+        return False
+    if not generated:
+        return False
+    from app.core.security import verify_password
+
+    try:
+        return bool(verify_password(generated, user.hashed_password or ""))
+    except Exception:  # noqa: BLE001 - only which sentence the console shows
+        return False
+
+
 def remove_first_admin_file() -> None:
     try:
         first_admin_file().unlink()
@@ -156,7 +176,7 @@ def create_administrator(
     must_change_password: bool = True,
     organisation_name: str | None = None,
 ) -> tuple[User, Tenant]:
-    """A tenant owner with their own tenant, within the activation codes' caps (the caller commits)."""
+    """A tenant owner with their own tenant, within the licence's caps (the caller commits)."""
 
     email = normalize_email(email)
     if not _EMAIL.match(email) or len(email) > 320:

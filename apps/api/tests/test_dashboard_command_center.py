@@ -476,6 +476,19 @@ def test_pilot_health_prefers_fresh_extension_heartbeat_over_stale_browser_runti
     assert latest_browser_event_at >= (now - timedelta(minutes=2))
 
 
+def test_pilot_health_of_a_new_installation_is_not_connected_rather_than_degraded(test_env, monkeypatch) -> None:
+    # Nothing reported yet (no browser extension, no browser telemetry): something to set up, not a degraded service.
+    from app.services.dashboard import aggregator
+
+    monkeypatch.setattr(aggregator, "evaluate_deployment_hardening", lambda payload, expected_tenant_id=None: {"status": "warning", "checks": []})
+    client: TestClient = test_env["client"]
+    owner = _register_owner(client, email="pilot-new-owner@example.com")
+    headers = _headers(owner["access_token"], owner["tenant_id"])
+    payload = client.get("/dashboard/pilot-health", headers=headers).json()
+    assert payload["policy_sync_health"]["status"] == "missing" and payload["telemetry_health"]["status"] == "missing"
+    assert payload["overall_status"] == "not_connected"
+
+
 def test_command_center_dashboard_aggregates_cross_module_state(test_env) -> None:
     client: TestClient = test_env["client"]
     session_factory = test_env["sessionmaker"]

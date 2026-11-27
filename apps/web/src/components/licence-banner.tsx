@@ -7,8 +7,8 @@ import { LICENCE_CHANGED_EVENT, licenceBannerText } from "@/lib/licence";
 import type { AdminLicence } from "@/lib/licence";
 
 /**
- * The product licence ends within 30 days (/settings/guide/licence): owners and admins are told, with the date,
- * at the top of every page, until a product activation code moves it (Settings → Activation codes).
+ * The 3-day trial, or a licence's last 30 days (/settings/guide/licence): owners and admins are told, with the end
+ * and the time left, at the top of every page, until a .hawkai licence moves it (Settings → Licence).
  */
 export function LicenceBanner() {
   const [licence, setLicence] = useState<AdminLicence | null>(null);

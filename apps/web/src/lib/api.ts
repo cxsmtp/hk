@@ -7,7 +7,7 @@ import type { HandsOffSettings, HandsOffView, LinkAnswer, SelfCheckHealth } from
 import type { ApprovalDecision, ApprovalGrantView, ApprovalPolicy, ApprovalPolicyView, ApprovalRequestView, ApprovalScope } from "@/lib/ai-system-approvals";
 import type { DiagnosticsView } from "@/lib/self-recovery";
 import type { AboutView, BrandingPatch, BrandingView, GeneralView, SettingsMe, SmtpSettings, SmtpView } from "@/lib/settings-console";
-import type { ComplianceSettings, ComplianceView, PacksOverview, PackView } from "@/lib/compliance";
+import type { ComplianceSettings, ComplianceView, DataRequestDetail, DataRequestKind, DataRequestLaw, DataRequestList, DataRequestSettings, DataRequestStatus, PacksOverview, PackView } from "@/lib/compliance";
 import type { AuditPage, AuditVerify, ConnectorActivity, EvidenceSigning, Emailed, NetworkCheck, NetworkInfo, SupportChannel, SupportKind, SupportList, SupportRequest, TrustDiagnosis, TrustedCertificate } from "@/lib/records";
 import { approvalStatusFilters, mergeApprovalStatusResults } from "@/lib/approval-workflow";
 import { demoFallbackRequest, isDemoFallbackEnabled } from "@/lib/demo-fallback";
@@ -16,7 +16,7 @@ import { accessNeededFrom, PASSWORD_CHANGE_EVENT, TERMS_REQUIRED_EVENT } from "@
 import type { TermsAcceptPayload, TermsAcceptance, TermsAcceptances, TermsState, TermsView } from "@/lib/access";
 import type { SignInPerson, SignInSettings, TwoStepChallenge, TwoStepSetup, TwoStepState } from "@/lib/sign-in";
 import type { IamJoinSettings, IamRole, IamView, JoinLink } from "@/lib/iam";
-import type { ActivationApplied, ActivationView, AdminLicence, LicenceStatus } from "@/lib/licence";
+import type { AdminLicence, LicenceImported, LicenceStatus, LicenceView } from "@/lib/licence";
 import type {
   AIDiscoveryAnomalyEvent,
   ActionIntegrityDetail,
@@ -590,6 +590,24 @@ async function requestBlob(path: string, init?: RequestInit, allowRefresh = true
   return res.blob();
 }
 
+/**
+ * A .hawkai licence file to POST /licence/import (/settings/guide/licence). Refusals keep the API's own sentence
+ * ({"error": ...}) as the error's message, for errorMessageFrom.
+ */
+async function uploadLicence(file: File, allowRefresh = true): Promise<LicenceImported> {
+  const session = getSession();
+  if (!session?.tenantId) throw new Error(JSON.stringify({ error: "Sign in first." }));
+  const headers = sessionHeaders();
+  headers.set("X-Tenant-ID", session.tenantId);
+  const form = new FormData();
+  form.set("file", file, file.name);
+  const res = await fetch(`${API_URL}/licence/import`, { method: "POST", headers, body: form, credentials: CREDENTIALS, cache: "no-store" });
+  if (res.status === 401 && allowRefresh && (await tryRefreshToken())) return uploadLicence(file, false);
+  const text = await res.text();
+  if (!res.ok) throw new Error(text || `API ${res.status}`);
+  return JSON.parse(text) as LicenceImported;
+}
+
 async function requestMultipart<T>(path: string, form: FormData, allowRefresh = true): Promise<T> {
   const session = getSession();
   if (!session?.tenantId) throw new Error("No tenant selected");
@@ -657,6 +675,8 @@ export type CurrentUser = {
   licence?: AdminLicence | null;
   // A temporary password to change, and the terms of use, first (/settings/guide/install).
   must_change_password?: boolean;
+  // That password is the first administrator's, printed by the installer (not one an administrator set).
+  password_from_installer?: boolean;
   terms?: TermsState | null;
   version?: string;
   // Two-step sign-in for this person (/settings/guide/people-and-access).
@@ -756,13 +776,11 @@ export const api = {
   setupStatus: () => request<{ setup: boolean }>("/setup", undefined, false),
   setup: (payload: { code: string; email: string; name: string; password: string }) =>
     request<LoginResponse | TwoStepChallenge>("/setup", { method: "POST", body: JSON.stringify(payload) }, false),
-  // The product licence and activation codes (/settings/guide/licence).
+  // The product licence (/settings/guide/licence): the trial, the installation ID, the .hawkai licence file.
   getLicence: () => request<LicenceStatus>("/licence", undefined, false),
-  activateLicence: (code: string) =>
-    request<{ active: boolean; until: string }>("/licence/activate", { method: "POST", body: JSON.stringify({ code }) }, false),
-  getActivation: () => request<ActivationView>("/activation"),
-  applyActivation: (code: string) =>
-    request<ActivationApplied>("/activation", { method: "POST", body: JSON.stringify({ code }) }),
+  getLicenceStatus: () => request<LicenceView>("/licence/status"),
+  downloadLicenceRequest: () => requestBlob("/licence/request"),
+  importLicence: (file: File) => uploadLicence(file),
   // Settings → HTTPS (/settings/guide/https).
   getHttps: () => request<HttpsStatus>("/https"),
   setHttpsMode: (mode: HttpsMode, confirm = false) =>
@@ -904,6 +922,25 @@ export const api = {
     request<PackView>(`/compliance/packs/${encodeURIComponent(packId)}/requirements/${encodeURIComponent(requirementId)}/record`, { method: "DELETE" }),
   /** A pack's signed evidence bundle for a window: a zip whose manifest.json carries the evidence signature. */
   packEvidence: (id: string, query: string) => requestBlob(`/compliance/packs/${encodeURIComponent(id)}/evidence${query ? `?${query}` : ""}`),
+  // Requests from data subjects on Settings → Compliance → Data requests (apps/api/app/services/data_subject_requests.py).
+  listDataRequests: (query: string) => request<DataRequestList>(`/compliance/data-requests${query ? `?${query}` : ""}`),
+  createDataRequest: (body: { kind: DataRequestKind; law: DataRequestLaw; subjectEmail: string; subjectIdentifier?: string; receivedAt?: string; channel?: string; notes?: string }) =>
+    request<DataRequestDetail>("/compliance/data-requests", { method: "POST", body: JSON.stringify(body) }),
+  getDataRequest: (id: string) => request<DataRequestDetail>(`/compliance/data-requests/${encodeURIComponent(id)}`),
+  updateDataRequest: (id: string, body: { status?: DataRequestStatus; note?: string; refusalReason?: string; handledBy?: string }) =>
+    request<DataRequestDetail>(`/compliance/data-requests/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(body) }),
+  /** What Hawk AI holds about the person of an access request (JSON), and its detached evidence signature ('' when none). */
+  exportDataRequest: async (id: string) => {
+    let signature = "";
+    const blob = await requestBlob(`/compliance/data-requests/${encodeURIComponent(id)}/export`, { method: "POST" }, true, (res) => {
+      signature = res.headers.get("X-Hawk-Evidence-Signature") ?? "";
+    });
+    return { blob, signature };
+  },
+  eraseDataRequest: (id: string) =>
+    request<DataRequestDetail>(`/compliance/data-requests/${encodeURIComponent(id)}/erase`, { method: "POST", body: JSON.stringify({ confirm: true }) }),
+  saveDataRequestSettings: (body: { dueDays?: number; grievanceContact?: string }) =>
+    request<{ settings: DataRequestSettings; mayManage: boolean }>("/compliance/data-requests/settings", { method: "PUT", body: JSON.stringify(body) }),
   // Settings → Hands-off and the self-check (app/api/routers/hands_off.py); the emailed links need no sign-in.
   getHandsOff: () => request<HandsOffView>("/hands-off"),
   saveHandsOff: (body: { handsOff: Partial<Omit<HandsOffSettings, "statusTo">> & { statusTo?: string | string[] } }) =>
@@ -2117,6 +2154,8 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ endpoint_id: endpointId, action }),
     }),
+  // Which optional parts of the API this server has on (Control Coverage is off unless CONTROL_COVERAGE_API_ENABLED).
+  systemFeatures: () => request<{ control_coverage: boolean }>("/system/features"),
   controlCoverage: (windowDays = 30) =>
     request<ControlCoverageSummary>(`/control-coverage?window_days=${encodeURIComponent(String(windowDays))}`),
   controlCoveragePaths: (query: string) =>

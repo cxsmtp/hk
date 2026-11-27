@@ -1,8 +1,8 @@
 """Background tasks stop while Hawk AI is deactivated (/settings/guide/licence).
 
 Every Celery task is a LicensedTask (app/jobs/celery_app.py). While the product licence is not active a task does
-not run: it logs once and returns, without a retry, so scheduled work simply stops until an activation code is
-entered, and starts again on its next run after that, with no restart.
+not run: it logs once and returns, without a retry, so scheduled work simply stops until a licence is
+imported, and starts again on its next run after that, with no restart.
 
 The same goes until an owner or admin has accepted the terms of use for the organisation (TERMS.md,
 app/services/terms_service.py): as in CxMissionZero, automation is closed until then.
@@ -32,7 +32,7 @@ def _note_skipped(task_name: str) -> None:
         _skipping = True
     if first:
         logger.warning(
-            "Hawk AI has been deactivated: background tasks do not run until an activation code is entered (first skipped: %s).",
+            "Hawk AI has been deactivated: background tasks do not run until a .hawkai licence is imported (first skipped: %s).",
             task_name,
         )
 

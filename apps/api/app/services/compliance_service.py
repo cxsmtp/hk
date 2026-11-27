@@ -394,6 +394,7 @@ EVENT_KINDS = {
     "updatesAndIntegrity": ("update", "integrity"),
     "gatewayDecisions": ("gateway.", "llm_gateway.", "executive_mcp.", "extension.", "endpoint."),
     "auditAccess": ("audit.",),
+    "privacyRequests": ("privacy.",),
 }
 
 

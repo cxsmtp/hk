@@ -1,6 +1,6 @@
 {
   "id": "uae-pdpl",
-  "version": "2026.11.1",
+  "version": "2026.11.2",
   "order": 20,
   "optional": false,
   "framework": {
@@ -152,9 +152,11 @@
       "title": "Tell a person what of their data is processed, why and by whom",
       "applicability": "customer",
       "controls": [
-        "gap.data_subject_requests"
+        "privacy.data_subject_requests"
       ],
       "evidence": [
+        "records:data_subject_requests",
+        "audit:privacy",
         "records:attestations"
       ]
     },
@@ -163,9 +165,11 @@
       "title": "Give a person their data in a portable form",
       "applicability": "customer",
       "controls": [
-        "gap.data_subject_requests"
+        "privacy.data_subject_requests"
       ],
       "evidence": [
+        "records:data_subject_requests",
+        "audit:privacy",
         "records:attestations"
       ]
     },
@@ -174,9 +178,11 @@
       "title": "Correct or erase a person's data on request",
       "applicability": "customer",
       "controls": [
-        "gap.data_subject_requests"
+        "privacy.data_subject_requests"
       ],
       "evidence": [
+        "records:data_subject_requests",
+        "audit:privacy",
         "records:attestations"
       ]
     },

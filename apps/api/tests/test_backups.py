@@ -10,6 +10,7 @@ import datetime as dt
 import email.utils
 import gzip
 import json
+import logging
 import os
 import re
 import time
@@ -608,6 +609,29 @@ def test_last_words_back_up_and_mail_the_admins_at_most_every_six_hours(tmp_path
         del os.environ["BACKUP_ENCRYPTION"]
 
 
+def test_last_words_while_the_database_stops_too_is_skipped_not_failed(tmp_path, caplog):
+    # `docker compose restart` stops PostgreSQL with the API: pg_dump then finds the database shutting down.
+    cfg = cfg_for(tmp_path)
+    fill_data(cfg.data_dir)
+    audits = []
+    kw = dict(cfg=cfg, env={}, audit=lambda action, *a, **k: audits.append(action), send=lambda to, **m: None, admins=lambda: [])
+    good = backup_service.backup_to_folder("Manual", cfg=cfg, audit=kw["audit"], dump=lambda url: DUMP, mail=False)
+    assert good["ok"]
+
+    def stopping(url):
+        raise RuntimeError('pg_dump failed: pg_dump: error: connection to server at "postgres" (172.18.0.3), port 5432 failed: FATAL:  the database system is shutting down')
+
+    with caplog.at_level(logging.WARNING, logger="hawk.backup"):
+        out = backup_service.last_words("the service was stopped", time.monotonic() + 5, dump=stopping, **kw)
+    assert out["backup"]["skipped"] and not out["backup"]["ok"]
+    assert backup_service.last_backup(cfg)["name"] == good["name"]  # the newest good backup stays the last one
+    assert "backup.failed" not in audits
+    assert not [r for r in caplog.records if r.levelno >= logging.ERROR]  # nothing for the error journal
+    # Any other failure before stopping is still a failed backup.
+    broken = backup_service.last_words("the service was stopped", time.monotonic() + 5, dump=lambda url: (_ for _ in ()).throw(RuntimeError("pg_dump failed: permission denied")), **kw)
+    assert not broken["backup"].get("skipped") and "backup.failed" in audits and not backup_service.last_backup(cfg)["ok"]
+
+
 # ---- The mailer ------------------------------------------------------------------------------------------------------
 
 
@@ -767,6 +791,17 @@ def test_ready_for_production_checks_and_as_meant(api):
     assert again["backup.restored"]["state"] == "ok" and again["backup.restored"]["accepted"]["by"] == "owner@example.com"
     assert c.put("/backups/readiness/backup.restored", json={"accept": False}, headers=headers).status_code == 200
     assert c.put("/backups/readiness/backup.sealed", json={"accept": True}, headers=headers).status_code == 404
+
+
+def test_the_backup_folder_is_named_as_it_is_on_the_server(api, monkeypatch):
+    # deploy/compose.yaml gives the containers /backups, and BACKUP_DIR_ON_HOST: where that is on the server.
+    monkeypatch.setenv("BACKUP_DIR_ON_HOST", "/var/lib/hawk-ai/backups")
+    c = api["client"]
+    headers = owner(c)
+    assert c.get("/backups", headers=headers).json()["hostDir"] == "/var/lib/hawk-ai/backups"
+    by = {x["id"]: x for x in c.get("/backups/readiness", headers=headers).json()["checks"]}
+    assert by["backup.separate"]["detail"].startswith("They are on the same disk as the data (/var/lib/hawk-ai/backups)")
+    assert "data volume" not in by["backup.separate"]["detail"]
 
 
 # ---- pg_dump and pg_restore ----------------------------------------------------------------------------------------

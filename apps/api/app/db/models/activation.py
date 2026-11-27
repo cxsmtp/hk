@@ -9,10 +9,11 @@ from app.db.session import Base
 
 
 class ActivationState(Base):
-    """The activation codes accepted on this installation and the licence's clock: one row, id 1.
+    """This installation's licence: one row, id 1.
 
-    Holds, as JSON, what CxMissionZero keeps in DATA_DIR/activation.json: ``{tenants, product, seenAt, history}``
-    (app/services/activation_service.py). It is kept in the database because Hawk runs several processes
+    Holds, as JSON (app/services/activation_service.py): ``{installationId, trialStart, identitySeal, licence,
+    seenAt, lastAt, trialUsedMs, history}``: the installation ID and when its 3-day trial started (sealed), the
+    imported ``.hawkai`` licence (the signed licence itself), the licence's clock and what was imported or refused. It is kept in the database because Hawk runs several processes
     (API workers, Celery worker and beat) that must all see the same codes and the same clock.
     """
 

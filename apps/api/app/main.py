@@ -47,7 +47,7 @@ from app.services.production_hardening import (
     validate_production_configuration,
 )
 from app.services.snapshot_service import ensure_artifact_storage_writable
-from app.services import backup_service, error_counter, first_run_service, https_runtime, network_proxy, terms_service, user_activity
+from app.services import activation_service, backup_service, error_counter, first_run_service, https_runtime, network_proxy, terms_service, user_activity
 from app.services.pg_tools import InstanceLock, is_postgres
 from app.services.integrity import service as integrity_service
 from app.services.updates.companion import acknowledge_start
@@ -73,6 +73,11 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     if is_postgres(settings.database_url):
         backup_service.decide_once()
     instance_lock = InstanceLock(settings.database_url, name="api").acquire()
+    # The licence (app/services/activation_service.py): the installation's ID, and its 3-day trial from this first start.
+    try:
+        activation_service.start_installation(SessionLocal, log=lambda line: print(line, flush=True))
+    except Exception as error:  # noqa: BLE001 - a database not migrated yet: the first request does it
+        print(f"! [licence] The installation's licence could not be read yet: {error}", flush=True)
     _prepare_access_at_start()
     # Network & proxy (app/services/network_proxy.py): the proxy saved under Settings, or the container's HTTPS_PROXY,
     # and the trusted certificates, for every outbound client of this process. Not in tests (their own environment).

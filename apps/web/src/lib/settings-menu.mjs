@@ -27,7 +27,7 @@ export const SETTINGS_GROUPS = [
   {
     label: "Licensing",
     items: [
-      { href: "/settings/activation", label: "Activation codes" },
+      { href: "/settings/activation", label: "Licence" },
     ],
   },
   {
@@ -80,7 +80,8 @@ export const SETTINGS_PERMISSIONS = {
   // and decides the approvals their role may give.
   "/settings/approvals": ["settings.manage", "discovery.view"],
   // DESC ISR / UAE IA / CERT-In controls and the incident report (apps/api/app/api/routers/compliance.py).
-  "/settings/compliance": ["audit.view"],
+  // Those who answer data requests (compliance.dsr.manage) open it for the Data requests tab.
+  "/settings/compliance": ["audit.view", "compliance.dsr.manage"],
   "/settings/general": ["settings.manage"],
   "/settings/branding": ["settings.manage"],
   "/settings/email": ["settings.manage"],

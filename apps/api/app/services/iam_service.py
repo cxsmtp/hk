@@ -238,7 +238,7 @@ def save_role(
     if wanted - actor_permissions:
         raise Refused(403, "A role cannot be given permissions you do not hold.")
     if wanted & ADMIN_ONLY:
-        raise Refused(403, "HTTPS, sign-in and single sign-on, updates, backups, activation codes, the network and settings stay with the Owner and Admin roles: no other role can hold them.")
+        raise Refused(403, "HTTPS, sign-in and single sign-on, updates, backups, the licence, the network and settings stay with the Owner and Admin roles: no other role can hold them.")
     if row is None:
         if key is None:
             key = _new_key(db, tenant_id)

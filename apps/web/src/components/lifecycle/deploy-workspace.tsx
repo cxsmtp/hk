@@ -61,6 +61,9 @@ function floorControlStyle(status: string, verification: string, health: string)
 export function DeployWorkspace() {
   const [deployment, setDeployment] = useState<DeploymentCoverageSummary | null>(null);
   const [coverage, setCoverage] = useState<ControlCoverageSummary | null>(null);
+  // Control Coverage is off unless the server enables it (GET /system/features): its figures then say so.
+  const [coverageEnabled, setCoverageEnabled] = useState(true);
+  const coverageValue = (value: string | number | null | undefined): string | number => (!coverageEnabled ? "Not enabled" : value ?? "Unknown");
   const [health, setHealth] = useState<PilotHealthState | null>(null);
   const [endpointFloorStatus, setEndpointFloorStatus] = useState<EndpointEnforcementFloorSummary | null>(null);
   const [endpointHealth, setEndpointHealth] = useState<EndpointHealthSummary | null>(null);
@@ -74,15 +77,17 @@ export function DeployWorkspace() {
   async function load() {
     setLoading(true);
     try {
+      const coverageOn = await api.systemFeatures().then((f) => f.control_coverage !== false, () => true);
+      setCoverageEnabled(coverageOn);
       const [deploymentResult, coverageResult, healthResult, endpointFloorResult, endpointHealthResult] = await Promise.allSettled([
         api.deploymentCoverage(),
-        api.controlCoverage(30),
+        coverageOn ? api.controlCoverage(30) : Promise.resolve(null),
         api.pilotHealth(),
         api.getEndpointFloorStatus(),
         api.getEndpointHealth(),
       ]);
       if (deploymentResult.status === "fulfilled") setDeployment(deploymentResult.value);
-      if (coverageResult.status === "fulfilled") setCoverage(coverageResult.value);
+      if (coverageResult.status === "fulfilled" && coverageResult.value) setCoverage(coverageResult.value);
       if (healthResult.status === "fulfilled") setHealth(healthResult.value);
       if (endpointFloorResult.status === "fulfilled") setEndpointFloorStatus(endpointFloorResult.value);
       setEndpointFloorState(endpointFloorResult.status === "fulfilled" ? "loaded" : "error");
@@ -275,23 +280,23 @@ export function DeployWorkspace() {
         </div>
         <section className="grid gap-3 border-t border-white/[0.08] px-5 py-5 sm:grid-cols-2 xl:grid-cols-5">
           {[
-            ["Conservative score", coverage?.headline.score === null || coverage?.headline.score === undefined ? "Unknown" : `${Math.round(coverage.headline.score)}%`],
-            ["Protected", coverage?.surface_summary.protected ?? "Unknown"],
-            ["Monitor only", coverage?.surface_summary.monitor_only ?? "Unknown"],
-            ["Outside control", coverage?.surface_summary.outside_control ?? "Unknown"],
-            ["Unknown", coverage?.surface_summary.unknown ?? "Unknown"],
+            ["Conservative score", coverageValue(coverage?.headline.score === null || coverage?.headline.score === undefined ? null : `${Math.round(coverage.headline.score)}%`)],
+            ["Protected", coverageValue(coverage?.surface_summary.protected)],
+            ["Monitor only", coverageValue(coverage?.surface_summary.monitor_only)],
+            ["Outside control", coverageValue(coverage?.surface_summary.outside_control)],
+            ["Unknown", coverageValue(coverage?.surface_summary.unknown)],
           ].map(([label, value]) => <div key={label} className="rounded-[20px] border border-white/[0.07] bg-[#0c1016] p-4"><p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500">{label}</p><p className="mt-3 text-2xl font-semibold text-white">{loading ? "—" : value}</p></div>)}
         </section>
         <section className="border-t border-white/[0.08] bg-[#0c1016] p-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-orange-300/70">Deployment surfaces</p><h2 className="mt-2 text-lg font-semibold text-white">Observed control posture</h2><p className="mt-1 text-xs text-slate-500">Protected requires policy evidence for every observed event. Mixed evidence is Partially protected; observation alone is Monitor only.</p></div><span className={cn("rounded-full border px-3 py-1.5 text-xs font-semibold", health?.overall_status === "ok" ? "border-emerald-400/20 bg-emerald-400/[0.07] text-emerald-300" : "border-amber-400/20 bg-amber-400/[0.07] text-amber-300")}>{health ? `Platform ${health.overall_status}` : "Health unknown"}</span></div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-orange-300/70">Deployment surfaces</p><h2 className="mt-2 text-lg font-semibold text-white">Observed control posture</h2><p className="mt-1 text-xs text-slate-500">Protected requires policy evidence for every observed event. Mixed evidence is Partially protected; observation alone is Monitor only.</p></div><span className={cn("rounded-full border px-3 py-1.5 text-xs font-semibold", health?.overall_status === "ok" ? "border-emerald-400/20 bg-emerald-400/[0.07] text-emerald-300" : "border-amber-400/20 bg-amber-400/[0.07] text-amber-300")}>{health ? `Platform ${health.overall_status.replace(/_/g, " ")}` : "Health unknown"}</span></div>
           <div className="mt-5 overflow-x-auto"><table className="w-full min-w-[720px] text-left"><thead><tr className="border-b border-white/[0.06] text-[9px] uppercase tracking-[0.15em] text-slate-600"><th className="px-3 py-3 font-semibold">Surface</th><th className="px-3 py-3 font-semibold">Status</th><th className="px-3 py-3 font-semibold">Observed events</th><th className="px-3 py-3 font-semibold">Policy enforcement</th><th className="px-3 py-3 font-semibold">Last seen</th></tr></thead><tbody>{(deployment?.surfaces || []).map((surface) => { const state = surfaceState(surface); const StateIcon = STATE_STYLE[state].icon; return <tr key={surface.surface} className="border-b border-white/[0.045] text-sm"><td className="px-3 py-4"><p className="font-medium text-slate-200">{surface.label}</p><p className="mt-1 text-[10px] text-slate-600">{surface.surface}</p></td><td className="px-3 py-4"><span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold", STATE_STYLE[state].className)}><StateIcon className="h-3 w-3" />{state}</span></td><td className="px-3 py-4 text-slate-400">{surface.observed_event_count.toLocaleString()}</td><td className="px-3 py-4 text-slate-400">{surface.policy_enforced_count.toLocaleString()}</td><td className="px-3 py-4 text-xs text-slate-600">{surface.last_seen_at ? new Date(surface.last_seen_at).toLocaleString() : "Unknown"}</td></tr>; })}</tbody></table>{!loading && !deployment?.surfaces.length ? <p className="py-12 text-center text-sm text-slate-600">No deployment-surface telemetry is available.</p> : null}</div>
         </section>
         </section>
       </details>
-      <section className="grid gap-4 xl:grid-cols-2">
+      {coverageEnabled ? <section className="grid gap-4 xl:grid-cols-2">
         <div className="rounded-[22px] border border-white/[0.07] bg-[#0c1016] p-5"><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Blind spots</p><div className="mt-3 space-y-2">{(coverage?.blind_spots || []).slice(0, 6).map((spot) => <div key={spot.blind_spot_id} className="rounded-2xl border border-white/[0.055] bg-white/[0.018] p-3.5"><p className="text-sm font-medium capitalize text-slate-200">{spot.kind.replaceAll("_", " ")}</p><p className="mt-1 text-xs leading-5 text-slate-600">Path {spot.path_id} · {spot.dimensions.join(", ") || "dimension unknown"} · {spot.evidence_refs.length} evidence references</p></div>)}{!coverage?.blind_spots.length ? <p className="rounded-2xl border border-dashed border-white/[0.08] p-6 text-center text-sm text-slate-600">No verified blind-spot records are available.</p> : null}</div></div>
         <div className="rounded-[22px] border border-white/[0.07] bg-[#0c1016] p-5"><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Highest-impact deployment</p><div className="mt-3 space-y-2">{(coverage?.deployment_improvements || []).slice(0, 6).map((item) => <Link key={item.deployment_type} href="/surface-coverage" className="group flex items-center justify-between gap-3 rounded-2xl border border-white/[0.055] bg-white/[0.018] p-3.5 transition hover:border-orange-400/20"><div><p className="text-sm font-medium text-slate-200">{item.deployment_type}</p><p className="mt-1 text-xs text-slate-600">{item.addressable_assertion_count} assertions · {item.impacted_path_count} paths</p></div><ArrowUpRight className="h-4 w-4 text-slate-600 group-hover:text-orange-300" /></Link>)}{!coverage?.deployment_improvements.length ? <p className="rounded-2xl border border-dashed border-white/[0.08] p-6 text-center text-sm text-slate-600">No evidence-backed deployment recommendation is available.</p> : null}</div></div>
-      </section>
+      </section> : null}
       <WorkspaceLinks links={[
         { href: "/surface-coverage", label: "Surface coverage", description: "Inspect every deployment family and prerequisite." },
         { href: "/integrations", label: "Connectors", description: "Configure and evaluate enterprise integrations." },

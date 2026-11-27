@@ -414,9 +414,11 @@ def test_migration_0104_follows_0103_and_0105_follows_it():
     config = Config()
     config.set_main_option("script_location", str(Path(__file__).resolve().parents[1] / "app/db/migrations"))
     script = ScriptDirectory.from_config(config)
-    assert script.get_heads() == ["0105_compliance_packs"]
+    assert script.get_heads() == ["0107_data_subject_requests"]
     assert script.get_revision("0104_desc_controls").down_revision == "0103_terms_acceptance"
     assert script.get_revision("0105_compliance_packs").down_revision == "0104_desc_controls"
+    assert script.get_revision("0106_installation_licence").down_revision == "0105_compliance_packs"
+    assert script.get_revision("0107_data_subject_requests").down_revision == "0106_installation_licence"
 
 
 def test_policy_row_created_concurrently_is_read_not_failed(tmp_path):

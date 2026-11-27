@@ -106,3 +106,42 @@ test("every pack file maps only to controls the API's registry has, and every co
   assert.ok(hrefs.length > 30, `only ${hrefs.length} links found`);
   for (const href of hrefs) assert.ok(existsSync(new URL(`../src/app${href}/page.tsx`, import.meta.url)), href);
 });
+
+// Requests from data subjects (apps/api/app/services/data_subject_requests.py): the helpers, the tab, the component and
+// the API calls; who may open the page for it.
+const { dataRequestQuery, dueWords, nextStatuses, eventWords, DSR_FILTERS, DSR_KIND_LABELS, DSR_STATUS_LABELS } = await import("../src/lib/compliance.ts");
+
+test("data request helpers: filters, due dates in words, the next statuses and the trail", () => {
+  assert.deepEqual(DSR_FILTERS.map((f) => f.key), ["open", "overdue", "all", "completed", "refused"]);
+  assert.equal(dataRequestQuery("open"), "status=open");
+  assert.equal(dataRequestQuery("overdue"), "overdue=true");
+  assert.equal(dataRequestQuery("all"), "");
+  assert.deepEqual(Object.keys(DSR_KIND_LABELS), ["access", "correction", "erasure", "grievance", "nomination"]);
+  assert.deepEqual(Object.keys(DSR_STATUS_LABELS), ["received", "verifying", "in_progress", "completed", "refused"]);
+  const base = { status: "received", dueAt: "2026-12-20T00:00:00Z", overdue: false, dueSoon: false, daysLeft: 23 };
+  assert.deepEqual(dueWords(base), { text: "Due in 23 days (2026-12-20)", chip: "" });
+  assert.deepEqual(dueWords({ ...base, daysLeft: 1, dueSoon: true }), { text: "Due in 1 day (2026-12-20)", chip: "warn" });
+  assert.deepEqual(dueWords({ ...base, daysLeft: -3, overdue: true }), { text: "Overdue by 3 days (due 2026-12-20)", chip: "bad" });
+  assert.deepEqual(dueWords({ ...base, status: "completed", daysLeft: null }), { text: "Due 2026-12-20", chip: "" });
+  assert.deepEqual(nextStatuses("received"), ["verifying", "in_progress", "completed", "refused"]);
+  assert.deepEqual(nextStatuses("in_progress"), ["verifying", "completed", "refused"]);
+  assert.deepEqual(nextStatuses("completed"), []);
+  assert.equal(eventWords({ kind: "status", from: "received", to: "refused" }), "Received → Refused");
+  assert.equal(eventWords({ kind: "erased", from: "", to: "completed" }), "Erased by pseudonymisation");
+});
+
+test("the Data requests tab: list, record, detail with its trail, export, erasure and settings", () => {
+  assert.ok(mayOpen("/settings/compliance", ["compliance.dsr.manage"]));
+  const page = source("app/settings/compliance/page.tsx");
+  for (const needle of ["<DataRequests />", 'data-ui="compliance-tab-requests"', 'data-ui="compliance-dsr-due"', 'get("tab")']) assert.ok(page.includes(needle), needle);
+  const component = source("components/compliance/data-requests.tsx");
+  for (const needle of ['data-ui="compliance-data-requests"', 'data-ui="dsr-table"', 'data-ui="dsr-filter"', 'data-ui="dsr-new"', 'data-ui="dsr-detail"', 'data-ui="dsr-timeline"', 'data-ui="dsr-export"', 'data-ui="dsr-erase"', 'data-ui="dsr-settings"', ".listDataRequests(", "api.createDataRequest(", "api.getDataRequest(", "api.updateDataRequest(", "api.exportDataRequest(", "api.eraseDataRequest(", "api.saveDataRequestSettings(", "window.confirm(", "signatureFile("]) {
+    assert.ok(component.includes(needle), needle);
+  }
+  // Tables become cards on a phone through the shared responsive tables: no table of its own layout.
+  assert.ok(component.includes('<div className="tw mt">') && !component.includes("data-table="));
+  const api = source("lib/api.ts");
+  for (const needle of ["/compliance/data-requests", "/compliance/data-requests/settings", "/erase`", "/export`", 'method: "PATCH"']) assert.ok(api.includes(needle), needle);
+  const guide = source("lib/guide/topics/compliance.ts");
+  assert.ok(guide.includes('id: "data-requests"') && guide.includes("pseudonymisation"));
+});

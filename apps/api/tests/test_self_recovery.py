@@ -692,3 +692,17 @@ def test_tenant_users_see_a_plain_status_not_the_installation_s_raw_job_error(wo
     with world.db() as db:
         out = _tool_ops_jobs_status(SimpleNamespace(db=db, tenant_id=second["X-Tenant-ID"]), {})
     assert "hunter2" not in json.dumps(out, default=str)
+
+
+def test_the_self_check_keeps_running_while_the_terms_wait_to_be_accepted_again():
+    """An update that changes the licence text must not stop the server watching itself until someone signs in."""
+
+    from app.jobs.celery_app import celery_app
+    from app.jobs.licence_task import LicensedTask
+    import app.jobs.watchdog_jobs  # noqa: F401 - registers the tasks
+
+    tasks = celery_app.tasks
+    for name in ("app.jobs.watchdog_jobs.self_check", "app.jobs.watchdog_jobs.self_recovery"):
+        assert not isinstance(tasks[name], LicensedTask), name
+    for name in ("app.jobs.watchdog_jobs.read_replies", "app.jobs.watchdog_jobs.weekly_status"):
+        assert isinstance(tasks[name], LicensedTask), name

@@ -151,7 +151,8 @@ def test_licence_caps_count_under_the_lock(db, monkeypatch):
     assert held == [("tenant-people", tenant.id)]
     with pytest.raises(HTTPException):
         activation_service.assert_may_add_tenant(db)
-    assert held[-1] == ("tenants",)
+    # Taken before the count (the installation's first licence read may also take the identity lock after it).
+    assert held[1] == ("tenants",)
 
 
 def test_last_owner_rule_counts_under_the_lock(db, monkeypatch):

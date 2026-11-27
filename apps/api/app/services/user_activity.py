@@ -71,8 +71,9 @@ ACTIONS: dict[str, str] = {
     "POST /trust/presented": "Trusted a presented certificate",
     "POST /trust/diagnose": "Looked at a server's certificate",
     "DELETE /trust/{fingerprint}": "Removed a trusted certificate",
-    # Activation
-    "POST /activation": "Entered an activation code",
+    # Licence
+    "POST /licence/import": "Imported a licence",
+    "GET /licence/request": "Downloaded the licence request",
     # Logs, backups, support
     "GET /audit/log/export.csv": "Exported the audit log",
     "GET /audit/log/export.jsonl": "Exported the audit log",
