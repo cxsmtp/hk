@@ -78,18 +78,19 @@ def redact_config(values: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def default_tenant(db: Any) -> str | None:
-    from app.services.self_check import SelfCheck
+    from app.core.installation import default_tenant as first
 
-    return SelfCheck.default_tenant(db)
+    return first(db)
 
 
 def is_installation_admin(db: Any, ctx: Any) -> bool:
     """Roles are per tenant (app/core/permissions.py): the installation's admins are the owners and admins (those who
-    hold system.update) of its first tenant, the one cases about the server itself are raised in (self-check)."""
+    hold system.update) of its first tenant, the one cases about the server itself are raised in (self-check). One
+    definition for the whole server: app/core/installation.py."""
 
-    from app.core.rbac import holds
+    from app.core.installation import is_installation_admin as check
 
-    return holds(ctx, "system.update") and bool(ctx.tenant) and ctx.tenant.id == default_tenant(db)
+    return check(db, ctx)
 
 
 def _dump(value: Any) -> bytes:

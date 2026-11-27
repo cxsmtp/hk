@@ -15,6 +15,7 @@ import {
   tenantsStatusLine,
 } from "@/lib/licence";
 import type { ActivationView } from "@/lib/licence";
+import { SET_BY_SERVER } from "@/lib/settings-console";
 
 /**
  * Settings → Activation codes (/settings/guide/licence), ported from CxMissionZero's Settings → Activation codes:
@@ -95,6 +96,13 @@ export default function ActivationCodesPage() {
           {view && !view.keyConfigured ? <p className="mt-3 text-xs text-slate-500">This build has no maintainer key, so no code can be checked.</p> : null}
         </PageSection>
         <PageSection title="Apply a code">
+          {/* The activation is the whole server's: only its administrators enter a code. */}
+          {view && view.canManage === false ? (
+            <p className="text-sm text-slate-400" data-ui="server-setting-note">
+              <strong>{SET_BY_SERVER}</strong> Activation codes apply to every workspace on this server.
+            </p>
+          ) : (
+          <>
           <label className="block text-xs text-slate-400" htmlFor="activation-code">
             Activation code
           </label>
@@ -116,6 +124,8 @@ export default function ActivationCodesPage() {
               {status.text}
             </span>
           </div>
+          </>
+          )}
         </PageSection>
         <PageSection title="Codes entered" description="The last 10 codes applied here or on the deactivation page.">
           {view?.history.length ? (

@@ -20,6 +20,7 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
+from app.core.installation import is_installation_admin, require_installation_admin
 from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.session import get_db
@@ -28,6 +29,8 @@ from app.services.self_check import SelfCheck
 
 router = APIRouter(tags=["hands-off"])
 admin_only = require_permission("settings.manage")
+#: Writes change the whole server: only its administrators (app/core/installation.py).
+installation_admin = require_installation_admin("settings.manage")
 NO_STORE = {"Cache-Control": "no-store", "Referrer-Policy": "no-referrer"}
 
 #: Injected by tests; otherwise made for each request (its state is in files and the database).
@@ -46,13 +49,14 @@ def _refused(message: str, status: int) -> JSONResponse:
     return JSONResponse(status_code=status, content={"error": message, "detail": message})
 
 
-def _view(db: Session, check: SelfCheck) -> dict[str, Any]:
+def _view(db: Session, check: SelfCheck, *, can_save: bool = True) -> dict[str, Any]:
     from app.services.password_reset_service import link_base
 
     current = hands_off.load(check.data_dir)
     return {
         "handsOff": current,
-        "canSave": True,
+        # Hands-off is the whole server's: only its administrators change it (app/core/installation.py).
+        "canSave": can_save,
         "ready": {"smtp": check.mail_ready(db), "serverUrl": bool(link_base())},
         "paused": hands_off.is_paused(current, check.now()),
         "commands": hands_off.COMMANDS,
@@ -62,12 +66,11 @@ def _view(db: Session, check: SelfCheck) -> dict[str, Any]:
 
 @router.get("/hands-off")
 def hands_off_status(ctx: TenantContext = Depends(admin_only), db: Session = Depends(get_db)):
-    del ctx
-    return JSONResponse(_view(db, checker()), headers=NO_STORE)
+    return JSONResponse(_view(db, checker(), can_save=is_installation_admin(db, ctx)), headers=NO_STORE)
 
 
 @router.put("/hands-off")
-def hands_off_save(body: Annotated[dict[str, Any] | None, Body()] = None, ctx: TenantContext = Depends(admin_only), db: Session = Depends(get_db)):
+def hands_off_save(body: Annotated[dict[str, Any] | None, Body()] = None, ctx: TenantContext = Depends(installation_admin), db: Session = Depends(get_db)):
     """The answers, saved in one go: what to do, who, when, and replies."""
 
     body = body or {}
@@ -91,7 +94,7 @@ def hands_off_save(body: Annotated[dict[str, Any] | None, Body()] = None, ctx: T
 
 
 @router.post("/hands-off/status")
-def hands_off_send_status(ctx: TenantContext = Depends(admin_only), db: Session = Depends(get_db)):
+def hands_off_send_status(ctx: TenantContext = Depends(installation_admin), db: Session = Depends(get_db)):
     del ctx
     check = checker()
     to = hands_off.load(check.data_dir)["statusTo"]
@@ -103,7 +106,7 @@ def hands_off_send_status(ctx: TenantContext = Depends(admin_only), db: Session 
 
 
 @router.post("/hands-off/check")
-async def hands_off_check(ctx: TenantContext = Depends(admin_only)):
+async def hands_off_check(ctx: TenantContext = Depends(installation_admin)):
     del ctx
     check = checker()
     await run_in_threadpool(check.run)

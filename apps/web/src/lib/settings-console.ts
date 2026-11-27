@@ -44,6 +44,9 @@ export type SmtpSettings = {
 };
 
 export type SmtpView = {
+  /** False for a workspace admin who is not one of the server's administrators: shown read-only. */
+  mayChange?: boolean;
+  readOnlyNote?: string;
   smtp: SmtpSettings;
   source: "settings" | "environment" | "";
   verified: boolean;
@@ -136,24 +139,33 @@ export function useBranding(): BrandingView {
   return b;
 }
 
-const permissionsByTenant = new Map<string, Promise<string[]>>();
+/**
+ * What GET /settings/me answers: the person's role and permissions in this workspace, and whether they are one of the
+ * server's administrators (the owners and admins of its first workspace), who alone change the settings of the whole
+ * server (sign-in rules, compliance, email, HTTPS, network, updates, backups, hands-off, branding, activation codes).
+ */
+export type SettingsMe = { role: string; permissions: string[]; installationAdmin?: boolean; readOnlyNote?: string };
 
-/** The permissions of the person signed in (null while they are read), for the Settings menu and Jump to. */
-export function useMyPermissions(): string[] | null {
-  const [held, setHeld] = useState<string[] | null>(null);
+/** The note shown beside a setting of the whole server to a workspace admin who may read it but not change it. */
+export const SET_BY_SERVER = "Set by the server's administrators.";
+
+const meByTenant = new Map<string, Promise<SettingsMe>>();
+
+function useSettingsMe(): SettingsMe | null {
+  const [me, setMe] = useState<SettingsMe | null>(null);
   useEffect(() => {
     let live = true;
     const read = () => {
       const session = getSession();
       const key = `${session?.tenantId ?? ""}:${session?.user?.email ?? ""}`;
       if (!session?.tenantId) return;
-      let pending = permissionsByTenant.get(key);
+      let pending = meByTenant.get(key);
       if (!pending) {
-        pending = api.getSettingsMe().then((me) => me.permissions);
-        permissionsByTenant.set(key, pending);
-        pending.catch(() => permissionsByTenant.delete(key));
+        pending = api.getSettingsMe();
+        meByTenant.set(key, pending);
+        pending.catch(() => meByTenant.delete(key));
       }
-      pending.then((p) => live && setHeld(p), () => live && setHeld([]));
+      pending.then((m) => live && setMe(m), () => live && setMe({ role: "", permissions: [], installationAdmin: false }));
     };
     read();
     window.addEventListener(SESSION_CHANGE_EVENT, read);
@@ -162,7 +174,21 @@ export function useMyPermissions(): string[] | null {
       window.removeEventListener(SESSION_CHANGE_EVENT, read);
     };
   }, []);
-  return held;
+  return me;
+}
+
+/** The permissions of the person signed in (null while they are read), for the Settings menu and Jump to. */
+export function useMyPermissions(): string[] | null {
+  return useSettingsMe()?.permissions ?? null;
+}
+
+/**
+ * Whether the person may change the settings of the whole server (null while it is read). An older server that does
+ * not say counts as yes: the server refuses a change it does not allow anyway.
+ */
+export function useInstallationAdmin(): boolean | null {
+  const me = useSettingsMe();
+  return me === null ? null : me.installationAdmin !== false;
 }
 
 /** A file, as base64 (FTR's fileToBase64). */

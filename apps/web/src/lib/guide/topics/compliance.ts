@@ -105,7 +105,7 @@ export const compliance: GuideTopic = {
     {
       id: "sign-in-baseline",
       title: "The recommended sign-in baseline",
-      who: "Owners and admins",
+      who: "Server administrators",
       blocks: [
         {
           kind: "p",
@@ -148,7 +148,7 @@ export const compliance: GuideTopic = {
     {
       id: "retention",
       title: "How long records are kept",
-      who: "Owners and admins",
+      who: "Server administrators",
       blocks: [
         {
           kind: "list",

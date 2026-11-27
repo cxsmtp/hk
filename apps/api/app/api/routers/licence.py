@@ -17,6 +17,7 @@ from fastapi import APIRouter, Body, Depends, Request, Response
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
+from app.core.installation import is_installation_admin, require_installation_admin
 from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.session import get_db
@@ -176,10 +177,11 @@ def licence_activate(request: Request, body: dict[str, Any] | None = Body(defaul
 # ---- Activation codes (Settings → Activation codes): what the maintainer has unlocked ---------------------------
 
 
-def _activation_view(store: activation_service.ActivationStore) -> dict[str, Any]:
+def _activation_view(store: activation_service.ActivationStore, *, can_manage: bool = True) -> dict[str, Any]:
     return {
-        # Only owners and admins reach this page, and they may change it.
-        "canManage": True,
+        # Owners and admins reach this page; the activation is the whole server's, so only its administrators enter a
+        # code (app/core/installation.py).
+        "canManage": can_manage,
         "keyConfigured": len(ISSUER_KEYS) > 0,
         "tenants": store.tenants(),
         "product": store.product(),
@@ -197,9 +199,8 @@ def _applied(result: dict[str, Any]) -> str:
 
 @router.get("/activation")
 def activation(response: Response, db: Session = Depends(get_db), ctx: TenantContext = Depends(require_permission("activation.manage"))):
-    del ctx
     response.headers["Cache-Control"] = "no-store"
-    view = _activation_view(activation_service.load_store(db))
+    view = _activation_view(activation_service.load_store(db), can_manage=is_installation_admin(db, ctx))
     db.commit()
     return view
 
@@ -208,7 +209,7 @@ def activation(response: Response, db: Session = Depends(get_db), ctx: TenantCon
 def apply_activation(
     body: dict[str, Any] | None = Body(default=None),
     db: Session = Depends(get_db),
-    ctx: TenantContext = Depends(require_permission("activation.manage")),
+    ctx: TenantContext = Depends(require_installation_admin("activation.manage")),
 ):
     result = activation_service.check_code(_code_from(body))
     actor = ctx.user.email if ctx.user else ""

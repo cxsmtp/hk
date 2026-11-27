@@ -75,7 +75,8 @@ test("Settings → Hands-off keeps MZ's wording in FTR's settings look, at /sett
 
 test("Backups & health shows the self-check in FTR's Health panel", () => {
   const page = source("app/settings/backups/page.tsx");
-  assert.ok(page.includes("<SelfCheckBox health={health} onCheck={checkNow} busy={checking} />"));
+  // Read-only for a workspace admin who is not one of the server's administrators (components/server-setting-note.tsx).
+  assert.ok(page.includes("<SelfCheckBox health={health} onCheck={checkNow} busy={checking} readOnly={readOnly} />"));
   assert.ok(page.indexOf("<h2>Health</h2>") < page.indexOf("<SelfCheckBox"));
   assert.ok(page.includes('href="/settings/hands-off"'));
 });

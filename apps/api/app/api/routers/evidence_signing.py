@@ -22,6 +22,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from app.core.installation import is_installation_admin, require_installation_admin
 from app.core.rbac import holds, require_permission
 from app.core.tenant import TenantContext
 from app.db.session import get_db
@@ -45,9 +46,10 @@ def _error(error: evidence_signing.EvidenceSigningError) -> HTTPException:
 
 
 @router.get("/evidence-signing")
-async def signing_status(ctx: TenantContext = Depends(require_permission("evidence.view"))) -> dict[str, Any]:
-    out = await run_in_threadpool(lambda: evidence_signing.service().status())
-    return {**out, "can_rotate": holds(ctx, "settings.manage")}
+def signing_status(ctx: TenantContext = Depends(require_permission("evidence.view")), db: Session = Depends(get_db)) -> dict[str, Any]:
+    out = evidence_signing.service().status()
+    # One signing key for the whole server: only its administrators rotate it (app/core/installation.py).
+    return {**out, "can_rotate": holds(ctx, "settings.manage") and is_installation_admin(db, ctx)}
 
 
 @router.get("/evidence-signing/keys")
@@ -91,7 +93,7 @@ def verify(body: VerifyRequest, ctx: TenantContext = Depends(require_permission(
 
 
 @router.post("/evidence-signing/rotate")
-def rotate(ctx: TenantContext = Depends(require_permission("settings.manage")), db: Session = Depends(get_db)) -> dict[str, Any]:
+def rotate(ctx: TenantContext = Depends(require_installation_admin("settings.manage")), db: Session = Depends(get_db)) -> dict[str, Any]:
     signing = evidence_signing.service()
     try:
         result = signing.rotate()

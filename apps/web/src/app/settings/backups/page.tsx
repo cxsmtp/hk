@@ -7,7 +7,9 @@ import type { FormEvent } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { ServerSettingNote } from "@/components/server-setting-note";
 import { api } from "@/lib/api";
+import { useInstallationAdmin } from "@/lib/settings-console";
 import { BACKUP_NOTICE_CHANGED_EVENT } from "@/components/backup-notice";
 import { SelfCheckBox } from "@/components/self-check-box";
 import { backupKeyFile, backupsHeading, beforeUpdateLine, kb, READINESS, restoreQuestion, sealedLine } from "@/lib/backups-settings";
@@ -61,6 +63,9 @@ const noticeChanged = (encryption: BackupEncryption) => window.dispatchEvent(new
  * passphrase form stands. Owners and admins only.
  */
 export default function BackupsSettingsPage() {
+  // Backups, the backup key and restore are the whole server's: a workspace admin who is not one of its
+  // administrators reads them only. Diagnostics below stay theirs (their own workspace's bundle).
+  const readOnly = useInstallationAdmin() === false;
   const [b, setB] = useState<BackupsStatus | null>(null);
   const [rd, setRd] = useState<Readiness | null>(null);
   const [loadError, setLoadError] = useState("");
@@ -254,7 +259,9 @@ export default function BackupsSettingsPage() {
           {!b && !loadError ? <p className="muted">Loading…</p> : null}
           {b && e && sealed ? (
             <>
+              <ServerSettingNote readOnly={readOnly} />
               <div className="grid g2">
+                <fieldset className="ro-fieldset" disabled={readOnly} data-ui="backups-server">
                 <div className="panel">
                   <h2>
                     Backups <small>{backupsHeading(b)}</small>
@@ -430,11 +437,12 @@ export default function BackupsSettingsPage() {
                     </div>
                   </form>
                 </div>
+                </fieldset>
 
                 <div className="panel">
                   <h2>Health</h2>
                   <div id="self-check">
-                    <SelfCheckBox health={health} onCheck={checkNow} busy={checking} />
+                    <SelfCheckBox health={health} onCheck={checkNow} busy={checking} readOnly={readOnly} />
                     <p className="muted small">
                       Who hears about problems, the weekly status and replies by email: <a href="/settings/hands-off">Settings → Hands-off</a>.
                     </p>
@@ -593,7 +601,7 @@ export default function BackupsSettingsPage() {
                                     Open
                                   </a>
                                 ) : null}
-                                {c.canAccept && c.state !== "ok" ? (
+                                {c.canAccept && c.state !== "ok" && !readOnly ? (
                                   <button className="ghost sm" type="button" data-accept={c.id} title="It is as you mean it: shown as ready until what was found changes" onClick={() => accept(c.id, true)}>
                                     As meant
                                   </button>
@@ -603,9 +611,11 @@ export default function BackupsSettingsPage() {
                                     <span className="muted small">
                                       as meant: {c.accepted.by}, {date(c.accepted.at)}
                                     </span>
-                                    <button className="ghost sm" type="button" data-ask={c.id} onClick={() => accept(c.id, false)}>
-                                      Ask again
-                                    </button>
+                                    {readOnly ? null : (
+                                      <button className="ghost sm" type="button" data-ask={c.id} onClick={() => accept(c.id, false)}>
+                                        Ask again
+                                      </button>
+                                    )}
                                   </>
                                 ) : null}
                               </span>

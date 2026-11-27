@@ -52,6 +52,8 @@ export type ComplianceView = {
   settings: ComplianceSettings;
   dataLocation: string;
   mayChange: boolean;
+  /** "Set by the server's administrators." for a workspace admin: the settings are the whole server's. */
+  readOnlyNote?: string;
 };
 
 export const STATUS_LABELS: Record<ControlStatus, string> = {
