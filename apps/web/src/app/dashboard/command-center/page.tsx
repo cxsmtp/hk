@@ -245,7 +245,7 @@ function healthBadgeClass(value: string): string {
   const normalized = String(value || "").toLowerCase();
   if (normalized === "ok" || normalized === "healthy") return "bg-emerald-950 text-emerald-300";
   if (normalized === "stale" || normalized === "warn") return "bg-amber-950 text-amber-300";
-  if (normalized === "missing") return "bg-slate-800 text-slate-300";
+  if (normalized === "missing" || normalized === "not_connected") return "bg-slate-800 text-slate-300";
   return "bg-rose-950 text-rose-300";
 }
 
@@ -695,7 +695,7 @@ function PilotHealthCard({
       <div className="space-y-5">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <Badge className={healthBadgeClass(health?.overall_status || "missing")}>
-            {(health?.overall_status || "missing").toUpperCase()}
+            {(health?.overall_status || "missing").replace(/_/g, " ").toUpperCase()}
           </Badge>
           <span className="text-sm text-slate-400">
             API latency: {latencyMs !== null ? `${latencyMs}ms` : "n/a"}
@@ -2110,7 +2110,17 @@ export default function CommandCenterPage() {
         label: "Service",
       });
     }
-    if (pilotHealth && pilotHealth.overall_status !== "ok") {
+    if (pilotHealth && pilotHealth.overall_status === "not_connected") {
+      // A new installation: nothing has reported yet, so the first step is to connect something, not a repair.
+      actions.push({
+        id: "get-started",
+        title: "Connect your first AI tool",
+        detail: "Nothing reports to Hawk AI yet. Install the browser extension, or connect an AI provider through the gateway, to start seeing AI activity.",
+        href: "/deploy",
+        tone: "info",
+        label: "Get started",
+      });
+    } else if (pilotHealth && pilotHealth.overall_status !== "ok") {
       actions.push({
         id: "pilot-health",
         title: "Resolve degraded pilot health",

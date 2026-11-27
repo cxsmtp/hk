@@ -283,3 +283,16 @@ def test_findings_generation_remains_identical_across_modes(test_env) -> None:
     assert enforce_finding["related_control_ids"] == discovery_finding["related_control_ids"]
     assert bool(enforce_finding["evidence_node_ids"])
     assert bool(discovery_finding["evidence_node_ids"])
+
+
+def test_the_console_is_told_whether_control_coverage_is_on(test_env, monkeypatch) -> None:
+    # Off by default: the console leaves Control Coverage out rather than calling it and reporting a 404 as unavailable.
+    from app.core.config import settings
+
+    client: TestClient = test_env["client"]
+    owner = _register_owner(client, email="features-owner@example.com")
+    headers = _headers(owner["access_token"], owner["tenant_id"])
+    monkeypatch.setattr(settings, "control_coverage_api_enabled", False)
+    assert client.get("/system/features", headers=headers).json() == {"control_coverage": False}
+    monkeypatch.setattr(settings, "control_coverage_api_enabled", True)
+    assert client.get("/system/features", headers=headers).json() == {"control_coverage": True}
