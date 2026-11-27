@@ -1,0 +1,359 @@
+{
+  "id": "desc-isr",
+  "version": "2026.11.1",
+  "order": 30,
+  "optional": false,
+  "framework": {
+    "name": "Dubai Information Security Regulation (DESC ISR) v3, with the UAE IA Standard and CERT-In directions",
+    "short": "DESC ISR",
+    "version": "ISR v3",
+    "publisher": "Dubai Electronic Security Center",
+    "jurisdiction": "Dubai, United Arab Emirates",
+    "url": "https://www.desc.gov.ae/"
+  },
+  "summary": "The controls Hawk AI takes part in for a Dubai government or semi-government entity under DESC ISR v3 (and the UAE IA Standard and India's CERT-In directions), the checklist Settings → Compliance shows, plus the entity's own management-system duties.",
+  "scope": "Requirement ids are Hawk AI's DESC checklist ids (AC, LG, IR, CR, SI, DR, AI) and ORG for the entity's own processes; each title names the ISR domain. The ISR's own control numbering is in the regulation as DESC issues it to entities.",
+  "sources": [
+    {
+      "title": "Dubai Electronic Security Center: Information Security Regulation",
+      "url": "https://www.desc.gov.ae/"
+    },
+    {
+      "title": "UAE Information Assurance Regulation",
+      "url": "https://u.ae/en/information-and-services/justice-safety-and-the-law/cyber-safety-and-digital-security/uae-information-assurance-regulation"
+    },
+    {
+      "title": "CERT-In directions under section 70B(6) of the IT Act (28 April 2022)",
+      "url": "https://www.cert-in.org.in/"
+    }
+  ],
+  "notes": [],
+  "requirements": [
+    {
+      "id": "AC-01",
+      "title": "Access Control: password rule",
+      "applicability": "product",
+      "controls": [
+        "auth.password_rule"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AC-02",
+      "title": "Access Control: two-step sign-in or company single sign-on",
+      "applicability": "product",
+      "controls": [
+        "auth.two_step"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AC-03",
+      "title": "Access Control: lock after wrong passwords; limit per address",
+      "applicability": "product",
+      "controls": [
+        "auth.lockout"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AC-04",
+      "title": "Access Control: idle sign-out",
+      "applicability": "product",
+      "controls": [
+        "auth.idle_signout"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AC-05",
+      "title": "Access Control: notice before sign-in",
+      "applicability": "product",
+      "controls": [
+        "auth.sign_in_notice"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AC-06",
+      "title": "Access Control: roles and least privilege",
+      "applicability": "product",
+      "controls": [
+        "access.roles",
+        "access.dormant_accounts"
+      ],
+      "evidence": [
+        "audit:people",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "LG-01",
+      "title": "Operations: tamper-evident audit log",
+      "applicability": "product",
+      "controls": [
+        "log.audit_chain"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "LG-02",
+      "title": "Compliance and Audit: log retention (180 days at least)",
+      "applicability": "product",
+      "controls": [
+        "log.retention"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "LG-03",
+      "title": "Operations: clock synchronised",
+      "applicability": "customer",
+      "controls": [
+        "log.clock"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "LG-04",
+      "title": "Incident Management: security events to a SIEM",
+      "applicability": "product",
+      "controls": [
+        "log.siem"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "IR-01",
+      "title": "Incident Management: incident report and contact (CERT-In within 6 hours)",
+      "applicability": "customer",
+      "controls": [
+        "ir.incident_report",
+        "notify.email"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "audit:settings",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "CR-01",
+      "title": "Communications: encryption in transit",
+      "applicability": "product",
+      "controls": [
+        "crypto.transit"
+      ],
+      "evidence": [
+        "settings:encryption",
+        "audit:settings",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "CR-02",
+      "title": "Business Continuity: backups encrypted",
+      "applicability": "product",
+      "controls": [
+        "crypto.backups",
+        "backup.schedule"
+      ],
+      "evidence": [
+        "settings:encryption",
+        "audit:settings",
+        "audit:backups",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "CR-03",
+      "title": "Information Assets: disk encrypted at rest",
+      "applicability": "customer",
+      "controls": [
+        "crypto.disk"
+      ],
+      "evidence": [
+        "settings:encryption",
+        "audit:settings",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "SI-01",
+      "title": "Acquisition, Development and Maintenance: genuine, signed software",
+      "applicability": "product",
+      "controls": [
+        "software.integrity"
+      ],
+      "evidence": [
+        "audit:updates",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "DR-01",
+      "title": "Cloud Security: data residency statement",
+      "applicability": "customer",
+      "controls": [
+        "data.residency"
+      ],
+      "evidence": [
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "AI-01",
+      "title": "Dubai AI Security Policy: AI use controls",
+      "applicability": "product",
+      "controls": [
+        "ai.local_detection",
+        "injection.detection",
+        "dlp.personal_data"
+      ],
+      "evidence": [
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "ORG-01",
+      "title": "Information security policy and ISMS",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "ORG-02",
+      "title": "Risk assessment and treatment",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "ORG-03",
+      "title": "Asset inventory and classification",
+      "applicability": "customer",
+      "controls": [
+        "ai.inventory",
+        "ai.discovery"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "ORG-04",
+      "title": "HR security and awareness",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "ORG-05",
+      "title": "Supplier management",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "ORG-06",
+      "title": "Incident response plan and team",
+      "applicability": "organisational",
+      "controls": [
+        "ir.incident_report"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "audit:settings",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "ORG-07",
+      "title": "Business continuity and disaster recovery, tested yearly",
+      "applicability": "customer",
+      "controls": [
+        "backup.restore_tested",
+        "ops.self_recovery"
+      ],
+      "evidence": [
+        "audit:backups",
+        "settings:encryption",
+        "records:operations",
+        "audit:updates",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "ORG-08",
+      "title": "Internal audit",
+      "applicability": "organisational",
+      "controls": [
+        "evidence.signing"
+      ],
+      "evidence": [
+        "audit:audit",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "ORG-09",
+      "title": "Physical security of the server room",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    }
+  ]
+}

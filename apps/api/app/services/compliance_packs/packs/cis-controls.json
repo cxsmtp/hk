@@ -1,0 +1,653 @@
+{
+  "id": "cis-controls",
+  "version": "2026.11.1",
+  "order": 70,
+  "optional": false,
+  "framework": {
+    "name": "CIS Critical Security Controls v8.1 (selected safeguards)",
+    "short": "CIS Controls",
+    "version": "v8.1 (June 2024)",
+    "publisher": "Center for Internet Security",
+    "jurisdiction": "International",
+    "url": "https://www.cisecurity.org/controls/v8-1"
+  },
+  "summary": "The CIS safeguards Hawk AI supports: software and service-provider inventories (AI included), data protection and DLP, account and access management, audit log management, data recovery and incident contact.",
+  "scope": "Safeguard numbers with our own short paraphrase. Only safeguards Hawk AI takes part in are listed; hardware inventory, malware defences, network infrastructure, awareness and penetration testing are the enterprise's.",
+  "sources": [
+    {
+      "title": "CIS Critical Security Controls v8.1",
+      "url": "https://www.cisecurity.org/controls/v8-1"
+    },
+    {
+      "title": "CIS Controls Assessment Specification: Control 8 (8.10 retain audit logs 90 days)",
+      "url": "https://controls-assessment-specification.readthedocs.io/en/latest/control-8/control-8.10.html"
+    },
+    {
+      "title": "CIS Controls Assessment Specification: 5.3 disable dormant accounts (45 days)",
+      "url": "https://controls-assessment-specification.readthedocs.io/en/latest/control-5/control-5.3.html"
+    }
+  ],
+  "notes": [],
+  "requirements": [
+    {
+      "id": "2.1",
+      "title": "Software inventory (AI tools and services included)",
+      "applicability": "customer",
+      "controls": [
+        "ai.inventory",
+        "ai.discovery"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "2.3",
+      "title": "Deal with unauthorised software",
+      "applicability": "customer",
+      "controls": [
+        "ai.discovery",
+        "ai.approval_policy",
+        "ai.gateway_in_use"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "settings:approvals",
+        "records:approvals",
+        "audit:approvals",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "2.5",
+      "title": "Allowlist authorised software",
+      "applicability": "customer",
+      "controls": [
+        "ai.approval_policy"
+      ],
+      "evidence": [
+        "settings:approvals",
+        "records:approvals",
+        "audit:approvals",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "3.1",
+      "title": "Data management process",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "3.3",
+      "title": "Data access control lists",
+      "applicability": "product",
+      "controls": [
+        "access.roles"
+      ],
+      "evidence": [
+        "audit:people",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "3.4",
+      "title": "Data retention",
+      "applicability": "product",
+      "controls": [
+        "log.retention"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "3.10",
+      "title": "Encrypt sensitive data in transit",
+      "applicability": "product",
+      "controls": [
+        "crypto.transit"
+      ],
+      "evidence": [
+        "settings:encryption",
+        "audit:settings",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "3.11",
+      "title": "Encrypt sensitive data at rest",
+      "applicability": "customer",
+      "controls": [
+        "crypto.disk",
+        "crypto.backups"
+      ],
+      "evidence": [
+        "settings:encryption",
+        "audit:settings",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "3.13",
+      "title": "Data loss prevention",
+      "applicability": "product",
+      "controls": [
+        "dlp.personal_data",
+        "dlp.payment_cards",
+        "dlp.secrets",
+        "ai.gateway_in_use"
+      ],
+      "evidence": [
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "3.14",
+      "title": "Log access to sensitive data",
+      "applicability": "product",
+      "controls": [
+        "log.audit_chain",
+        "ai.gateway_in_use"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "4.1",
+      "title": "Secure configuration process",
+      "applicability": "customer",
+      "controls": [
+        "host.hardening"
+      ],
+      "evidence": [
+        "records:operations",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "4.3",
+      "title": "Automatic session locking",
+      "applicability": "product",
+      "controls": [
+        "auth.idle_signout"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "5.1",
+      "title": "Inventory of accounts",
+      "applicability": "product",
+      "controls": [
+        "access.roles"
+      ],
+      "evidence": [
+        "audit:people",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "5.2",
+      "title": "Unique passwords",
+      "applicability": "product",
+      "controls": [
+        "auth.password_rule"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "5.3",
+      "title": "Disable dormant accounts (45 days)",
+      "applicability": "customer",
+      "controls": [
+        "access.dormant_accounts"
+      ],
+      "evidence": [
+        "audit:people",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "5.4",
+      "title": "Admin rights only on dedicated admin accounts",
+      "applicability": "customer",
+      "controls": [
+        "access.roles"
+      ],
+      "evidence": [
+        "audit:people",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "5.6",
+      "title": "Centralised account management",
+      "applicability": "customer",
+      "controls": [
+        "auth.sso"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "6.1",
+      "title": "Process for granting access",
+      "applicability": "customer",
+      "controls": [
+        "access.roles"
+      ],
+      "evidence": [
+        "audit:people",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "6.2",
+      "title": "Process for revoking access",
+      "applicability": "customer",
+      "controls": [
+        "access.dormant_accounts"
+      ],
+      "evidence": [
+        "audit:people",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "6.3",
+      "title": "MFA for externally exposed applications",
+      "applicability": "product",
+      "controls": [
+        "auth.two_step"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "6.5",
+      "title": "MFA for administrative access",
+      "applicability": "product",
+      "controls": [
+        "auth.admin_mfa"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "6.7",
+      "title": "Centralised access control",
+      "applicability": "customer",
+      "controls": [
+        "auth.sso"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "6.8",
+      "title": "Role-based access control",
+      "applicability": "product",
+      "controls": [
+        "access.roles"
+      ],
+      "evidence": [
+        "audit:people",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "7.3",
+      "title": "Automated operating system patching",
+      "applicability": "customer",
+      "controls": [
+        "host.hardening"
+      ],
+      "evidence": [
+        "records:operations",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "7.4",
+      "title": "Automated application patching",
+      "applicability": "product",
+      "controls": [
+        "software.integrity"
+      ],
+      "evidence": [
+        "audit:updates",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "8.1",
+      "title": "Audit log management process",
+      "applicability": "customer",
+      "controls": [
+        "log.audit_chain",
+        "log.retention"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "8.2",
+      "title": "Collect audit logs",
+      "applicability": "product",
+      "controls": [
+        "log.audit_chain"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "8.3",
+      "title": "Enough audit log storage",
+      "applicability": "product",
+      "controls": [
+        "log.retention"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "8.4",
+      "title": "Standard time synchronisation",
+      "applicability": "customer",
+      "controls": [
+        "log.clock"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "8.5",
+      "title": "Detailed audit logs",
+      "applicability": "product",
+      "controls": [
+        "log.audit_chain"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "8.9",
+      "title": "Centralise audit logs",
+      "applicability": "customer",
+      "controls": [
+        "log.siem"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "8.10",
+      "title": "Keep audit logs at least 90 days",
+      "applicability": "product",
+      "controls": [
+        "log.retention"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "8.11",
+      "title": "Review audit logs",
+      "applicability": "customer",
+      "controls": [
+        "log.siem",
+        "log.audit_chain"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "9.3",
+      "title": "Network-based URL filters (AI sites included)",
+      "applicability": "customer",
+      "controls": [
+        "ai.gateway_in_use",
+        "ai.discovery"
+      ],
+      "evidence": [
+        "audit:gateway",
+        "records:ai_inventory",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "10.1",
+      "title": "Anti-malware software",
+      "applicability": "customer",
+      "controls": [
+        "host.hardening"
+      ],
+      "evidence": [
+        "records:operations",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "11.1",
+      "title": "Data recovery process",
+      "applicability": "organisational",
+      "controls": [
+        "backup.schedule"
+      ],
+      "evidence": [
+        "audit:backups",
+        "settings:encryption",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "11.2",
+      "title": "Automated backups",
+      "applicability": "product",
+      "controls": [
+        "backup.schedule"
+      ],
+      "evidence": [
+        "audit:backups",
+        "settings:encryption",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "11.3",
+      "title": "Protect recovery data",
+      "applicability": "product",
+      "controls": [
+        "crypto.backups"
+      ],
+      "evidence": [
+        "settings:encryption",
+        "audit:settings",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "11.4",
+      "title": "Isolated copy of recovery data",
+      "applicability": "customer",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "11.5",
+      "title": "Test data recovery",
+      "applicability": "customer",
+      "controls": [
+        "backup.restore_tested"
+      ],
+      "evidence": [
+        "audit:backups",
+        "settings:encryption",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "12.2",
+      "title": "Secure network architecture",
+      "applicability": "customer",
+      "controls": [
+        "host.hardening"
+      ],
+      "evidence": [
+        "records:operations",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "13.1",
+      "title": "Centralised security event alerting",
+      "applicability": "customer",
+      "controls": [
+        "log.siem"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "14.1",
+      "title": "Security awareness programme",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "15.1",
+      "title": "Inventory of service providers (AI providers included)",
+      "applicability": "customer",
+      "controls": [
+        "ai.inventory",
+        "ai.discovery"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "16.1",
+      "title": "Secure application development process",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "17.1",
+      "title": "People to handle incidents",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "17.2",
+      "title": "Contact details for reporting incidents",
+      "applicability": "customer",
+      "controls": [
+        "ir.incident_report"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "audit:settings",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "17.3",
+      "title": "Process for reporting incidents",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "18.1",
+      "title": "Penetration testing programme",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    }
+  ]
+}

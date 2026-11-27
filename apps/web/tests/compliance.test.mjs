@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import test from "node:test";
 
 import { registerProductionAliases } from "./fixtures/ts-alias-hooks.mjs";
@@ -8,7 +8,7 @@ import { mayOpen, settingsNav } from "../src/lib/settings-menu.mjs";
 // Settings → Compliance (DESC ISR, UAE IA, CERT-In): the page, its helpers, the sign-in rule fields, the notice on the
 // sign-in page, the CEF export and the data location in About.
 registerProductionAliases();
-const { clockSentence, incidentQuery, retentionDays, STATUS_CHIP, STATUS_LABELS } = await import("../src/lib/compliance.ts");
+const { clockSentence, incidentQuery, retentionDays, STATUS_CHIP, STATUS_LABELS, filterRequirements, fixFor, packLine, evidenceQuery, REQUIREMENT_LABELS, REQUIREMENT_CHIP, STATUS_FILTERS, APPLICABILITY_LABELS } = await import("../src/lib/compliance.ts");
 const source = (path) => readFileSync(new URL(`../src/${path}`, import.meta.url), "utf8");
 
 test("Compliance is under Records for those who may see the audit log", () => {
@@ -51,4 +51,58 @@ test("Settings → Sign-in sets the password rule, idle sign-out and notice; the
   assert.ok(login.includes('data-ui="sign-in-banner"') && login.includes("options.banner"));
   assert.ok(source("app/settings/audit/page.tsx").includes('exportAs("cef")'));
   assert.ok(source("app/settings/about/page.tsx").includes('data-ui="about-data-location"'));
+});
+
+// Framework packs (apps/api/app/services/compliance_packs): the helpers, the page's tab and component, the API calls,
+// and that every pack file's requirements name controls the API's registry has.
+const control = (id, status, extra = {}) => ({ id, title: id, status, reason: "", scope: "administrator", href: "/settings/signin", label: "Settings → Sign-in", planned: false, ...extra });
+const req = (id, status, applicability, controls = []) => ({ id, title: id, status, applicability, why: "", note: "", controls, evidence: [], attestation: null });
+
+test("pack helpers: labels, filters (gaps first), the next step and the evidence window", () => {
+  assert.deepEqual(Object.keys(REQUIREMENT_LABELS).sort(), ["attested", "gap", "met", "not_applicable", "partly", "yours"]);
+  assert.equal(REQUIREMENT_CHIP.gap, "bad");
+  assert.deepEqual(Object.keys(APPLICABILITY_LABELS), ["product", "customer", "organisational"]);
+  assert.deepEqual(STATUS_FILTERS.map((f) => f.key), ["all", "met", "partly", "gap", "yours"]);
+  const items = [req("A", "met", "product"), req("B", "gap", "customer"), req("C", "yours", "organisational"), req("D", "partly", "product"), req("E", "attested", "organisational")];
+  assert.deepEqual(filterRequirements(items, "all", "all").map((r) => r.id), ["B", "D", "C", "E", "A"]);
+  assert.deepEqual(filterRequirements(items, "product", "all").map((r) => r.id), ["D", "A"]);
+  assert.deepEqual(filterRequirements(items, "all", "met").map((r) => r.id), ["E", "A"]);
+  assert.deepEqual(filterRequirements(items, "all", "gap").map((r) => r.id), ["B"]);
+  assert.deepEqual(filterRequirements(items, "organisational", "yours").map((r) => r.id), ["C"]);
+  assert.equal(fixFor(req("X", "partly", "product", [control("a", "met"), control("gap.x", "not_configured", { planned: true }), control("b", "partly", { href: "/settings/https" })])).href, "/settings/https");
+  assert.equal(fixFor(req("Y", "met", "product", [control("a", "met")])), null);
+  const counts = { total: 10, met: 3, attested: 1, not_applicable: 1, partly: 2, gap: 2, yours: 1 };
+  assert.equal(packLine(counts), "5 of 10 met or recorded · 2 partly · 2 gaps · 1 yours to record");
+  assert.equal(evidenceQuery("2026-10-01", ""), "from=2026-10-01");
+});
+
+test("the Compliance page opens on the framework packs, keeps the DESC view, and the packs component does what it says", () => {
+  const page = source("app/settings/compliance/page.tsx");
+  for (const needle of ['data-ui="compliance-tabs"', "<FrameworkPacks />", "do not by themselves make you compliant or certified"]) assert.ok(page.includes(needle), needle);
+  const packs = source("components/compliance/framework-packs.tsx");
+  for (const needle of ['data-ui="compliance-packs"', 'data-ui="pack-picker"', 'data-ui="packs-disclaimer"', 'data-ui="pack-filter-who"', 'data-ui="pack-filter-status"', 'data-ui="pack-requirements"', 'data-ui="pack-fix"', 'data-ui="pack-record"', 'data-ui="pack-evidence"', "Download signed evidence", ".getCompliancePacks()", ".getCompliancePack(current)", "api.packEvidence(", "api.recordRequirement(", "api.removeRequirementRecord(", "tools/verify_evidence.py"]) {
+    assert.ok(packs.includes(needle), needle);
+  }
+  const api = source("lib/api.ts");
+  for (const needle of ['request<PacksOverview>("/compliance/packs")', "/compliance/packs/${encodeURIComponent(id)}/evidence", "/record`"]) assert.ok(api.includes(needle), needle);
+});
+
+test("every pack file maps only to controls the API's registry has, and every control links to a page that exists", () => {
+  const dir = new URL("../../api/app/services/compliance_packs/packs/", import.meta.url);
+  const registry = readFileSync(new URL("../../api/app/services/compliance_packs/controls.py", import.meta.url), "utf8");
+  const ids = new Set([...registry.matchAll(/^\s+Control\("([a-z_.]+)"/gm)].map((m) => m[1]));
+  assert.ok(ids.size > 30, `only ${ids.size} controls found`);
+  const files = readdirSync(dir).filter((f) => f.endsWith(".json"));
+  assert.ok(files.length >= 18);
+  for (const file of files) {
+    const pack = JSON.parse(readFileSync(new URL(file, dir), "utf8"));
+    assert.equal(`${pack.id}.json`, file);
+    for (const r of pack.requirements) {
+      for (const ref of r.controls) assert.ok(ids.has(ref.split(":")[0]), `${file} ${r.id}: ${ref}`);
+      if (!r.controls.length) assert.notEqual(r.applicability, "product", `${file} ${r.id}`);
+    }
+  }
+  const hrefs = [...registry.matchAll(/^\s+Control\("[a-z_.]+", "[^"]*", "[^"]*", "[a-z]+", "(\/settings\/[a-z-]+)"/gm)].map((m) => m[1]);
+  assert.ok(hrefs.length > 30, `only ${hrefs.length} links found`);
+  for (const href of hrefs) assert.ok(existsSync(new URL(`../src/app${href}/page.tsx`, import.meta.url)), href);
 });

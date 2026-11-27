@@ -1,0 +1,165 @@
+{
+  "id": "au-ai-safety-standard",
+  "version": "2026.11.1",
+  "order": 102,
+  "optional": false,
+  "framework": {
+    "name": "Australia Voluntary AI Safety Standard (10 guardrails)",
+    "short": "AU AI Safety Standard",
+    "version": "September 2024 (condensed into the Guidance for AI Adoption, October 2025)",
+    "publisher": "Department of Industry, Science and Resources (National AI Centre)",
+    "jurisdiction": "Australia (voluntary)",
+    "url": "https://www.industry.gov.au/publications/voluntary-ai-safety-standard/10-guardrails"
+  },
+  "summary": "The 10 voluntary guardrails for organisations that develop or deploy AI, and the Hawk AI controls that support each: accountability, risk management, protecting systems and data, testing and monitoring, human control, records and supply-chain transparency.",
+  "scope": "Guardrail numbers with our own short wording. The October 2025 Guidance for AI Adoption replaces the guardrails with six essential practices; the guardrails stay published and this mapping still applies to them.",
+  "sources": [
+    {
+      "title": "Voluntary AI Safety Standard: the 10 guardrails",
+      "url": "https://www.industry.gov.au/publications/voluntary-ai-safety-standard/10-guardrails"
+    },
+    {
+      "title": "Guidance for AI Adoption (October 2025)",
+      "url": "https://www.industry.gov.au/publications/guidance-for-ai-adoption"
+    }
+  ],
+  "notes": [],
+  "requirements": [
+    {
+      "id": "G1",
+      "title": "Accountability: owner, strategy and training for AI",
+      "applicability": "customer",
+      "controls": [
+        "access.roles",
+        "ai.approval_policy"
+      ],
+      "evidence": [
+        "audit:people",
+        "settings:sign_in",
+        "settings:approvals",
+        "records:approvals",
+        "audit:approvals",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "G2",
+      "title": "Risk management process for AI",
+      "applicability": "customer",
+      "controls": [
+        "ai.inventory",
+        "gap.impact_assessment"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "G3",
+      "title": "Protect AI systems and manage data quality and provenance",
+      "applicability": "product",
+      "controls": [
+        "dlp.personal_data",
+        "dlp.secrets",
+        "injection.detection",
+        "gap.ai_supply_chain"
+      ],
+      "evidence": [
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "G4",
+      "title": "Test before deployment, then monitor",
+      "applicability": "customer",
+      "controls": [
+        "ai.adversarial_testing",
+        "ai.gateway_in_use",
+        "ai.approval_policy"
+      ],
+      "evidence": [
+        "records:operations",
+        "audit:gateway",
+        "settings:approvals",
+        "records:approvals",
+        "audit:approvals",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "G5",
+      "title": "Meaningful human control or intervention",
+      "applicability": "product",
+      "controls": [
+        "ai.human_oversight",
+        "ai.approval_policy"
+      ],
+      "evidence": [
+        "settings:approvals",
+        "settings:detection",
+        "records:approvals",
+        "audit:approvals",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "G6",
+      "title": "Tell people when AI is used and what it produced",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "G7",
+      "title": "Let affected people challenge AI use or outcomes",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "G8",
+      "title": "Transparency with others in the AI supply chain",
+      "applicability": "customer",
+      "controls": [
+        "gap.ai_supply_chain",
+        "ai.inventory"
+      ],
+      "evidence": [
+        "records:attestations",
+        "records:ai_inventory"
+      ]
+    },
+    {
+      "id": "G9",
+      "title": "Keep records (AI inventory, documentation) to show compliance",
+      "applicability": "product",
+      "controls": [
+        "ai.inventory",
+        "log.audit_chain",
+        "evidence.signing"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "G10",
+      "title": "Engage stakeholders; consider safety, diversity, inclusion and fairness",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    }
+  ]
+}

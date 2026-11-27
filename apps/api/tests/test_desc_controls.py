@@ -395,7 +395,7 @@ def test_audit_export_cef_and_incident_report(env):
         assert db.scalar(select(AuditLog).where(AuditLog.action == "compliance.incident_report")) is not None
 
 
-def test_migration_0104_is_the_head():
+def test_migration_0104_follows_0103_and_0105_follows_it():
     from pathlib import Path
 
     from alembic.config import Config
@@ -404,5 +404,6 @@ def test_migration_0104_is_the_head():
     config = Config()
     config.set_main_option("script_location", str(Path(__file__).resolve().parents[1] / "app/db/migrations"))
     script = ScriptDirectory.from_config(config)
-    assert script.get_heads() == ["0104_desc_controls"]
+    assert script.get_heads() == ["0105_compliance_packs"]
     assert script.get_revision("0104_desc_controls").down_revision == "0103_terms_acceptance"
+    assert script.get_revision("0105_compliance_packs").down_revision == "0104_desc_controls"

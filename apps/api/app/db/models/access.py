@@ -127,6 +127,29 @@ class CompliancePolicy(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
 
+class ComplianceAttestation(Base, UUIDPrimaryKeyMixin):
+    """What a tenant's owner or admin recorded about one requirement of a framework pack (Settings → Compliance,
+    app/services/compliance_packs, migration 0105): ``in_place`` (the organisation's own process or control exists;
+    ``note`` and ``reference`` say where its evidence is) or ``not_applicable`` (out of scope, with the reason). It
+    stands until ``expires_at`` (a year by default), when it must be reviewed. Every change is in the audit log; the
+    row holds the latest only.
+    """
+
+    __tablename__ = "compliance_attestations"
+    __table_args__ = (Index("uq_compliance_attestation", "tenant_id", "pack_id", "requirement_id", unique=True),)
+
+    tenant_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    pack_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    requirement_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    status: Mapped[str] = mapped_column(String(16), nullable=False)
+    note: Mapped[str] = mapped_column(Text, nullable=False, default="", server_default="")
+    reference: Mapped[str] = mapped_column(String(500), nullable=False, default="", server_default="")
+    attested_by: Mapped[Optional[str]] = mapped_column(String(36), nullable=True)
+    attested_by_email: Mapped[str] = mapped_column(String(320), nullable=False, default="", server_default="")
+    attested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
 class SignInPolicy(Base):
     """The sign-in rules an administrator sets for the whole installation (Settings → Sign-in): one row, id 1.
 
