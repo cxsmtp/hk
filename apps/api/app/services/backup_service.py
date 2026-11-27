@@ -220,6 +220,20 @@ def build_backup(cfg: BackupConfig, store: BackupKeyStore, *, dump: Callable[[st
     )
 
 
+#: What pg_dump says when PostgreSQL is stopping, or already gone, as the API stops with it.
+DATABASE_STOPPING = (
+    "the database system is shutting down",
+    "connection refused",
+    "could not translate host name",
+    "server closed the connection unexpectedly",
+)
+
+
+def database_is_stopping(error: BaseException) -> bool:
+    text = str(error).lower()
+    return any(sign in text for sign in DATABASE_STOPPING)
+
+
 def backup_to_folder(
     trigger: str,
     *,
@@ -231,8 +245,11 @@ def backup_to_folder(
     dump: Callable[[str], bytes] | None = None,
     mail: bool = True,
     dump_timeout: float = 600,
+    database_may_be_stopping: bool = False,
 ) -> dict[str, Any]:
-    """Write a backup into BACKUP_DIR, keeping the newest BACKUP_KEEP; audited, and copied to the backup mailbox."""
+    """Write a backup into BACKUP_DIR, keeping the newest BACKUP_KEEP; audited, and copied to the backup mailbox.
+    ``database_may_be_stopping``: the backup taken while Hawk AI stops, when PostgreSQL may be stopping with it; a
+    database that is gone is then a skipped backup, not a failed one."""
 
     cfg = cfg or config()
     store = key_store(cfg)
@@ -261,6 +278,12 @@ def backup_to_folder(
                 log.warning("[backup] Could not email the backup: %s", error)
         return last
     except Exception as error:  # noqa: BLE001 - said on the page, in the log and the audit log
+        if database_may_be_stopping and database_is_stopping(error):
+            # `docker compose restart` stops every service at once, so PostgreSQL is often already going when the API
+            # takes its backup before stopping. Nothing failed that anyone can put right: the newest backup is kept as
+            # the last one, and the error journal (self-recovery) and the audit log are left alone.
+            log.warning("[backup] %s backup skipped: the database was stopping too (%s).", trigger, str(error).strip().splitlines()[-1][:200], extra={"trigger": trigger})
+            return {"at": _now_iso(), "ok": False, "skipped": True, "error": str(error)[:500], "trigger": trigger}
         last = {"at": _now_iso(), "ok": False, "error": str(error)[:500], "trigger": trigger}
         _remember(cfg, last)
         audit("backup.failed", f"{trigger} backup to {cfg.dir} failed: {str(error)[:300]}", outcome="failed", actor=actor, actor_user_id=actor_user_id, tenant_id=tenant_id)
@@ -357,7 +380,7 @@ def last_words(
     result: dict[str, Any] = {"backup": None, "mailed": 0, "throttled": False}
     store = key_store(cfg)
     remaining = max(1.0, deadline - time.monotonic())
-    backup = backup_to_folder(f"Before stopping ({reason})", cfg=cfg, audit=audit, dump=dump, mail=send is None, dump_timeout=remaining)
+    backup = backup_to_folder(f"Before stopping ({reason})", cfg=cfg, audit=audit, dump=dump, mail=send is None, dump_timeout=remaining, database_may_be_stopping=True)
     result["backup"] = backup
     if not backup.get("ok"):
         backup = None
