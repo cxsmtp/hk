@@ -27,4 +27,17 @@ ignore:
   # deploy/compose.yaml and remove this entry as soon as an image with libpam 1.5.2-6+deb12u3 or later exists.
   - vulnerability: CVE-2025-6020
     package:
-      name: "libpam*"
+      name: libpam0g
+      type: deb
+  - vulnerability: CVE-2025-6020
+    package:
+      name: libpam-modules
+      type: deb
+  - vulnerability: CVE-2025-6020
+    package:
+      name: libpam-modules-bin
+      type: deb
+  - vulnerability: CVE-2025-6020
+    package:
+      name: libpam-runtime
+      type: deb
