@@ -167,7 +167,7 @@ export const install: GuideTopic = {
         {
           kind: "note",
           tone: "warn",
-          text: "Everything Hawk AI keeps is in Docker volumes and in `HAWK_DATA_DIR`. `docker compose -f deploy/compose.yaml down` keeps the volumes; `docker compose -f deploy/compose.yaml down -v` deletes them, with every record. Never use `-v` unless you mean to start from nothing.",
+          text: "Everything Hawk AI keeps is in Docker volumes and in `HAWK_DATA_DIR`. `docker compose -f deploy/compose.yaml down` keeps the volumes; `docker compose -f deploy/compose.yaml down -v` deletes them, with every record. Never use `-v` unless you mean to start from nothing. Start it again with `sudo deploy/install.sh`, not `docker compose up -d`: with `HAWK_RELEASE` only the installer knows which published images to run (and the version chosen under Settings → Updates), and a plain `up -d` would build the images from the folder instead.",
         },
       ],
     },

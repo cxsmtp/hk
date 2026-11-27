@@ -519,7 +519,7 @@ def secrets_instructions(result: Mapping[str, Any]) -> list[str]:
         "  sudo docker compose -f deploy/compose.yaml cp api:/data/restored-secrets /tmp/hawk-restored-secrets",
         "  sudo sh -c 'cd /tmp/hawk-restored-secrets && for f in *; do install -o 1000 -g 1000 -m 0600 \"$f\" /var/lib/hawk-ai/secrets/\"$f\"; done; rm -rf /tmp/hawk-restored-secrets'",
         "  docker compose -f deploy/compose.yaml run --rm --no-deps api rm -rf /data/restored-secrets /run/hawk/secret_key.lock",
-        "  docker compose -f deploy/compose.yaml up -d",
+        "  sudo deploy/install.sh",
     ]
 
 

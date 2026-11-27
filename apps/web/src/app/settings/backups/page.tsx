@@ -167,7 +167,7 @@ export default function BackupsSettingsPage() {
       const { backup: info } = await api.restoreBackup(file, pass, true);
       if (!window.confirm(restoreQuestion(info, dateTime))) return;
       const r = await api.restoreBackup(file, pass, false);
-      setRsres(r.staged ? "Checked and staged. Restart the server to restore it (docker compose -f deploy/compose.yaml stop api worker beat, then up -d): it is applied before anything else starts." : "Restored. Restart the server to read it.");
+      setRsres(r.staged ? "Checked and staged. Restart the server to restore it (docker compose -f deploy/compose.yaml stop api worker beat, then sudo deploy/install.sh): it is applied before anything else starts." : "Restored. Restart the server to read it.");
       setPass("");
       if (fileRef.current) fileRef.current.value = "";
       await load();
