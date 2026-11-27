@@ -53,6 +53,12 @@ def _resolve_binding(bindings: dict[str, Any], key: str, default: Any = None) ->
     return value
 
 
+def _synthetic_variables() -> dict[str, str]:
+    from app.services.simulation_catalog_runners import synthetic_variables
+
+    return synthetic_variables()
+
+
 def _substitute(template: Any, variables: dict[str, Any]) -> Any:
     if isinstance(template, str):
         out = template
@@ -1209,6 +1215,8 @@ def _execute_simulation_iteration(
             "ai_system_id": ai_system_id,
             "run_id": run_id,
             "iteration.index": iteration_index + 1,
+            # Test card numbers and files holding one, made only now: a stored definition never holds a full PAN.
+            **_synthetic_variables(),
         }
         payload = _substitute(step.get("payload_template", {}), variables)
         kind = str(step.get("kind") or "").strip()

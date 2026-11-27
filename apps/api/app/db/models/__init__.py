@@ -301,6 +301,11 @@ from app.db.models.snapshot import AuditorSnapshot
 from app.db.models.tenant import Tenant
 from app.db.models.user import RefreshToken, User, UserTenantRole
 from app.db.models.iam import IamJoinSettings, IamRole, IamTeam
+from app.services.pci_controls import install_persistence_guard
+
+# Card numbers are masked in every row the ORM writes (PCI DSS 3.3 / 3.4): registered after the models' own
+# before_flush hooks, so the rows they add are masked too.
+install_persistence_guard()
 
 __all__ = [
     "Tenant",
