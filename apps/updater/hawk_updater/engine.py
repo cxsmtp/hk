@@ -126,7 +126,18 @@ class EngineClient:
                 raise EngineError(f"Pulling {repository}:{tag_or_digest} failed: {detail}")
 
     def create(self, name: str, spec: dict[str, Any]) -> dict[str, Any]:
-        return self.request("POST", f"/containers/create?{urlencode({'name': name})}", body=spec)
+        """Create the container; on more than one network (deploy/compose.yaml's api, worker, beat and migrate are on
+        ``hawk`` and ``hawk-internal``), with the first, then connected to the others before it starts: API 1.41
+        takes one network at create."""
+
+        endpoints = dict(((spec.get("NetworkingConfig") or {}).get("EndpointsConfig")) or {})
+        if len(endpoints) <= 1:
+            return self.request("POST", f"/containers/create?{urlencode({'name': name})}", body=spec)
+        first, *others = endpoints.items()
+        made = self.request("POST", f"/containers/create?{urlencode({'name': name})}", body={**spec, "NetworkingConfig": {"EndpointsConfig": dict([first])}})
+        for network, endpoint in others:
+            self.request("POST", f"/networks/{quote(network, safe='')}/connect", body={"Container": made["Id"], "EndpointConfig": endpoint or {}})
+        return made
 
     def start(self, container_id: str) -> None:
         try:

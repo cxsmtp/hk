@@ -40,6 +40,11 @@ ADMIN_ROLES = ("owner", "admin")
 SSO_ROLES = ("viewer", "operator", "auditor")
 RESET_POLICIES = ("everyone", "not-admins", "off")
 POLICY_ID = 1
+#: The idle sign-out an administrator may set (Settings → Sign-in): 5 minutes to 24 hours.
+MIN_IDLE_MINUTES = 5
+MAX_IDLE_MINUTES = 24 * 60
+#: The notice on the sign-in page: at most this many characters.
+MAX_BANNER = 2000
 
 _DUMMY_BCRYPT_HASH = "$2b$12$C6UzMDM.H6dfI/f/IKcEe.5D6Q.Z5N6J8XcJteLoI0lp4rWuIwoL2"
 
@@ -243,6 +248,41 @@ def record_sign_in(user: User) -> None:
     user.failed_logins = 0
     user.locked_until = None
     user.last_login_at = utcnow()
+    # A password older than the rule allows (Settings → Sign-in → Password rule): it must be changed before anything
+    # else, as a generated one must (app/services/password_policy.py).
+    from sqlalchemy.orm import object_session
+
+    from app.services import password_policy
+
+    if not user.must_change_password and password_policy.expired(object_session(user), user):
+        user.must_change_password = True
+        logger.info("Password expired: a new one is asked for at this sign-in", extra={"user_id": user.id, "reason_code": "password_expired"})
+
+
+def idle_minutes(db: Session | None) -> int:
+    """Minutes without activity before a sign-in ends: Settings → Sign-in when set there, else SESSION_IDLE_MINUTES."""
+
+    from app.core.config import settings
+
+    configured = None
+    if db is not None:
+        try:
+            row = db.get(SignInPolicy, POLICY_ID)
+            configured = row.session_idle_minutes if row is not None else None
+        except Exception:  # noqa: BLE001 - the configured value is the fallback, never an error at sign-in
+            configured = None
+    if configured:
+        return max(MIN_IDLE_MINUTES, min(MAX_IDLE_MINUTES, int(configured)))
+    return max(1, int(settings.session_idle_minutes or 480))
+
+
+def access_minutes(db: Session | None) -> int:
+    """How long an access token lasts: ACCESS_TOKEN_EXPIRE_MINUTES, but at most half the idle sign-out, so that someone
+    working refreshes well before the idle limit and someone away is signed out within it."""
+
+    from app.core.config import settings
+
+    return max(1, min(int(settings.access_token_expire_minutes), idle_minutes(db) // 2))
 
 
 def check_two_step(db: Session, user: User, typed: Any, *, recovery: bool = True) -> dict[str, Any]:

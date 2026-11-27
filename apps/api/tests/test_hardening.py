@@ -23,6 +23,7 @@ from app.db.models.tenant import Tenant
 from app.db.models.user import User, UserTenantRole
 from app.db.session import Base, get_db
 from app.main import app
+from ai_system_approval_helpers import approve_ai_system
 
 
 PASSWORD = "Password123!"
@@ -223,7 +224,7 @@ def test_tenant_isolation_across_core_modules(test_env) -> None:
     )
     assert ai_system_resp.status_code == 200, ai_system_resp.text
     ai_system_id = ai_system_resp.json()["id"]
-    approved = client.patch(f"/ai-systems/{ai_system_id}", headers=headers_a, json={"status": "approved"})
+    approved = approve_ai_system(client, headers_a, ai_system_id)
     assert approved.status_code == 200, approved.text
 
     pack_resp = client.post(

@@ -34,6 +34,7 @@ from app.services.ai_graph import build_unified_ai_graph
 from app.services.discovery_service import tool_key_for_name
 from app.services.runtime_intelligence.runtime_event_normalizer import ingest_runtime_event
 from app.services.runtime_intelligence.schemas import RuntimeEventIngestPayload
+from ai_system_approval_helpers import approve_ai_system
 
 
 PASSWORD = "Password123!"
@@ -96,7 +97,7 @@ def _create_ai_system(client: TestClient, *, headers: dict[str, str], name: str 
     )
     assert response.status_code == 200, response.text
     ai_system_id = response.json()["id"]
-    approved = client.patch(f"/ai-systems/{ai_system_id}", headers=headers, json={"status": "approved"})
+    approved = approve_ai_system(client, headers, ai_system_id)
     assert approved.status_code == 200, approved.text
     return ai_system_id
 

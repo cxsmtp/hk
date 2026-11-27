@@ -671,8 +671,11 @@ def test_current_revision_is_the_sole_short_migration_head() -> None:
     scripts = ScriptDirectory.from_config(config)
     heads = scripts.get_heads()
 
-    assert heads == ["0101_github_agent_controls"]
+    assert heads == ["0104_desc_controls"]
     assert [revision.revision for revision in scripts.iterate_revisions(heads[0], "0089_provider_signal_lifecycle")] == [
+        "0104_desc_controls",
+        "0103_terms_acceptance",
+        "0102_ai_system_approval_policy",
         "0101_github_agent_controls",
         "0100_detection_settings",
         "0099_iam_roles",

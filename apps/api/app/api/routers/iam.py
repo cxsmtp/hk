@@ -50,7 +50,8 @@ from app.db.session import get_db
 from app.services import account_security, activation_service, iam_service, mailer, password_reset_service, sign_in_store
 from app.services.audit_service import write_audit_log
 from app.services.iam_service import Refused, clean
-from app.services.passwords import generate_password, password_problem
+from app.services import password_policy
+from app.services.passwords import generate_password
 from app.services.sign_in_store import StoreUnavailable
 
 
@@ -311,7 +312,7 @@ def add_person(
         if existing is None:
             password = str(body.get("password") or "")
             if password:
-                problem = password_problem(password)
+                problem = password_policy.problem(db, password)
                 if problem:
                     raise Refused(400, f"Temporary password: {problem}")
             temporary = password or generate_password()
@@ -465,7 +466,7 @@ def reset_password(user_id: str, ctx: TenantContext = Depends(require_permission
         user, _, _ = _target(db, ctx, user_id)
         _everywhere(db, ctx, user)
         temporary = generate_password()
-        user.hashed_password = get_password_hash(temporary)
+        password_policy.remember(user, get_password_hash(temporary))
         user.must_change_password = True
         user.failed_logins = 0
         user.locked_until = None
@@ -936,7 +937,7 @@ def confirm_join(request: Request, body: Annotated[dict[str, Any] | None, Body()
         if role_key not in join_rules(db, tenant.id)["roles"]:
             raise Refused(400, "Choose your role from the list.")
         password = str(body.get("password") or "")
-        problem = password_problem(password)
+        problem = password_policy.problem(db, password)
         if problem:
             raise Refused(400, problem)
         # The activation code's limit of active users in each tenant (/settings/guide/licence).

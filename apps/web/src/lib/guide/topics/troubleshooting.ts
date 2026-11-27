@@ -1,10 +1,11 @@
 import type { GuideTopic } from "../types";
 
-/** app/main.py (health), app/services/https_proxy.py (/api), app/api/routers/updates.py (the report), deploy/install.sh. */
+/** app/main.py (health), app/services/https_proxy.py (/api), app/api/routers/updates.py (the report),
+ * app/services/self_recovery.py and app/services/diagnostics_bundle.py (self-recovery, the bundle), deploy/install.sh. */
 export const troubleshooting: GuideTopic = {
   slug: "troubleshooting",
   title: "Troubleshooting",
-  summary: "Health addresses, the logs, the troubleshooting report, and the usual problems with what to do about each.",
+  summary: "Health addresses, the logs, self-recovery, the diagnostics bundle for the OEM, and the usual problems with what to do about each.",
   sections: [
     {
       id: "health",
@@ -57,7 +58,61 @@ export const troubleshooting: GuideTopic = {
       blocks: [
         {
           kind: "p",
-          text: "**Download troubleshooting report** on [Settings → Updates](/settings/updates) or [Settings → Backups & health](/settings/backups) saves a JSON file with the versions, the updater and its recent events, the integrity check, the disk, the HTTPS mode, the last backup and the time zone: no secrets, keys or customer data. Send it to whoever helps you. (The same button on Settings → Backups & health is not working yet.)",
+          text: "**Download troubleshooting report** on [Settings → Updates](/settings/updates) or [Settings → Backups & health](/settings/backups) saves a JSON file with the versions, the updater and its recent events, the integrity check, the disk, the HTTPS mode, the last backup and the time zone: no secrets, keys or customer data. For the OEM, the diagnostics bundle (below) has much more.",
+        },
+      ],
+    },
+    {
+      id: "self-recovery",
+      title: "Self-recovery",
+      who: "Owners and admins",
+      blocks: [
+        {
+          kind: "p",
+          text: "Every `SELF_RECOVERY_EVERY_SECONDS` (300) Hawk AI reads its error log (the API's, the worker's and the scheduler's), its failed background jobs, the updater's events and the installer's result, recognises the failures it knows and puts them right. Each fix has a limit; a pause that doubles between attempts; and a circuit breaker, so a kind of fix that keeps failing is left alone for a while. When the attempts run out, or the failure is one Hawk AI does not know, it stops trying, marks it **Needs OEM help** and prepares the diagnostics bundle. Everything it does is in its history on [Settings → Backups & health](/settings/backups) and in the audit log (Updates & system).",
+        },
+        {
+          kind: "table",
+          head: ["What it recognises", "What it does", "At most"],
+          rows: [
+            ["A background job failed.", "Runs it again, waiting longer each time (a job that needs its own schedule is waited for).", "3 times in 6 hours"],
+            ["A lock was left behind: an update request no updater took, a database session idle in a transaction.", "Clears it.", "2 times an hour"],
+            ["The database or Redis connection dropped.", "Empties the connection pool and connects again.", "3 times an hour"],
+            ["The worker or the scheduler stopped answering.", "Asks the updater to restart that service alone.", "2 times in 6 hours"],
+            ["The disk is almost full.", "Removes old error logs, half-written files and older prepared bundles; never a backup.", "2 times in 6 hours"],
+            ["The database schema looks out of date.", "Runs the migration check again.", "2 times in 6 hours"],
+            ["An update failed, or the new version is unhealthy.", "Goes back to the version before through the updater, then checks it is running and healthy within 30 minutes.", "once per version"],
+            ["The installer reported a problem.", "Checks Hawk AI is running and healthy now.", "3 times a day"],
+            ["Errors it does not recognise (the same one 3 times in 30 minutes).", "Nothing: Needs OEM help at once.", "—"],
+          ],
+        },
+        {
+          kind: "p",
+          text: "When the worker or the scheduler is down, the API runs self-recovery itself. **Try again** next to an issue that needed help gives it its attempts back, once the OEM has advised.",
+        },
+      ],
+    },
+    {
+      id: "diagnostics-bundle",
+      title: "The diagnostics bundle for the OEM",
+      who: "Owners and admins",
+      blocks: [
+        {
+          kind: "steps",
+          items: [
+            "Open [Settings → Backups & health](/settings/backups) and find **Self-recovery**.",
+            "**Download diagnostics bundle**: one `.tar.gz` file. When an issue needed help, **Bundle prepared** is the one Hawk AI made at that moment.",
+            "Send it to the OEM with the reference shown (`REC-…`, or `JOB-…` for a background job).",
+          ],
+        },
+        {
+          kind: "p",
+          text: "It holds the recent errors, the failed jobs, the update and rollback history, the self-check's and self-recovery's events, the installer's log, the versions, health (database, Redis, worker, scheduler, disk, schema) and the settings in force, with every secret, key and password replaced by `[redacted]`: no prompt text or customer data. `manifest.json` lists every file with its SHA-256 and `manifest.sig.json` signs it with the server's evidence key (`keys.json` has the public keys), so the OEM can check it came from this server unchanged.",
+        },
+        {
+          kind: "note",
+          tone: "info",
+          text: "The owners and admins of the first organisation set up on the server get the whole installation's bundle. Those of another organisation get their own organisation's only, and see the installation's problems as a line with a time and a reference, never their text. Every download is in the audit log.",
         },
       ],
     },
@@ -123,7 +178,7 @@ export const troubleshooting: GuideTopic = {
       blocks: [
         {
           kind: "p",
-          text: "It waited 600 seconds (`HAWK_WAIT_SECONDS`) and printed the last 40 lines of the API's log. Read them, or `docker compose -f deploy/compose.yaml logs api` and `docker compose -f deploy/compose.yaml logs migrate`. A first build takes several minutes; on a slow machine, run the installer again with a longer `HAWK_WAIT_SECONDS`.",
+          text: "It waited 600 seconds (`HAWK_WAIT_SECONDS`), read the logs and tried one fix on its own: the migrations again when they failed, unused images and build cache removed when the disk was full, the database restarted when it did not answer, or the API restarted; then it waited once more. If that did not help it printed the last 40 lines of the API's log and saved what happened in the updater folder (`install-status.json`, `install.log`), which self-recovery reads and the diagnostics bundle carries. Read them, or `docker compose -f deploy/compose.yaml logs api` and `docker compose -f deploy/compose.yaml logs migrate`. A first build takes several minutes; on a slow machine, run the installer again with a longer `HAWK_WAIT_SECONDS`.",
         },
       ],
     },

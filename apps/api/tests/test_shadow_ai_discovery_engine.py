@@ -19,6 +19,7 @@ from app.main import app
 import app.services.shadow_ai.endpoint_ingest_service as endpoint_ingest_service
 import app.services.runtime_intelligence.runtime_event_normalizer as runtime_normalizer
 from app.services.shadow_ai.discovery_engine import safe_process_runtime_event_for_shadow_discovery
+from ai_system_approval_helpers import approve_ai_system
 
 
 PASSWORD = "Password123!"
@@ -78,7 +79,7 @@ def _create_active_ai_system(client: TestClient, *, headers: dict[str, str]) -> 
     )
     assert create.status_code == 200, create.text
     ai_system_id = create.json()["id"]
-    activate = client.patch(f"/ai-systems/{ai_system_id}", headers=headers, json={"status": "active"})
+    activate = approve_ai_system(client, headers, ai_system_id, status="active")
     assert activate.status_code == 200, activate.text
     return ai_system_id
 

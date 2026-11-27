@@ -43,7 +43,7 @@ from app.db.session import get_db
 from app.services import account_security, mailer, mfa_service, password_reset_service, sign_in_store
 from app.services.account_security import SignInRefused
 from app.services.audit_service import write_audit_log
-from app.services.passwords import password_problem
+from app.services import password_policy
 from app.services.sign_in_store import StoreUnavailable
 
 
@@ -91,7 +91,9 @@ def sign_in_options(db: Session = Depends(get_db)):
     ready = password_reset_ready(db)["ready"]
     admins_only = bool(settings.company_sso_enabled and account_security.policy(db).sso_password_admins_only)
     db.commit()
-    return _no_store({"passwordReset": ready, "ssoPasswordAdminsOnly": admins_only})
+    banner = account_security.policy(db).banner_text or ""
+    db.commit()
+    return _no_store({"passwordReset": ready, "ssoPasswordAdminsOnly": admins_only, "banner": banner})
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -412,7 +414,7 @@ def password_reset_confirm(
         if user is None:
             password_reset_service.note_ip(ip)
             return refused(400, password_reset_service.RESET_DEAD)
-        problem = password_problem(password)
+        problem = password_policy.problem(db, password, user=user)
         if problem:
             return refused(400, problem)
         if verify_password(password, user.hashed_password):
@@ -423,7 +425,7 @@ def password_reset_confirm(
             return refused(400, password_reset_service.RESET_DEAD)
     except StoreUnavailable:
         return refused(503, UNAVAILABLE)
-    user.hashed_password = get_password_hash(password)
+    password_policy.remember(user, get_password_hash(password))
     user.must_change_password = False
     # Saving it clears a lock after wrong passwords, and signs the account out everywhere.
     user.failed_logins = 0
@@ -507,7 +509,13 @@ def settings_view(db: Session) -> dict[str, Any]:
             "tested": bool(row.smtp_verified) and row.smtp_verified == mailer.fingerprint(smtp),
         },
         "serverAddress": password_reset_service.link_base(),
-        "sessionIdleMinutes": int(settings.session_idle_minutes),
+        # The idle sign-out in force; sessionIdleSet: the value set here (None: SESSION_IDLE_MINUTES).
+        "sessionIdleMinutes": account_security.idle_minutes(db),
+        "sessionIdleSet": row.session_idle_minutes,
+        "sessionIdleDefault": int(settings.session_idle_minutes),
+        "passwordRule": {**password_policy.rule(db).view(), "text": password_policy.describe(password_policy.rule(db))},
+        "banner": row.banner_text or "",
+        "baseline": dict(password_policy.BASELINE),
     }
 
 
@@ -536,6 +544,43 @@ def put_sign_in_settings(ctx: AdminContext, body: Annotated[dict[str, Any] | Non
         if wanted_on != bool(row.two_step_required):
             changes.append(f"Two-step sign-in for everyone who signs in with a password: {'required' if row.two_step_required else 'not required'} → {'required' if wanted_on else 'not required'}.")
             row.two_step_required = wanted_on
+    rule_body = body.get("passwordRule")
+    if isinstance(rule_body, dict):
+        values, problem = password_policy.clean(rule_body)
+        if problem:
+            return refused(400, problem)
+        before = password_policy.rule(db)
+        columns = {"minLength": "password_min_length", "classes": "password_classes", "history": "password_history", "maxAgeDays": "password_max_age_days"}
+        for key, value in values.items():
+            setattr(row, columns[key], value)
+        db.flush()
+        after = password_policy.rule(db)
+        if after != before:
+            changes.append(f"Password rule: {password_policy.describe(before)} → {password_policy.describe(after)}.")
+    if "sessionIdleMinutes" in body:
+        wanted_idle = body.get("sessionIdleMinutes")
+        if wanted_idle in (None, "", 0, "0"):
+            new_idle = None
+        else:
+            try:
+                new_idle = int(str(wanted_idle).strip())
+            except ValueError:
+                new_idle = -1
+            if isinstance(wanted_idle, bool) or not account_security.MIN_IDLE_MINUTES <= new_idle <= account_security.MAX_IDLE_MINUTES:
+                return refused(400, f"Sign out after {account_security.MIN_IDLE_MINUTES} to {account_security.MAX_IDLE_MINUTES} minutes without activity, or leave it empty for SESSION_IDLE_MINUTES.")
+        if new_idle != row.session_idle_minutes:
+            def said(value: int | None) -> str:
+                return f"{value} minutes" if value else f"SESSION_IDLE_MINUTES ({int(settings.session_idle_minutes)} minutes)"
+
+            changes.append(f"Idle sign-out: {said(row.session_idle_minutes)} → {said(new_idle)}.")
+            row.session_idle_minutes = new_idle
+    if "banner" in body:
+        banner = str(body.get("banner") or "").replace("\r\n", "\n").strip()
+        if len(banner) > account_security.MAX_BANNER:
+            return refused(400, f"The sign-in notice is at most {account_security.MAX_BANNER} characters.")
+        if banner != (row.banner_text or ""):
+            changes.append("Sign-in notice: " + ("set." if banner and not row.banner_text else "changed." if banner else "removed."))
+            row.banner_text = banner
     sso = body.get("sso")
     if isinstance(sso, dict):
         provision = row.sso_provision
@@ -588,7 +633,7 @@ def put_sign_in_settings(ctx: AdminContext, body: Annotated[dict[str, Any] | Non
 
 
 @router.post("/sign-in-settings/test-email")
-def test_email(ctx: AdminContext, db: Session = Depends(get_db)):
+def test_email(ctx: AdminContext, background: BackgroundTasks, db: Session = Depends(get_db)):
     """Send a test email to oneself with the email server in force (Settings → Email (SMTP), else SMTP_*): once it arrives, password reset links may be sent with
     exactly these settings (CxMissionZero's isVerified)."""
 
@@ -606,6 +651,10 @@ def test_email(ctx: AdminContext, db: Session = Depends(get_db)):
     mailer.mark_verified(db, smtp)
     _audit_admin(db, ctx, action="auth.email.tested", reason=f"Test email sent to {to}; password reset links may use this email server.")
     db.commit()
+    # Copies of the licence agreement waiting for the email server go out now (app/services/terms_copy_service.py).
+    from app.services import terms_copy_service
+
+    background.add_task(terms_copy_service.deliver_with, db.get_bind())
     return _no_store({"message": f"A test message was sent to {to}.", **settings_view(db)})
 
 

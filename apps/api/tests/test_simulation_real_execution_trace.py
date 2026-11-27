@@ -16,6 +16,7 @@ from app.db.models.ai_system import AISystem
 from app.db.models.simulation import SimulationDefinition
 from app.db.session import Base, get_db
 from app.main import app
+from ai_system_approval_helpers import approve_ai_system
 
 
 PASSWORD = "Password123!"
@@ -118,7 +119,7 @@ def _create_ai_system(
         assert found is not None
         ai_system_id = found["id"]
 
-    activate = client.patch(f"/ai-systems/{ai_system_id}", headers=headers, json={"status": "active"})
+    activate = approve_ai_system(client, headers, ai_system_id, status="active")
     assert activate.status_code == 200, activate.text
 
     with session_local() as db:

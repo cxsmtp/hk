@@ -6,8 +6,10 @@ when its day and hour come (looked at every 5 minutes). As in CxMissionZero, the
 
 from __future__ import annotations
 
+from celery import Task
+
 from app.jobs.celery_app import celery_app
-from app.jobs.watchdog_schedule import INBOX_TASK, SELF_CHECK_TASK, STATUS_TASK, beat_entries  # noqa: F401 - one place to find them
+from app.jobs.watchdog_schedule import INBOX_TASK, SELF_CHECK_TASK, SELF_RECOVERY_TASK, STATUS_TASK, beat_entries  # noqa: F401 - one place to find them
 
 
 @celery_app.task(name=SELF_CHECK_TASK, acks_late=False)
@@ -30,3 +32,14 @@ def weekly_status() -> dict:
     from app.services.self_check import SelfCheck
 
     return {"sent": SelfCheck().status_tick()}
+
+
+@celery_app.task(name=SELF_RECOVERY_TASK, base=Task, acks_late=False)
+def self_recovery() -> dict:
+    """Self-recovery (app/services/self_recovery.py): a plain task, not LicensedTask, like backups and updates, so a
+    deactivated installation keeps itself healthy too."""
+
+    from app.services.self_recovery import SelfRecovery
+
+    result = SelfRecovery().run()
+    return {"skipped": bool(result.get("skipped")), "needsOem": len(result.get("needsOem") or [])}

@@ -20,6 +20,7 @@ from app.core.tenant import TenantContext
 from app.db.models.job_run import ScheduledJobRun
 from app.db.models.policy import ApprovalRequest
 from app.db.session import get_db
+from app.services.self_recovery import DIAGNOSTICS_URL, job_reference, plain_job_failure
 
 
 router = APIRouter(prefix="/ops", tags=["ops"])
@@ -35,6 +36,20 @@ class ScheduledJobRunResponse(BaseModel):
     finished_at: datetime
     status: str
     error_message: str | None = None
+    #: For a job of the whole installation that failed: its reference (the diagnostics bundle lists it) and where an
+    #: owner or admin downloads the bundle. Its error's text is never shown here.
+    reference: str | None = None
+    diagnostics_url: str | None = None
+
+
+def job_run_view(run: ScheduledJobRun) -> ScheduledJobRunResponse:
+    """One run as every tenant sees it: a job of the whole installation that failed says when and its reference, in
+    plain words; its error (which can name other tenants, hosts or internals) stays in the diagnostics bundle."""
+
+    item = ScheduledJobRunResponse.model_validate(run)
+    if run.tenant_id is None and str(run.status) != "success":
+        return item.model_copy(update={"error_message": plain_job_failure(run), "reference": job_reference(run.id), "diagnostics_url": DIAGNOSTICS_URL})
+    return item
 
 
 class JobStatusItemResponse(BaseModel):
@@ -118,7 +133,7 @@ def list_job_status(
     items = [
         JobStatusItemResponse(
             job_name=job_name,
-            runs=[ScheduledJobRunResponse.model_validate(run) for run in runs],
+            runs=[job_run_view(run) for run in runs],
         )
         for job_name, runs in sorted(grouped.items())
     ]

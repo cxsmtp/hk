@@ -59,11 +59,13 @@ export type AboutView = {
   version: string;
   versionLabel: string;
   licence: { active: boolean; until: string; daysLeft: number; activation: { org: string; expires: string; at?: string } | null; message: string };
-  terms: { version: string; accepted: boolean; at: string | null };
+  terms: { version: string; accepted: boolean; at: string | null; acceptanceId?: string | null; scope?: "organisation" | "user" | null; canManage?: boolean };
   organisationName: string;
   changelog: string;
   notices: { name: string; text: string } | null;
   canUpdate: boolean;
+  /** Where the data is (Settings → Compliance). */
+  dataResidency?: { location: string; region: string; statement: string };
 };
 
 export const DEFAULT_BRANDING: BrandingView = {

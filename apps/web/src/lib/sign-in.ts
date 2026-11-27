@@ -96,8 +96,19 @@ export type SignInSettings = {
   };
   email: { configured: boolean; host: string; port: number; from: string; tested: boolean };
   serverAddress: string;
+  /** The idle sign-out in force; sessionIdleSet: the value set on Settings → Sign-in (null: SESSION_IDLE_MINUTES). */
   sessionIdleMinutes: number;
+  sessionIdleSet?: number | null;
+  sessionIdleDefault?: number;
+  /** The password rule (apps/api/app/services/password_policy.py; /settings/guide/compliance). */
+  passwordRule?: PasswordRule & { text: string };
+  /** The notice shown on the sign-in page. */
+  banner?: string;
+  /** What "Apply the recommended baseline" sets. */
+  baseline?: PasswordRule & { sessionIdleMinutes: number };
 };
+
+export type PasswordRule = { minLength: number; classes: number; history: number; maxAgeDays: number };
 
 export type SignInPerson = {
   id: string;

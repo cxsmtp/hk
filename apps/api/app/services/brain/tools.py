@@ -16,6 +16,7 @@ from app.db.models.enforcement import EnforcementEvent
 from app.db.models.evidence import EvidenceEdge, EvidenceNode
 from app.db.models.finding import Finding
 from app.db.models.job_run import ScheduledJobRun
+from app.services.self_recovery import plain_job_failure
 from app.db.models.maturity import ControlConflict
 from app.db.models.monitoring import Connector
 from app.db.models.policy import ApprovalRequest, PolicyPack, PolicyVersion
@@ -503,7 +504,8 @@ def _tool_ops_jobs_status(ctx: ToolContext, args: dict[str, Any]) -> dict[str, A
                 "tenant_id": row.tenant_id,
                 "started_at": row.started_at.isoformat() if row.started_at else None,
                 "finished_at": row.finished_at.isoformat() if row.finished_at else None,
-                "error_message": row.error_message,
+                # A job of the whole installation: when and its reference, never its error's text (self_recovery.py).
+                "error_message": plain_job_failure(row) if row.tenant_id is None and row.status != "success" else row.error_message,
             }
         )
 
@@ -1036,7 +1038,10 @@ def _tool_aiiam_mint_token(ctx: ToolContext, args: dict[str, Any]) -> dict[str, 
                 ApprovalRequest.ai_system_id == ai_system_id,
             )
         )
-        if req is None or req.status != "approved":
+        from app.services.ai_system_approval_service import is_ai_system_approval_request
+
+        # The approval of the AI system itself is not an approval to mint a token for it.
+        if req is None or req.status != "approved" or is_ai_system_approval_request(req):
             raise ValueError("approval_request_id is not approved for this ai_system_id")
 
     raw_token = secrets.token_urlsafe(32)

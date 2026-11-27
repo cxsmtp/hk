@@ -1,4 +1,4 @@
-FROM python:3.11-slim@sha256:9c900dea9e8fb7e16277c179b555cc72d29a352dbc33cff48ad5a0412fd5bfc7 AS builder
+FROM python:3.11-slim@sha256:61e01f72680f86a5279ad510818ab7b2ee9f049822589d4e34e33e044360356c AS builder
 
 COPY apps/api/requirements.lock /tmp/requirements.lock
 # Building behind a company proxy that inspects TLS? Pass its CA certificate (as CxMissionZero's Dockerfile does):
@@ -20,7 +20,7 @@ RUN --mount=type=secret,id=ca,required=false \
       pip wheel --require-hashes --no-deps --no-cache-dir --wheel-dir /wheels-ner -r /tmp/requirements-ner.lock && rm -f /tmp/ca.pem; \
     elif [ -n "$HAWK_NER_MODEL" ]; then echo "HAWK_NER_MODEL: only en_core_web_sm is pinned" >&2; exit 1; fi
 
-FROM python:3.11-slim@sha256:9c900dea9e8fb7e16277c179b555cc72d29a352dbc33cff48ad5a0412fd5bfc7 AS api-base
+FROM python:3.11-slim@sha256:61e01f72680f86a5279ad510818ab7b2ee9f049822589d4e34e33e044360356c AS api-base
 
 WORKDIR /workspace/apps/api
 

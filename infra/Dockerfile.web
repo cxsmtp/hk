@@ -1,13 +1,14 @@
 # The web console. Stages:
 #   build, deps, integrity, runtime  the production image deploy/compose.yaml runs (target: runtime);
 #   dev                              the last stage, the default for the development compose files (npm run dev).
-# The base image is pinned by digest, the same node:20-alpine infra/Dockerfile.web.demo uses.
+# The base image is pinned by digest: node 22 (LTS; node 20 is past its end of life). The runtime takes Alpine's security
+# fixes released since that image was made (apk upgrade), so the container scan (.github/workflows/security.yml) stays clean.
 #
 # The console is built once, on the machine that builds (BUILDPLATFORM), and the same files go into the amd64 and the
 # arm64 image: their file lists are then the same, byte for byte, as the release workflow requires (/settings/guide/updates).
 # Only the production node_modules are installed for each platform (deps).
 
-FROM --platform=$BUILDPLATFORM node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS build
+FROM --platform=$BUILDPLATFORM node:22-alpine@sha256:1314fb30ec37592d5845e5a160d522c0e680972aa534549940b8d73bde88481a AS build
 
 WORKDIR /workspace/apps/web
 
@@ -39,7 +40,7 @@ RUN npm run build \
     && rm -rf node_modules && npm cache clean --force
 
 # The production dependencies, for the platform the image is for.
-FROM node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS deps
+FROM node:22-alpine@sha256:1314fb30ec37592d5845e5a160d522c0e680972aa534549940b8d73bde88481a AS deps
 WORKDIR /workspace/apps/web
 COPY apps/web/package.json apps/web/package-lock.json ./
 RUN --mount=type=secret,id=ca,required=false \
@@ -48,7 +49,7 @@ RUN --mount=type=secret,id=ca,required=false \
 
 # ---- The file list: every file of the console the image ships, with its SHA-256 (/settings/guide/updates) -----------------
 # Not node_modules: its native packages differ between amd64 and arm64. Signed by the release workflow.
-FROM --platform=$BUILDPLATFORM python:3.11-slim@sha256:9c900dea9e8fb7e16277c179b555cc72d29a352dbc33cff48ad5a0412fd5bfc7 AS integrity
+FROM --platform=$BUILDPLATFORM python:3.11-slim@sha256:61e01f72680f86a5279ad510818ab7b2ee9f049822589d4e34e33e044360356c AS integrity
 ARG HAWK_COMMIT=""
 ARG HAWK_REPOSITORY=""
 COPY infra/scripts/integrity.py /tool/infra/scripts/integrity.py
@@ -59,10 +60,13 @@ COPY --from=build /workspace/VERSION /workspace/VERSION
 RUN python /tool/infra/scripts/integrity.py write /workspace --image web --commit "$HAWK_COMMIT" --repository "$HAWK_REPOSITORY" \
       --tree apps/web --tree packages --file VERSION --skip-dir apps/web/node_modules --skip-dir apps/web/.next/cache
 
-FROM node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS runtime
+FROM node:22-alpine@sha256:1314fb30ec37592d5845e5a160d522c0e680972aa534549940b8d73bde88481a AS runtime
 
-# No package manager at run time (as CxMissionZero's image): Next.js is started with node directly.
-RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
+# Alpine's security fixes, then no package manager at run time (as CxMissionZero's image): Next.js is started with node.
+RUN --mount=type=secret,id=ca,required=false \
+    if [ -s /run/secrets/ca ]; then cat /etc/ssl/certs/ca-certificates.crt /run/secrets/ca > /tmp/ca.pem && export SSL_CERT_FILE=/tmp/ca.pem; fi \
+    && apk upgrade --no-cache && rm -f /tmp/ca.pem \
+    && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
     /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /opt/yarn-* /usr/local/bin/yarn /usr/local/bin/yarnpkg
 
 WORKDIR /workspace/apps/web
@@ -86,7 +90,7 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
 
 CMD ["node", "node_modules/next/dist/bin/next", "start", "--hostname", "0.0.0.0", "--port", "3000"]
 
-FROM node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS dev
+FROM node:22-alpine@sha256:1314fb30ec37592d5845e5a160d522c0e680972aa534549940b8d73bde88481a AS dev
 
 WORKDIR /workspace/apps/web
 

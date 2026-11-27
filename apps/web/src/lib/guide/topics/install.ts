@@ -75,14 +75,50 @@ export const install: GuideTopic = {
             ["`HAWK_RELEASE`", "empty", "Empty: build the images from this folder. `latest`, `stable` or a version such as `0.2.0`: run the published images, with the updater, so owners and admins update from Settings → Updates."],
             ["`ADMIN_EMAIL`", "`admin@hawk.local`", "The first administrator's email. With `ADMIN_PASSWORD` too, that is their first password instead of a generated one."],
             ["`FIRST_ADMIN`", "empty", "`setup-code`: print a setup code in the log instead, and create the first administrator on the sign-in page."],
-            ["`ACCEPT_TERMS`", "empty", "An email: the person deploying accepts the terms of use for the organisation and everyone, on record."],
+            ["`ACCEPT_TERMS`", "empty", "An email: the person deploying accepts the licence agreement for the organisation and everyone, on record (a copy is emailed to them)."],
             ["`ORGANISATION_NAME`", "empty", "The organisation's name (otherwise the administrator gives it when accepting the terms)."],
+            ["`LICENSOR_LEGAL_NAME`, `LICENSOR_ADDRESS`, `LICENSOR_NOTICE_EMAIL`", "the order or activation code", "The licensor's legal name, registered address and notice email, written into the licence agreement."],
+            ["`GOVERNING_LAW`, `DISPUTE_FORUM`", "UAE law (Dubai); DIAC arbitration in Dubai", "The licence agreement's governing law and disputes forum."],
+            ["`LIABILITY_CAP_NO_FEES`", "AED 500", "The licence agreement's liability cap when no fees were paid. Changing any of these asks every administrator to accept the agreement again."],
             ["`CELERY_WORKER_CONCURRENCY`", "`4`", "How many background jobs the worker runs at once."],
           ],
         },
         {
           kind: "p",
           text: "The other settings (HTTPS certificates, backups, email, updates, the self-check, the proxy) are described on their own pages of this guide.",
+        },
+        {
+          kind: "table",
+          head: ["Setting", "Default", "What it does"],
+          rows: [
+            ["`HAWK_API_MEMORY`", "`2g`", "The most memory the api may use. Each service has its own cap: `HAWK_WORKER_MEMORY` (`3g`), `HAWK_POSTGRES_MEMORY` (`2g`), `HAWK_MIGRATE_MEMORY` (`2g`), `HAWK_WEB_MEMORY` (`1g`), `HAWK_REDIS_MEMORY` (`1g`), `HAWK_PROXY_MEMORY` (`512m`), `HAWK_BEAT_MEMORY` (`512m`), `HAWK_UPDATER_MEMORY` (`256m`). Raise one if its service is stopped for lack of memory (`docker compose -f deploy/compose.yaml ps` shows it restarting)."],
+          ],
+        },
+      ],
+    },
+    {
+      id: "hardening",
+      title: "How the installation is protected",
+      who: "Whoever runs the server",
+      blocks: [
+        {
+          kind: "p",
+          text: "The installer sets every service up to the CIS Docker Benchmark, with nothing to do on your side:",
+        },
+        {
+          kind: "list",
+          items: [
+            "Every service runs as a fixed user that is not root, with no Linux capabilities, no way to gain privileges, a read-only file system (only its data and a scratch folder can be written), a memory cap, a CPU share, at most 512 processes, a health check and a restart policy. Logs are rotated.",
+            "Only the proxy answers on the network (`BIND_ADDRESS`, `PORT`, `HTTP_REDIRECT_PORT`). PostgreSQL and Redis are on an internal network of their own: only the api, worker, beat and migrate services reach them, and they reach nothing outside this machine.",
+            "PostgreSQL accepts only SCRAM-SHA-256 passwords, over TLS (with a certificate the installer makes for it, in the `secrets` folder), and logs every connection and disconnection, schema changes and slow statements: `docker compose -f deploy/compose.yaml logs postgres`.",
+            "Redis needs its password, and the commands that would wipe, reconfigure or list the whole store are switched off.",
+            "PostgreSQL, Redis and every image Hawk AI is built on are pinned to an exact, checked version. Each published image carries a list of its components (an SBOM) and is scanned for known vulnerabilities before it is published.",
+            "The updater is the one service with access to Docker, which it needs to replace the others: it has no network at all, runs as an ordinary user in the Docker socket's group, and acts only on what an owner or admin asks from Settings → Updates.",
+          ],
+        },
+        {
+          kind: "p",
+          text: "At each run the installer also checks the machine itself (firewall, SSH, automatic security updates, time, disk encryption, the audit daemon) and prints Pass or Check for each; [Settings → Backups & health](/settings/backups) shows the same list under the self-check. It changes nothing on the machine.",
         },
       ],
     },

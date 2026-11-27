@@ -13,7 +13,8 @@ test("the Settings menu has FTR's groups and items, in FTR's order, with Licensi
   assert.deepEqual(labels(settingsNav(ALL)), [
     ["People", ["People", "Teams", "Roles & permissions", "Sign-in"]],
     ["Licensing", ["Activation codes"]],
-    ["Records", ["Audit log", "Connector API activity"]],
+    ["Records", ["Audit log", "Connector API activity", "Compliance"]],
+    ["Workflow", ["AI system approvals"]],
     ["System", ["General", "Branding", "Email (SMTP)", "Single sign-on", "HTTPS", "Updates", "Backups & health", "Hands-off", "Network & proxy", "Get help", "Guide", "About"]],
   ]);
   // Every item is a page.
@@ -26,17 +27,20 @@ test("each person sees only what their role allows; the System group only with a
   // theirs through Jump to and Get help).
   assert.deepEqual(labels(settingsNav(["dashboard.view"])), [["People", ["People", "Teams"]]]);
   // An Auditor: the records too.
-  assert.deepEqual(labels(settingsNav(["dashboard.view", "audit.view"])), [["People", ["People", "Teams"]], ["Records", ["Audit log", "Connector API activity"]]]);
+  assert.deepEqual(labels(settingsNav(["dashboard.view", "audit.view"])), [["People", ["People", "Teams"]], ["Records", ["Audit log", "Connector API activity", "Compliance"]]]);
   // A support desk: Get help, and the Guide and About with it.
   assert.deepEqual(labels(settingsNav(["support.manage"]))[1], ["System", ["Get help", "Guide", "About"]]);
   assert.ok(!mayOpen("/settings/email", ["dashboard.view"]) && mayOpen("/settings/email", ["settings.manage"]) && !mayOpen("/settings/nope", ALL));
+  // AI system approvals: owners and admins set the policy; whoever sees the inventory reads it and decides what their
+  // role may approve.
+  assert.deepEqual(labels(settingsNav(["dashboard.view", "discovery.view"])), [["People", ["People", "Teams"]], ["Workflow", ["AI system approvals"]]]);
   assert.ok(isSettingsItemActive("/settings/people", "/settings/people") && !isSettingsItemActive("/settings/peoples", "/settings/people"));
 });
 
 test("Jump to finds Settings pages by their name and by 'settings' and the group's name", () => {
   const entries = settingsJumpEntries(ALL);
   assert.deepEqual(jumpMatches(entries, "settings email").map((e) => e.href), ["/settings/email"]);
-  assert.deepEqual(jumpMatches(entries, "records").map((e) => e.title), ["Audit log", "Connector API activity"]);
+  assert.deepEqual(jumpMatches(entries, "records").map((e) => e.title), ["Audit log", "Connector API activity", "Compliance"]);
   assert.equal(jumpMatches(entries, "").length, entries.length);
 });
 
@@ -69,7 +73,7 @@ test("General, Branding, Email (SMTP) and About keep FTR's panels, controls and 
   const email = source("app/settings/email/page.tsx");
   for (const text of ["Email server (SMTP)", "Not tested: nothing is sent until it is", "Implicit TLS", "Check the mail server&apos;s certificate", "The server needs a sign-in", "Kept: type to replace", "Who may reset a forgotten password by email", "Links in emails point at", "Test connection", "Send test email", "Send a test to (you by default)"]) assert.ok(email.includes(text), text);
   const about = source("app/settings/about/page.tsx");
-  for (const text of ["about-facts", "On premise, your data stays yours.", "Terms of use &amp; license", "What is new <small>the latest three versions; earlier ones ten at a time</small>", "earlier version", "Versions and updates"]) assert.ok(about.includes(text), text);
+  for (const text of ["about-facts", "On premise, your data stays yours.", "Licence agreement &amp; terms of use", "What is new <small>the latest three versions; earlier ones ten at a time</small>", "earlier version", "Versions and updates"]) assert.ok(about.includes(text), text);
   for (const page of [general, branding, email, about]) assert.ok(page.includes('import "../ftr-settings.css"'));
 });
 

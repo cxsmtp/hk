@@ -15,8 +15,8 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.routers import account_boundary, action_integrity, activity_audit, agui, agents, ai_discovery, ai_iam, ai_orchestration, ai_systems, ai_tools_usage, audit, auditor, auth, banking_transaction_integrity, brain, checkmarx, continuous_assurance, control_coverage, coverage, dashboard, deployments, discovery, discovery_adv, discovery_assets, discovery_capabilities, discovery_collectors, discovery_ecosystems, discovery_erg, discovery_exposure, discovery_scans, discovery_source_connections, discovery_surface_sources, discovery_targets, endpoint_agent, enforcement, executive_mcp, executive_remote_mcp, extension, external_risk, findings, gateway, guardian_contracts_v2, investigations, kb, llm_gateway, maturity_curve, monitoring, native_controls, onprem, ops, policies, policy_pack_platform, runtime, runtime_control, runtime_intelligence, scans, shadow_ai, simulation_policies, simulations, surface_coverage, system, trust_center, user_visibility
-from app.api.routers import access, backups, claude_enterprise, evidence_signing, hands_off, https, iam, licence, network, records, settings_console, sign_in, support, updates
-from app.api.routers import detection
+from app.api.routers import access, backups, claude_enterprise, compliance, diagnostics, evidence_signing, hands_off, https, iam, licence, network, records, settings_console, sign_in, support, updates
+from app.api.routers import ai_system_approvals, detection
 from app.core.access_gate import AccessRequired, access_required_response
 from app.core.config import configured_secret_sources, settings
 from app.core.licence_gate import licence_gate
@@ -86,6 +86,10 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     if is_postgres(settings.database_url):
         acknowledge_start(PACKAGE_VERSION)
         integrity_service.start_in_background()
+        # Self-recovery (app/services/self_recovery.py) runs here too when the worker or the scheduler stopped.
+        from app.services import self_recovery
+
+        self_recovery.start_guard()
     print(f"Hawk AI {APP_VERSION} running", flush=True)
     try:
         yield
@@ -690,7 +694,19 @@ def health():
         "strict_schema": strict_schema,
         "schema_healthy": schema_report.healthy,
         "detection": _detection_health(),
+        "clock": _clock_health(),
     }
+
+
+def _clock_health() -> dict:
+    """Is the host's clock synchronised by NTP (CERT-In's directions, DESC ISR; Settings → Compliance)? Read from the
+    kernel only, so this stays instant: true, false, or null where it cannot be read."""
+    try:
+        from app.services.compliance_service import kernel_clock
+
+        return {"synchronized": kernel_clock()["synchronized"]}
+    except Exception as exc:  # noqa: BLE001 - health must answer
+        return {"synchronized": None, "error": type(exc).__name__}
 
 
 def _detection_health() -> dict:
@@ -738,6 +754,7 @@ app.include_router(licence.router)
 app.include_router(https.router)
 app.include_router(backups.router)
 app.include_router(updates.router)
+app.include_router(diagnostics.router)
 app.include_router(records.router)
 app.include_router(evidence_signing.router)
 app.include_router(support.router)
@@ -745,6 +762,7 @@ app.include_router(detection.router)
 app.include_router(network.router)
 app.include_router(hands_off.router)
 app.include_router(settings_console.router)
+app.include_router(compliance.router)
 app.include_router(access.router)
 app.include_router(account_boundary.router)
 app.include_router(action_integrity.router)
@@ -754,6 +772,7 @@ app.include_router(ai_orchestration.router)
 app.include_router(agui.router)
 app.include_router(kb.router)
 app.include_router(ai_systems.router)
+app.include_router(ai_system_approvals.router)
 app.include_router(ai_tools_usage.router)
 app.include_router(executive_mcp.router)
 app.include_router(executive_remote_mcp.router)

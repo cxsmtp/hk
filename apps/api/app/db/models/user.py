@@ -38,6 +38,10 @@ class User(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     # Single sign-on: the identity provider's account this person is linked to, by (issuer, subject).
     sso_issuer: Mapped[Optional[str]] = mapped_column(String(300), nullable=True)
     sso_subject: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    # The password rule (app/services/password_policy.py): when the password was last set (None: before migration
+    # 0104, counted from created_at) and the bcrypt hashes of the earlier ones, newest first (a JSON list).
+    password_changed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    password_history: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     tenant_roles = relationship("UserTenantRole", back_populates="user", cascade="all,delete-orphan")
 

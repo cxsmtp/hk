@@ -558,6 +558,11 @@ def enforce(
         )
 
     ai_system: AISystem | None = None
+    if ai_system_id:
+        from app.services.ai_system_approval_service import RESPONSE_ACTIONS, allow_response_after_one_time_use
+
+        if action in RESPONSE_ACTIONS:
+            allow_response_after_one_time_use(db, tenant_id=tenant_id, ai_system_id=ai_system_id)
     governance_resolution = resolve_ai_system_status(
         ai_system_id,
         {
@@ -749,6 +754,13 @@ def enforce(
         if commit_logs and emit_logs:
             db.commit()
         raise GovernanceViolationError("lifecycle_state_prohibited", status_code=403)
+
+    if ai_system is not None:
+        # The first governed use of a system approved one time consumes the approval (the rest of this use still
+        # passes; the next one needs a new approval).
+        from app.services.ai_system_approval_service import consume_one_time
+
+        consume_one_time(db, tenant_id=tenant_id, ai_system_id=ai_system.id, action=action)
 
     ok_payload = _metadata_payload(
         reason_code="ok",

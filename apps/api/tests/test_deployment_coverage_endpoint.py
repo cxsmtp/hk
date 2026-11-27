@@ -11,6 +11,7 @@ os.environ.setdefault("DATABASE_URL", "sqlite+pysqlite:///:memory:")
 
 from app.db.session import Base, get_db
 from app.main import app
+from ai_system_approval_helpers import approve_ai_system
 
 
 PASSWORD = "Password123!"
@@ -72,7 +73,7 @@ def _create_ai_system(client: TestClient, *, headers: dict[str, str], risk_tier:
     )
     assert created.status_code == 200, created.text
     ai_system_id = created.json()["id"]
-    activated = client.patch(f"/ai-systems/{ai_system_id}", headers=headers, json={"status": "active"})
+    activated = approve_ai_system(client, headers, ai_system_id, status="active")
     assert activated.status_code == 200, activated.text
     return ai_system_id
 

@@ -8,6 +8,7 @@ from app.db.models.enforcement import EnforcementEvent
 from app.db.models.policy import ApprovalRequest
 from app.db.session import SessionLocal
 from app.jobs.celery_app import celery_app
+from app.services.ai_system_approval_service import expire_due, is_ai_system_approval_request
 from app.services.audit_service import write_audit_log
 from app.services.evidence_service import create_evidence_node, link_evidence_nodes
 from app.services.job_run_service import tracked_scheduled_job
@@ -36,6 +37,9 @@ def resolve_timed_out_approvals(tenant_id: str | None = None, batch_limit: int =
 
         resolved_ids: list[str] = []
         for req in pending:
+            if is_ai_system_approval_request(req):
+                # Expired by expire_ai_system_approvals, which also puts the AI system back as it was.
+                continue
             created_at = req.created_at
             if created_at.tzinfo is None:
                 created_at = created_at.replace(tzinfo=timezone.utc)
@@ -146,6 +150,25 @@ def resolve_timed_out_approvals(tenant_id: str | None = None, batch_limit: int =
 def run_sla_timeout_checks() -> dict:
     with tracked_scheduled_job("approval_sla_timeout", tenant_id=None):
         return resolve_timed_out_approvals(tenant_id=None, batch_limit=500)
+
+
+@celery_app.task(name="app.jobs.enforcement_jobs.expire_ai_system_approvals")
+def expire_ai_system_approvals(tenant_id: str | None = None, batch_limit: int = 500) -> dict:
+    """Time-bound AI system approvals whose time is up, and approval requests that waited too long: the systems go to
+    pending re-approval (or back to where they were), each with an audit entry and evidence
+    (app/services/ai_system_approval_service.py)."""
+
+    with tracked_scheduled_job("ai_system_approval_expiry", tenant_id=tenant_id):
+        db = SessionLocal()
+        try:
+            result = expire_due(db, tenant_id=tenant_id, batch_limit=batch_limit)
+            db.commit()
+            return {"tenant_id": tenant_id, **result}
+        except Exception:
+            db.rollback()
+            raise
+        finally:
+            db.close()
 
 
 @celery_app.task(name="app.jobs.enforcement_jobs.ocr_extract_text")

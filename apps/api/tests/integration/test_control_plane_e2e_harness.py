@@ -23,6 +23,7 @@ from app.services import control_plane_health_service
 from app.services.governance_guard import GovernanceFailSecureError
 from app.services.governance_resolution import resolve_ai_system_status
 from app.services.snapshot_service import resolve_artifact_file_path
+from tests.ai_system_approval_helpers import SELF_APPROVAL_POLICY
 
 
 PASSWORD = "Password123!"
@@ -115,15 +116,35 @@ def _create_active_ai_system(client: TestClient, *, headers: dict[str, str], nam
     correlation_ids.append(corr_create)
     ai_system_id = str(created.get("id") or "")
     assert ai_system_id, "ai_system_create: id missing"
-    _updated, corr_update = _request_json(
+    # An AI system becomes active only through an approval (Settings → AI system approvals). The harness tenant lets
+    # one owner ask and approve, a policy an owner may choose.
+    _policy, corr_policy = _request_json(
         client,
-        method="PATCH",
-        path=f"/ai-systems/{ai_system_id}",
+        method="PUT",
+        path="/settings/ai-system-approvals",
         headers=headers,
-        body={"status": "active", "risk_tier": "HIGH"},
-        label="ai_system_update",
+        body=SELF_APPROVAL_POLICY,
+        label="ai_system_approval_policy",
     )
-    correlation_ids.append(corr_update)
+    correlation_ids.append(corr_policy)
+    asked, corr_ask = _request_json(
+        client,
+        method="POST",
+        path=f"/ai-systems/{ai_system_id}/approval-requests",
+        headers=headers,
+        body={"scope": "blanket", "target_status": "active"},
+        label="ai_system_approval_request",
+    )
+    correlation_ids.append(corr_ask)
+    _decided, corr_decide = _request_json(
+        client,
+        method="POST",
+        path=f"/ai-system-approvals/{asked['request']['id']}/decision",
+        headers=headers,
+        body={"decision": "approve", "scope": "blanket"},
+        label="ai_system_approval_decision",
+    )
+    correlation_ids.append(corr_decide)
     return ai_system_id, correlation_ids
 
 

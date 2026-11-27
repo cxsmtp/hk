@@ -46,7 +46,8 @@ export const audit: GuideTopic = {
           items: [
             "**Export CSV** downloads `audit.csv`, with the filters in use.",
             "**Export JSON Lines** downloads `audit.jsonl`: every entry with its chain code, for a SIEM.",
-            "Each export comes with its signature beside it (`audit.csv.sig.json`, `audit.jsonl.sig.json`). The activity and connector exports, and the auditor's export under Reports → Automated Auditor (a signed list of all its files), are signed the same way.",
+            "**Export CEF** downloads `audit.cef`: one ArcSight Common Event Format line per entry (who, from where, what, the outcome, the sequence number and chain code), which ArcSight, QRadar, Microsoft Sentinel and Splunk read as they are.",
+            "Each export comes with its signature beside it (`audit.csv.sig.json`, `audit.jsonl.sig.json`, `audit.cef.sig.json`). The activity and connector exports, and the auditor's export under Reports → Automated Auditor (a signed list of all its files), are signed the same way.",
           ],
         },
       ],

@@ -85,20 +85,29 @@ export async function changeTemporaryPassword(page: Page, current: string, next:
   await expect(page.getByRole("heading", { name: "Choose a new password" })).toBeHidden();
 }
 
-/** Read the terms of use to the end, tick, and accept (naming the organisation when asked). */
-export async function acceptTerms(page: Page, organisation = ADMIN.organisation): Promise<void> {
-  await expect(page.getByRole("heading", { name: /^Terms of use · version / })).toBeVisible();
+/**
+ * Read the terms to the end and accept them: an owner or admin accepts the licence agreement for the organisation
+ * (company, full name and email prefilled from the account, "authorised"); anyone else the terms of use for users.
+ */
+export async function acceptTerms(page: Page, organisation = ADMIN.organisation, fullName = "E2E Administrator"): Promise<void> {
+  await expect(page.getByRole("heading", { name: /^(Licence agreement|Terms of use) · version / })).toBeVisible();
   const text = page.locator(".terms-text");
   await expect(text).not.toContainText("Loading…");
   await text.evaluate((element) => {
     element.scrollTop = element.scrollHeight;
     element.dispatchEvent(new Event("scroll"));
   });
-  const organisationName = page.locator("#terms-org");
-  if (await organisationName.isVisible()) await organisationName.fill(organisation);
-  const box = page.getByRole("checkbox");
-  await expect(box).toBeEnabled();
-  await box.check();
+  const read = page.locator("#terms-read");
+  await expect(read).toBeEnabled();
+  await read.check();
+  const company = page.locator("#terms-company");
+  if (await company.isVisible()) {
+    if (!(await company.inputValue())) await company.fill(organisation);
+    const name = page.locator("#terms-name");
+    if (!(await name.inputValue())) await name.fill(fullName);
+    await expect(page.locator("#terms-email")).not.toHaveValue("");
+    await page.locator("#terms-authorised").check();
+  }
   await page.getByRole("button", { name: "Accept and continue" }).click();
   await expect(page.locator("[data-ui=access-gate]")).toBeHidden();
 }

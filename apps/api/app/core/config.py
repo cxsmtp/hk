@@ -229,6 +229,15 @@ class Settings(BaseSettings):
     smtp_pass: str = ""
     smtp_from: str = ""
     smtp_from_name: str = "Hawk AI"
+    # The licence agreement's parties and forum (TERMS.md, app/services/terms_service.py): written into the terms
+    # where they are shown, accepted and emailed. Empty: the defaults in terms_service.TERMS_DEFAULTS. Changing one
+    # changes the accepted text (its hash), so administrators are asked to accept again.
+    licensor_legal_name: str = ""
+    licensor_address: str = ""
+    licensor_notice_email: str = ""
+    governing_law: str = ""
+    dispute_forum: str = ""
+    liability_cap_no_fees: str = ""
 
     web_origin: str = "http://localhost:3000"
     cors_origins: str = ""

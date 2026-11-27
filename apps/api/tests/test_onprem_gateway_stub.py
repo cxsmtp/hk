@@ -19,6 +19,7 @@ from app.main import app
 from app.onprem_gateway.client import OnPremGatewayClient, OnPremRetryableError
 from app.onprem_gateway import main as local_gateway_module
 from app.onprem_gateway.main import _gateway_from_env, app as local_gateway_app
+from ai_system_approval_helpers import approve_ai_system
 
 
 PASSWORD = "Password123!"
@@ -119,7 +120,7 @@ def _create_approved_ai_system(client: TestClient, *, headers: dict[str, str]) -
     )
     assert created.status_code == 200, created.text
     ai_system_id = created.json()["id"]
-    approved = client.patch(f"/ai-systems/{ai_system_id}", headers=headers, json={"status": "approved"})
+    approved = approve_ai_system(client, headers, ai_system_id)
     assert approved.status_code == 200, approved.text
     return ai_system_id
 

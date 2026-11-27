@@ -20,7 +20,7 @@ from __future__ import annotations
 from email.utils import parseaddr
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Body, Depends
+from fastapi import APIRouter, BackgroundTasks, Body, Depends
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse, Response
 from sqlalchemy.orm import Session
@@ -29,7 +29,7 @@ from app.core.config import settings
 from app.core.rbac import require_permission
 from app.core.tenant import TenantContext, require_tenant
 from app.db.session import get_db
-from app.services import account_security, branding, mailer, password_reset_service
+from app.services import account_security, branding, mailer, password_reset_service, terms_copy_service
 from app.services.audit_service import write_audit_log
 from app.version import APP_VERSION, PACKAGE_VERSION, VERSION_FILE
 
@@ -158,8 +158,15 @@ def get_smtp(ctx: SettingsContext, db: Session = Depends(get_db)):
     return JSONResponse(view, headers=NO_STORE)
 
 
+def _send_waiting_copies(background: BackgroundTasks, db: Session) -> None:
+    """A test of the email server passed: the copies of the licence agreement waiting for it go out now
+    (app/services/terms_copy_service.py)."""
+
+    background.add_task(terms_copy_service.deliver_with, db.get_bind())
+
+
 @router.put("/settings/smtp")
-async def put_smtp(ctx: SettingsContext, body: Annotated[dict[str, Any] | None, Body()] = None, db: Session = Depends(get_db)):
+async def put_smtp(ctx: SettingsContext, background: BackgroundTasks, body: Annotated[dict[str, Any] | None, Body()] = None, db: Session = Depends(get_db)):
     body = body if isinstance(body, dict) else {}
     incoming = body.get("smtp") if isinstance(body.get("smtp"), dict) else None
     changed: list[str] = []
@@ -189,6 +196,7 @@ async def put_smtp(ctx: SettingsContext, body: Annotated[dict[str, Any] | None, 
             db.commit()
             return _refused(400, f"Saved, but the test failed: {error}")
         mailer.mark_verified(db, smtp)
+        _send_waiting_copies(background, db)
     if "passwordReset" in body:
         wanted = str(body.get("passwordReset") or "")
         if wanted not in password_reset_service.RESET_POLICIES:
@@ -201,7 +209,7 @@ async def put_smtp(ctx: SettingsContext, body: Annotated[dict[str, Any] | None, 
 
 
 @router.post("/settings/smtp/test")
-async def test_smtp(ctx: SettingsContext, db: Session = Depends(get_db)):
+async def test_smtp(ctx: SettingsContext, background: BackgroundTasks, db: Session = Depends(get_db)):
     smtp = mailer.current()
     try:
         await run_in_threadpool(mailer.test_connection, smtp)
@@ -212,12 +220,13 @@ async def test_smtp(ctx: SettingsContext, db: Session = Depends(get_db)):
     mailer.mark_verified(db, smtp)
     _audit(db, ctx, "settings.smtp.test", smtp.host, {"ok": True})
     db.commit()
+    _send_waiting_copies(background, db)
     signed = " and signed in" if smtp.signs_in else ""
     return JSONResponse({**smtp_view(db), "message": f"Connected to {smtp.host}:{smtp.port}{signed}. Email can be sent."}, headers=NO_STORE)
 
 
 @router.post("/settings/smtp/send-test")
-async def send_test_smtp(ctx: SettingsContext, body: Annotated[dict[str, Any] | None, Body()] = None, db: Session = Depends(get_db)):
+async def send_test_smtp(ctx: SettingsContext, background: BackgroundTasks, body: Annotated[dict[str, Any] | None, Body()] = None, db: Session = Depends(get_db)):
     body = body if isinstance(body, dict) else {}
     to = mailer.plain(body.get("to")).lower() or (str(ctx.user.email).lower() if ctx.user else "")
     if not mailer.EMAIL.match(to) or parseaddr(to)[1] != to:
@@ -240,6 +249,7 @@ async def send_test_smtp(ctx: SettingsContext, body: Annotated[dict[str, Any] | 
     mailer.mark_verified(db, smtp)
     _audit(db, ctx, "settings.smtp.sendTest", to, {"ok": True})
     db.commit()
+    _send_waiting_copies(background, db)
     return JSONResponse({"message": f"A test message went to {to}."}, headers=NO_STORE)
 
 
@@ -263,6 +273,26 @@ def _read(name: str, limit: int = 2_000_000) -> str:
         return ""
 
 
+def _residency(db: Session) -> dict[str, Any]:
+    from app.services import compliance_service
+
+    try:
+        location = compliance_service.data_location(db)
+    except Exception:  # noqa: BLE001 - About must answer
+        location = ""
+    return {
+        "location": location,
+        "region": str(settings.deployment_region or ""),
+        "statement": (
+            "Hawk AI runs on this server, which the customer installs and operates. Everything it keeps (the database, "
+            "backups, logs and evidence) stays on this server and where its backups are sent; nothing is sent to the "
+            "vendor. It connects out only where its administrators set it up: AI providers through the gateways, the "
+            "email server, the identity provider, connectors and risk-intelligence feeds (such as NVD), the backup mailbox, and, when updates are on, the image "
+            "registry and GitHub's signing service."
+        ),
+    }
+
+
 @router.get("/settings/about")
 def about(ctx: TenantContext = Depends(require_tenant), db: Session = Depends(get_db)):
     from app.services import activation_service, terms_service
@@ -274,7 +304,7 @@ def about(ctx: TenantContext = Depends(require_tenant), db: Session = Depends(ge
     except OSError:
         terms_version = ""
     org = terms_service.organisation(db)
-    accepted = bool(ctx.user and org is not None and terms_service.accepted_by(db, ctx.user.id, org))
+    accepted = bool(ctx.user and org is not None and terms_service.accepted_by(db, ctx.user, org))
     mine = terms_service.user_acceptance(db, ctx.user.id) if ctx.user else None
     at = mine.accepted_at if mine else (org.accepted_at if org is not None and org.everyone else None)
     notices = next(((name, text) for name in NOTICE_FILES if (text := _read(name))), None)
@@ -289,11 +319,20 @@ def about(ctx: TenantContext = Depends(require_tenant), db: Session = Depends(ge
             "activation": product["activation"],
             "message": product["message"],
         },
-        "terms": {"version": terms_version, "accepted": accepted, "at": at.isoformat() if at else None},
+        "terms": {
+            "version": terms_version,
+            "accepted": accepted,
+            "at": at.isoformat() if at else None,
+            "acceptanceId": mine.id if mine else None,
+            "scope": mine.scope if mine else None,
+            "canManage": bool(ctx.user and terms_service.may_accept_for_organisation(db, ctx.user)),
+        },
         "organisationName": branding.load().get("organisationName") or _organisation(db),
         "changelog": _read("CHANGELOG.md"),
         "notices": {"name": notices[0], "text": notices[1]} if notices else None,
         "canUpdate": "system.update" in ctx.permissions,
+        # Where the data is (Settings → Compliance): everything stays on this server.
+        "dataResidency": _residency(db),
     }
     db.commit()
     return JSONResponse(view, headers=NO_STORE)

@@ -148,7 +148,8 @@ export const people: GuideTopic = {
           kind: "list",
           items: [
             "The console keeps its sign-in in secure cookies that only the API reads, never in the browser's storage, and every change carries a check another site cannot forge.",
-            "While the console is in use it renews its sign-in by itself (the token it sends lasts 30 minutes). A sign-in not used for 8 hours ends, and the person signs in again (`SESSION_IDLE_MINUTES` in `deploy/.env`, 480 by default).",
+            "While the console is in use it renews its sign-in by itself (the token it sends lasts 30 minutes). A sign-in not used for 8 hours ends, and the person signs in again (`SESSION_IDLE_MINUTES` in `deploy/.env`, 480 by default). An owner or admin can set a shorter time on [Settings → Sign-in](/settings/signin) (5 minutes to 24 hours; 15 in the recommended baseline): the token then lasts at most half of it.",
+            "The password rule (shortest length, kinds of character, earlier passwords that may not come back, days a password lasts) and the notice on the sign-in page are set on [Settings → Sign-in](/settings/signin) too: see [Compliance](/settings/guide/compliance#sign-in-baseline).",
             "**Sign out** ends the sign-in on the server too. A person who manages people can sign someone out everywhere from [Settings → People](/settings/people); a password reset by link does the same.",
             "Over plain http the cookies cannot be marked secure; use HTTPS for anything but a test.",
           ],

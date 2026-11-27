@@ -52,7 +52,20 @@ export default function SignInSettingsPage() {
       async (f) => {
         const data = new FormData(f);
         try {
-          setView(await api.saveSignInSettings({ passwordReset: data.get("passwordReset"), twoStepRequired: data.get("twoStepRequired") === "on" }));
+          setView(
+            await api.saveSignInSettings({
+              passwordReset: data.get("passwordReset"),
+              twoStepRequired: data.get("twoStepRequired") === "on",
+              passwordRule: {
+                minLength: data.get("minLength"),
+                classes: data.get("classes"),
+                history: data.get("history"),
+                maxAgeDays: data.get("maxAgeDays"),
+              },
+              sessionIdleMinutes: String(data.get("sessionIdleMinutes") ?? "").trim() || null,
+              banner: data.get("banner") ?? "",
+            }),
+          );
         } catch (error) {
           throw new Error(refusalFrom(error instanceof Error ? error.message : "").message);
         }
@@ -139,7 +152,7 @@ export default function SignInSettingsPage() {
                   <h2>How people sign in</h2>
                   <dl className="kv">
                     <dt>Passwords</dt>
-                    <dd>At least 12 characters; locked 15 minutes after 5 wrong ones.</dd>
+                    <dd>{view.passwordRule ? `${view.passwordRule.text.charAt(0).toUpperCase()}${view.passwordRule.text.slice(1)}` : "At least 12 characters"}; locked 15 minutes after 5 wrong ones.</dd>
                     <dt>Two-step sign-in</dt>
                     <dd>{view.twoStepRequired ? "Required for everyone who signs in with a password" : "Each person chooses (Settings → Two-step sign-in)"}</dd>
                     <dt>Single sign-on</dt>
@@ -148,13 +161,50 @@ export default function SignInSettingsPage() {
                       {view.sso.enabled && view.sso.passwordAdminsOnly ? "; passwords for Admins only" : ""}
                     </dd>
                     <dt>Idle sign-out</dt>
-                    <dd>After {idleHours(view.sessionIdleMinutes)} hours.</dd>
+                    <dd>{view.sessionIdleMinutes < 60 ? `After ${view.sessionIdleMinutes} minutes.` : `After ${idleHours(view.sessionIdleMinutes)} hours.`}</dd>
                     <dt>From one address</dt>
                     <dd>At most 30 sign-in attempts in 10 minutes.</dd>
                   </dl>
                   <Link className="btn mt" href="/settings/sso">
                     Single sign-on settings
                   </Link>
+                </div>
+                <div className="panel wide-panel" data-ui="signin-password-rule">
+                  <h2>Password rule, idle sign-out and notice</h2>
+                  <p className="muted small">
+                    What Dubai&apos;s Information Security Regulation (DESC ISR), the UAE IA Standard and most security policies ask of passwords and sessions; Settings → Compliance applies the recommended baseline in one step (<Link href="/settings/guide/compliance">Guide → Compliance</Link>). A new rule applies to the next password someone chooses; a password older than the days allowed is changed at the next sign-in. Single sign-on accounts follow the identity provider&apos;s rules.
+                  </p>
+                  <div className="grid g2">
+                    <label className="f">
+                      Shortest password (8 to 64 characters)
+                      <input name="minLength" inputMode="numeric" defaultValue={view.passwordRule?.minLength ?? 12} />
+                    </label>
+                    <label className="f">
+                      Kinds of character to mix (lower case, upper case, digits, symbols)
+                      <select name="classes" defaultValue={String(view.passwordRule?.classes ?? 0)}>
+                        <option value="0">Any</option>
+                        <option value="2">At least 2 of the 4</option>
+                        <option value="3">At least 3 of the 4</option>
+                        <option value="4">All 4</option>
+                      </select>
+                    </label>
+                    <label className="f">
+                      Earlier passwords that may not come back (0 to 24)
+                      <input name="history" inputMode="numeric" defaultValue={view.passwordRule?.history ?? 0} />
+                    </label>
+                    <label className="f">
+                      Days a password lasts (0: no limit; at most 365)
+                      <input name="maxAgeDays" inputMode="numeric" defaultValue={view.passwordRule?.maxAgeDays ?? 0} />
+                    </label>
+                    <label className="f">
+                      Sign out after this many minutes without activity (5 to 1440; empty: SESSION_IDLE_MINUTES, now {view.sessionIdleDefault ?? view.sessionIdleMinutes})
+                      <input name="sessionIdleMinutes" inputMode="numeric" defaultValue={view.sessionIdleSet ?? ""} placeholder={String(view.sessionIdleDefault ?? "")} />
+                    </label>
+                  </div>
+                  <label className="f mt">
+                    Notice on the sign-in page (authorised use only, monitoring; at most 2,000 characters)
+                    <textarea name="banner" rows={3} maxLength={2000} defaultValue={view.banner ?? ""} placeholder="This system is for authorised use only. Activity is monitored and recorded." />
+                  </label>
                 </div>
                 <div className="panel wide-panel">
                   <h2>Two-step sign-in</h2>

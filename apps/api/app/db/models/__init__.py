@@ -7,6 +7,7 @@ from app.db.models.agent_collective import (
 )
 from app.db.models.ai_orchestration import AIReasoningTrace
 from app.db.models.ai_system import AISystem
+from app.db.models.ai_system_approval import AISystemApprovalGrant, AISystemApprovalPolicy
 from app.db.models.ai_asset import (
     DiscoveryAIAsset,
     DiscoveryAICapability,
@@ -59,7 +60,7 @@ from app.db.models.execution_effect import (
     EffectReservationV2,
     ExecutionPermitEffectBindingV2,
 )
-from app.db.models.access import FirstRunState, SignInPolicy, TermsAcceptance
+from app.db.models.access import CompliancePolicy, FirstRunState, SignInPolicy, TermsAcceptance, TermsCopyEmail, TermsTextRecord
 from app.db.models.activation import ActivationState
 from app.db.models.audit import AuditChainHead, AuditLog
 from app.db.models.platform_records import ConnectorCall, SupportCounter, SupportSettings, SupportTicket, UserActivity
@@ -313,7 +314,10 @@ __all__ = [
     "ActivationState",
     "FirstRunState",
     "SignInPolicy",
+    "CompliancePolicy",
     "TermsAcceptance",
+    "TermsCopyEmail",
+    "TermsTextRecord",
     "AuditChainHead",
     "ConnectorCall",
     "SupportCounter",
@@ -372,6 +376,8 @@ __all__ = [
     "DiscoveryCapabilityGenome",
     "DiscoveryCapabilityEvent",
     "AISystem",
+    "AISystemApprovalGrant",
+    "AISystemApprovalPolicy",
     "DiscoveryAIAsset",
     "DiscoveryAssetHypothesis",
     "DiscoveryAssetIdentityLink",

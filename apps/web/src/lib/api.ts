@@ -4,13 +4,16 @@ import type { AcmeStatus, HttpsCertificateReport, HttpsMode, HttpsStatus, Upload
 import type { BackupEncryption, BackupFile, BackupInfo, BackupKeyShown, BackupNotice, BackupsStatus, Readiness } from "@/lib/backups-settings";
 import type { Integrity, IntegrityState, UpdateSettings, UpdatesStatus } from "@/lib/updates-settings";
 import type { HandsOffSettings, HandsOffView, LinkAnswer, SelfCheckHealth } from "@/lib/hands-off-settings";
+import type { ApprovalDecision, ApprovalGrantView, ApprovalPolicy, ApprovalPolicyView, ApprovalRequestView, ApprovalScope } from "@/lib/ai-system-approvals";
+import type { DiagnosticsView } from "@/lib/self-recovery";
 import type { AboutView, BrandingPatch, BrandingView, GeneralView, SmtpSettings, SmtpView } from "@/lib/settings-console";
+import type { ComplianceSettings, ComplianceView } from "@/lib/compliance";
 import type { AuditPage, AuditVerify, ConnectorActivity, EvidenceSigning, Emailed, NetworkCheck, NetworkInfo, SupportChannel, SupportKind, SupportList, SupportRequest, TrustDiagnosis, TrustedCertificate } from "@/lib/records";
 import { approvalStatusFilters, mergeApprovalStatusResults } from "@/lib/approval-workflow";
 import { demoFallbackRequest, isDemoFallbackEnabled } from "@/lib/demo-fallback";
 import { isDeactivatedAnswer, LICENCE_DEACTIVATED_EVENT } from "@/lib/licence";
 import { accessNeededFrom, PASSWORD_CHANGE_EVENT, TERMS_REQUIRED_EVENT } from "@/lib/access";
-import type { TermsState, TermsView } from "@/lib/access";
+import type { TermsAcceptPayload, TermsAcceptance, TermsAcceptances, TermsState, TermsView } from "@/lib/access";
 import type { SignInPerson, SignInSettings, TwoStepChallenge, TwoStepSetup, TwoStepState } from "@/lib/sign-in";
 import type { IamJoinSettings, IamRole, IamView, JoinLink } from "@/lib/iam";
 import type { ActivationApplied, ActivationView, AdminLicence, LicenceStatus } from "@/lib/licence";
@@ -668,7 +671,7 @@ export const api = {
     }, false),
   // Sign-in (/settings/guide/people-and-access): the second step, "Forgot your password?", one's own two-step sign-in, and the
   // administrator's sign-in rules.
-  signInOptions: () => request<{ passwordReset: boolean; ssoPasswordAdminsOnly: boolean }>("/auth/sign-in-options", undefined, false),
+  signInOptions: () => request<{ passwordReset: boolean; ssoPasswordAdminsOnly: boolean; banner?: string }>("/auth/sign-in-options", undefined, false),
   twoStep: (ticket: string, code: string) =>
     request<LoginResponse & { recovery_codes?: string[] }>("/auth/two-step", { method: "POST", body: JSON.stringify({ ticket, code }) }, false),
   askPasswordReset: (email: string) =>
@@ -737,8 +740,12 @@ export const api = {
     request<LoginResponse>("/auth/me/password", { method: "POST", body: JSON.stringify({ current, next }) }),
   // Before or after signing in: the session cookie, when there is one, says whose acceptance to show.
   getTerms: () => request<TermsView>("/terms", undefined, false),
-  acceptTerms: (payload: { version: string; forOrganisation?: boolean; organisationName?: string }) =>
-    request<{ terms: TermsState }>("/terms/accept", { method: "POST", body: JSON.stringify(payload) }),
+  acceptTerms: (payload: TermsAcceptPayload) => request<{ terms: TermsState }>("/terms/accept", { method: "POST", body: JSON.stringify(payload) }),
+  // The accepted licence agreement (Settings → About): the acceptances, their emailed copy, send again, download.
+  getTermsAcceptances: () => request<TermsAcceptances>("/terms/acceptances"),
+  resendTermsCopy: (id: string, to?: string) =>
+    request<TermsAcceptance>(`/terms/acceptances/${encodeURIComponent(id)}/resend`, { method: "POST", body: JSON.stringify(to ? { to } : {}) }),
+  downloadTermsCopy: (id: string, format: "html" | "txt") => requestBlob(`/terms/acceptances/${encodeURIComponent(id)}/copy?format=${format}`),
   setupStatus: () => request<{ setup: boolean }>("/setup", undefined, false),
   setup: (payload: { code: string; email: string; name: string; password: string }) =>
     request<LoginResponse | TwoStepChallenge>("/setup", { method: "POST", body: JSON.stringify(payload) }, false),
@@ -790,9 +797,9 @@ export const api = {
   // Records → Audit log and Connector API activity (app/api/routers/records.py)
   getAuditLog: (query: string) => request<AuditPage>(`/audit/log${query ? `?${query}` : ""}`),
   verifyAuditLog: () => request<AuditVerify>("/audit/log/verify"),
-  exportAuditLog: (format: "csv" | "jsonl", query: string) => requestBlob(`/audit/log/export.${format}${query ? `?${query}` : ""}`),
+  exportAuditLog: (format: "csv" | "jsonl" | "cef", query: string) => requestBlob(`/audit/log/export.${format}${query ? `?${query}` : ""}`),
   /** The export and its detached evidence signature (the X-Hawk-Evidence-Signature header, '' when none). */
-  exportAuditLogSigned: async (format: "csv" | "jsonl", query: string) => {
+  exportAuditLogSigned: async (format: "csv" | "jsonl" | "cef", query: string) => {
     let signature = "";
     const blob = await requestBlob(`/audit/log/export.${format}${query ? `?${query}` : ""}`, undefined, true, (res) => {
       signature = res.headers.get("X-Hawk-Evidence-Signature") ?? "";
@@ -843,6 +850,41 @@ export const api = {
   sendTestSmtp: (to: string) => request<{ message: string }>("/settings/smtp/send-test", { method: "POST", body: JSON.stringify({ to }) }),
   forgetSmtp: () => request<SmtpView>("/settings/smtp", { method: "DELETE" }),
   getAbout: () => request<AboutView>("/settings/about"),
+  // Settings → AI system approvals (app/api/routers/ai_system_approvals.py).
+  getApprovalPolicy: () => request<ApprovalPolicyView>("/settings/ai-system-approvals"),
+  saveApprovalPolicy: (policy: ApprovalPolicy) =>
+    request<ApprovalPolicyView>("/settings/ai-system-approvals", { method: "PUT", body: JSON.stringify(policy) }),
+  listAiSystemApprovals: (status: "pending" | "approved" | "denied" | "expired" | "all" = "pending") =>
+    request<{ items: ApprovalRequestView[]; total: number }>(`/ai-system-approvals?status=${encodeURIComponent(status)}`),
+  decideAiSystemApproval: (requestId: string, body: ApprovalDecision) =>
+    request<{ request: ApprovalRequestView; grant: ApprovalGrantView | null; ai_system_status: string | null }>(
+      `/ai-system-approvals/${encodeURIComponent(requestId)}/decision`,
+      { method: "POST", body: JSON.stringify(body) },
+    ),
+  listAiSystemApprovalGrants: (state: "ACTIVE" | "all" = "ACTIVE") =>
+    request<{ items: ApprovalGrantView[]; total: number }>(`/ai-system-approvals/grants?state=${encodeURIComponent(state)}`),
+  revokeAiSystemApproval: (grantId: string, reason: string) =>
+    request<{ grant: ApprovalGrantView; ai_system_status: string | null }>(`/ai-system-approvals/grants/${encodeURIComponent(grantId)}/revoke`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    }),
+  requestAiSystemApproval: (aiSystemId: string, body: { scope?: ApprovalScope; duration_hours?: number; reason?: string; target_status?: "approved" | "active" }) =>
+    request<{ request: ApprovalRequestView; ai_system_status: string | null }>(`/ai-systems/${encodeURIComponent(aiSystemId)}/approval-requests`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  // Settings → Compliance (apps/api/app/api/routers/compliance.py; /settings/guide/compliance).
+  getCompliance: () => request<ComplianceView>("/compliance"),
+  saveCompliance: (patch: Partial<ComplianceSettings>) =>
+    request<ComplianceView>("/compliance/settings", { method: "PUT", body: JSON.stringify(patch) }),
+  /** The incident report for a time window, and its detached evidence signature ('' when none). */
+  incidentReport: async (query: string) => {
+    let signature = "";
+    const blob = await requestBlob(`/compliance/incident-report${query ? `?${query}` : ""}`, undefined, true, (res) => {
+      signature = res.headers.get("X-Hawk-Evidence-Signature") ?? "";
+    });
+    return { blob, signature };
+  },
   // Settings → Hands-off and the self-check (app/api/routers/hands_off.py); the emailed links need no sign-in.
   getHandsOff: () => request<HandsOffView>("/hands-off"),
   saveHandsOff: (body: { handsOff: Partial<Omit<HandsOffSettings, "statusTo">> & { statusTo?: string | string[] } }) =>
@@ -860,6 +902,17 @@ export const api = {
     request<UpdatesStatus>("/updates/settings", { method: "PUT", body: JSON.stringify(patch) }),
   restartHawk: () => request<{ restarting: boolean }>("/updates/restart", { method: "POST", body: "{}" }),
   downloadUpdateReport: () => requestBlob("/updates/report"),
+  // Self-recovery and the diagnostics bundle on Settings → Backups & health (app/api/routers/diagnostics.py)
+  getDiagnostics: () => request<DiagnosticsView>("/diagnostics"),
+  runSelfRecovery: () => request<DiagnosticsView>("/diagnostics/recovery/run", { method: "POST", body: "{}" }),
+  retrySelfRecovery: (reference: string) => request<DiagnosticsView>(`/diagnostics/recovery/${encodeURIComponent(reference)}/retry`, { method: "POST", body: "{}" }),
+  downloadDiagnosticsBundle: async (prepared = false) => {
+    let disposition: string | null = null;
+    const blob = await requestBlob(prepared ? "/diagnostics/bundle/prepared" : "/diagnostics/bundle", undefined, true, (res) => {
+      disposition = res.headers.get("Content-Disposition");
+    });
+    return { blob, disposition: disposition as string | null };
+  },
   checkIntegrity: () => request<Integrity>("/integrity/check", { method: "POST", body: "{}" }),
   getIntegrityNotice: () => request<{ notice: { state: IntegrityState; summary: string } | null }>("/integrity/notice"),
   getPlatformMode: () => request<PlatformModeResponse>("/system/platform-mode"),

@@ -9,11 +9,14 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.envelopes import ListEnvelope, paginate_rows
-from app.core.rbac import require_permission
+from app.core.rbac import holds, require_permission
 from app.core.tenant import TenantContext
 from app.db.models.ai_system import AISystem
+from app.db.models.ai_system_approval import AISystemApprovalGrant
 from app.db.session import get_db
+from app.services import ai_system_approval_service as approvals
 from app.services.audit_service import write_audit_log
+from app.services.governance_resolution import ai_system_is_approved
 from app.services.policy_service import get_latest_policy_for_ai_system
 from app.services.remediation import propose_remediation_action
 from app.services.simulation_scheduler_service import (
@@ -119,6 +122,13 @@ class AISystemUpdate(BaseModel):
     oauth_scopes: list[str] | None = None
     blast_radius_score: float | None = None
     evidence_refs: list[str] | None = None
+
+
+class ApprovalRequestBody(BaseModel):
+    scope: str | None = Field(default=None, max_length=16, description="blanket|one_time|time_bound (within the tier's policy)")
+    duration_hours: int | None = Field(default=None, ge=1, le=approvals.MAX_DURATION_HOURS)
+    reason: str | None = Field(default=None, max_length=500)
+    target_status: str | None = Field(default=None, max_length=16, description="approved (default) or active, once approved")
 
 
 class AISystemResponse(BaseModel):
@@ -275,6 +285,70 @@ def update_ai_system(
     previous_status = str(row.status or "").strip().lower()
     previous_risk_tier = str(row.risk_tier or "").strip().upper()
     metadata = dict(row.metadata_json or {})
+    actor_user_id = str(ctx.user.id) if getattr(ctx, "user", None) is not None else None
+
+    # An approved status comes only from the approval workflow (POST /ai-systems/{id}/approval-requests, then the
+    # approvers' decisions): a direct write of one is refused unless the system holds a standing approval now.
+    requested_status = str(payload.status).strip().lower() if payload.status is not None else None
+    if requested_status in approvals.APPROVED_STATUSES and not ai_system_is_approved(row):
+        # LIVE keeps its own answer when the lifecycle prerequisites are missing (below).
+        if not (requested_status == "live" and _build_lifecycle_missing_requirements(db=db, tenant_id=ctx.tenant.id, ai_system=row)):
+            pending = approvals.pending_request_for(db, ctx.tenant.id, row.id)
+            message = (
+                f"An AI system becomes {requested_status} only through an approval: ask for one with "
+                f"POST /ai-systems/{row.id}/approval-requests and have it approved under the "
+                f"{approvals.tier_of(row.risk_tier) or str(row.risk_tier).upper()} policy."
+            )
+            write_audit_log(
+                db,
+                tenant_id=ctx.tenant.id,
+                actor_user_id=actor_user_id,
+                actor_type="human",
+                action="ai_system.approval.bypass_refused",
+                resource_type="ai_system",
+                resource_id=row.id,
+                payload={
+                    "outcome": "refused",
+                    "reason": message,
+                    "requested_status": requested_status,
+                    "current_status": previous_status,
+                    "pending_approval_request_id": pending.id if pending else None,
+                },
+            )
+            db.commit()
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={
+                    "code": "approval_required",
+                    "message": message,
+                    "pending_approval_request_id": pending.id if pending else None,
+                },
+            )
+
+    # Lowering a classified system's risk tier would put it under a laxer approval policy (fewer approvers, more
+    # roles): only those who may approve its current tier, or owners and admins, may lower it.
+    requested_tier = str(payload.risk_tier).strip().upper() if payload.risk_tier is not None else None
+    if requested_tier is not None and 0 < _risk_rank(requested_tier) < _risk_rank(previous_risk_tier) and not holds(ctx, "settings.manage"):
+        old_tier = approvals.tier_of(previous_risk_tier)
+        approvers = approvals.load_config(db, ctx.tenant.id)["tiers"][old_tier]["approver_roles"] if old_tier else []
+        role = str(getattr(ctx, "role_key", None) or ctx.role or "").strip().lower()
+        if role not in {str(item).lower() for item in approvers}:
+            message = (
+                f"Only {', '.join(approvers) if approvers else 'owners and admins'} may lower this AI system's risk tier "
+                f"from {previous_risk_tier} (it would fall under a laxer approval policy)."
+            )
+            write_audit_log(
+                db,
+                tenant_id=ctx.tenant.id,
+                actor_user_id=actor_user_id,
+                actor_type="human",
+                action="ai_system.risk_tier.lower_refused",
+                resource_type="ai_system",
+                resource_id=row.id,
+                payload={"outcome": "refused", "reason": message, "from": previous_risk_tier, "to": requested_tier},
+            )
+            db.commit()
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={"code": "risk_tier_lower_refused", "message": message})
 
     for field in ["name", "description", "risk_tier", "status"]:
         value = getattr(payload, field)
@@ -441,6 +515,26 @@ def update_ai_system(
             ai_system_id=row.id,
             actor_user_id=None,
         )
+    if risk_escalated:
+        # A standing approval was given under the old tier's policy: a higher tier asks again under its own.
+        for grant in db.scalars(
+            select(AISystemApprovalGrant).where(
+                AISystemApprovalGrant.tenant_id == ctx.tenant.id,
+                AISystemApprovalGrant.ai_system_id == row.id,
+                AISystemApprovalGrant.state == "ACTIVE",
+            )
+        ).all():
+            if approvals.tier_of(previous_risk_tier) == approvals.tier_of(current_risk_tier):
+                continue
+            approvals.revoke_grant(
+                db,
+                tenant_id=ctx.tenant.id,
+                grant_id=grant.id,
+                actor_user_id=actor_user_id,
+                actor_role=None,
+                may_manage=True,
+                reason=f"risk tier raised from {previous_risk_tier or '-'} to {current_risk_tier}",
+            )
     if risk_tier_changed:
         schedule_for_high_risk_tier(
             db,
@@ -520,3 +614,39 @@ def update_ai_system(
     db.commit()
     db.refresh(row)
     return _to_ai_system_response(row)
+
+
+@router.post("/{ai_system_id}/approval-requests")
+def request_ai_system_approval(
+    ai_system_id: str,
+    payload: ApprovalRequestBody | None = None,
+    ctx: TenantContext = Depends(require_permission("discovery.operate")),
+    db: Session = Depends(get_db),
+):
+    """Ask for this AI system to be approved, under its risk tier's approval policy (Settings → AI system approvals)."""
+
+    body = payload or ApprovalRequestBody()
+    actor_user_id = str(ctx.user.id) if getattr(ctx, "user", None) is not None else None
+    try:
+        request = approvals.request_approval(
+            db,
+            tenant_id=ctx.tenant.id,
+            ai_system_id=ai_system_id,
+            actor_user_id=actor_user_id,
+            scope=body.scope,
+            duration_hours=body.duration_hours,
+            reason=body.reason,
+            target_status=body.target_status,
+        )
+    except approvals.ApprovalWorkflowError as error:
+        db.rollback()
+        if error.code != "not_found":
+            approvals.record_refusal(db, tenant_id=ctx.tenant.id, actor_user_id=actor_user_id, ai_system_id=ai_system_id, error=error, step="request")
+            db.commit()
+        raise HTTPException(status_code=error.status_code, detail={"code": error.code, "message": error.message}) from None
+    db.commit()
+    row = db.scalar(select(AISystem).where(AISystem.id == ai_system_id, AISystem.tenant_id == ctx.tenant.id))
+    return {
+        "request": approvals.request_view(request, system=row, actor_user_id=actor_user_id, actor_role=str(getattr(ctx, "role_key", "") or ctx.role or "")),
+        "ai_system_status": row.status if row is not None else None,
+    }

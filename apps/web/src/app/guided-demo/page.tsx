@@ -9,6 +9,7 @@ import { PageSection } from "@/components/page-section";
 import { SimpleTable } from "@/components/simple-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { refusalMessage } from "@/lib/ai-system-approvals";
 import { api } from "@/lib/api";
 import type {
   AISystem,
@@ -366,7 +367,16 @@ export default function GuidedDemoPage() {
         description: `${scenario.title} walkthrough system`,
         risk_tier: scenario.riskTier,
       })) as AISystem;
-      await api.updateAISystem(aiSystem.id, { status: "active" });
+      // Approved through the approval policy (Settings → AI system approvals): the demo asks and approves as you,
+      // which works only where the policy lets the requester approve this tier.
+      const asked = await api.requestAiSystemApproval(aiSystem.id, { target_status: "active" });
+      try {
+        await api.decideAiSystemApproval(asked.request.id, { decision: "approve" });
+      } catch (approvalError) {
+        throw new Error(
+          `The demo AI system needs approval: ${refusalMessage(approvalError instanceof Error ? approvalError.message : String(approvalError ?? ""))} Approve it on Settings → AI system approvals, or allow self-approval for the ${scenario.riskTier} tier there.`,
+        );
+      }
       working.aiSystemId = aiSystem.id;
       working.aiSystemName = aiSystem.name;
       working.controlId = `CTRL-DEMO-${scenario.id.toUpperCase()}-${shortId()}`;

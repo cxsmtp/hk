@@ -12,9 +12,15 @@
 # HTTPS (/settings/guide/https): the API owns the certificate and the choices made under Settings → HTTPS and
 # writes the proxy's configuration into the hawk-proxy-config volume; the proxy reloads it by itself.
 #
-# Hardened as CxMissionZero's container: nothing in the images can be changed at run time (only the volumes and a
-# scratch /tmp are writable), no Linux capabilities, no privilege escalation, a non-root user, at most 512 processes,
-# 15 s to stop. PostgreSQL and Redis are the exceptions noted on them.
+# Hardened as CxMissionZero's container and to the CIS Docker Benchmark (section 5, the container runtime): nothing in
+# the images can be changed at run time (read_only; only the volumes and a scratch /tmp are writable), no Linux
+# capabilities (cap_drop ALL), no privilege escalation (no-new-privileges), a fixed non-root user, a memory cap and a
+# CPU weight, at most 512 processes, a health check and a restart policy, 15 s to stop, rotated logs, no privileged
+# container and no host namespace. Third-party images (postgres, redis, the proxy's caddy) are pinned by digest.
+# Networks: `hawk` (proxy, web, api, worker, beat, migrate) and `hawk-internal` (internal: no way out of this machine)
+# for PostgreSQL and Redis, which only api, worker, beat and migrate join; only the proxy publishes a port.
+# The exceptions (PostgreSQL's shared memory, the updater's Docker socket) are noted on them.
+# infra/tests/test_deploy_hardening.py checks all of this, so it cannot be undone by accident.
 
 name: hawk
 
@@ -42,9 +48,11 @@ x-hawk-hardening: &hawk-hardening
   user: "1000:1000"
   networks:
     - hawk
-  # Optional limits (CxMissionZero sizes 2 vCPU / 4 GB for its container; Hawk runs several): uncomment to cap.
-  # cpus: 2
-  # mem_limit: 3g
+  # Memory caps (CIS 5.10) and CPU weight (CIS 5.11; relative, so it never fails on a small machine): each service
+  # sets its own below, and HAWK_<SERVICE>_MEMORY in deploy/.env changes one (e.g. HAWK_WORKER_MEMORY=4g). A hard CPU
+  # cap is optional (cpus: 2 on a service): it must not exceed this machine's processors, so it is not set here.
+  mem_limit: 1g
+  cpu_shares: 1024
 
 x-hawk-healthcheck: &hawk-healthcheck
   interval: 30s
@@ -76,6 +84,10 @@ x-hawk-environment: &hawk-environment
   DEPLOYMENT_ID: ${DEPLOYMENT_ID:-hawk}
   DEPLOYMENT_REGION: ${DEPLOYMENT_REGION:-on-premise}
   DEPLOYMENT_DATA_LOCATION: ${DEPLOYMENT_DATA_LOCATION:-on-premise}
+  # Settings → Compliance (/settings/guide/compliance): an NTP server to measure the clock against (UDP 123), and
+  # whether the customer confirmed that this machine's disk is encrypted.
+  TIME_SYNC_NTP_SERVER: ${TIME_SYNC_NTP_SERVER:-}
+  DISK_ENCRYPTION_CONFIRMED: ${DISK_ENCRYPTION_CONFIRMED:-false}
   DEPLOYMENT_TOPOLOGY: single_node_compose
   COMPONENT_VERSION: "0.1.0"
   COMPONENT_PROTOCOL_VERSION: "1.0"
@@ -153,6 +165,13 @@ x-hawk-environment: &hawk-environment
   SMTP_FROM_NAME: ${SMTP_FROM_NAME:-}
   SMTP_REQUIRE_AUTH: ${SMTP_REQUIRE_AUTH:-}
   SMTP_REJECT_UNAUTHORIZED: ${SMTP_REJECT_UNAUTHORIZED:-}
+  # The licence agreement's parties and forum (TERMS.md): written into the terms shown, accepted and emailed.
+  LICENSOR_LEGAL_NAME: ${LICENSOR_LEGAL_NAME:-}
+  LICENSOR_ADDRESS: ${LICENSOR_ADDRESS:-}
+  LICENSOR_NOTICE_EMAIL: ${LICENSOR_NOTICE_EMAIL:-}
+  GOVERNING_LAW: ${GOVERNING_LAW:-}
+  DISPUTE_FORUM: ${DISPUTE_FORUM:-}
+  LIABILITY_CAP_NO_FEES: ${LIABILITY_CAP_NO_FEES:-}
   # Updates and software integrity (/settings/guide/updates, /settings/guide/updates). Images come from <UPDATE_IMAGE>-api, -web and
   # -proxy; a private copy needs UPDATE_REGISTRY_TOKEN (read-only). The updater shares UPDATER_DIR with api and worker.
   UPDATE_IMAGE: ${UPDATE_IMAGE:-ghcr.io/cxsmtp/hk}
@@ -166,6 +185,7 @@ x-hawk-environment: &hawk-environment
   # automatic support cases are to be forwarded (by an administrator: Hawk AI never sends outside by itself).
   WATCHDOG_EVERY_SECONDS: ${WATCHDOG_EVERY_SECONDS:-300}
   INBOX_EVERY_SECONDS: ${INBOX_EVERY_SECONDS:-120}
+  SELF_RECOVERY_EVERY_SECONDS: ${SELF_RECOVERY_EVERY_SECONDS:-300}
   MAINTAINER_EMAIL: ${MAINTAINER_EMAIL:-}
 
 x-hawk-secrets: &hawk-secrets
@@ -187,6 +207,8 @@ services:
     build:
       context: ..
       dockerfile: infra/Dockerfile.proxy
+      secrets:
+        - ca
     # Reachable from this machine only by default. To serve other machines, set BIND_ADDRESS=0.0.0.0 (or one
     # interface's address) and HAWK_HOST to the name or address people use (deploy/.env).
     ports:
@@ -200,6 +222,7 @@ services:
       - hawk-proxy:/data
       # Written by the API only (app/services/https_proxy.py): the Caddyfile and the certificate in use.
       - hawk-proxy-config:/hawk-proxy:ro
+    mem_limit: ${HAWK_PROXY_MEMORY:-512m}
     tmpfs:
       - /tmp
       - /config
@@ -224,6 +247,7 @@ services:
     environment:
       TZ: ${TZ:-UTC}
       COMPONENT_TYPE: web
+    mem_limit: ${HAWK_WEB_MEMORY:-1g}
     tmpfs:
       - /tmp
       - /workspace/apps/web/.next/cache:uid=1000,gid=1000
@@ -241,6 +265,9 @@ services:
       <<: *hawk-environment
       COMPONENT_TYPE: api
     command: ["python", "-m", "app.cli.prestart"]
+    # A restore runs here (pg_restore piped into psql), and the backup mailbox is read from here: both networks.
+    networks: [hawk, hawk-internal]
+    mem_limit: ${HAWK_MIGRATE_MEMORY:-2g}
     secrets: *hawk-secrets
     volumes:
       - hawk-data:/data
@@ -294,6 +321,8 @@ services:
       HTTP_REDIRECT_PORT: ${HTTP_REDIRECT_PORT:-80}
       HAWK_PROXY_DIR: /hawk-proxy
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips", "*", "--no-access-log"]
+    networks: [hawk, hawk-internal]
+    mem_limit: ${HAWK_API_MEMORY:-2g}
     secrets: *hawk-secrets
     volumes:
       - hawk-data:/data
@@ -322,6 +351,8 @@ services:
       <<: *hawk-environment
       COMPONENT_TYPE: worker
     command: ["celery", "-A", "app.jobs.celery_app.celery_app", "worker", "--loglevel=info", "--concurrency", "${CELERY_WORKER_CONCURRENCY:-4}", "--prefetch-multiplier", "1", "-Q", "default,monitoring,auditor,discovery"]
+    networks: [hawk, hawk-internal]
+    mem_limit: ${HAWK_WORKER_MEMORY:-3g}
     secrets: *hawk-secrets
     volumes:
       - hawk-artifacts:/artifacts
@@ -346,6 +377,9 @@ services:
       <<: *hawk-environment
       COMPONENT_TYPE: celery_beat
     command: ["celery", "-A", "app.jobs.celery_app.celery_app", "beat", "--loglevel=info", "--schedule", "/tmp/celerybeat-schedule"]
+    networks: [hawk, hawk-internal]
+    mem_limit: ${HAWK_BEAT_MEMORY:-512m}
+    cpu_shares: 512
     secrets: *hawk-secrets
     volumes:
       - hawk-artifacts:/artifacts
@@ -361,13 +395,19 @@ services:
       migrate:
         condition: service_completed_successfully
 
-  # The updater (apps/updater, /settings/guide/updates): CxMissionZero's update companion for the whole stack. Exception: it is
-  # the only container with the Docker socket, and runs as root for it (with no capabilities and no privilege
-  # escalation). It opens no port and acts only on ${HAWK_DATA_DIR}/updater/request.json: it replaces migrate, api,
-  # worker, beat, web and proxy with the same services on the images asked for (only <UPDATE_IMAGE>-…, which they must
-  # already run), takes a backup first, waits UPDATE_START_TIMEOUT_SECONDS (150) for them to be healthy, and otherwise
-  # puts the previous ones back (and the database, when the migrations ran). Started by install.sh with the published
-  # images only (the "updates" profile).
+  # The updater (apps/updater, /settings/guide/updates): CxMissionZero's update companion for the whole stack.
+  # Exception (CIS Docker 5.31, "the Docker socket is not mounted inside any container"): it is the only container
+  # with the Docker socket, which it needs to replace the other containers. Whoever controls the socket controls this
+  # machine, so it is kept apart from everything else:
+  #   - no network at all (network_mode: none): nothing can reach it, and it reaches nothing but the socket;
+  #   - a fixed non-root user (uid 1000) that may use the socket through the socket's group only (HAWK_DOCKER_GID,
+  #     which deploy/install.sh reads from the socket), no capabilities, no privilege escalation, read-only;
+  #   - Python's standard library and its own package only, no package manager, signed like the other images;
+  #   - it acts only on ${HAWK_DATA_DIR}/updater/request.json, written by the API for an owner or admin: it replaces
+  #     migrate, api, worker, beat, web and proxy with the same services on the images asked for (only
+  #     <UPDATE_IMAGE>-…, which they must already run), takes a backup first, waits UPDATE_START_TIMEOUT_SECONDS (150)
+  #     for them to be healthy, and otherwise puts the previous ones back (and the database, when the migrations ran).
+  # Started by install.sh with the published images only (the "updates" profile); HAWK_UPDATER=off leaves it out.
   updater:
     image: ${HAWK_UPDATER_IMAGE:-hawk-updater:local}
     build:
@@ -377,7 +417,9 @@ services:
     profiles: ["updates"]
     restart: unless-stopped
     logging: *hawk-logging
-    user: "0:0"
+    user: "1000:1000"
+    group_add:
+      - "${HAWK_DOCKER_GID:-0}"
     read_only: true
     tmpfs:
       - /tmp
@@ -386,6 +428,8 @@ services:
     security_opt:
       - no-new-privileges:true
     pids_limit: 64
+    mem_limit: ${HAWK_UPDATER_MEMORY:-256m}
+    cpu_shares: 512
     stop_grace_period: 15s
     init: true
     environment:
@@ -407,41 +451,83 @@ services:
       start_period: 20s
       retries: 3
 
-  # Exception: PostgreSQL's entrypoint runs as root to prepare its data folder and then drops to the postgres user,
-  # so it keeps the five capabilities that needs (CHOWN, SETUID, SETGID, FOWNER, DAC_OVERRIDE) and a writable root
-  # file system. Everything else is as the Hawk containers. Not published; reachable only from the services above.
-  # TODO(owner): pin by digest (the repository records no digest for postgres:16).
+  # PostgreSQL, hardened to the CIS Docker and PostgreSQL benchmarks: the image's postgres user (uid 999) from the
+  # start, so no capability at all (its entrypoint needs none when it is not root), read-only (the data volume, the
+  # socket folder and /tmp are writable), only on the internal network, never published.
+  #   - Sign-in: SCRAM-SHA-256 passwords only (password_encryption), and deploy/postgres-hba.conf accepts only
+  #     SCRAM-SHA-256 over TLS from the other containers (hostssl; plain TCP is refused) and SCRAM-SHA-256 on the
+  #     container's own socket. No trust, no md5.
+  #   - TLS (ssl=on, TLS 1.2 at least) with the certificate deploy/install.sh makes for it (postgres_tls.crt and
+  #     postgres_tls.key in ${HAWK_DATA_DIR}/secrets). The connection never leaves this machine, so the certificate is
+  #     self-signed: the API's libpq encrypts by default (sslmode=prefer) and the server refuses anything else.
+  #   - Logging (CIS PostgreSQL section 3): every connection and disconnection, schema changes (log_statement=ddl),
+  #     lock waits, errors with their statement and statements slower than 5 s, each line with the time, process,
+  #     user, database, client and application: docker compose logs postgres, rotated like the others.
+  #   - pgaudit is not in the official image; the connection log and log_statement=ddl stand in for it here.
+  # The application connects as the database's owner, `hawk` (the migrations and a few start-up schema checks need
+  # it); a separate, least-privileged role for the running services is planned.
   postgres:
-    image: postgres:16
+    image: postgres:16.16@sha256:07abc3f43c9395b0bdbbab36bc25ddb0e8d83cd4fcafb5fb7d6abe14ff156dd8
     restart: unless-stopped
     logging: *hawk-logging
+    user: "999:999"
+    command:
+      - postgres
+      - -c
+      - hba_file=/etc/hawk/pg_hba.conf
+      - -c
+      - password_encryption=scram-sha-256
+      - -c
+      - ssl=on
+      - -c
+      - ssl_cert_file=/run/secrets/postgres_tls_cert
+      - -c
+      - ssl_key_file=/run/secrets/postgres_tls_key
+      - -c
+      - ssl_min_protocol_version=TLSv1.2
+      - -c
+      - log_connections=on
+      - -c
+      - log_disconnections=on
+      - -c
+      - "log_line_prefix=%m [%p] %q%u@%d %h %a "
+      - -c
+      - log_statement=ddl
+      - -c
+      - log_lock_waits=on
+      - -c
+      - log_min_duration_statement=5000
+      - -c
+      - log_min_error_statement=error
     environment:
       POSTGRES_USER: hawk
       POSTGRES_DB: hawk
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256 --auth-local=scram-sha-256
       TZ: ${TZ:-UTC}
     secrets:
       - postgres_password
+      - postgres_tls_cert
+      - postgres_tls_key
     volumes:
       - hawk-postgres:/var/lib/postgresql/data
+      - ./postgres-hba.conf:/etc/hawk/pg_hba.conf:ro
+    read_only: true
     tmpfs:
       - /tmp
+      - /var/run/postgresql:uid=999,gid=999,mode=3775
     cap_drop:
       - ALL
-    cap_add:
-      - CHOWN
-      - SETUID
-      - SETGID
-      - FOWNER
-      - DAC_OVERRIDE
     security_opt:
       - no-new-privileges:true
     pids_limit: 512
+    mem_limit: ${HAWK_POSTGRES_MEMORY:-2g}
+    cpu_shares: 1024
     # Time for a clean shutdown of the database (CxMissionZero's 15 s is for its own process).
     stop_grace_period: 30s
     shm_size: 128m
     networks:
-      - hawk
+      - hawk-internal
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U hawk -d hawk"]
       interval: 10s
@@ -449,18 +535,23 @@ services:
       start_period: 20s
       retries: 6
 
-  # Exception: Redis runs as its own user (uid 999, the image's redis user) rather than 1000, so its data volume
-  # stays its own. Otherwise hardened as the Hawk containers. Not published.
-  # TODO(owner): pin by digest (the repository records no digest for redis:7).
+  # Redis, hardened to the CIS Docker benchmark and Redis's own security advice: its image's redis user (uid 999),
+  # read-only, no capabilities, only on the internal network, never published. A password (requirepass, from
+  # ${HAWK_DATA_DIR}/secrets), protected mode on, and the commands Hawk AI never uses that would wipe, reconfigure or
+  # walk the whole store switched off (FLUSHALL, FLUSHDB, CONFIG, DEBUG, KEYS; Hawk AI uses SCAN instead).
   redis:
-    image: redis:7
+    image: redis:7.4.12@sha256:6b645a37f49b0546582468706b32e71a8b7fbb5ba4583d0f9e27a8004716b738
     restart: unless-stopped
     logging: *hawk-logging
     user: "999:999"
     command:
       - sh
       - -ec
-      - exec redis-server --appendonly yes --appendfsync everysec --requirepass "$$(cat /run/secrets/redis_password)"
+      - >-
+        exec redis-server --appendonly yes --appendfsync everysec --protected-mode yes
+        --requirepass "$$(cat /run/secrets/redis_password)"
+        --rename-command FLUSHALL '' --rename-command FLUSHDB '' --rename-command CONFIG ''
+        --rename-command DEBUG '' --rename-command KEYS ''
     secrets:
       - redis_password
     volumes:
@@ -473,9 +564,11 @@ services:
     security_opt:
       - no-new-privileges:true
     pids_limit: 512
+    mem_limit: ${HAWK_REDIS_MEMORY:-1g}
+    cpu_shares: 1024
     stop_grace_period: 15s
     networks:
-      - hawk
+      - hawk-internal
     healthcheck:
       test: ["CMD-SHELL", "REDISCLI_AUTH=\"$$(cat /run/secrets/redis_password)\" redis-cli ping | grep -q PONG"]
       interval: 10s
@@ -484,8 +577,14 @@ services:
       retries: 6
 
 networks:
+  # The proxy, the console and the application: the way out to the internet (email, Let's Encrypt, connectors).
   hawk:
     name: ${HAWK_NETWORK_NAME:-hawk}
+  # PostgreSQL and Redis: internal, so they reach nothing outside this machine and nothing outside reaches them;
+  # only migrate, api, worker and beat join it.
+  hawk-internal:
+    name: ${HAWK_INTERNAL_NETWORK_NAME:-hawk-internal}
+    internal: true
 
 # State lives in these volumes (and the secrets in ${HAWK_DATA_DIR}/secrets). `docker compose down` keeps them;
 # only `docker compose down -v` deletes them.
@@ -505,6 +604,11 @@ secrets:
     file: ${HAWK_BUILD_CA_FILE:-/dev/null}
   postgres_password:
     file: ${HAWK_DATA_DIR:?HAWK_DATA_DIR is required (deploy/install.sh writes it to deploy/.env)}/secrets/postgres_password
+  # PostgreSQL's TLS certificate and key (self-signed, made by deploy/install.sh; the key is the postgres user's, 0600).
+  postgres_tls_cert:
+    file: ${HAWK_DATA_DIR}/secrets/postgres_tls.crt
+  postgres_tls_key:
+    file: ${HAWK_DATA_DIR}/secrets/postgres_tls.key
   redis_password:
     file: ${HAWK_DATA_DIR}/secrets/redis_password
   database_url:

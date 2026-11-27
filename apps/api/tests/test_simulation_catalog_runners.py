@@ -48,6 +48,7 @@ from app.services.simulation_catalog_runners import (
 from app.services.simulation_catalog_service import sync_simulation_catalog
 from app.services.simulation_catalog_source import load_simulation_catalog_entries
 from app.services.simulation_service import _decision_matches_expected
+from ai_system_approval_helpers import approve_ai_system
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -98,7 +99,7 @@ def catalog_world(tmp_path_factory):
                 )
                 assert created.status_code == 200, created.text
                 ai_system_id = created.json()["id"]
-                activated = client.patch(f"/ai-systems/{ai_system_id}", headers=headers, json={"status": "active"})
+                activated = approve_ai_system(client, headers, ai_system_id, status="active")
                 assert activated.status_code == 200, activated.text
         finally:
             app.dependency_overrides.pop(get_db, None)

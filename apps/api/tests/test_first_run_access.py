@@ -3,6 +3,7 @@ CxMissionZero's prepareAccess, scripts/reset-admin.mjs, requireSession and src/t
 
 from __future__ import annotations
 
+import hashlib
 import re
 import stat
 import threading
@@ -18,13 +19,13 @@ from app.cli import reset_admin as reset_admin_cli
 from app.api.routers import access as access_routes
 from app.core.config import settings
 from app.core.security import get_password_hash
-from app.db.models.access import TermsAcceptance
+from app.db.models.access import ImmutableRecordError, TermsAcceptance
 from app.db.models.audit import AuditLog
 from app.db.models.tenant import Tenant
 from app.db.models.user import User, UserTenantRole
 from app.db.session import Base, get_db
 from app.main import app
-from app.services import activation_service, first_run_service, terms_service
+from app.services import activation_service, first_run_service, mailer, terms_copy_service, terms_service
 from app.services.passwords import ALPHABET, generate_password, password_problem
 from app.version import APP_VERSION, display_version
 
@@ -418,35 +419,104 @@ def test_reset_admin_creates_an_administrator_when_there_is_none(env, capsys):
     assert sign_in(env["client"], "admin@hawk.local", password)["must_change_password"] is True
 
 
-# --- The terms of use ---------------------------------------------------------------------------------------------
+# --- The licence agreement and terms of use ------------------------------------------------------------------------
 
 
 def _add_member(env, tenant_id: str, email: str, role: str = "viewer") -> None:
     with env["db"]() as db:
-        user = User(email=email, full_name="Member", hashed_password=get_password_hash(NEW_PASSWORD), is_active=True)
+        user = User(email=email, full_name="Member Person", hashed_password=get_password_hash(NEW_PASSWORD), is_active=True)
         db.add(user)
         db.flush()
         db.add(UserTenantRole(user_id=user.id, tenant_id=tenant_id, role=role))
         db.commit()
 
 
-@pytest.mark.terms_gate
-def test_terms_text_version_and_hash():
-    terms = terms_service.current()
-    assert terms.version == "1.0"
-    assert re.fullmatch(r"[0-9a-f]{16}", terms.hash)
-    assert "Bhawani Singh" in terms.text
-
-
-@pytest.mark.terms_gate
-def test_hawk_is_closed_until_an_administrator_accepts_the_terms_then_each_person(env):
+def _owner(env):
     client = env["client"]
     prepare(env, ADMIN_EMAIL="owner@example.com", ADMIN_PASSWORD="Chosen-Password-2026")
     first = sign_in(client, "owner@example.com", "Chosen-Password-2026")
-    owner = client.post("/auth/me/password", headers=bearer(first), json={"current": "Chosen-Password-2026", "next": NEW_PASSWORD}).json()
+    return client.post("/auth/me/password", headers=bearer(first), json={"current": "Chosen-Password-2026", "next": NEW_PASSWORD}).json()
+
+
+def _full(**overrides):
+    terms = terms_service.current()
+    body = {
+        "version": terms.version,
+        "hash": terms.hash,
+        "forOrganisation": True,
+        "read": True,
+        "companyName": "Acme Bank PJSC",
+        "fullName": "Olivia Owner",
+        "email": "olivia@acme.example",
+        "authorised": True,
+    }
+    body.update(overrides)
+    return {k: v for k, v in body.items() if v is not None}
+
+
+class _Outbox:
+    """mailer.send, recorded (and failing while ``fail`` is set)."""
+
+    def __init__(self) -> None:
+        self.sent: list[tuple[object, str]] = []
+        self.fail = False
+
+    def __call__(self, message, to, *, smtp=None):
+        if self.fail:
+            raise mailer.MailError("Sending failed: the mail server is down.")
+        self.sent.append((message, to))
+
+
+@pytest.fixture()
+def outbox(monkeypatch):
+    """A mail server that is set up (mailer.current) but not tested until a test passes; mailer.send recorded."""
+
+    box = _Outbox()
+    smtp = mailer.Smtp(host="mail.acme.example", port=587, from_address="hawk@acme.example", from_name="Hawk AI", require_auth=False)
+    monkeypatch.setattr(mailer, "current", lambda: smtp)
+    monkeypatch.setattr(mailer, "test_connection", lambda smtp=None: None)
+    monkeypatch.setattr(mailer, "send", box)
+    return box
+
+
+def test_terms_render_the_licensor_settings_into_a_versioned_hashed_text(monkeypatch):
+    terms = terms_service.current()
+    assert terms.version == "2.0"
+    assert terms.text.startswith("# Hawk AI End User Licence Agreement and Terms of Use")
+    assert terms.hash == hashlib.sha256(terms.text.encode("utf-8")).hexdigest()
+    assert "{{" not in terms.text
+    # The defaults read sensibly: UAE law, DIAC arbitration seated onshore in Dubai, in English, one arbitrator.
+    assert "**the licensor named in your order or activation code** (address: as stated in your order or activation code)" in terms.text
+    assert "governed by the federal laws of the United Arab Emirates as applied in the Emirate of Dubai, without regard" in terms.text
+    assert "Dubai International Arbitration Centre (DIAC)" in terms.text and "onshore Dubai, and not the Dubai International Financial Centre" in terms.text
+    assert "five hundred UAE dirhams (AED 500)" in terms.text
+    for clause in ("## 9. AI outputs", "## 11. Limitation of liability", "## 13. Bringing claims", "## Schedule 1", "## Schedule 2"):
+        assert clause in terms.text
+
+    monkeypatch.setattr(settings, "licensor_legal_name", "Example Licensing FZ-LLC.")
+    monkeypatch.setattr(settings, "licensor_address", "Office 1, Dubai, United Arab Emirates")
+    monkeypatch.setattr(settings, "licensor_notice_email", "legal@example.com")
+    monkeypatch.setattr(settings, "liability_cap_no_fees", "AED 100 {{GOVERNING_LAW}}\n")
+    named = terms_service.current()
+    assert "**Example Licensing FZ-LLC** (address: Office 1, Dubai, United Arab Emirates)" in named.text
+    assert "Notices to the Licensor go to legal@example.com" in named.text
+    assert "if no such Fees were paid, AED 100 GOVERNING_LAW." in named.text
+    assert named.version == "2.0" and named.hash != terms.hash
+    assert named.hash == hashlib.sha256(named.text.encode("utf-8")).hexdigest()
+
+    users = terms_service.user_terms(named.text)
+    assert users.startswith("## Schedule 2 — Terms of use for users and acceptable use")
+    assert "## 11." not in users and "Licensor and acceptance details" not in users
+
+
+@pytest.mark.terms_gate
+def test_hawk_is_closed_until_an_administrator_accepts_the_agreement_then_each_person(env):
+    client = env["client"]
+    owner = _owner(env)
     tenant_id = owner["selected_tenant_id"]
     _add_member(env, tenant_id, "member@example.com")
     member = sign_in(client, "member@example.com", NEW_PASSWORD)
+    terms = terms_service.current()
 
     closed = client.get("/auth/tenants", headers=bearer(owner))
     assert closed.status_code == 403
@@ -456,62 +526,259 @@ def test_hawk_is_closed_until_an_administrator_accepts_the_terms_then_each_perso
     for path in ("/health/live", "/licence", "/setup", "/terms"):
         assert client.get(path).status_code == 200, path
     me = client.get("/auth/me", headers=bearer(owner)).json()
-    assert me["terms"] == {"version": "1.0", "organisationAccepted": False, "accepted": False, "canAcceptForOrganisation": True}
+    assert me["terms"] == {"version": "2.0", "organisationAccepted": False, "accepted": False, "canAcceptForOrganisation": True, "scope": "organisation"}
     readable = client.get("/terms", headers=bearer(member)).json()
-    assert readable["version"] == "1.0" and readable["text"].startswith("# Hawk AI terms of use")
-    assert readable["you"] == {"accepted": False, "at": None, "canAcceptForOrganisation": False}
+    assert readable["version"] == "2.0" and readable["hash"] == terms.hash and readable["text"] == terms.text
+    assert readable["userText"].startswith("## Schedule 2")
+    assert readable["you"] == {"accepted": False, "at": None, "canAcceptForOrganisation": False, "scope": "user", "email": "member@example.com", "fullName": "Member Person"}
 
-    assert client.post("/terms/accept", headers=bearer(owner), json={"version": "0.9", "forOrganisation": True}).status_code == 409
-    assert client.post("/terms/accept", headers=bearer(member), json={"version": "1.0", "forOrganisation": True}).json()["error"] == (
-        "An administrator must accept the terms of use for the organisation first."
-    )
-    unnamed = client.post("/terms/accept", headers=bearer(owner), json={"version": "1.0", "forOrganisation": True})
-    assert unnamed.status_code == 400
-    accepted = client.post("/terms/accept", headers=bearer(owner), json={"version": "1.0", "forOrganisation": True, "organisationName": "Acme Bank"})
+    # A stale version or text, and someone who is not an administrator, are refused.
+    assert client.post("/terms/accept", headers=bearer(owner), json=_full(version="1.0")).status_code == 409
+    assert client.post("/terms/accept", headers=bearer(owner), json=_full(hash="0" * 64)).status_code == 409
+    assert client.post("/terms/accept", headers=bearer(member), json=_full()).json()["error"] == "An administrator must accept the terms of use for the organisation first."
+    # Every field is required: read to the end, company, full name, email and "authorised".
+    assert client.post("/terms/accept", headers=bearer(owner), json=_full(read=None)).json()["error"] == "Read the terms to the end and confirm that you have read them."
+    for field, value in (("companyName", " "), ("fullName", ""), ("email", "not-an-email"), ("authorised", False)):
+        refused = client.post("/terms/accept", headers=bearer(owner), json=_full(**{field: value}))
+        assert refused.status_code == 400, field
+        assert list(refused.json()["fields"]) == [field]
+    assert client.get("/auth/tenants", headers=bearer(owner)).status_code == 403
+
+    accepted = client.post("/terms/accept", headers={**bearer(owner), "User-Agent": "Browser/1.0"}, json=_full())
     assert accepted.status_code == 200, accepted.text
     assert accepted.json()["terms"]["accepted"] is True
-    assert client.get("/auth/tenants", headers=bearer(owner)).status_code == 200
-    assert client.get("/auth/tenants", headers=bearer(owner)).json()["items"][0]["name"] == "Acme Bank"
+    assert client.get("/auth/tenants", headers=bearer(owner)).json()["items"][0]["name"] == "Acme Bank PJSC"
 
-    # The organisation has accepted; each person still accepts once.
+    # The organisation has accepted; everyone else accepts the terms of use for users (no company fields).
     assert client.get("/auth/tenants", headers=bearer(member)).json()["error"] == "Accept the terms of use to continue."
-    assert client.post("/terms/accept", headers=bearer(member), json={"version": "1.0"}).status_code == 200
+    assert client.post("/terms/accept", headers=bearer(member), json={"version": "2.0", "hash": terms.hash}).status_code == 400
+    assert client.post("/terms/accept", headers=bearer(member), json={"version": "2.0", "hash": terms.hash, "read": True}).status_code == 200
     assert client.get("/auth/tenants", headers=bearer(member)).status_code == 200
+
+    # Another administrator accepts the whole agreement too, at their own sign-in: the terms of use are not enough.
+    _add_member(env, tenant_id, "admin2@example.com", role="admin")
+    second = sign_in(client, "admin2@example.com", NEW_PASSWORD)
+    assert client.get("/auth/tenants", headers=bearer(second)).json()["code"] == "terms_required"
+    assert client.post("/terms/accept", headers=bearer(second), json={"version": "2.0", "hash": terms.hash, "read": True}).status_code == 400
+    assert client.post("/terms/accept", headers=bearer(second), json=_full(fullName="Adam Admin", email="admin2@example.com")).status_code == 200
+    assert client.get("/auth/tenants", headers=bearer(second)).status_code == 200
+
     with env["db"]() as db:
         assert terms_service.organisation_accepted(db) is True
-
-    with env["db"]() as db:
-        reasons = [row.payload["reason"] for row in db.scalars(select(AuditLog).where(AuditLog.action == "terms.accepted"))]
-    assert reasons == [
-        "Terms of use v1.0 accepted for the organisation by [email] (organisation name: Acme Bank).",
-        "Terms of use v1.0 accepted by [email].",
-        "Terms of use v1.0 accepted by [email].",
-    ]
+        rows = db.scalars(select(TermsAcceptance).order_by(TermsAcceptance.accepted_at)).all()
+        first_row = next(r for r in rows if r.email == "olivia@acme.example")
+        assert (first_row.scope, first_row.organisation_name, first_row.full_name, first_row.authorised) == ("organisation", "Acme Bank PJSC", "Olivia Owner", True)
+        assert (first_row.version, first_row.text_hash, first_row.tenant_id, first_row.user_agent) == ("2.0", terms.hash, tenant_id, "Browser/1.0")
+        assert first_row.ip and first_row.user_id
+        assert sorted(r.scope for r in rows) == ["organisation", "organisation", "user"]
+        audit = db.scalars(select(AuditLog).where(AuditLog.action == "terms.accepted").order_by(AuditLog.created_at)).all()
+    assert [entry.payload["terms"]["scope"] for entry in audit] == ["organisation", "user", "organisation"]
+    assert audit[0].resource_id == first_row.id
+    assert audit[0].payload["terms"]["hash"] == terms.hash
+    assert audit[0].payload["acceptance"]["companyName"] == "Acme Bank PJSC"
+    assert audit[0].payload["reason"].startswith("Licence agreement v2.0 accepted for Acme Bank PJSC by Olivia Owner")
 
 
 @pytest.mark.terms_gate
 def test_changed_terms_are_asked_for_again(env, monkeypatch):
     client = env["client"]
-    prepare(env, ADMIN_EMAIL="owner@example.com", ADMIN_PASSWORD="Chosen-Password-2026")
-    first = sign_in(client, "owner@example.com", "Chosen-Password-2026")
-    owner = client.post("/auth/me/password", headers=bearer(first), json={"current": "Chosen-Password-2026", "next": NEW_PASSWORD}).json()
-    client.post("/terms/accept", headers=bearer(owner), json={"version": "1.0", "forOrganisation": True, "organisationName": "Acme"})
+    owner = _owner(env)
+    assert client.post("/terms/accept", headers=bearer(owner), json=_full()).status_code == 200
     assert client.get("/auth/tenants", headers=bearer(owner)).status_code == 200
 
-    changed = terms_service.TermsText(terms_service.current().text + "\n## 12. New\n")
+    changed = terms_service.TermsText(terms_service.current().text.replace("Version 2.0", "Version 2.1") + "\n## 29. New\n")
     monkeypatch.setattr(terms_service, "current", lambda: changed)
     assert client.get("/auth/tenants", headers=bearer(owner)).json()["code"] == "terms_required"
-    # The organisation's name is kept, so it is not asked for again.
-    assert client.post("/terms/accept", headers=bearer(owner), json={"version": "1.0", "forOrganisation": True}).status_code == 200
+    assert client.get("/auth/me", headers=bearer(owner)).json()["terms"]["accepted"] is False
+    assert client.post("/terms/accept", headers=bearer(owner), json=_full(version="2.0", hash=changed.hash)).status_code == 409
+    assert client.post("/terms/accept", headers=bearer(owner), json=_full(version="2.1", hash=changed.hash)).status_code == 200
     assert client.get("/auth/tenants", headers=bearer(owner)).status_code == 200
 
 
 @pytest.mark.terms_gate
-def test_accept_terms_from_the_environment_accepts_for_everyone_on_record(env):
+def test_a_changed_licensor_setting_is_asked_for_again(env, monkeypatch):
     client = env["client"]
-    prepare(env, ADMIN_EMAIL="owner@example.com", ADMIN_PASSWORD="Chosen-Password-2026")
-    first = sign_in(client, "owner@example.com", "Chosen-Password-2026")
-    owner = client.post("/auth/me/password", headers=bearer(first), json={"current": "Chosen-Password-2026", "next": NEW_PASSWORD}).json()
+    owner = _owner(env)
+    assert client.post("/terms/accept", headers=bearer(owner), json=_full()).status_code == 200
+    monkeypatch.setattr(terms_service, "_organisation_accepted_hash", None)
+    monkeypatch.setattr(settings, "governing_law", "the laws of the Emirate of Dubai")
+    assert client.get("/auth/tenants", headers=bearer(owner)).json()["code"] == "terms_required"
+    with env["db"]() as db:
+        assert terms_service.organisation_accepted(db) is False
+
+
+@pytest.mark.terms_gate
+def test_acceptances_are_never_changed_or_deleted(env):
+    client = env["client"]
+    owner = _owner(env)
+    assert client.post("/terms/accept", headers=bearer(owner), json=_full()).status_code == 200
+    with env["db"]() as db:
+        row_id = db.scalar(select(TermsAcceptance.id))
+    for method in ("put", "patch", "delete"):
+        assert getattr(client, method)(f"/terms/acceptances/{row_id}", headers=bearer(owner)).status_code in (404, 405), method
+    with env["db"]() as db:
+        row = db.get(TermsAcceptance, row_id)
+        row.full_name = "Someone Else"
+        with pytest.raises(ImmutableRecordError):
+            db.flush()
+        db.rollback()
+        row = db.get(TermsAcceptance, row_id)
+        db.delete(row)
+        with pytest.raises(ImmutableRecordError):
+            db.flush()
+        db.rollback()
+        assert db.get(TermsAcceptance, row_id).full_name == "Olivia Owner"
+
+
+@pytest.mark.terms_gate
+def test_the_copy_waits_for_the_email_server_and_goes_once_a_test_passes(env, outbox):
+    client = env["client"]
+    owner = _owner(env)
+    terms = terms_service.current()
+    assert client.post("/terms/accept", headers=bearer(owner), json=_full()).status_code == 200
+    # The mail server is set up but not tested: nothing is sent, the copy waits.
+    assert outbox.sent == []
+    listed = client.get("/terms/acceptances", headers=bearer(owner)).json()
+    assert listed["emailReady"] is False
+    [item] = listed["acceptances"]
+    assert item["copy"]["state"] == "waiting" and item["copy"]["to"] == "olivia@acme.example"
+    with env["db"]() as db:
+        assert terms_copy_service.deliver_due(db) == {"sent": 0, "failed": 0, "waiting": 1, "retrying": 0}
+
+    # Settings → Email (SMTP) → Test: the copy goes out at once.
+    tested = client.post("/settings/smtp/test", headers=bearer(owner))
+    assert tested.status_code == 200, tested.text
+    assert len(outbox.sent) == 1
+    message, to = outbox.sent[0]
+    assert to == "olivia@acme.example"
+    assert "licence agreement (version 2.0)" in message["Subject"]
+    body = message.get_body(("plain",)).get_content()
+    assert terms.hash in body and "Acme Bank PJSC" in body and "Olivia Owner" in body
+    assert "## 11. Limitation of liability" in body
+    html_body = message.get_body(("html",)).get_content()
+    assert "Limitation of liability" in html_body and "<script" not in html_body
+    attachments = {part.get_filename(): part.get_content() for part in message.iter_attachments()}
+    assert hashlib.sha256(attachments["hawk-ai-licence-agreement-v2.0.txt"]).hexdigest() == terms.hash
+    assert "Acme Bank PJSC" in attachments["hawk-ai-licence-agreement-v2.0-accepted.html"].decode("utf-8")
+
+    item = client.get("/terms/acceptances", headers=bearer(owner)).json()["acceptances"][0]
+    assert item["copy"]["state"] == "sent" and item["copy"]["sentAt"]
+    # Sent once: the scheduler finds nothing more to send.
+    with env["db"]() as db:
+        assert terms_copy_service.deliver_due(db)["sent"] == 0
+    assert len(outbox.sent) == 1
+
+
+@pytest.mark.terms_gate
+def test_a_failed_send_is_retried_with_backoff_then_given_up(env, outbox):
+    from datetime import datetime, timedelta, timezone
+
+    from app.db.models.access import TermsCopyEmail
+
+    client = env["client"]
+    owner = _owner(env)
+    with env["db"]() as db:
+        mailer.mark_verified(db, mailer.current())
+        db.commit()
+    outbox.fail = True
+    assert client.post("/terms/accept", headers=bearer(owner), json=_full()).status_code == 200
+    with env["db"]() as db:
+        row = db.scalar(select(TermsCopyEmail))
+        assert (row.status, row.attempts) == ("queued", 1)
+        assert "mail server is down" in row.last_error
+        first_retry = row.next_attempt_at
+        assert first_retry is not None
+    copy = client.get("/terms/acceptances", headers=bearer(owner)).json()["acceptances"][0]["copy"]
+    assert copy["state"] == "retrying" and copy["attempts"] == 1
+
+    now = datetime.now(timezone.utc)
+    with env["db"]() as db:
+        assert terms_copy_service.deliver_due(db, now=now)["retrying"] == 1  # not due yet
+        db.commit()
+    outbox.fail = False
+    with env["db"]() as db:
+        assert terms_copy_service.deliver_due(db, now=now + timedelta(minutes=2))["sent"] == 1
+        db.commit()
+    assert len(outbox.sent) == 1
+
+    # A copy that keeps failing is given up after MAX_ATTEMPTS, with growing waits in between.
+    outbox.fail = True
+    with env["db"]() as db:
+        acceptance = db.scalar(select(TermsAcceptance))
+        terms_copy_service.queue(db, acceptance)
+        db.commit()
+        waits = []
+        moment = now
+        for _ in range(terms_copy_service.MAX_ATTEMPTS):
+            terms_copy_service.deliver_due(db, now=moment)
+            db.commit()
+            row = terms_copy_service.latest(db, acceptance.id)
+            if row.next_attempt_at is not None:
+                due = row.next_attempt_at if row.next_attempt_at.tzinfo else row.next_attempt_at.replace(tzinfo=timezone.utc)
+                waits.append((due - moment).total_seconds())
+                moment = due
+        assert (row.status, row.attempts) == ("failed", terms_copy_service.MAX_ATTEMPTS)
+    assert waits[:4] == [60, 300, 900, 3600]
+    assert client.get("/terms/acceptances", headers=bearer(owner)).json()["acceptances"][0]["copy"]["state"] == "failed"
+
+
+@pytest.mark.terms_gate
+def test_send_again_and_download_the_accepted_copy(env, outbox):
+    client = env["client"]
+    owner = _owner(env)
+    terms = terms_service.current()
+    assert client.post("/terms/accept", headers=bearer(owner), json=_full()).status_code == 200
+    _add_member(env, owner["selected_tenant_id"], "member@example.com")
+    member = sign_in(client, "member@example.com", NEW_PASSWORD)
+    assert client.post("/terms/accept", headers=bearer(member), json={"version": "2.0", "hash": terms.hash, "read": True}).status_code == 200
+    with env["db"]() as db:
+        row_id = db.scalar(select(TermsAcceptance.id).where(TermsAcceptance.scope == "organisation"))
+
+    exact = client.get(f"/terms/acceptances/{row_id}/copy?format=txt", headers=bearer(owner))
+    assert exact.status_code == 200
+    assert hashlib.sha256(exact.content).hexdigest() == terms.hash
+    assert "attachment" in exact.headers["content-disposition"]
+    page = client.get(f"/terms/acceptances/{row_id}/copy", headers=bearer(owner))
+    assert page.status_code == 200 and "Acme Bank PJSC" in page.text and terms.hash in page.text
+    assert client.get(f"/terms/acceptances/{row_id}/copy?format=exe", headers=bearer(owner)).status_code == 400
+    assert client.get(f"/terms/acceptances/{row_id}/copy", headers=bearer(member)).status_code == 403
+    # Someone who is not an administrator sees only their own acceptance, and cannot send copies.
+    mine = client.get("/terms/acceptances", headers=bearer(member)).json()["acceptances"]
+    assert [a["scope"] for a in mine] == ["user"]
+    assert client.post(f"/terms/acceptances/{row_id}/resend", headers=bearer(member), json={}).status_code == 403
+
+    # Not tested yet: the re-sent copy waits too; once the test passes both go.
+    again = client.post(f"/terms/acceptances/{row_id}/resend", headers=bearer(owner), json={"to": "legal@acme.example"})
+    assert again.status_code == 200 and again.json()["copy"]["state"] == "waiting" and again.json()["copy"]["to"] == "legal@acme.example"
+    assert client.post(f"/terms/acceptances/{row_id}/resend", headers=bearer(owner), json={"to": "nope"}).status_code == 400
+    assert client.post("/settings/smtp/test", headers=bearer(owner)).status_code == 200
+    assert sorted(to for _, to in outbox.sent) == ["legal@acme.example", "olivia@acme.example"]
+    # Once tested, a re-send goes at once (just after the answer).
+    assert client.post(f"/terms/acceptances/{row_id}/resend", headers=bearer(owner), json={}).json()["copy"]["state"] == "queued"
+    assert client.get("/terms/acceptances", headers=bearer(owner)).json()["acceptances"][0]["copy"]["state"] == "sent"
+    assert len(outbox.sent) == 3
+    with env["db"]() as db:
+        assert db.scalar(select(func.count()).select_from(AuditLog).where(AuditLog.action == "terms.copy.resend")) == 2
+
+
+@pytest.mark.terms_gate
+def test_acceptances_are_in_the_auditor_export(env):
+    from app.services.snapshot_service import _terms_acceptance_rows
+
+    client = env["client"]
+    owner = _owner(env)
+    assert client.post("/terms/accept", headers=bearer(owner), json=_full()).status_code == 200
+    with env["db"]() as db:
+        [row] = _terms_acceptance_rows(db, owner["selected_tenant_id"])
+    assert row["companyName"] == "Acme Bank PJSC" and row["fullName"] == "Olivia Owner" and row["email"] == "olivia@acme.example"
+    assert row["hash"] == terms_service.current().hash and row["authorised"] is True and row["acceptedAt"]
+
+
+@pytest.mark.terms_gate
+def test_accept_terms_from_the_environment_accepts_for_everyone_on_record(env, monkeypatch):
+    client = env["client"]
+    owner = _owner(env)
+    monkeypatch.setenv("ORGANISATION_NAME", "Deployer Co")
     with env["db"]() as db:
         assert terms_service.organisation_accepted(db) is False
 
@@ -522,7 +789,9 @@ def test_accept_terms_from_the_environment_accepts_for_everyone_on_record(env):
         db.commit()
         assert terms_service.accept_from_environment(db, "deployer@example.com") is False
         row = db.scalar(select(TermsAcceptance))
-        assert (row.scope, row.email, row.via, row.everyone) == ("organisation", "deployer@example.com", "ACCEPT_TERMS", True)
+        assert (row.scope, row.email, row.via, row.everyone, row.organisation_name) == ("organisation", "deployer@example.com", "ACCEPT_TERMS", True, "Deployer Co")
+        # Its copy waits for the email server too.
+        assert terms_copy_service.status(db, row)["state"] == "waiting"
     assert client.get("/auth/tenants", headers=bearer(owner)).status_code == 200
     assert client.get("/terms", headers=bearer(owner)).json()["organisation"]["via"] == "ACCEPT_TERMS"
 
@@ -536,3 +805,45 @@ def test_background_tasks_wait_for_the_terms(env, monkeypatch):
     assert licence_task._terms_accepted("app.jobs.example") is False
     monkeypatch.setattr(terms_service, "organisation_accepted", lambda db=None: True)
     assert licence_task._terms_accepted("app.jobs.example") is True
+
+
+def test_the_scheduler_sends_the_waiting_copies_every_five_minutes():
+    from app.jobs import terms_jobs
+    from app.jobs.celery_app import celery_app
+
+    entry = celery_app.conf.beat_schedule["terms-copy-emails"]
+    assert entry["task"] == terms_jobs.TERMS_COPY_TASK == "app.jobs.terms_jobs.send_terms_copies"
+    assert entry["schedule"] == 300.0
+
+
+@pytest.mark.terms_gate
+def test_another_tenants_admin_sees_only_their_own_tenants_acceptances(env, outbox):
+    """Checkmarx triage (PR 11): the acceptances carry people's names, email, address and browser. An owner or admin
+    of another tenant sees, downloads and re-sends only their own tenant's; the installation's admins see all."""
+
+    from datetime import datetime, timedelta, timezone
+
+    client = env["client"]
+    owner = _owner(env)
+    assert client.post("/terms/accept", headers=bearer(owner), json=_full()).status_code == 200
+    with env["db"]() as db:
+        other = Tenant(name="Other Co", slug="other-co", created_at=datetime.now(timezone.utc) + timedelta(days=1))
+        db.add(other)
+        db.commit()
+        other_id = other.id
+        owners_row = db.scalar(select(TermsAcceptance.id).where(TermsAcceptance.scope == "organisation"))
+    _add_member(env, other_id, "admin@other.example", role="admin")
+    admin = sign_in(client, "admin@other.example", NEW_PASSWORD)
+    mine = client.post("/terms/accept", headers=bearer(admin), json=_full(companyName="Other Co", fullName="Oscar Other", email="oscar@other.example"))
+    assert mine.status_code == 200, mine.text
+
+    listed = client.get("/terms/acceptances", headers=bearer(admin)).json()["acceptances"]
+    assert [item["email"] for item in listed] == ["oscar@other.example"]
+    assert client.get(f"/terms/acceptances/{owners_row}/copy", headers=bearer(admin)).status_code == 404
+    assert client.post(f"/terms/acceptances/{owners_row}/resend", headers=bearer(admin), json={"to": "x@attacker.example"}).status_code == 404
+    with env["db"]() as db:
+        assert db.scalar(select(func.count()).select_from(AuditLog).where(AuditLog.action == "terms.copy.resend")) == 0
+
+    # The installation's admins (its first tenant's) see every tenant's.
+    everyone = client.get("/terms/acceptances", headers=bearer(owner)).json()["acceptances"]
+    assert sorted(item["email"] for item in everyone) == ["olivia@acme.example", "oscar@other.example"]

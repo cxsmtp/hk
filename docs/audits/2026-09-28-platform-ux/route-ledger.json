@@ -1979,6 +1979,25 @@
     "mobile": "not-observed"
   },
   {
+    "route": "/settings/compliance",
+    "file": "apps/web/src/app/settings/compliance/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-applicable",
+      "unavailable": "not-observed",
+      "stale": "not-applicable"
+    },
+    "notes": "Records → Compliance: the DESC ISR, UAE IA Standard and CERT-In controls the software takes part in, the clock, encryption at rest, retention, data location, the recommended sign-in baseline and the incident report (app/api/routers/compliance.py). Covered by apps/web/tests/compliance.test.mjs and apps/api/tests/test_desc_controls.py; not yet observed in a browser.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
+  },
+  {
     "route": "/settings/help",
     "file": "apps/web/src/app/settings/help/page.tsx",
     "owner": "W3",
@@ -2051,6 +2070,25 @@
       "stale": "not-observed"
     },
     "notes": "Settings → Hands-off (docs/hands-off.md): CxMissionZero's page (public/index.html #set-handsoff) in FTR Command Center's settings look, without MZ's Checkmarx reminder questions: the weekly status (who, day, hour), the email buttons and replies, and the self-check box. Covered by apps/web/tests/hands-off-settings.test.mjs (pure view logic and source checks) and apps/api/tests/test_watchdog.py; not yet observed in a browser.",
+    "desktop": "not-observed",
+    "mobile": "not-observed"
+  },
+  {
+    "route": "/settings/approvals",
+    "file": "apps/web/src/app/settings/approvals/page.tsx",
+    "owner": "W3",
+    "local_views": [],
+    "implementation": "updated",
+    "automated": "passed",
+    "browser": "not-observed",
+    "states": {
+      "loading": "not-observed",
+      "ready-populated": "not-observed",
+      "ready-empty": "not-observed",
+      "unavailable": "not-observed",
+      "stale": "not-observed"
+    },
+    "notes": "Settings → AI system approvals (Workflow): the approval policy by risk tier (approvers, self-approval, roles, scopes, durations), the requests waiting for a decision and the standing approvals with revoke. Covered by apps/web/tests/ai-system-approvals.test.mjs (pure view logic and source checks) and apps/api/tests/test_ai_system_approval_workflow.py; not yet observed in a browser.",
     "desktop": "not-observed",
     "mobile": "not-observed"
   },

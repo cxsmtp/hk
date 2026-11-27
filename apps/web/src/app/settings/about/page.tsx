@@ -6,7 +6,8 @@ import Link from "next/link";
 import { Fragment, useEffect, useRef, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
-import type { TermsView } from "@/lib/access";
+import { termsCopyStatus } from "@/lib/access";
+import type { TermsAcceptance, TermsAcceptances, TermsView } from "@/lib/access";
 import { api } from "@/lib/api";
 import { inline, mdBlocks, MORE, SHOWN_OPEN, splitVersions } from "@/lib/changelog";
 import type { Version } from "@/lib/changelog";
@@ -66,6 +67,116 @@ function Markdown({ text }: { text: string }) {
         );
       })}
     </>
+  );
+}
+
+function save(blob: Blob, name: string) {
+  const link = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: name });
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+}
+
+/**
+ * The accepted licence agreement (apps/api/app/services/terms_copy_service.py): who accepted which version for which
+ * company, the SHA-256 of the text, and where its emailed copy is ("copy emailed on …", or "will be emailed when the
+ * mail server is set up"). Owners and admins see every administrator's acceptance and can send a copy again; anyone
+ * can download their own accepted copy. Acceptances are permanent: there is nothing to change or delete.
+ */
+function AcceptedAgreement({ canManage }: { canManage: boolean }) {
+  const [data, setData] = useState<TermsAcceptances | null>(null);
+  const [status, setStatus] = useState("");
+  const [busy, setBusy] = useState("");
+
+  const load = () =>
+    api
+      .getTermsAcceptances()
+      .then(setData)
+      .catch((error) => setStatus(message(error)));
+
+  useEffect(() => {
+    void load();
+  }, []);
+
+  async function resend(row: TermsAcceptance) {
+    setBusy(row.id);
+    setStatus("");
+    try {
+      const after = await api.resendTermsCopy(row.id);
+      setStatus(after.copy.state === "waiting" ? `Queued: ${termsCopyStatus(after.copy, dateTime)}` : `A copy is on its way to ${after.copy.to}.`);
+      window.setTimeout(() => void load(), 1500);
+    } catch (error) {
+      setStatus(message(error));
+    } finally {
+      setBusy("");
+    }
+  }
+
+  async function download(row: TermsAcceptance, format: "html" | "txt") {
+    try {
+      save(await api.downloadTermsCopy(row.id, format), `hawk-ai-licence-agreement-v${row.version}${format === "html" ? "-accepted.html" : ".txt"}`);
+    } catch (error) {
+      setStatus(message(error));
+    }
+  }
+
+  const rows = data?.acceptances ?? [];
+  return (
+    <div className="panel mt" data-ui="terms-acceptances">
+      <h2>
+        Accepted licence agreement <small>{canManage ? "every administrator's acceptance, newest first" : "your acceptance"}</small>
+      </h2>
+      {!data && !status ? <p className="muted">Loading…</p> : null}
+      {data && !rows.length ? <p className="muted">Nothing accepted yet.</p> : null}
+      {rows.map((row) => (
+        <div key={row.id} className="terms-acceptance">
+          <dl className="about-facts">
+            <div>
+              <dt>Accepted</dt>
+              <dd>
+                {row.scope === "organisation" ? "Licence agreement" : "Terms of use"} version {row.version}, {dateTime(row.acceptedAt)}
+                {row.version !== data?.current.version ? <span className="muted"> (an earlier version)</span> : null}
+              </dd>
+            </div>
+            {row.scope === "organisation" ? (
+              <div>
+                <dt>For</dt>
+                <dd>
+                  {row.companyName || "—"}, by {row.fullName || row.email} ({row.email}){row.via === "ACCEPT_TERMS" ? " through ACCEPT_TERMS" : ""}
+                </dd>
+              </div>
+            ) : null}
+            <div>
+              <dt>SHA-256</dt>
+              <dd className="mono small" style={{ wordBreak: "break-all" }}>
+                {row.hash}
+              </dd>
+            </div>
+            {row.scope === "organisation" ? (
+              <div>
+                <dt>Emailed copy</dt>
+                <dd data-ui="terms-copy-status">{termsCopyStatus(row.copy, dateTime)}</dd>
+              </div>
+            ) : null}
+          </dl>
+          <div className="flex">
+            <button type="button" className="sm" onClick={() => void download(row, "html")}>
+              Download the accepted copy
+            </button>
+            <button type="button" className="sm ghost" onClick={() => void download(row, "txt")}>
+              Exact text (.txt)
+            </button>
+            {canManage && row.scope === "organisation" ? (
+              <button type="button" className="sm" disabled={busy === row.id} onClick={() => void resend(row)}>
+                Email the copy again
+              </button>
+            ) : null}
+          </div>
+        </div>
+      ))}
+      <p role="status" aria-live="polite" className="small muted">
+        {status}
+      </p>
+    </div>
   );
 }
 
@@ -163,18 +274,26 @@ export default function AboutSettingsPage() {
                     <dt>Organisation</dt>
                     <dd>{view.organisationName}</dd>
                   </div>
+                  {view.dataResidency ? (
+                    <div>
+                      <dt>Data location</dt>
+                      <dd data-ui="about-data-location">{view.dataResidency.location || "Not stated (Settings → Compliance)"}</dd>
+                    </div>
+                  ) : null}
                 </dl>
+                {view.dataResidency ? <p className="muted small">{view.dataResidency.statement}</p> : null}
                 <p className="onprem-note">
                   <b>On premise, your data stays yours.</b> {terms?.notice ?? ""}
                 </p>
                 <div className="terms-card">
-                  <h3>Terms of use &amp; license</h3>
+                  <h3>Licence agreement &amp; terms of use</h3>
                   <p className="muted small">
-                    The terms of use every person accepts before using {view.appName}, version {view.terms.version}. The activation codes that keep it working are under Settings → Activation codes.
+                    The End User Licence Agreement every owner or admin accepts for the organisation, and the terms of use every other person accepts, before using {view.appName}: version {view.terms.version}
+                    {terms?.licensor ? `, licensed by ${terms.licensor}` : ""}. The activation codes that keep it working are under Settings → Activation codes.
                   </p>
                   <div className="flex">
                     <button type="button" className="primary" onClick={() => termsDialog.current?.showModal()} disabled={!terms}>
-                      Read the terms of use &amp; license
+                      Read the licence agreement &amp; terms of use
                     </button>
                     {view.notices ? (
                       <button type="button" onClick={() => noticesDialog.current?.showModal()}>
@@ -184,6 +303,7 @@ export default function AboutSettingsPage() {
                   </div>
                 </div>
               </div>
+              {view.terms.accepted ? <AcceptedAgreement canManage={Boolean(view.terms.canManage)} /> : null}
               <div className="panel mt">
                 <h2>
                   What is new <small>the latest three versions; earlier ones ten at a time</small>
@@ -199,15 +319,17 @@ export default function AboutSettingsPage() {
                   ) : null}
                 </div>
               </div>
-              <dialog ref={termsDialog} className="docd" aria-label="Terms of use">
+              <dialog ref={termsDialog} className="docd" aria-label="Licence agreement and terms of use">
                 <div className="doc-head">
-                  <b>Terms of use &amp; license</b>
+                  <b>Licence agreement &amp; terms of use</b>
                   <button type="button" className="sm ghost" onClick={() => termsDialog.current?.close()}>
                     Close
                   </button>
                 </div>
                 <div className="doc-text md">{terms ? <Markdown text={terms.text} /> : null}</div>
-                <div className="doc-foot small muted">Version {terms?.version}</div>
+                <div className="doc-foot small muted">
+                  Version {terms?.version} · SHA-256 {terms?.hash}
+                </div>
               </dialog>
               {view.notices ? (
                 <dialog ref={noticesDialog} className="docd" aria-label="Third-party notices">

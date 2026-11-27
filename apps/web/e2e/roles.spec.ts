@@ -16,6 +16,7 @@ const ADMIN_ONLY = [
   "Activation codes",
   "Audit log",
   "Connector API activity",
+  "Compliance",
   "General",
   "Branding",
   "Email (SMTP)",

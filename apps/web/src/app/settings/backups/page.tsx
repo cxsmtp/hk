@@ -14,6 +14,8 @@ import { backupKeyFile, backupsHeading, beforeUpdateLine, kb, READINESS, restore
 import type { BackupEncryption, BackupKeyShown, BackupsStatus, Readiness } from "@/lib/backups-settings";
 import type { SelfCheckHealth } from "@/lib/hands-off-settings";
 import { errorMessageFrom } from "@/lib/licence";
+import { bundleFileName, historyLine, recoveryChip, STATUS_TONE } from "@/lib/self-recovery";
+import type { DiagnosticsView } from "@/lib/self-recovery";
 
 const message = (error: unknown) => errorMessageFrom(error instanceof Error ? error.message : String(error ?? ""), "Something went wrong.");
 
@@ -70,11 +72,14 @@ export default function BackupsSettingsPage() {
   const [pass, setPass] = useState("");
   const [health, setHealth] = useState<SelfCheckHealth | null>(null);
   const [checking, setChecking] = useState(false);
+  const [diag, setDiag] = useState<DiagnosticsView | null>(null);
+  const [recovering, setRecovering] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const [status, ready, selfCheck] = await Promise.all([api.getBackups(), api.getReadiness().catch(() => null), api.getSelfCheck().catch(() => null)]);
+      const [status, ready, selfCheck, diagnostics] = await Promise.all([api.getBackups(), api.getReadiness().catch(() => null), api.getSelfCheck().catch(() => null), api.getDiagnostics().catch(() => null)]);
       setB(status);
+      setDiag(diagnostics);
       setRd(ready);
       setHealth(selfCheck?.health ?? null);
       setLoadError("");
@@ -187,6 +192,36 @@ export default function BackupsSettingsPage() {
     }
   }
 
+  /** The diagnostics bundle (signed manifest, redacted logs and settings): to send to the OEM. */
+  async function downloadBundle(prepared = false) {
+    try {
+      const { blob, disposition } = await api.downloadDiagnosticsBundle(prepared);
+      save(blob, bundleFileName(disposition));
+    } catch (error) {
+      toast.error(message(error));
+    }
+  }
+
+  async function recoverNow() {
+    setRecovering(true);
+    try {
+      setDiag(await api.runSelfRecovery());
+    } catch (error) {
+      toast.error(message(error));
+    } finally {
+      setRecovering(false);
+    }
+  }
+
+  async function tryAgain(reference: string) {
+    try {
+      setDiag(await api.retrySelfRecovery(reference));
+      toast.success(`${reference}: Hawk AI tries again at its next run.`);
+    } catch (error) {
+      toast.error(message(error));
+    }
+  }
+
   async function accept(id: string, yes: boolean) {
     await api.setReadiness(id, yes).then(
       () => toast.success(yes ? "Kept as meant." : "It is asked again."),
@@ -197,6 +232,7 @@ export default function BackupsSettingsPage() {
 
   const e = b?.encryption;
   const sealed = b ? sealedLine(b) : null;
+  const chip = recoveryChip(diag);
 
   return (
     <AppShell>
@@ -424,6 +460,97 @@ export default function BackupsSettingsPage() {
                       Download troubleshooting report
                     </button>
                   </div>
+                </div>
+              </div>
+              <div className="panel wide-panel mt" id="diagnostics">
+                <h2>
+                  Self-recovery <small>{diag ? (diag.scope === "installation" ? "the whole installation" : "your organisation, and the installation's issues in plain words") : ""}</small>
+                </h2>
+                <p>
+                  <span className={`chip ${chip.tone}`}>
+                    <i />
+                    {chip.label}
+                  </span>{" "}
+                  {chip.text}
+                </p>
+                <p className="muted small">
+                  Every {diag?.everyMinutes ?? 5} minutes Hawk AI reads its error log and its failed jobs, recognises the failures it knows and puts them right: it runs a failed job again, clears a stale lock, reconnects to the database or Redis, restarts a stuck worker or scheduler, frees disk space, checks the database schema again, and rolls a failed or unhealthy update back to the version before. Each fix has a limit; when it runs out, or the failure is one Hawk AI does not know, it stops trying and marks it <b>Needs OEM help</b>.
+                  {diag?.lastRunAt ? ` Last run: ${dateTime(diag.lastRunAt)}.` : ""}
+                </p>
+                {diag?.issues.length ? (
+                  <div className="tw">
+                    <table className="ready-table" id="recovery-issues">
+                      <thead>
+                        <tr>
+                          <th>Issue</th>
+                          <th>State</th>
+                          <th>What Hawk AI did</th>
+                          <th>Reference</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {diag.issues.map((i) => (
+                          <tr key={i.reference}>
+                            <td>
+                              <b>{i.title}</b>
+                              {i.detail ? <div className="small muted">{i.detail}</div> : null}
+                              <div className="small muted">since {dateTime(i.firstSeen)}</div>
+                            </td>
+                            <td data-v={i.statusLabel}>
+                              <span className={`chip ${STATUS_TONE[i.status] ?? "warn"}`}>
+                                <i />
+                                {i.statusLabel}
+                              </span>
+                            </td>
+                            <td className="small">
+                              {i.lastAction ? `${i.lastAction} (${i.attempts} of ${i.limit}): ${i.lastResult ?? ""}` : i.limit ? `${i.action} (at most ${i.limit})` : i.action}
+                            </td>
+                            <td>
+                              <span className="ready-act">
+                                <span className="mono small">{i.reference}</span>
+                                {diag.canRun && i.status === "needs_oem" ? (
+                                  <button className="ghost sm" type="button" data-retry={i.reference} onClick={() => tryAgain(i.reference)}>
+                                    Try again
+                                  </button>
+                                ) : null}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : null}
+                <h3 className="mt">Self-recovery history</h3>
+                {diag?.history.length ? (
+                  <ul className="small" id="recovery-history">
+                    {diag.history.slice(0, 15).map((h, n) => (
+                      <li key={`${h.at}-${h.reference}-${n}`}>{historyLine(h, dateTime)}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="small muted">Nothing yet: Hawk AI has not needed to put anything right.</p>
+                )}
+                <p className="muted small">
+                  The diagnostics bundle is one file to send to the OEM: recent errors, failed jobs, update and rollback history, the self-check&apos;s and self-recovery&apos;s events, versions, health and the settings in force, with every secret, key and password taken out and no prompt text or customer data. Its manifest lists each file with its SHA-256 and is signed with this server&apos;s evidence key, so the OEM can check it came from here. {diag?.scope === "tenant" ? "Yours covers your organisation only." : ""}
+                </p>
+                <div className="flex">
+                  <button id="bundle" type="button" className="primary" onClick={() => downloadBundle(false)}>
+                    <Icon name="download" />
+                    Download diagnostics bundle
+                  </button>
+                  {diag?.prepared ? (
+                    <button id="bundle-prepared" type="button" className="ghost" onClick={() => downloadBundle(true)}>
+                      <Icon name="download" />
+                      Bundle prepared {dateTime(diag.prepared.at)}
+                      {diag.prepared.reference ? ` (${diag.prepared.reference})` : ""}
+                    </button>
+                  ) : null}
+                  {diag?.canRun ? (
+                    <button id="recover-now" type="button" className="ghost" disabled={recovering} onClick={recoverNow}>
+                      Run self-recovery now
+                    </button>
+                  ) : null}
                 </div>
               </div>
               {rd ? (
