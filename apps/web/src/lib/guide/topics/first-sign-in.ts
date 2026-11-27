@@ -18,6 +18,10 @@ export const firstSignIn: GuideTopic = {
           kind: "p",
           text: "Sign in with your email and password: there is no workspace to type, since an email address belongs to one account on the installation. The page is light; anyone can switch to dark, or to their device's setting, under **Appearance** in the account menu (top right), and the choice is kept in that browser. An Owner or Admin sets everyone's default look on [Settings → Branding](/settings/branding).",
         },
+        {
+          kind: "p",
+          text: "A new installation works for 3 days from its first start. Owners and admins see the time left in a banner at the top of every page: before it runs out, download the licence request under [Settings → Licence](/settings/activation), send it to Bhawani Singh and upload the `.hawkai` licence you receive ([Licence](/settings/guide/licence)).",
+        },
       ],
     },
     {

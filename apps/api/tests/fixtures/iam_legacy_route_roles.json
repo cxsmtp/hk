@@ -20,8 +20,6 @@
 {"method":"POST","path":"/account-boundary/sessions/{session_id}/revalidate","checks":[{"min_role":"operator","allow_list":null}],"endpoint":"app.api.routers.account_boundary.revalidate_session"},
 {"method":"POST","path":"/account-boundary/sessions/{session_id}/revoke","checks":[{"min_role":"operator","allow_list":null}],"endpoint":"app.api.routers.account_boundary.revoke_session"},
 {"method":"GET","path":"/action-integrity/actions/{runtime_event_id}","checks":[{"min_role":"viewer","allow_list":null}],"endpoint":"app.api.routers.action_integrity.action_detail"},
-{"method":"GET","path":"/activation","checks":[{"min_role":"admin","allow_list":null}],"endpoint":"app.api.routers.licence.activation"},
-{"method":"POST","path":"/activation","checks":[{"min_role":"admin","allow_list":null}],"endpoint":"app.api.routers.licence.apply_activation"},
 {"method":"GET","path":"/activity-audit/search","checks":[{"min_role":"viewer","allow_list":null}],"endpoint":"app.api.routers.activity_audit.search_activity"},
 {"method":"GET","path":"/activity/log","checks":[{"min_role":"auditor","allow_list":null}],"endpoint":"app.api.routers.records.activity_log"},
 {"method":"GET","path":"/activity/log/export.csv","checks":[{"min_role":"auditor","allow_list":null}],"endpoint":"app.api.routers.records.export_activity_csv"},

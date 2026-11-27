@@ -133,7 +133,7 @@ class MeResponse(BaseModel):
     full_name: str
     tenants: list[TenantMembershipResponse]
     # The product licence's end, for the admins' banner in its last 30 days (/settings/guide/licence): only for
-    # someone who is an owner or admin of a tenant, as they may enter activation codes.
+    # someone who is an owner or admin of a tenant, as they may import the licence.
     licence: dict[str, Any] | None = None
     # Choose a new password first (app/core/access_gate.py).
     must_change_password: bool = False
@@ -304,7 +304,7 @@ def register(payload: RegisterRequest, request: Request, response: Response, db:
         db.add(user)
         db.flush()
 
-        # Several tenants need a tenants activation code (/settings/guide/licence).
+        # Several tenants need a licence for several tenants (/settings/guide/licence).
         activation_service.assert_may_add_tenant(db)
         tenant = Tenant(name=f"{payload.full_name} Org", slug=f"{payload.email.split('@')[0]}-org", is_active=True)
         db.add(tenant)

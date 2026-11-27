@@ -25,7 +25,7 @@ from app.services.auth_service import issue_tokens
 PASSWORD = "correct-Horse-2026"
 
 #: Every route that changes a setting kept once for the whole server (no tenant_id): the sign-in rules
-#: (sign_in_policy), the compliance settings (compliance_policy), activation codes (activation_state), and what is kept
+#: (sign_in_policy), the compliance settings (compliance_policy), the licence (activation_state), and what is kept
 #: in the server's data folder (email server, branding, HTTPS, network and trusted certificates, updates, backups,
 #: hands-off, the evidence signing key).
 GATED = {
@@ -68,7 +68,7 @@ GATED = {
     ("PUT", "/hands-off"),
     ("POST", "/hands-off/status"),
     ("POST", "/hands-off/check"),
-    ("POST", "/activation"),
+    ("POST", "/licence/import"),
     ("POST", "/evidence-signing/rotate"),
 }
 
@@ -177,7 +177,7 @@ def test_another_tenants_admin_is_refused_every_change_in_the_audit_log_and_read
     smtp = c.get("/settings/smtp", headers=other["h"]).json()
     assert smtp["mayChange"] is False
     assert c.get("/hands-off", headers=other["h"]).json()["canSave"] is False
-    assert c.get("/activation", headers=other["h"]).json()["canManage"] is False
+    assert c.get("/licence/status", headers=other["h"]).json()["canManage"] is False
     assert c.get("/evidence-signing", headers=other["h"]).status_code in (200, 503)
     for path in ("/network", "/https", "/updates", "/backups"):
         assert c.get(path, headers=other["h"]).status_code != 403, path

@@ -3,38 +3,40 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { InstallationId, LicenceRequestButton, LicenceUpload } from "@/components/licence-tools";
 import { PageHeader } from "@/components/page-header";
 import { PageSection } from "@/components/page-section";
-import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import {
   errorMessageFrom,
   historyLine,
+  lastDayOf,
   LICENCE_CHANGED_EVENT,
   productStatusLine,
+  shortDate,
+  shortMoment,
   tenantsStatusLine,
+  timeLeftText,
 } from "@/lib/licence";
-import type { ActivationView } from "@/lib/licence";
+import type { LicenceImported, LicenceView } from "@/lib/licence";
 import { SET_BY_SERVER } from "@/lib/settings-console";
 
 /**
- * Settings → Activation codes (/settings/guide/licence), ported from CxMissionZero's Settings → Activation codes:
- * the product licence (until when Hawk AI works), the tenants code, the last codes entered, and a field to apply a
- * code from the maintainer. Owners and admins only.
+ * Settings → Licence (/settings/guide/licence): this installation's ID, its 3-day trial or the licence in force and
+ * how long is left, the licence request to send to the owner of Hawk AI, the upload of the .hawkai licence they make
+ * for this installation, and what was imported or refused. Owners and admins; only the server's administrators
+ * import a licence.
  */
-export default function ActivationCodesPage() {
-  const [view, setView] = useState<ActivationView | null>(null);
+export default function LicencePage() {
+  const [view, setView] = useState<LicenceView | null>(null);
   const [loadError, setLoadError] = useState("");
-  const [code, setCode] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [status, setStatus] = useState<{ text: string; kind: "ok" | "error" | "" }>({ text: "", kind: "" });
 
   const load = useCallback(async () => {
     try {
-      setView(await api.getActivation());
+      setView(await api.getLicenceStatus());
       setLoadError("");
     } catch (error) {
-      setLoadError(errorMessageFrom(error instanceof Error ? error.message : "", "Activation codes are unavailable."));
+      setLoadError(errorMessageFrom(error instanceof Error ? error.message : "", "The licence is unavailable."));
     }
   }, []);
 
@@ -42,28 +44,14 @@ export default function ActivationCodesPage() {
     load().catch(() => undefined);
   }, [load]);
 
-  async function apply() {
-    const trimmed = code.trim();
-    if (!trimmed) {
-      setStatus({ text: "Paste the activation code first.", kind: "error" });
-      return;
-    }
-    setBusy(true);
-    try {
-      const result = await api.applyActivation(trimmed);
-      setView(result);
-      setCode("");
-      setStatus({ text: `Applied: ${result.applied}.`, kind: "ok" });
-      // A product code moves the licence's end: the banner follows.
-      window.dispatchEvent(new CustomEvent(LICENCE_CHANGED_EVENT, { detail: result.product }));
-    } catch (error) {
-      setStatus({ text: errorMessageFrom(error instanceof Error ? error.message : ""), kind: "error" });
-    } finally {
-      setBusy(false);
-    }
+  function imported(result: LicenceImported) {
+    setView(result);
+    // The licence moves the end: the banner follows.
+    window.dispatchEvent(new CustomEvent(LICENCE_CHANGED_EVENT, { detail: result.product }));
   }
 
   const product = view?.product;
+  const licence = view?.licence;
   const tenants = view?.tenants;
 
   return (
@@ -71,71 +59,72 @@ export default function ActivationCodesPage() {
       <div className="space-y-5">
         <PageHeader
           eyebrow="Administration"
-          title="Activation codes"
-          description="Some add-ons are unlocked with a code from the maintainer of Hawk AI. Paste the code you were sent: it is checked here, with nothing sent anywhere, and what it unlocks is switched on at once."
+          title="Licence"
+          description="Each installation of Hawk AI works for 3 days from its first start. After that it needs a licence made for this installation: download the licence request, send it to Bhawani Singh, and upload the .hawkai file you receive. It is checked here, offline, with nothing sent anywhere."
         />
-        <PageSection title="In force">
+        <PageSection title="This installation">
           {loadError ? <p className="text-sm text-red-400">{loadError}</p> : null}
           {!view && !loadError ? <p className="text-sm text-slate-500">Loading…</p> : null}
-          {product ? (
-            <ul className="space-y-2 text-sm text-slate-200">
-              <li data-ui="licence-product">
-                <strong>{productStatusLine(product)}</strong>
-                {product.warn ? <span className="ml-2 font-semibold text-amber-300">{product.daysLeft} days left</span> : null}
-              </li>
-              {tenants ? (
-                <li data-ui="licence-tenants">
-                  {tenantsStatusLine(tenants)}
-                  {tenants.warn ? <span className="ml-2 font-semibold text-amber-300">{tenants.daysLeft} days left</span> : null}
+          {view && product ? (
+            <div className="space-y-4">
+              <InstallationId id={view.installationId} />
+              <ul className="space-y-2 text-sm text-slate-200">
+                <li data-ui="licence-product" className="break-words">
+                  <strong>{productStatusLine(product)}</strong>
+                  {product.active ? (
+                    <span className={`ml-2 font-semibold ${product.warn ? "text-amber-300" : "text-slate-400"}`}>{timeLeftText(product.hoursLeft, product.daysLeft)} left</span>
+                  ) : null}
                 </li>
-              ) : (
-                <li className="text-slate-500">No add-ons are unlocked yet. Without a tenants code Hawk AI serves 1 tenant.</li>
-              )}
-            </ul>
+                <li data-ui="licence-trial" className="text-slate-400">
+                  Trial: {shortMoment(view.trial.start)} to {shortMoment(view.trial.end)}
+                  {view.trial.active ? " (in progress)" : licence?.valid ? " (licensed)" : " (ended)"}
+                </li>
+                {licence ? (
+                  <li data-ui="licence-holder" className="break-words">
+                    Licensed to <strong>{licence.org}</strong> · {licence.valid ? `until the end of ${lastDayOf(licence.expires, "short")} (UTC)` : `expired ${shortDate(licence.expires)}`} ·{" "}
+                    {licence.scopes.includes("tenants") ? "Hawk AI and several tenants" : "Hawk AI"} · licence {licence.id}
+                    {licence.at ? ` · imported ${shortDate(licence.at)}${licence.by ? ` by ${licence.by}` : ""}` : ""}
+                  </li>
+                ) : (
+                  <li className="text-slate-500">No licence has been imported on this installation.</li>
+                )}
+                {tenants ? (
+                  <li data-ui="licence-tenants" className="break-words">
+                    {tenantsStatusLine(tenants)}
+                  </li>
+                ) : (
+                  <li className="text-slate-500">Without a licence for several tenants Hawk AI serves 1 tenant, with no cap on its users.</li>
+                )}
+              </ul>
+              {!view.keyConfigured ? <p className="text-xs text-slate-500">This build has no owner key, so no licence can be checked.</p> : null}
+            </div>
           ) : null}
-          {view && !view.keyConfigured ? <p className="mt-3 text-xs text-slate-500">This build has no maintainer key, so no code can be checked.</p> : null}
         </PageSection>
-        <PageSection title="Apply a code">
-          {/* The activation is the whole server's: only its administrators enter a code. */}
+        <PageSection
+          title="Get and upload a licence"
+          description="The request names this installation, its address, its version and your organisation; nothing secret is in it. The licence you receive works only on this installation."
+        >
+          {/* The licence is the whole server's: only its administrators import one. */}
           {view && view.canManage === false ? (
             <p className="text-sm text-slate-400" data-ui="server-setting-note">
-              <strong>{SET_BY_SERVER}</strong> Activation codes apply to every workspace on this server.
+              <strong>{SET_BY_SERVER}</strong> The licence applies to every workspace on this server.
             </p>
-          ) : (
-          <>
-          <label className="block text-xs text-slate-400" htmlFor="activation-code">
-            Activation code
-          </label>
-          <textarea
-            id="activation-code"
-            rows={3}
-            spellCheck={false}
-            autoComplete="off"
-            placeholder="HK1.…"
-            value={code}
-            onChange={(event) => setCode(event.target.value)}
-            className="mt-1.5 w-full break-all rounded-lg border border-white/[0.1] bg-[#07090d] px-3 py-2 font-mono text-xs text-slate-100"
-          />
-          <div className="mt-3 flex items-center gap-3">
-            <Button type="button" onClick={apply} disabled={busy}>
-              Apply the code
-            </Button>
-            <span role="status" aria-live="polite" className={`text-sm ${status.kind === "error" ? "text-red-400" : status.kind === "ok" ? "text-emerald-400" : ""}`}>
-              {status.text}
-            </span>
-          </div>
-          </>
-          )}
+          ) : view ? (
+            <div className="space-y-4">
+              <LicenceRequestButton installationId={view.installationId} />
+              <LicenceUpload onImported={imported} />
+            </div>
+          ) : null}
         </PageSection>
-        <PageSection title="Codes entered" description="The last 10 codes applied here or on the deactivation page.">
+        <PageSection title="Licences imported and refused" description="The last 10, here or on the deactivation page.">
           {view?.history.length ? (
-            <ul className="space-y-1.5 text-xs text-slate-300">
+            <ul className="space-y-1.5 break-words text-xs text-slate-300">
               {view.history.map((entry, index) => (
-                <li key={`${entry.id}-${entry.at}-${index}`}>{historyLine(entry)}</li>
+                <li key={`${entry.id ?? entry.outcome}-${entry.at}-${index}`}>{historyLine(entry)}</li>
               ))}
             </ul>
           ) : (
-            <p className="text-xs text-slate-500">No code has been entered yet.</p>
+            <p className="text-xs text-slate-500">No licence has been imported yet.</p>
           )}
         </PageSection>
       </div>

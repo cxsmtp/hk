@@ -154,6 +154,11 @@ export const install: GuideTopic = {
             "On a database that already has people, the log names an administrator and the command to reset their password instead.",
           ],
         },
+        {
+          kind: "note",
+          tone: "info",
+          text: "The first start also gives the installation its installation ID and starts its **3-day trial**; the API's log says until when (`[licence] Installation HK-…: trial until …`). Before the 3 days are over, an owner or admin downloads the licence request under [Settings → Licence](/settings/activation), sends it to Bhawani Singh and uploads the `.hawkai` licence they receive ([Licence](/settings/guide/licence)).",
+        },
       ],
     },
     {

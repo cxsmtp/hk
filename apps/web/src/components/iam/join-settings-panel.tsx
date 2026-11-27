@@ -10,7 +10,7 @@ import type { IamJoinSettings } from "@/lib/iam";
 /**
  * "Joining by themselves", FTR Command Center's People → Sign-in panel (public/js/people.js signInTab joinPanel,
  * CC-01.116.00), for this tenant. Off until an Owner or Admin turns it on; the domains and the roles people may choose;
- * a role that manages people, roles or teams, or sees every team, is never offered. The activation code's cap of active
+ * a role that manages people, roles or teams, or sees every team, is never offered. The licence's cap of active
  * users and required two-step sign-in apply to people who join. Hidden for those who do not manage people.
  */
 export function JoinSettingsPanel() {

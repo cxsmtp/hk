@@ -74,7 +74,6 @@ def catalog_world(tmp_path_factory):
             db.close()
 
     with pytest.MonkeyPatch.context() as patch:
-        patch.setattr(activation_service, "PRODUCT_DEADLINE", "9999-12-31T00:00:00.000Z")
         patch.setattr(activation_service, "licence_active", lambda now=None: True)
         patch.setattr(activation_service, "assert_may_add_tenant", lambda db: None)
         patch.setattr(activation_service, "assert_may_add_member", lambda db, tenant_id: None)

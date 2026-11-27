@@ -16,7 +16,7 @@ import { accessNeededFrom, PASSWORD_CHANGE_EVENT, TERMS_REQUIRED_EVENT } from "@
 import type { TermsAcceptPayload, TermsAcceptance, TermsAcceptances, TermsState, TermsView } from "@/lib/access";
 import type { SignInPerson, SignInSettings, TwoStepChallenge, TwoStepSetup, TwoStepState } from "@/lib/sign-in";
 import type { IamJoinSettings, IamRole, IamView, JoinLink } from "@/lib/iam";
-import type { ActivationApplied, ActivationView, AdminLicence, LicenceStatus } from "@/lib/licence";
+import type { AdminLicence, LicenceImported, LicenceStatus, LicenceView } from "@/lib/licence";
 import type {
   AIDiscoveryAnomalyEvent,
   ActionIntegrityDetail,
@@ -590,6 +590,24 @@ async function requestBlob(path: string, init?: RequestInit, allowRefresh = true
   return res.blob();
 }
 
+/**
+ * A .hawkai licence file to POST /licence/import (/settings/guide/licence). Refusals keep the API's own sentence
+ * ({"error": ...}) as the error's message, for errorMessageFrom.
+ */
+async function uploadLicence(file: File, allowRefresh = true): Promise<LicenceImported> {
+  const session = getSession();
+  if (!session?.tenantId) throw new Error(JSON.stringify({ error: "Sign in first." }));
+  const headers = sessionHeaders();
+  headers.set("X-Tenant-ID", session.tenantId);
+  const form = new FormData();
+  form.set("file", file, file.name);
+  const res = await fetch(`${API_URL}/licence/import`, { method: "POST", headers, body: form, credentials: CREDENTIALS, cache: "no-store" });
+  if (res.status === 401 && allowRefresh && (await tryRefreshToken())) return uploadLicence(file, false);
+  const text = await res.text();
+  if (!res.ok) throw new Error(text || `API ${res.status}`);
+  return JSON.parse(text) as LicenceImported;
+}
+
 async function requestMultipart<T>(path: string, form: FormData, allowRefresh = true): Promise<T> {
   const session = getSession();
   if (!session?.tenantId) throw new Error("No tenant selected");
@@ -758,13 +776,11 @@ export const api = {
   setupStatus: () => request<{ setup: boolean }>("/setup", undefined, false),
   setup: (payload: { code: string; email: string; name: string; password: string }) =>
     request<LoginResponse | TwoStepChallenge>("/setup", { method: "POST", body: JSON.stringify(payload) }, false),
-  // The product licence and activation codes (/settings/guide/licence).
+  // The product licence (/settings/guide/licence): the trial, the installation ID, the .hawkai licence file.
   getLicence: () => request<LicenceStatus>("/licence", undefined, false),
-  activateLicence: (code: string) =>
-    request<{ active: boolean; until: string }>("/licence/activate", { method: "POST", body: JSON.stringify({ code }) }, false),
-  getActivation: () => request<ActivationView>("/activation"),
-  applyActivation: (code: string) =>
-    request<ActivationApplied>("/activation", { method: "POST", body: JSON.stringify({ code }) }),
+  getLicenceStatus: () => request<LicenceView>("/licence/status"),
+  downloadLicenceRequest: () => requestBlob("/licence/request"),
+  importLicence: (file: File) => uploadLicence(file),
   // Settings → HTTPS (/settings/guide/https).
   getHttps: () => request<HttpsStatus>("/https"),
   setHttpsMode: (mode: HttpsMode, confirm = false) =>

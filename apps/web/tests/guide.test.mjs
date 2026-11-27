@@ -168,8 +168,11 @@ test("defaults in the settings tables are deploy/.env.example's, and the dates a
       }
   assert.ok(checked >= 10, `${checked} defaults checked`);
   const all = texts().out.join("\n");
-  assert.match(repo("apps/api/app/services/activation_service.py"), /PRODUCT_DEADLINE = "2027-02-01T00:00:00.000Z"/);
-  assert.match(all, /31 January 2027/);
+  assert.match(repo("apps/api/app/services/activation_service.py"), /TRIAL_HOURS = 72\n/);
+  assert.match(all, /3 days \(72 hours\)/);
+  assert.match(repo("apps/api/app/services/activation_service.py"), /MAX_FILE_BYTES = 16 \* 1024/);
+  assert.match(all, /any file over 16 KB/);
+  assert.doesNotMatch(all, /January 2027|product activation code|Activation codes|`HK1\./);
   assert.match(repo("apps/api/app/services/activation_service.py"), /WARN_DAYS = 30/);
   assert.match(repo("deploy/.env.example"), /UPDATE_START_TIMEOUT_SECONDS=150/);
   assert.match(all, /within 150 seconds/);

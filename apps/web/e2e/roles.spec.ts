@@ -13,7 +13,7 @@ const VIEWER = {
 const ADMIN_ONLY = [
   "Roles & permissions",
   "Sign-in",
-  "Activation codes",
+  "Licence",
   "Audit log",
   "Connector API activity",
   "Compliance",

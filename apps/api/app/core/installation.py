@@ -2,7 +2,7 @@
 
 Roles are per tenant (app/core/permissions.py), but some settings are kept once for the whole server: the password
 rule, idle sign-out and sign-in notice, the compliance settings, the email server, HTTPS, the network and its trusted
-certificates, updates, backups, hands-off, branding, activation codes and the evidence signing key. A tenant's owners
+certificates, updates, backups, hands-off, branding, the licence and the evidence signing key. A tenant's owners
 and admins may read them (shown read-only in the console), but only the installation's administrators may change them:
 the owners and admins (those who hold system.update) of the installation's first tenant, the one cases about the server
 itself are raised in (app/services/self_check.py), as for the diagnostics bundle.
