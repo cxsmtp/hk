@@ -1,7 +1,9 @@
 """The self-check and hands-off (app/services/self_check.py), sent by beat and run by the worker: the self-check every
 WATCHDOG_EVERY_SECONDS (300), the replies to Hawk AI's emails every INBOX_EVERY_SECONDS (120), and the weekly status
-when its day and hour come (looked at every 5 minutes). As in CxMissionZero, they run only while the product is active
-(LicensedTask, the default), and an error in one is logged and never stops the next.
+when its day and hour come (looked at every 5 minutes). The self-check is a plain task, like self-recovery, backups
+and updates, so it keeps watching the server while Hawk AI is deactivated or waits for the terms to be accepted again
+after an update changed them; the replies and the weekly status run only while the product is active and its terms
+accepted (LicensedTask, the default). An error in one is logged and never stops the next.
 """
 
 from __future__ import annotations
@@ -12,7 +14,7 @@ from app.jobs.celery_app import celery_app
 from app.jobs.watchdog_schedule import INBOX_TASK, SELF_CHECK_TASK, SELF_RECOVERY_TASK, STATUS_TASK, beat_entries  # noqa: F401 - one place to find them
 
 
-@celery_app.task(name=SELF_CHECK_TASK, acks_late=False)
+@celery_app.task(name=SELF_CHECK_TASK, base=Task, acks_late=False)
 def self_check() -> dict:
     from app.services.self_check import SelfCheck
 
