@@ -1,0 +1,281 @@
+{
+  "id": "uae-pdpl",
+  "version": "2026.11.1",
+  "order": 20,
+  "optional": false,
+  "framework": {
+    "name": "UAE Personal Data Protection Law (Federal Decree-Law No. 45 of 2021)",
+    "short": "UAE PDPL",
+    "version": "Decree-Law 45/2021, in force 2 January 2022; Executive Regulations pending",
+    "publisher": "UAE Government (UAE Data Office)",
+    "jurisdiction": "United Arab Emirates (onshore)",
+    "url": "https://uaelegislation.gov.ae/en/legislations/1972"
+  },
+  "summary": "A controller's duties under the UAE's federal data protection law and where Hawk AI supports them: security measures (Article 20), breach reporting (Article 9), impact assessments, objection to automated decisions, cross-border transfers and data subject rights.",
+  "scope": "Article numbers of the Decree-Law; titles are our own short wording. The Executive Regulations (deadlines, DPO thresholds) had not been issued when this pack was written: check the current text. The free zones with their own laws (DIFC, ADGM) are in the notes.",
+  "sources": [
+    {
+      "title": "UAE Legislation: Federal Decree-Law No. 45 of 2021",
+      "url": "https://uaelegislation.gov.ae/en/legislations/1972"
+    },
+    {
+      "title": "Modulos: UAE PDPL structure (articles 1-31)",
+      "url": "https://docs.modulos.ai/frameworks/uae-pdpl"
+    },
+    {
+      "title": "DIFC Data Protection Law No. 5 of 2020",
+      "url": "https://government.ae/-/media/Documents-2022/Data_Protection_Law_final--DIFC.pdf"
+    },
+    {
+      "title": "ADGM Data Protection Regulations 2021",
+      "url": "https://assets.adgm.com/download/assets/ADGM+Data+Protection+Regulations+2021+Updated.pdf/146aa34858b011efb99a36e29b0f3a63"
+    },
+    {
+      "title": "Clyde & Co: Regulation 10 of the DIFC Data Protection Regulations (autonomous systems)",
+      "url": "https://www.clydeco.com/en/insights/2026/01/regulation-10-of-the-difc-data-protection-law"
+    }
+  ],
+  "notes": [
+    {
+      "id": "DIFC",
+      "title": "DIFC Data Protection Law 2020",
+      "text": "In the DIFC its own law applies instead: accountability and notifications to the Commissioner (Art. 14), records of processing, impact assessments for high-risk processing (Art. 20), breach notice to the Commissioner (Art. 41) and to data subjects when the risk is high (Art. 42). Regulation 10 (September 2023) adds duties for personal data processed by autonomous or semi-autonomous systems (AI): notice, purpose, and for high-risk systems certification. The same Hawk AI controls support them: security, logs, the incident report, the AI inventory and approvals."
+    },
+    {
+      "id": "ADGM",
+      "title": "ADGM Data Protection Regulations 2021",
+      "text": "In ADGM: breach notice to the Commissioner of Data Protection within 72 hours of becoming aware, and to data subjects without undue delay when the risk is high; DPIAs for high-risk processing; a DPO for large-scale special-category processing. Use the incident report (with its incident contact) for the 72-hour notice."
+    },
+    {
+      "id": "sectoral",
+      "title": "Health and banking data",
+      "text": "The PDPL does not apply to health and banking data covered by their own laws (for example the ICT in Health Fields law and the Central Bank's rules), nor to government data."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "Art. 4",
+      "title": "Process without consent only in the cases the law lists",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 5",
+      "title": "Process lawfully, fairly and transparently, for a set purpose, minimised, accurate and kept no longer than needed",
+      "applicability": "customer",
+      "controls": [
+        "dlp.personal_data",
+        "log.retention",
+        "crypto.transit"
+      ],
+      "evidence": [
+        "settings:detection",
+        "audit:gateway",
+        "audit:audit",
+        "settings:compliance",
+        "settings:encryption",
+        "audit:settings",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 6",
+      "title": "Consent that is specific, clear, provable and can be withdrawn",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 7",
+      "title": "Controller: technical and organisational measures and a record of processing",
+      "applicability": "customer",
+      "controls": [
+        "access.roles",
+        "log.audit_chain",
+        "ai.inventory"
+      ],
+      "evidence": [
+        "audit:people",
+        "settings:sign_in",
+        "audit:audit",
+        "settings:compliance",
+        "records:ai_inventory",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 8",
+      "title": "Processor: process only on the controller's instructions, securely",
+      "applicability": "organisational",
+      "controls": [
+        "data.residency"
+      ],
+      "evidence": [
+        "settings:compliance",
+        "records:attestations"
+      ],
+      "note": "Hawk AI runs on the customer's server; the vendor does not process the data."
+    },
+    {
+      "id": "Art. 9",
+      "title": "Report a breach to the Data Office and to people it harms",
+      "applicability": "customer",
+      "controls": [
+        "ir.incident_report",
+        "notify.email",
+        "log.audit_chain"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "audit:settings",
+        "settings:compliance",
+        "audit:audit",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 10",
+      "title": "Appoint a data protection officer where the law requires one",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 13",
+      "title": "Tell a person what of their data is processed, why and by whom",
+      "applicability": "customer",
+      "controls": [
+        "gap.data_subject_requests"
+      ],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 14",
+      "title": "Give a person their data in a portable form",
+      "applicability": "customer",
+      "controls": [
+        "gap.data_subject_requests"
+      ],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 15",
+      "title": "Correct or erase a person's data on request",
+      "applicability": "customer",
+      "controls": [
+        "gap.data_subject_requests"
+      ],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 16",
+      "title": "Restrict processing on request",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 17",
+      "title": "Stop processing on request (marketing, statistics)",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 18",
+      "title": "Let a person object to decisions made only by automated processing",
+      "applicability": "customer",
+      "controls": [
+        "ai.human_oversight",
+        "ai.inventory"
+      ],
+      "evidence": [
+        "settings:approvals",
+        "settings:detection",
+        "records:approvals",
+        "records:ai_inventory",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 20",
+      "title": "Security measures suited to the risk: encryption, resilience, regular testing",
+      "applicability": "product",
+      "controls": [
+        "crypto.transit",
+        "crypto.backups",
+        "crypto.disk",
+        "auth.two_step",
+        "access.roles",
+        "backup.schedule",
+        "backup.restore_tested",
+        "log.audit_chain"
+      ],
+      "evidence": [
+        "settings:encryption",
+        "audit:settings",
+        "audit:sign_in",
+        "settings:sign_in",
+        "audit:people",
+        "audit:backups",
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 21",
+      "title": "Assess the impact before processing that uses new technology or is high-risk",
+      "applicability": "customer",
+      "controls": [
+        "gap.impact_assessment",
+        "ai.inventory"
+      ],
+      "evidence": [
+        "records:attestations",
+        "records:ai_inventory"
+      ]
+    },
+    {
+      "id": "Art. 22",
+      "title": "Transfer abroad to countries with adequate protection",
+      "applicability": "customer",
+      "controls": [
+        "data.residency"
+      ],
+      "evidence": [
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 23",
+      "title": "Transfer abroad without adequacy only on the conditions listed",
+      "applicability": "organisational",
+      "controls": [
+        "data.residency"
+      ],
+      "evidence": [
+        "settings:compliance",
+        "records:attestations"
+      ]
+    }
+  ]
+}

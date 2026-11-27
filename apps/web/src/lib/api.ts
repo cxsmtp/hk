@@ -7,7 +7,7 @@ import type { HandsOffSettings, HandsOffView, LinkAnswer, SelfCheckHealth } from
 import type { ApprovalDecision, ApprovalGrantView, ApprovalPolicy, ApprovalPolicyView, ApprovalRequestView, ApprovalScope } from "@/lib/ai-system-approvals";
 import type { DiagnosticsView } from "@/lib/self-recovery";
 import type { AboutView, BrandingPatch, BrandingView, GeneralView, SmtpSettings, SmtpView } from "@/lib/settings-console";
-import type { ComplianceSettings, ComplianceView } from "@/lib/compliance";
+import type { ComplianceSettings, ComplianceView, PacksOverview, PackView } from "@/lib/compliance";
 import type { AuditPage, AuditVerify, ConnectorActivity, EvidenceSigning, Emailed, NetworkCheck, NetworkInfo, SupportChannel, SupportKind, SupportList, SupportRequest, TrustDiagnosis, TrustedCertificate } from "@/lib/records";
 import { approvalStatusFilters, mergeApprovalStatusResults } from "@/lib/approval-workflow";
 import { demoFallbackRequest, isDemoFallbackEnabled } from "@/lib/demo-fallback";
@@ -885,6 +885,18 @@ export const api = {
     });
     return { blob, signature };
   },
+  // Framework packs on Settings → Compliance (apps/api/app/services/compliance_packs).
+  getCompliancePacks: () => request<PacksOverview>("/compliance/packs"),
+  getCompliancePack: (id: string) => request<PackView>(`/compliance/packs/${encodeURIComponent(id)}`),
+  recordRequirement: (packId: string, requirementId: string, body: { status: "in_place" | "not_applicable"; note: string; reference?: string }) =>
+    request<PackView>(`/compliance/packs/${encodeURIComponent(packId)}/requirements/${encodeURIComponent(requirementId)}/record`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    }),
+  removeRequirementRecord: (packId: string, requirementId: string) =>
+    request<PackView>(`/compliance/packs/${encodeURIComponent(packId)}/requirements/${encodeURIComponent(requirementId)}/record`, { method: "DELETE" }),
+  /** A pack's signed evidence bundle for a window: a zip whose manifest.json carries the evidence signature. */
+  packEvidence: (id: string, query: string) => requestBlob(`/compliance/packs/${encodeURIComponent(id)}/evidence${query ? `?${query}` : ""}`),
   // Settings → Hands-off and the self-check (app/api/routers/hands_off.py); the emailed links need no sign-in.
   getHandsOff: () => request<HandsOffView>("/hands-off"),
   saveHandsOff: (body: { handsOff: Partial<Omit<HandsOffSettings, "statusTo">> & { statusTo?: string | string[] } }) =>

@@ -1,0 +1,236 @@
+{
+  "id": "eu-ai-act",
+  "version": "2026.11.1",
+  "order": 120,
+  "optional": true,
+  "framework": {
+    "name": "EU Artificial Intelligence Act (Regulation (EU) 2024/1689)",
+    "short": "EU AI Act",
+    "version": "Regulation (EU) 2024/1689 (OJ 12 July 2024)",
+    "publisher": "European Union",
+    "jurisdiction": "European Union (and providers or deployers whose AI output is used in the EU)",
+    "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj"
+  },
+  "summary": "Optional. A deployer's view of the AI Act: prohibited practices, high-risk classification, logs kept six months, human oversight, robustness against manipulation, impact assessments and serious-incident reporting, with the Hawk AI controls that support each.",
+  "scope": "Article numbers of the Regulation with our own short wording; the deployer's obligations first, the provider's for reference. Dates: prohibitions from 2 February 2025, general-purpose AI from 2 August 2025; the Digital Omnibus (November 2025) moves high-risk obligations to 2 December 2027 (Annex III) and 2 August 2028 (products), subject to its adoption.",
+  "sources": [
+    {
+      "title": "Regulation (EU) 2024/1689 (EUR-Lex)",
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj"
+    },
+    {
+      "title": "Hogan Lovells: EU legislators agree to delay high-risk AI rules",
+      "url": "https://www.hoganlovells.com/en/publications/eu-legislators-agree-to-delay-for-highrisk-ai-rules"
+    }
+  ],
+  "notes": [],
+  "requirements": [
+    {
+      "id": "Art. 4",
+      "title": "AI literacy of staff using AI",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 5",
+      "title": "No prohibited AI practices",
+      "applicability": "customer",
+      "controls": [
+        "ai.inventory",
+        "ai.approval_policy"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "settings:approvals",
+        "records:approvals",
+        "audit:approvals",
+        "records:attestations"
+      ],
+      "note": "Systems classed PROHIBITED can never be approved; the gateway blocks them."
+    },
+    {
+      "id": "Art. 6",
+      "title": "Classify AI systems that are high-risk (Annex III)",
+      "applicability": "customer",
+      "controls": [
+        "ai.inventory"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 9",
+      "title": "Provider: risk management system for high-risk AI",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 10",
+      "title": "Provider: data and data governance",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 11",
+      "title": "Provider: technical documentation",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 12",
+      "title": "Automatic logging of events over the system's life",
+      "applicability": "product",
+      "controls": [
+        "log.audit_chain",
+        "ai.gateway_in_use"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 13",
+      "title": "Provider: transparency and instructions for deployers",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 14",
+      "title": "Human oversight",
+      "applicability": "product",
+      "controls": [
+        "ai.human_oversight",
+        "ai.approval_policy"
+      ],
+      "evidence": [
+        "settings:approvals",
+        "settings:detection",
+        "records:approvals",
+        "audit:approvals",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 15",
+      "title": "Accuracy, robustness and cybersecurity (resistance to manipulation)",
+      "applicability": "product",
+      "controls": [
+        "injection.detection",
+        "detect.coverage:owasp_llm:LLM01",
+        "ai.adversarial_testing"
+      ],
+      "evidence": [
+        "settings:detection",
+        "audit:gateway",
+        "records:detector_coverage",
+        "records:operations",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 26",
+      "title": "Deployer: use as instructed, assign oversight, monitor operation",
+      "applicability": "customer",
+      "controls": [
+        "ai.human_oversight",
+        "ai.gateway_in_use",
+        "ai.approval_policy"
+      ],
+      "evidence": [
+        "settings:approvals",
+        "settings:detection",
+        "records:approvals",
+        "audit:gateway",
+        "audit:approvals",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 26(6)",
+      "title": "Deployer: keep the system's logs at least six months",
+      "applicability": "product",
+      "controls": [
+        "log.retention",
+        "log.audit_chain"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 27",
+      "title": "Fundamental rights impact assessment (certain deployers)",
+      "applicability": "customer",
+      "controls": [
+        "gap.impact_assessment"
+      ],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 50",
+      "title": "Tell people they are dealing with AI; mark synthetic content",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 53",
+      "title": "General-purpose AI providers: documentation and copyright policy",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 72",
+      "title": "Provider: post-market monitoring",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "Art. 73",
+      "title": "Report serious incidents",
+      "applicability": "customer",
+      "controls": [
+        "ir.incident_report",
+        "notify.email"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "audit:settings",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    }
+  ]
+}

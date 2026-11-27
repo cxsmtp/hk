@@ -1,0 +1,498 @@
+{
+  "id": "pci-dss",
+  "version": "2026.11.1",
+  "order": 60,
+  "optional": false,
+  "framework": {
+    "name": "PCI DSS v4.0.1 (selected requirements)",
+    "short": "PCI DSS",
+    "version": "v4.0.1 (June 2024)",
+    "publisher": "PCI Security Standards Council",
+    "jurisdiction": "International (payment card industry)",
+    "url": "https://www.pcisecuritystandards.org/document_library/"
+  },
+  "summary": "The PCI DSS requirements Hawk AI takes part in: keeping card numbers (PAN) out of AI services and chats, and Hawk AI's own controls as a system that can affect the security of the cardholder data environment (authentication, logs kept 12 months, cryptography, patching).",
+  "scope": "Requirement numbers only, with our own short paraphrase: the standard's text is the PCI SSC's. Only requirements where Hawk AI takes part are listed; scoping, segmentation, the rest of requirements 1, 9, 11 and 12, and the assessment itself are the entity's (and its QSA's).",
+  "sources": [
+    {
+      "title": "PCI SSC document library (PCI DSS v4.0.1)",
+      "url": "https://www.pcisecuritystandards.org/document_library/"
+    },
+    {
+      "title": "SecurityMetrics: what changed in PCI DSS 4.0.1 (8.3.6, 8.3.4, 8.2.8, 10.5.1)",
+      "url": "https://www.securitymetrics.com/blog/a-guide-to-new-requirements-in-pci-dss-4-0-1"
+    }
+  ],
+  "notes": [],
+  "requirements": [
+    {
+      "id": "1.2.1",
+      "title": "Configuration standards for network security controls",
+      "applicability": "customer",
+      "controls": [
+        "host.hardening"
+      ],
+      "evidence": [
+        "records:operations",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "2.2.1",
+      "title": "Configuration standards for system components",
+      "applicability": "customer",
+      "controls": [
+        "host.hardening"
+      ],
+      "evidence": [
+        "records:operations",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "2.2.4",
+      "title": "Only needed services, protocols and functions enabled",
+      "applicability": "customer",
+      "controls": [
+        "host.hardening"
+      ],
+      "evidence": [
+        "records:operations",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "3.2.1",
+      "title": "Keep stored account data to the minimum, with retention limits",
+      "applicability": "customer",
+      "controls": [
+        "dlp.payment_cards",
+        "log.retention"
+      ],
+      "evidence": [
+        "settings:detection",
+        "audit:gateway",
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "3.3.1",
+      "title": "Do not keep sensitive authentication data after authorisation",
+      "applicability": "customer",
+      "controls": [
+        "dlp.payment_cards"
+      ],
+      "evidence": [
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "3.4.1",
+      "title": "PAN masked when displayed",
+      "applicability": "product",
+      "controls": [
+        "dlp.payment_cards"
+      ],
+      "evidence": [
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ],
+      "note": "Hawk AI reports the type of a finding, never the card number itself."
+    },
+    {
+      "id": "3.5.1",
+      "title": "PAN unreadable wherever it is stored",
+      "applicability": "product",
+      "controls": [
+        "dlp.payment_cards",
+        "crypto.disk",
+        "crypto.backups"
+      ],
+      "evidence": [
+        "settings:detection",
+        "audit:gateway",
+        "settings:encryption",
+        "audit:settings",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "4.2.1",
+      "title": "Strong cryptography for PAN over open, public networks",
+      "applicability": "product",
+      "controls": [
+        "crypto.transit"
+      ],
+      "evidence": [
+        "settings:encryption",
+        "audit:settings",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "4.2.2",
+      "title": "PAN secured when sent through end-user messaging (AI chats included)",
+      "applicability": "product",
+      "controls": [
+        "dlp.payment_cards",
+        "ai.gateway_in_use"
+      ],
+      "evidence": [
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "5.2.1",
+      "title": "Anti-malware on system components",
+      "applicability": "customer",
+      "controls": [
+        "host.hardening"
+      ],
+      "evidence": [
+        "records:operations",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "6.3.3",
+      "title": "Security patches installed in time",
+      "applicability": "product",
+      "controls": [
+        "software.integrity"
+      ],
+      "evidence": [
+        "audit:updates",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "6.4.2",
+      "title": "Public-facing web applications protected by an automated solution",
+      "applicability": "customer",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "7.2.1",
+      "title": "An access control model is defined",
+      "applicability": "product",
+      "controls": [
+        "access.roles"
+      ],
+      "evidence": [
+        "audit:people",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "7.2.2",
+      "title": "Access by job function, least privilege",
+      "applicability": "product",
+      "controls": [
+        "access.roles"
+      ],
+      "evidence": [
+        "audit:people",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "7.2.4",
+      "title": "User accounts and access reviewed every six months",
+      "applicability": "customer",
+      "controls": [
+        "access.dormant_accounts",
+        "access.roles"
+      ],
+      "evidence": [
+        "audit:people",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "8.2.1",
+      "title": "Every user has a unique ID",
+      "applicability": "product",
+      "controls": [
+        "access.roles"
+      ],
+      "evidence": [
+        "audit:people",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "8.2.6",
+      "title": "Inactive accounts removed or disabled within 90 days",
+      "applicability": "customer",
+      "controls": [
+        "access.dormant_accounts"
+      ],
+      "evidence": [
+        "audit:people",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "8.2.8",
+      "title": "Re-authenticate after 15 minutes idle",
+      "applicability": "product",
+      "controls": [
+        "auth.idle_signout"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "8.3.4",
+      "title": "Lock out after at most 10 wrong attempts, for at least 30 minutes",
+      "applicability": "product",
+      "controls": [
+        "auth.lockout"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "8.3.6",
+      "title": "Passwords of at least 12 characters with letters and digits",
+      "applicability": "product",
+      "controls": [
+        "auth.password_rule"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "8.3.7",
+      "title": "A new password differs from the last four",
+      "applicability": "product",
+      "controls": [
+        "auth.password_rule"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "8.3.9",
+      "title": "Passwords changed every 90 days where they are the only factor",
+      "applicability": "product",
+      "controls": [
+        "auth.password_rule",
+        "auth.two_step"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "8.4.1",
+      "title": "MFA for administrative access",
+      "applicability": "product",
+      "controls": [
+        "auth.admin_mfa"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "8.4.2",
+      "title": "MFA for all access into the CDE",
+      "applicability": "product",
+      "controls": [
+        "auth.two_step"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "10.2.1",
+      "title": "Audit logs enabled and active",
+      "applicability": "product",
+      "controls": [
+        "log.audit_chain"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "10.2.1.2",
+      "title": "Administrative actions logged",
+      "applicability": "product",
+      "controls": [
+        "log.audit_chain"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "10.3.2",
+      "title": "Audit logs protected from changes",
+      "applicability": "product",
+      "controls": [
+        "log.audit_chain",
+        "evidence.signing"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "10.4.1",
+      "title": "Security events and logs reviewed (automated) at least daily",
+      "applicability": "customer",
+      "controls": [
+        "log.siem"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "10.5.1",
+      "title": "Audit log history kept 12 months, 3 months at hand",
+      "applicability": "product",
+      "controls": [
+        "log.retention_year",
+        "log.audit_chain"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "10.6.1",
+      "title": "Clocks synchronised",
+      "applicability": "customer",
+      "controls": [
+        "log.clock"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "10.7.2",
+      "title": "Failures of critical security controls detected and alerted",
+      "applicability": "product",
+      "controls": [
+        "ops.self_recovery",
+        "notify.email",
+        "ai.fail_secure"
+      ],
+      "evidence": [
+        "records:operations",
+        "audit:updates",
+        "audit:settings",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "11.3.1",
+      "title": "Internal vulnerability scans every three months",
+      "applicability": "customer",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "12.5.1",
+      "title": "Inventory of system components in scope",
+      "applicability": "customer",
+      "controls": [
+        "ai.inventory",
+        "ai.discovery"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "12.6.1",
+      "title": "Security awareness programme",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "12.8.1",
+      "title": "List of third-party service providers that touch account data",
+      "applicability": "customer",
+      "controls": [
+        "ai.inventory",
+        "ai.discovery"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "12.10.1",
+      "title": "Incident response plan ready to use",
+      "applicability": "organisational",
+      "controls": [
+        "ir.incident_report"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "audit:settings",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    }
+  ]
+}

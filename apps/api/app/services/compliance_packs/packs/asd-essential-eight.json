@@ -1,0 +1,137 @@
+{
+  "id": "asd-essential-eight",
+  "version": "2026.11.1",
+  "order": 100,
+  "optional": false,
+  "framework": {
+    "name": "ASD Essential Eight Maturity Model",
+    "short": "Essential Eight",
+    "version": "November 2023",
+    "publisher": "Australian Signals Directorate (ACSC)",
+    "jurisdiction": "Australia",
+    "url": "https://www.cyber.gov.au/business-government/asds-cyber-security-frameworks/essential-eight"
+  },
+  "summary": "The eight mitigation strategies and where Hawk AI applies them to its own server and console (patching, administrative privileges, MFA, backups) or helps with AI use on workstations (approved AI only).",
+  "scope": "The strategies have no numbers: ids are E8 short codes. The maturity model targets Windows workstations and servers on the internet; it applies here to the Hawk AI installation and, where noted, to AI use. Aim for the same maturity level across all eight.",
+  "sources": [
+    {
+      "title": "Essential Eight maturity model (November 2023, PDF)",
+      "url": "https://www.cyber.gov.au/sites/default/files/2025-03/Essential%20Eight%20maturity%20model%20(November%202023).pdf"
+    },
+    {
+      "title": "ASD: Essential Eight",
+      "url": "https://www.cyber.gov.au/business-government/asds-cyber-security-frameworks/essential-eight"
+    }
+  ],
+  "notes": [],
+  "requirements": [
+    {
+      "id": "E8-AC",
+      "title": "Application control",
+      "applicability": "customer",
+      "controls": [
+        "ai.approval_policy",
+        "ai.discovery"
+      ],
+      "evidence": [
+        "settings:approvals",
+        "records:approvals",
+        "audit:approvals",
+        "records:ai_inventory",
+        "records:attestations"
+      ],
+      "note": "Hawk AI applies an allow-only-approved rule to AI systems; workstation application control is the customer's."
+    },
+    {
+      "id": "E8-PA",
+      "title": "Patch applications",
+      "applicability": "product",
+      "controls": [
+        "software.integrity"
+      ],
+      "evidence": [
+        "audit:updates",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "E8-MM",
+      "title": "Configure Microsoft Office macro settings",
+      "applicability": "customer",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "E8-UH",
+      "title": "User application hardening",
+      "applicability": "customer",
+      "controls": [
+        "ai.gateway_in_use"
+      ],
+      "evidence": [
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "E8-RA",
+      "title": "Restrict administrative privileges",
+      "applicability": "product",
+      "controls": [
+        "access.roles",
+        "auth.admin_mfa",
+        "access.dormant_accounts"
+      ],
+      "evidence": [
+        "audit:people",
+        "settings:sign_in",
+        "audit:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "E8-PO",
+      "title": "Patch operating systems",
+      "applicability": "customer",
+      "controls": [
+        "host.hardening"
+      ],
+      "evidence": [
+        "records:operations",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "E8-MFA",
+      "title": "Multi-factor authentication",
+      "applicability": "product",
+      "controls": [
+        "auth.two_step",
+        "auth.admin_mfa"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "settings:sign_in",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "E8-RB",
+      "title": "Regular backups",
+      "applicability": "product",
+      "controls": [
+        "backup.schedule",
+        "crypto.backups",
+        "backup.restore_tested"
+      ],
+      "evidence": [
+        "audit:backups",
+        "settings:encryption",
+        "audit:settings",
+        "records:attestations"
+      ]
+    }
+  ]
+}

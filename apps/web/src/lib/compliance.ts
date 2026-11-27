@@ -96,3 +96,137 @@ export function retentionDays(value: string, min: number, max: number): number |
   const days = Number(text);
   return days >= min && days <= max ? days : null;
 }
+
+// ---- Framework packs (apps/api/app/services/compliance_packs; GET /compliance/packs) --------------------------------
+
+/** A control of the registry, as one requirement of a pack shows it. */
+export type PackControlStatus = "met" | "partly" | "not_configured" | "not_applicable";
+export type RequirementStatus = "met" | "partly" | "gap" | "not_applicable" | "attested" | "yours";
+export type Applicability = "product" | "customer" | "organisational";
+
+export type PackControl = {
+  id: string;
+  title: string;
+  status: PackControlStatus;
+  reason: string;
+  scope: "product" | "administrator" | "customer";
+  href: string;
+  label: string;
+  planned: boolean;
+};
+
+export type PackRecord = {
+  status: "in_place" | "not_applicable";
+  note: string;
+  reference: string;
+  by: string;
+  at: string | null;
+  expiresAt: string | null;
+  current: boolean;
+};
+
+export type PackRequirement = {
+  id: string;
+  title: string;
+  applicability: Applicability;
+  status: RequirementStatus;
+  why: string;
+  note: string;
+  controls: PackControl[];
+  evidence: string[];
+  attestation: PackRecord | null;
+};
+
+export type PackFramework = { name: string; short: string; version: string; publisher: string; jurisdiction: string; url: string };
+
+export type PackCounts = Record<RequirementStatus, number> & {
+  total: number;
+  byApplicability: Record<Applicability, Record<RequirementStatus | "total", number>>;
+};
+
+export type PackSummary = { id: string; version: string; optional: boolean; framework: PackFramework; summary: string; counts: PackCounts };
+
+export type PacksOverview = { packs: PackSummary[]; disclaimer: string; evaluatedAt: string; mayRecord: boolean; mayExport: boolean };
+
+export type PackView = {
+  id: string;
+  version: string;
+  optional: boolean;
+  framework: PackFramework;
+  summary: PackCounts;
+  scope: string;
+  sources: Array<{ title: string; url: string }>;
+  notes: Array<{ id: string; title: string; text: string }>;
+  requirements: PackRequirement[];
+  disclaimer: string;
+  evaluatedAt: string;
+  mayRecord: boolean;
+  mayExport: boolean;
+};
+
+export const REQUIREMENT_LABELS: Record<RequirementStatus, string> = {
+  met: "Met",
+  partly: "Partly met",
+  gap: "Gap",
+  not_applicable: "Not applicable",
+  attested: "Recorded in place",
+  yours: "Your process",
+};
+
+export const REQUIREMENT_CHIP: Record<RequirementStatus, string> = { met: "ok", partly: "warn", gap: "bad", not_applicable: "", attested: "ok", yours: "" };
+
+export const CONTROL_LABELS: Record<PackControlStatus, string> = { met: "Met", partly: "Partly", not_configured: "Not configured", not_applicable: "Not applicable" };
+
+export const CONTROL_CHIP: Record<PackControlStatus, string> = { met: "ok", partly: "warn", not_configured: "bad", not_applicable: "" };
+
+export const APPLICABILITY_LABELS: Record<Applicability, string> = {
+  product: "Hawk AI (product)",
+  customer: "You, with Hawk AI",
+  organisational: "Your organisation",
+};
+
+/** The status filter of the pack view: everything, or met, partly, gaps, or what is the organisation's own. */
+export type StatusFilter = "all" | "met" | "partly" | "gap" | "yours";
+
+export const STATUS_FILTERS: Array<{ key: StatusFilter; label: string }> = [
+  { key: "all", label: "All" },
+  { key: "met", label: "Met" },
+  { key: "partly", label: "Partly" },
+  { key: "gap", label: "Gaps" },
+  { key: "yours", label: "Yours to record" },
+];
+
+const FILTER_MATCH: Record<StatusFilter, RequirementStatus[]> = {
+  all: ["met", "partly", "gap", "not_applicable", "attested", "yours"],
+  met: ["met", "attested", "not_applicable"],
+  partly: ["partly"],
+  gap: ["gap"],
+  yours: ["yours"],
+};
+
+const SHOW_ORDER: RequirementStatus[] = ["gap", "partly", "yours", "attested", "met", "not_applicable"];
+
+/** The requirements a pack view shows for the chosen applicability ("all" or one) and status filter, gaps first. */
+export function filterRequirements(items: PackRequirement[], applicability: Applicability | "all", status: StatusFilter): PackRequirement[] {
+  return items
+    .map((r, index) => ({ r, index }))
+    .filter(({ r }) => (applicability === "all" || r.applicability === applicability) && FILTER_MATCH[status].includes(r.status))
+    .sort((a, b) => SHOW_ORDER.indexOf(a.r.status) - SHOW_ORDER.indexOf(b.r.status) || a.index - b.index)
+    .map(({ r }) => r);
+}
+
+/** The first control of a requirement that is not met and can be set: where to go to close the gap. */
+export function fixFor(item: PackRequirement): PackControl | null {
+  return item.controls.find((c) => (c.status === "not_configured" || c.status === "partly") && !c.planned) ?? null;
+}
+
+/** One line of counts for a pack. */
+export function packLine(counts: PackCounts): string {
+  const done = counts.met + counts.attested + counts.not_applicable;
+  return `${done} of ${counts.total} met or recorded · ${counts.partly} partly · ${counts.gap} gaps · ${counts.yours} yours to record`;
+}
+
+/** The evidence bundle's window as a query (dates or times as given; the API defaults to the last 30 days). */
+export function evidenceQuery(from: string, to: string): string {
+  return incidentQuery(from, to);
+}

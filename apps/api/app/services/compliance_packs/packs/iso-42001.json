@@ -1,0 +1,447 @@
+{
+  "id": "iso-42001",
+  "version": "2026.11.1",
+  "order": 50,
+  "optional": false,
+  "framework": {
+    "name": "ISO/IEC 42001:2023 AI management system, Annex A controls",
+    "short": "ISO 42001",
+    "version": "ISO/IEC 42001:2023",
+    "publisher": "ISO/IEC",
+    "jurisdiction": "International",
+    "url": "https://www.iso.org/standard/42001"
+  },
+  "summary": "The 38 Annex A controls of an AI management system (policies, roles, resources, impact assessment, life cycle, data, information for interested parties, use, third parties) and the Hawk AI controls that support an organisation's AI use under them.",
+  "scope": "ISO control numbers only, with our own short paraphrase: the standard's text is copyrighted. Clauses 4-10 (the AIMS itself) are the organisation's.",
+  "sources": [
+    {
+      "title": "ISO/IEC 42001:2023 (catalogue page)",
+      "url": "https://www.iso.org/standard/42001"
+    }
+  ],
+  "notes": [],
+  "requirements": [
+    {
+      "id": "A.2.2",
+      "title": "AI policy",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.2.3",
+      "title": "AI policy aligned with other policies",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.2.4",
+      "title": "AI policy reviewed",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.3.2",
+      "title": "AI roles and responsibilities",
+      "applicability": "customer",
+      "controls": [
+        "access.roles",
+        "ai.approval_policy"
+      ],
+      "evidence": [
+        "audit:people",
+        "settings:sign_in",
+        "settings:approvals",
+        "records:approvals",
+        "audit:approvals",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.3.3",
+      "title": "Reporting concerns",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.4.2",
+      "title": "Resources documented",
+      "applicability": "customer",
+      "controls": [
+        "ai.inventory"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.4.3",
+      "title": "Data resources",
+      "applicability": "customer",
+      "controls": [
+        "gap.ai_supply_chain"
+      ],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.4.4",
+      "title": "Tooling resources",
+      "applicability": "customer",
+      "controls": [
+        "ai.inventory",
+        "ai.mcp_tool_scan"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "records:detector_coverage",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.4.5",
+      "title": "System and computing resources",
+      "applicability": "customer",
+      "controls": [
+        "ai.inventory"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.4.6",
+      "title": "Human resources",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.5.2",
+      "title": "Impact assessment process",
+      "applicability": "customer",
+      "controls": [
+        "gap.impact_assessment"
+      ],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.5.3",
+      "title": "Impact assessments documented",
+      "applicability": "customer",
+      "controls": [
+        "gap.impact_assessment"
+      ],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.5.4",
+      "title": "Impact on individuals and groups",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.5.5",
+      "title": "Societal impact",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.6.1.2",
+      "title": "Objectives for responsible development",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.6.1.3",
+      "title": "Processes for responsible design and development",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.6.2.2",
+      "title": "Requirements and specification",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.6.2.3",
+      "title": "Design and development documented",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.6.2.4",
+      "title": "Verification and validation",
+      "applicability": "customer",
+      "controls": [
+        "ai.adversarial_testing"
+      ],
+      "evidence": [
+        "records:operations",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.6.2.5",
+      "title": "Deployment",
+      "applicability": "customer",
+      "controls": [
+        "ai.approval_policy",
+        "ai.human_oversight"
+      ],
+      "evidence": [
+        "settings:approvals",
+        "records:approvals",
+        "audit:approvals",
+        "settings:detection",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.6.2.6",
+      "title": "Operation and monitoring",
+      "applicability": "product",
+      "controls": [
+        "ai.gateway_in_use",
+        "injection.detection",
+        "dlp.personal_data",
+        "log.audit_chain"
+      ],
+      "evidence": [
+        "audit:gateway",
+        "settings:detection",
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.6.2.7",
+      "title": "Technical documentation",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.6.2.8",
+      "title": "Event logs of AI systems",
+      "applicability": "product",
+      "controls": [
+        "log.audit_chain",
+        "log.retention"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.7.2",
+      "title": "Data for development and enhancement",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.7.3",
+      "title": "Acquiring data",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.7.4",
+      "title": "Data quality",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.7.5",
+      "title": "Data provenance",
+      "applicability": "customer",
+      "controls": [
+        "gap.ai_supply_chain"
+      ],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.7.6",
+      "title": "Data preparation",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.8.2",
+      "title": "Documentation and information for users",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.8.3",
+      "title": "External reporting",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.8.4",
+      "title": "Communicating incidents",
+      "applicability": "customer",
+      "controls": [
+        "ir.incident_report",
+        "notify.email"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "audit:settings",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.8.5",
+      "title": "Information for interested parties",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.9.2",
+      "title": "Processes for responsible use",
+      "applicability": "customer",
+      "controls": [
+        "ai.approval_policy",
+        "dlp.personal_data",
+        "injection.detection"
+      ],
+      "evidence": [
+        "settings:approvals",
+        "records:approvals",
+        "audit:approvals",
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.9.3",
+      "title": "Objectives for responsible use",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.9.4",
+      "title": "Intended use",
+      "applicability": "customer",
+      "controls": [
+        "ai.inventory",
+        "ai.approval_policy",
+        "ai.discovery"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "settings:approvals",
+        "records:approvals",
+        "audit:approvals",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.10.2",
+      "title": "Responsibilities allocated across parties",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.10.3",
+      "title": "Suppliers",
+      "applicability": "customer",
+      "controls": [
+        "ai.inventory",
+        "ai.discovery",
+        "gap.ai_supply_chain"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "A.10.4",
+      "title": "Customers",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    }
+  ]
+}

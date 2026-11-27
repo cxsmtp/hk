@@ -1,0 +1,852 @@
+{
+  "id": "nist-ai-rmf",
+  "version": "2026.11.1",
+  "order": 80,
+  "optional": false,
+  "framework": {
+    "name": "NIST AI Risk Management Framework 1.0",
+    "short": "NIST AI RMF",
+    "version": "AI RMF 1.0 (NIST AI 100-1, January 2023)",
+    "publisher": "US National Institute of Standards and Technology",
+    "jurisdiction": "United States (voluntary, used internationally)",
+    "url": "https://www.nist.gov/itl/ai-risk-management-framework"
+  },
+  "summary": "All 72 subcategories of the four functions (GOVERN, MAP, MEASURE, MANAGE) and the Hawk AI controls that support them: inventory and discovery, approvals and human oversight, runtime monitoring through the gateways, attack simulations, logs and incident reporting.",
+  "scope": "Subcategory ids of AI RMF 1.0 with our own short wording. Most of GOVERN and MAP is the organisation's; Hawk AI supports inventory, oversight, monitoring and evidence. NIST is revising the RMF (2025 AI Action Plan): check for a newer version.",
+  "sources": [
+    {
+      "title": "NIST AI RMF 1.0 (NIST AI 100-1)",
+      "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf"
+    },
+    {
+      "title": "NIST AI Risk Management Framework",
+      "url": "https://www.nist.gov/itl/ai-risk-management-framework"
+    }
+  ],
+  "notes": [],
+  "requirements": [
+    {
+      "id": "GOVERN 1.1",
+      "title": "Legal and regulatory requirements for AI understood and documented",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "GOVERN 1.2",
+      "title": "Trustworthy-AI characteristics built into policies",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "GOVERN 1.3",
+      "title": "Level of risk management set by risk tolerance",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "GOVERN 1.4",
+      "title": "Risk management outcomes set through transparent policies",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "GOVERN 1.5",
+      "title": "Ongoing monitoring and periodic review planned",
+      "applicability": "customer",
+      "controls": [
+        "ai.inventory",
+        "log.audit_chain"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "GOVERN 1.6",
+      "title": "Inventory of AI systems",
+      "applicability": "customer",
+      "controls": [
+        "ai.inventory",
+        "ai.discovery"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "GOVERN 1.7",
+      "title": "Decommissioning AI systems safely",
+      "applicability": "customer",
+      "controls": [
+        "ai.approval_policy"
+      ],
+      "evidence": [
+        "settings:approvals",
+        "records:approvals",
+        "audit:approvals",
+        "records:attestations"
+      ],
+      "note": "Revoking an approval stops the gateway letting the system through."
+    },
+    {
+      "id": "GOVERN 2.1",
+      "title": "Roles, responsibilities and lines of communication documented",
+      "applicability": "customer",
+      "controls": [
+        "access.roles",
+        "ai.approval_policy"
+      ],
+      "evidence": [
+        "audit:people",
+        "settings:sign_in",
+        "settings:approvals",
+        "records:approvals",
+        "audit:approvals",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "GOVERN 2.2",
+      "title": "Staff trained in AI risk management",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "GOVERN 2.3",
+      "title": "Executive leadership responsible for AI risk decisions",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "GOVERN 3.1",
+      "title": "Decisions informed by a diverse team",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "GOVERN 3.2",
+      "title": "Roles for human-AI configuration and oversight defined",
+      "applicability": "customer",
+      "controls": [
+        "ai.human_oversight",
+        "ai.approval_policy"
+      ],
+      "evidence": [
+        "settings:approvals",
+        "settings:detection",
+        "records:approvals",
+        "audit:approvals",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "GOVERN 4.1",
+      "title": "A safety-first, critical-thinking culture",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "GOVERN 4.2",
+      "title": "Risks and impacts documented and communicated",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "GOVERN 4.3",
+      "title": "Testing, incident identification and information sharing enabled",
+      "applicability": "customer",
+      "controls": [
+        "ai.adversarial_testing",
+        "ir.incident_report"
+      ],
+      "evidence": [
+        "records:operations",
+        "audit:sign_in",
+        "audit:settings",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "GOVERN 5.1",
+      "title": "Feedback from outside the team collected",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "GOVERN 5.2",
+      "title": "Feedback built into the system's design",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "GOVERN 6.1",
+      "title": "Third-party AI risks addressed (IP included)",
+      "applicability": "customer",
+      "controls": [
+        "ai.inventory",
+        "ai.discovery",
+        "gap.ai_supply_chain"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "GOVERN 6.2",
+      "title": "Contingency for failures in third-party data or AI",
+      "applicability": "customer",
+      "controls": [
+        "ai.fail_secure",
+        "ai.approval_policy"
+      ],
+      "evidence": [
+        "audit:gateway",
+        "settings:approvals",
+        "records:approvals",
+        "audit:approvals",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MAP 1.1",
+      "title": "Intended purpose, context and applicable laws documented",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MAP 1.2",
+      "title": "Interdisciplinary participation",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MAP 1.3",
+      "title": "Organisation's mission and goals for the AI understood",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MAP 1.4",
+      "title": "Business value and context defined",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MAP 1.5",
+      "title": "Risk tolerance determined and documented",
+      "applicability": "customer",
+      "controls": [
+        "ai.approval_policy",
+        "injection.detection"
+      ],
+      "evidence": [
+        "settings:approvals",
+        "records:approvals",
+        "audit:approvals",
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ],
+      "note": "Approval tiers and detection thresholds express risk tolerance in force."
+    },
+    {
+      "id": "MAP 1.6",
+      "title": "System requirements gathered with socio-technical view",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MAP 2.1",
+      "title": "Tasks and methods of the AI system defined",
+      "applicability": "customer",
+      "controls": [
+        "ai.inventory"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MAP 2.2",
+      "title": "Knowledge limits and human oversight of outputs documented",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MAP 2.3",
+      "title": "Scientific integrity and test considerations identified",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MAP 3.1",
+      "title": "Benefits examined",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MAP 3.2",
+      "title": "Costs, including non-monetary, examined",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MAP 3.3",
+      "title": "Application scope specified",
+      "applicability": "customer",
+      "controls": [
+        "ai.inventory"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MAP 3.4",
+      "title": "Operator and practitioner proficiency defined",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MAP 3.5",
+      "title": "Human oversight processes defined",
+      "applicability": "customer",
+      "controls": [
+        "ai.human_oversight"
+      ],
+      "evidence": [
+        "settings:approvals",
+        "settings:detection",
+        "records:approvals",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MAP 4.1",
+      "title": "Legal and technology risks of components mapped (third parties included)",
+      "applicability": "customer",
+      "controls": [
+        "gap.ai_supply_chain",
+        "ai.mcp_tool_scan"
+      ],
+      "evidence": [
+        "records:attestations",
+        "records:detector_coverage",
+        "audit:gateway"
+      ]
+    },
+    {
+      "id": "MAP 4.2",
+      "title": "Internal risk controls for components identified",
+      "applicability": "customer",
+      "controls": [
+        "ai.mcp_tool_scan",
+        "ai.approval_policy"
+      ],
+      "evidence": [
+        "records:detector_coverage",
+        "audit:gateway",
+        "settings:approvals",
+        "records:approvals",
+        "audit:approvals",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MAP 5.1",
+      "title": "Likelihood and size of impacts identified",
+      "applicability": "customer",
+      "controls": [
+        "gap.impact_assessment"
+      ],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MAP 5.2",
+      "title": "Regular engagement with AI actors about impacts",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MEASURE 1.1",
+      "title": "Methods and metrics for measuring risks chosen",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MEASURE 1.2",
+      "title": "Metrics and control effectiveness reassessed regularly",
+      "applicability": "customer",
+      "controls": [
+        "ai.adversarial_testing"
+      ],
+      "evidence": [
+        "records:operations",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MEASURE 1.3",
+      "title": "Independent assessors involved",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MEASURE 2.1",
+      "title": "Test sets, metrics and tools documented",
+      "applicability": "customer",
+      "controls": [
+        "ai.adversarial_testing"
+      ],
+      "evidence": [
+        "records:operations",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MEASURE 2.2",
+      "title": "Evaluations with human subjects meet requirements",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MEASURE 2.3",
+      "title": "Performance measured",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MEASURE 2.4",
+      "title": "Behaviour monitored in production",
+      "applicability": "product",
+      "controls": [
+        "ai.gateway_in_use",
+        "log.audit_chain",
+        "injection.detection"
+      ],
+      "evidence": [
+        "audit:gateway",
+        "audit:audit",
+        "settings:compliance",
+        "settings:detection",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MEASURE 2.5",
+      "title": "Validity and reliability demonstrated",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MEASURE 2.6",
+      "title": "Safety risks evaluated regularly",
+      "applicability": "customer",
+      "controls": [
+        "ai.adversarial_testing",
+        "gap.output_content_safety"
+      ],
+      "evidence": [
+        "records:operations",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MEASURE 2.7",
+      "title": "Security and resilience evaluated",
+      "applicability": "product",
+      "controls": [
+        "injection.detection",
+        "ai.mcp_tool_scan",
+        "ai.adversarial_testing"
+      ],
+      "evidence": [
+        "settings:detection",
+        "audit:gateway",
+        "records:detector_coverage",
+        "records:operations",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MEASURE 2.8",
+      "title": "Transparency and accountability risks examined",
+      "applicability": "product",
+      "controls": [
+        "log.audit_chain",
+        "evidence.signing"
+      ],
+      "evidence": [
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MEASURE 2.9",
+      "title": "Model explained and documented",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MEASURE 2.10",
+      "title": "Privacy risk examined",
+      "applicability": "product",
+      "controls": [
+        "dlp.personal_data"
+      ],
+      "evidence": [
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MEASURE 2.11",
+      "title": "Fairness and bias evaluated",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MEASURE 2.12",
+      "title": "Environmental impact assessed",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MEASURE 2.13",
+      "title": "Effectiveness of measurement evaluated",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MEASURE 3.1",
+      "title": "Existing and emerging risks tracked",
+      "applicability": "customer",
+      "controls": [
+        "ai.discovery",
+        "log.siem"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "audit:audit",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MEASURE 3.2",
+      "title": "Risk tracking where risks are hard to measure",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MEASURE 3.3",
+      "title": "Users and affected people can report problems and appeal",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MEASURE 4.1",
+      "title": "Measurement informed by domain experts",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MEASURE 4.2",
+      "title": "Trustworthiness results validated in context",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MEASURE 4.3",
+      "title": "Performance changes identified",
+      "applicability": "customer",
+      "controls": [
+        "ai.adversarial_testing"
+      ],
+      "evidence": [
+        "records:operations",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MANAGE 1.1",
+      "title": "Decide whether the AI system should proceed",
+      "applicability": "customer",
+      "controls": [
+        "ai.approval_policy"
+      ],
+      "evidence": [
+        "settings:approvals",
+        "records:approvals",
+        "audit:approvals",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MANAGE 1.2",
+      "title": "Treatment of risks prioritised",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MANAGE 1.3",
+      "title": "Responses to high-priority risks planned",
+      "applicability": "customer",
+      "controls": [
+        "injection.detection",
+        "dlp.personal_data"
+      ],
+      "evidence": [
+        "settings:detection",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MANAGE 1.4",
+      "title": "Residual risks documented",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MANAGE 2.1",
+      "title": "Resources and non-AI alternatives considered",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MANAGE 2.2",
+      "title": "Value of deployed systems sustained",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MANAGE 2.3",
+      "title": "Respond to and recover from unknown risks",
+      "applicability": "customer",
+      "controls": [
+        "ir.incident_report",
+        "ops.self_recovery"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "audit:settings",
+        "settings:compliance",
+        "records:operations",
+        "audit:updates",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MANAGE 2.4",
+      "title": "Disengage or deactivate an AI system behaving outside its intended use",
+      "applicability": "product",
+      "controls": [
+        "ai.approval_policy",
+        "ai.fail_secure"
+      ],
+      "evidence": [
+        "settings:approvals",
+        "records:approvals",
+        "audit:approvals",
+        "audit:gateway",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MANAGE 3.1",
+      "title": "Third-party AI risks monitored with controls applied",
+      "applicability": "customer",
+      "controls": [
+        "ai.inventory",
+        "ai.discovery"
+      ],
+      "evidence": [
+        "records:ai_inventory",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MANAGE 3.2",
+      "title": "Pre-trained models monitored",
+      "applicability": "customer",
+      "controls": [
+        "gap.ai_supply_chain"
+      ],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MANAGE 4.1",
+      "title": "Post-deployment monitoring, override, incident response and recovery",
+      "applicability": "customer",
+      "controls": [
+        "ai.gateway_in_use",
+        "log.audit_chain",
+        "ir.incident_report"
+      ],
+      "evidence": [
+        "audit:gateway",
+        "audit:audit",
+        "settings:compliance",
+        "audit:sign_in",
+        "audit:settings",
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MANAGE 4.2",
+      "title": "Continual improvement built in",
+      "applicability": "organisational",
+      "controls": [],
+      "evidence": [
+        "records:attestations"
+      ]
+    },
+    {
+      "id": "MANAGE 4.3",
+      "title": "Incidents and errors communicated and tracked",
+      "applicability": "customer",
+      "controls": [
+        "ir.incident_report",
+        "notify.email"
+      ],
+      "evidence": [
+        "audit:sign_in",
+        "audit:settings",
+        "settings:compliance",
+        "records:attestations"
+      ]
+    }
+  ]
+}
