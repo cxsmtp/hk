@@ -44,6 +44,7 @@ from pathlib import Path
 from typing import Any
 
 from app.core.config import settings
+from app.services.pci_controls import scrub_pan
 
 log = logging.getLogger("hawk.mail")
 
@@ -454,6 +455,11 @@ def system_email(*, subject: str, lines: list[str], facts: list[tuple[str, str]]
     """CxMissionZero's systemEmail: plain text and the same simple HTML, headed with the product name."""
 
     app_name = app_name if app_name is not None else brand_name()
+    # Never a full card number in an email (PCI DSS 3.4): an error's text or a reference can quote one.
+    subject = scrub_pan(subject, boundary="email")
+    lines = [scrub_pan(line, boundary="email") for line in lines]
+    facts = [(k, scrub_pan(v, boundary="email")) for k, v in facts]
+    footer = scrub_pan(footer, boundary="email")
     text = "\n".join(
         [
             *lines,
@@ -626,9 +632,9 @@ def send_mail(
     message = EmailMessage()
     message["From"] = smtp.sender
     message["To"] = ", ".join(recipients)
-    message["Subject"] = re.sub(r"[\r\n]+", " ", subject)
+    message["Subject"] = re.sub(r"[\r\n]+", " ", scrub_pan(subject, boundary="email"))
     message["Message-ID"] = make_msgid(domain=(smtp.sender.rsplit("@", 1)[-1].strip(">") or None))
-    message.set_content(text)
+    message.set_content(scrub_pan(text, boundary="email"))
     for filename, content, content_type in attachments:
         maintype, _, subtype = (content_type or "application/octet-stream").partition("/")
         message.add_attachment(content, maintype=maintype, subtype=subtype or "octet-stream", filename=filename)

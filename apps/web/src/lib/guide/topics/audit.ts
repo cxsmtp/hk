@@ -53,6 +53,16 @@ export const audit: GuideTopic = {
       ],
     },
     {
+      id: "card-numbers",
+      title: "Card numbers",
+      blocks: [
+        {
+          kind: "p",
+          text: "Hawk AI never stores, logs or exports a full payment card number (PCI DSS 3.3, 3.4). Its detectors see the whole number in a prompt, a response, a file or telemetry, so they can warn or block; everything kept afterwards shows at most the last four digits, as `[card ending 1111]`: every database row, every log line and the error journal, the exports above, the auditor's export, SIEM exports, the diagnostics bundle and system emails. A base64 piece holding a card number is replaced as a whole. A card number is 13 to 19 digits, together or in groups split by spaces or dashes, that pass the Luhn check and start with a card network's digit; record ids and digests are never changed. The hashes Hawk AI keeps of what it saw are taken from the original text, before it is masked, so they still prove what was seen; the audit log's chain, receipts and signed evidence are computed over the masked text and still check. Simulations are stored with their card numbers masked: to send a test card number, write `{{hawk.test_card}}` in a step and it is filled in only when the step runs, as the built-in simulations do. Backups are encrypted and hold the masked database. Your own systems, your keys and who may see Hawk AI stay yours to scope and manage.",
+        },
+      ],
+    },
+    {
       id: "evidence-signing",
       title: "Evidence signing",
       blocks: [

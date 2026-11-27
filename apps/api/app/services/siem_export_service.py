@@ -15,6 +15,7 @@ from app.core.config import (
     settings,
     siem_pseudonymization_key_is_obviously_predictable,
 )
+from app.services.pci_controls import scrub_pan_value
 from app.services.outbound_destination_policy import (
     OutboundDestinationPolicy,
     OutboundDestinationPolicyError,
@@ -856,6 +857,8 @@ def build_siem_export(
         if adapter_key == "generic"
         else [_sentinel_event(event) for event in projected_generic]
     )
+    # Never a full card number in an export (PCI DSS 3.4): masked as [card ending 1111], whatever the caller passed.
+    projected = [scrub_pan_value(row, boundary="export:siem") for row in projected]
     ndjson = _encode_ndjson(projected)
     timestamps = [
         parsed

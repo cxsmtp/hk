@@ -9,6 +9,7 @@ from typing import Any
 
 from app.core.config import settings
 from app.services.detection import dlp_engine
+from app.services.pci_controls import scrub_pan
 from app.services.detection.profile import REPORT_MIN_CONFIDENCE, DetectionProfile, current_profile
 
 
@@ -539,17 +540,29 @@ def _extract_file_text(file_meta: dict[str, Any]) -> tuple[str, dict[str, Any]]:
     ):
         try:
             from app.jobs.celery_app import celery_app
+            from app.services.enforcement_payload_crypto_service import (
+                decrypt_transient_payload,
+                encrypt_transient_payload,
+            )
 
             task = celery_app.send_task(
                 "app.jobs.enforcement_jobs.ocr_extract_text",
                 kwargs={
-                    "file_name": _normalize_text(file_meta.get("name")) or None,
+                    "file_name": scrub_pan(_normalize_text(file_meta.get("name"))) or None,
                     "mime_type": _normalize_text(file_meta.get("mime_type") or file_meta.get("content_type")) or None,
-                    "content_b64": base64.b64encode(content).decode("utf-8"),
+                    # Encrypted on the queue: the file can hold a card number (PCI DSS 3.3/3.4).
+                    "content_b64": encrypt_transient_payload(base64.b64encode(content).decode("utf-8")),
                 },
             )
-            text = task.get(timeout=float(getattr(settings, "sensitive_detection_async_ocr_timeout_seconds", 2.0)))
-            extracted = _normalize_text(text)
+            try:
+                text = task.get(timeout=float(getattr(settings, "sensitive_detection_async_ocr_timeout_seconds", 2.0)))
+            finally:
+                # The extracted text can hold a card number (PCI DSS 3.3/3.4): never left in the result backend.
+                try:
+                    task.forget()
+                except Exception:  # noqa: BLE001 - a result backend without forget keeps its own expiry
+                    pass
+            extracted = _normalize_text(decrypt_transient_payload(text))
             if extracted:
                 return extracted, {"engine": "celery_ocr", "async": True}
         except Exception:
