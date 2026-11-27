@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bell, ChevronDown, ExternalLink, LogOut, Settings2, UserRound } from "lucide-react";
@@ -10,6 +10,8 @@ import { api, signOut } from "@/lib/api";
 import type { DashboardNotificationItem } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { JumpTo } from "@/components/jump-to";
+import { ThemeSwitch } from "@/components/theme-switch";
+import { WorkspaceSwitch } from "@/components/workspace-switch";
 import { SETTINGS_ENTRY, SPECIALIST_WORKSPACES } from "@/lib/navigation";
 
 const ADMINISTRATION_ITEMS = SPECIALIST_WORKSPACES.find((group) => group.label === "Administration")?.items ?? [];
@@ -115,7 +117,7 @@ function quickNotificationDrilldowns(item: DashboardNotificationItem) {
     .slice(0, 5);
 }
 
-export function Topbar() {
+export function Topbar({ leading }: { leading?: ReactNode } = {}) {
   const [email, setEmail] = useState<string>("");
   const [tenantId, setTenantId] = useState<string>("");
   const [role, setRole] = useState<string>("");
@@ -261,12 +263,15 @@ export function Topbar() {
   );
 
   return (
-    <header className="sticky top-0 z-10 flex flex-col items-stretch gap-3 border-b border-[#1e2433] bg-[#0e1018]/85 px-4 py-3 backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-4">
-      <div className="min-w-0">
-        <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500">Tenant</p>
-        <p className="max-w-[9rem] truncate font-mono text-xs text-slate-300 sm:max-w-none">{tenantId}</p>
+    <header className="hawk-topbar sticky top-0 z-30 flex items-center justify-between gap-2 border-b border-[#1e2433] bg-[#0e1018]/90 px-3 py-2.5 sm:px-6 lg:py-3.5">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        {leading}
+        <div className="hidden min-w-0 lg:block">
+          <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500">Tenant</p>
+          <p className="truncate font-mono text-xs text-slate-300">{tenantId}</p>
+        </div>
       </div>
-      <div className="flex min-w-0 items-center justify-between gap-2 sm:justify-end sm:gap-4">
+      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
         <JumpTo />
         <div className="relative" ref={hubRef}>
           <button
@@ -274,6 +279,7 @@ export function Topbar() {
             onClick={openNotificationHub}
             className="relative inline-flex h-10 items-center gap-2 rounded-md border border-[#2a3348] bg-transparent px-3 text-sm font-semibold text-slate-200 transition-colors hover:border-brand-500/40 hover:bg-brand-500/10"
             title="Open notification hub"
+            aria-label="Alerts"
           >
             <Bell className="h-4 w-4" />
             <span className="hidden sm:inline">Alerts</span>
@@ -284,7 +290,7 @@ export function Topbar() {
             ) : null}
           </button>
           {notificationOpen ? (
-            <div className="absolute right-0 top-12 z-50 w-[min(92vw,25rem)] overflow-hidden rounded-[22px] border border-[#263047] bg-[#0b1220] shadow-2xl">
+            <div className="absolute right-0 top-12 z-50 w-[25rem] overflow-hidden max-sm:fixed max-sm:inset-x-3 max-sm:top-[3.75rem] max-sm:w-auto rounded-[22px] border border-[#263047] bg-[#0b1220] shadow-2xl">
               <div className="border-b border-[#1e2433] px-4 py-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -311,7 +317,7 @@ export function Topbar() {
                 </div>
               </div>
 
-              <div className="max-h-[26rem] space-y-1 overflow-y-auto px-2 py-2">
+              <div className="max-h-[min(26rem,60dvh)] space-y-1 overflow-y-auto overscroll-contain px-2 py-2">
                 {notifications.length === 0 ? (
                   <div className="m-2 rounded-xl border border-dashed border-[#334155] bg-[#0f172a] px-3 py-5 text-center text-sm text-slate-400">
                     No alerts yet for this tenant.
@@ -418,10 +424,10 @@ export function Topbar() {
             <span className="rounded border border-brand-500/40 bg-brand-500/15 px-2 py-0.5 text-[9px] font-semibold tracking-[0.08em] text-brand-300">
               {role}
             </span>
-            <ChevronDown className={`h-3.5 w-3.5 text-slate-500 transition ${accountOpen ? "rotate-180" : ""}`} />
+            <ChevronDown className={`hidden h-3.5 w-3.5 text-slate-500 transition sm:block ${accountOpen ? "rotate-180" : ""}`} />
           </button>
           {accountOpen ? (
-            <div className="absolute right-0 top-12 z-50 w-[min(88vw,18rem)] overflow-hidden rounded-2xl border border-[#263047] bg-[#0b1220] shadow-2xl">
+            <div className="absolute right-0 top-12 z-50 w-[min(calc(100vw-1.5rem),18rem)] overflow-hidden rounded-2xl border border-[#263047] bg-[#0b1220] shadow-2xl">
               <div className="border-b border-[#1e2433] px-4 py-3">
                 <p className="truncate text-sm font-semibold text-white">{email}</p>
                 <p className="mt-1 truncate font-mono text-[10px] text-slate-500">{tenantId}</p>
@@ -447,6 +453,10 @@ export function Topbar() {
                     {item.label}
                   </Link>
                 ))}
+              </div>
+              <WorkspaceSwitch />
+              <div className="border-t border-[#1e2433] p-2">
+                <ThemeSwitch />
               </div>
               <div className="border-t border-[#1e2433] p-2">
                 <button

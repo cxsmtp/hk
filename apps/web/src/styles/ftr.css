@@ -7,8 +7,8 @@
  */
 
 .ftr {
-  --brand: #5cb8d0;
-  --on-brand: #06222b;
+  --brand: #fb923c; /* the console's orange (was FTR's teal) */
+  --on-brand: #1c0d03;
   --bg: #0f1417;
   --panel: #161e24;
   --panel-solid: #161e24;
@@ -30,8 +30,9 @@
   line-height: 1.45;
   color-scheme: dark;
 }
-.ftr[data-theme="light"] {
-  --brand: #0b6b86;
+.ftr[data-theme="light"],
+:root[data-theme="light"] .ftr {
+  --brand: #c2410c;
   --on-brand: #ffffff;
   --bg: #f4f6f7;
   --panel: #ffffff;

@@ -6519,4 +6519,5 @@ export type OIDCProvider = {
   display_name: string;
 };
 
-export type OIDCProviderList = { providers: OIDCProvider[] };
+/** byEmail: several workspaces, so the sign-in page asks for the email first (POST /auth/oidc/discover). */
+export type OIDCProviderList = { providers: OIDCProvider[]; byEmail?: boolean };

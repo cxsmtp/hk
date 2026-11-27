@@ -331,8 +331,10 @@ def test_join_is_off_until_turned_on_and_offers_no_managing_role(env):
     assert view["enabled"] is False and {r["id"] for r in view["allRoles"] if not r["open"]} == {"owner", "admin"}
     assert _join_on(env, admin, roles=["admin"]).status_code == 400
     assert _join_on(env, admin).status_code == 200
-    assert c.get("/auth/join", params={"workspace": "acme"}).json() == {"available": True, "domains": ["acme.test"]}
+    assert c.get("/auth/join", params={"workspace": "acme"}).json() == {"available": True, "domains": ["acme.test"], "workspace": "acme"}
     assert c.post("/auth/join", json={"workspace": "acme", "email": "someone@gmail.com"}).status_code == 400
+    # The sign-in page has no workspace box: with one workspace on the installation, it is the one.
+    assert c.get("/auth/join").json() == {"available": True, "domains": ["acme.test"], "workspace": "acme"}
 
 
 def test_join_review_and_approve(env):

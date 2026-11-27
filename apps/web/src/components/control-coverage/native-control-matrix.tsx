@@ -480,7 +480,7 @@ export function NativeControlMatrix() {
           <span className="font-mono text-xs text-cyan-200">{points.length} configured · {enforcingCount} authoritative</span>
         </div>
         {points.length ? (
-          <div className="mt-3 flex gap-3 overflow-x-auto pb-2">
+          <div className="mt-3 flex flex-wrap gap-3 pb-2">
             {points.map((point) => (
               <ControlPointCard
                 key={point.id}
@@ -515,7 +515,7 @@ export function NativeControlMatrix() {
                   </div>
                   <span className="shrink-0 font-mono text-[9px] uppercase tracking-wider text-slate-600">{compatibilityRows.length} routes</span>
                 </div>
-                <div className="flex gap-3 overflow-x-auto p-3">
+                <div className="flex flex-wrap gap-3 p-3">
                   {compatibilityRows.map(({ manifest, point }) => (
                     <div key={`compat:${manifest.manifest_id}:${point?.id ?? "catalog"}`} className="min-w-[350px] border border-[#273247] bg-[#090f17] p-3">
                       <div className="flex items-start justify-between gap-3">

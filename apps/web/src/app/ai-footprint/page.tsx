@@ -481,7 +481,7 @@ export default function AIFootprintPage() {
             </div>
           </header>
 
-          <div className="relative h-[680px] overflow-hidden rounded-b-2xl">
+          <div className="relative h-[min(680px,75dvh)] min-h-[380px] overflow-hidden rounded-b-2xl">
             {!graph.nodes.length ? (
               <div role="status" className="absolute inset-0 z-10 grid place-items-center bg-[#0a1020]/95 px-6 text-center text-sm text-slate-500">
                 {loadState === "loading" ? "Loading observed footprint…" : loadState === "unavailable" ? "Footprint data is unavailable for this tenant." : "No observed footprint data is available for this tenant yet."}

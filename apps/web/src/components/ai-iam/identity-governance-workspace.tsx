@@ -425,7 +425,7 @@ export function IdentityGovernanceWorkspace({
       >
         {drawerAgent ? (
           <div className="space-y-5">
-            <div role="tablist" aria-label="AI identity investigation tabs" className="flex gap-1 overflow-x-auto border-b border-[#283247] pb-2">
+            <div role="tablist" aria-label="AI identity investigation tabs" className="flex flex-wrap gap-1 border-b border-[#283247] pb-2">
               {INVESTIGATION_TABS.map((tab) => (
                 <button
                   key={tab.id}

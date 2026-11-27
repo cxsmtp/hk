@@ -6,8 +6,10 @@ import { toast } from "sonner";
 
 import { api } from "@/lib/api";
 import { setSession } from "@/lib/auth";
+import { rememberWorkspace } from "@/lib/workspace";
 import { defaultRouteForRole } from "@/lib/navigation";
 import type { LoginResponse } from "@/lib/types";
+import { SignInFrame } from "@/components/sign-in-frame";
 
 export default function OIDCCallbackPage() {
   const router = useRouter();
@@ -32,6 +34,7 @@ export default function OIDCCallbackPage() {
       const role = login.tenants?.find((tenant) => tenant.id === tenantId)?.role;
       // The tokens are HttpOnly cookies the API set; only who signed in is remembered here.
       setSession({ tenantId, userRole: role, user: login.user });
+      rememberWorkspace(tenantId);
       router.replace(defaultRouteForRole(role));
     }).catch(() => {
       if (active) {
@@ -44,7 +47,7 @@ export default function OIDCCallbackPage() {
   }, [router]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-4">
+    <SignInFrame>
       <div className="text-center">
         <p>{message}</p>
         {failed ? (
@@ -53,6 +56,6 @@ export default function OIDCCallbackPage() {
           </a>
         ) : null}
       </div>
-    </main>
+    </SignInFrame>
   );
 }

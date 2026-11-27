@@ -172,6 +172,19 @@ export function FrameworkPacks() {
         <h2>
           Framework packs <small>pick one: requirements, Hawk AI&apos;s controls and their status now</small>
         </h2>
+        {/* On a phone: one list to choose from instead of a wall of buttons (globals: .pack-select under 640 px). */}
+        <label className="pack-select f">
+          <span className="sr-only">Framework pack</span>
+          <select value={current} onChange={(event) => setCurrent(event.target.value)} data-ui="pack-select">
+            {overview.packs.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.framework.short}
+                {p.optional ? " (optional)" : ""}
+                {p.counts.gap ? ` · ${p.counts.gap} gaps` : ""}
+              </option>
+            ))}
+          </select>
+        </label>
         <div className="seg" role="tablist" aria-label="Framework packs" data-ui="pack-picker">
           {overview.packs.map((p) => (
             <button key={p.id} type="button" role="tab" aria-selected={p.id === current} className={p.id === current ? "primary" : ""} data-pack={p.id} title={`${p.framework.name} — ${packLine(p.counts)}`} onClick={() => setCurrent(p.id)}>

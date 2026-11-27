@@ -259,7 +259,7 @@ export function AssetExposureIntelligence({ assetId }: { assetId: string }) {
             ))}
           </div>
 
-          <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+          <div className="mt-4 flex flex-wrap gap-2 pb-1">
             {projection.exposures.map((item) => (
               <button
                 key={item.category_id}

@@ -10,7 +10,7 @@ export function VersionTag() {
     <div
       data-ui="hawk-version"
       aria-label={`Hawk AI version ${version}`}
-      className="pointer-events-none fixed bottom-1.5 left-2 z-50 select-text font-mono text-[11px] text-slate-500"
+      className="pointer-events-none fixed bottom-1.5 right-3 z-40 hidden select-text font-mono text-[11px] text-slate-600 md:block"
     >
       {version}
     </div>

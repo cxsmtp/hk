@@ -166,7 +166,7 @@ export default function BrandingSettingsPage() {
                   </div>
                   <div className="f">
                     <span>
-                      Look of the app <small>Everyone&apos;s look: light, dark, or as each person&apos;s device is set.</small>
+                      Look of the app <small>Everyone&apos;s look until they choose their own in the account menu: light (the default), dark, or as each person&apos;s device is set.</small>
                     </span>
                   </div>
                   <div className="seg" id="b-modes">

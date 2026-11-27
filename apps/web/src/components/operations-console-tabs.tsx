@@ -27,9 +27,10 @@ export function OperationsConsoleTabs({
   }
 
   return (
-    <div className="-mx-4 -mt-6 mb-6 border-b border-[#1b2131] bg-[#0a0d16]/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <nav className="flex flex-wrap items-center gap-2">
+    <div className="-mx-4 -mt-4 mb-5 border-b border-[#1b2131] bg-[#0a0d16]/95 px-4 py-2.5 sm:-mx-6 sm:-mt-6 sm:mb-6 sm:px-6 sm:py-3">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        {/* On a phone the tabs share the row equally (never a second row, never a sideways scroll). */}
+        <nav className="grid w-full auto-cols-fr grid-flow-col gap-1 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:gap-2">
           {tabs.map((tab) => {
             const active = isActive(tab);
             return (
@@ -37,7 +38,7 @@ export function OperationsConsoleTabs({
                 key={tab.href}
                 href={tab.href}
                 className={cn(
-                  "rounded-2xl px-4 py-2 text-sm font-medium transition",
+                  "truncate rounded-xl px-2 py-2 text-center text-[13px] font-medium transition sm:rounded-2xl sm:px-4 sm:text-sm",
                   active
                     ? "bg-[#1a2030] text-slate-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
                     : "text-slate-500 hover:bg-white/[0.04] hover:text-slate-200"

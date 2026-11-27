@@ -116,8 +116,9 @@ function Matrix({ d, reload }: { d: IamView; reload: () => Promise<void> }) {
           <span className="small muted">Read only: an Owner or Admin changes roles.</span>
         )}
       </div>
+      <p className="scroll-hint small muted mt">A grid of every permission against every role: slide it sideways to see each role.</p>
       <div className="tw mt matrix-wrap">
-        <table className="matrix">
+        <table className="matrix" data-table="scroll">
           <thead>
             <tr>
               <th>Permission</th>

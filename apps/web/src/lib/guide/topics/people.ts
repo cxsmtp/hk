@@ -121,10 +121,14 @@ export const people: GuideTopic = {
           head: ["Setting", "What it holds"],
           rows: [
             ["`COMPANY_SSO_ENABLED`", "`true` turns single sign-on on."],
-            ["`OIDC_PROVIDERS_JSON`", "The identity provider: its `key`, `kind` (`entra` or `okta`), the button's name (`display_name`), `workspace_slug`, `issuer` address, `client_id` and the Hawk AI `tenant_id` it signs people into. `deploy/.env.example` has an example."],
+            ["`OIDC_PROVIDERS_JSON`", "The identity provider: its `key`, `kind` (`entra` or `okta`), the button's name (`display_name`), `workspace_slug`, `issuer` address, `client_id` and the Hawk AI `tenant_id` it signs people into. `deploy/.env.example` has an example. With more than one workspace, give each provider its email `domains` too (for example `[\"acme.com\"]`)."],
             ["`OIDC_PROVIDER_SECRETS_JSON`", "Its client secret, by `key`. Keep `deploy/.env` readable by root only (the installer makes it so)."],
             ["`OIDC_CALLBACK_URL`", "The https address of `/auth/oidc/callback` on this API, which the identity provider needs."],
           ],
+        },
+        {
+          kind: "p",
+          text: "The sign-in page has no workspace box: people type only their email and password, or press **Continue with …** for single sign-on. With one workspace on the installation (the usual case) its providers' buttons are shown straight away. With several (one installation serving several organisations), the page shows **Continue with single sign-on**: the person types their work email first, and the provider listed for that email's domain is used. The answer depends on the domain only, so it never tells anyone whether an address has an account. Someone who belongs to several workspaces signs in to the one they used last in that browser and changes it from the account menu (top right, **Workspace**).",
         },
         {
           kind: "p",

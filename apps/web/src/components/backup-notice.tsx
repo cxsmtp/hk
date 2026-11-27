@@ -36,7 +36,7 @@ export function BackupNotice() {
   const text = backupNoticeText(notice);
   if (!text) return null;
   return (
-    <div role="status" data-ui="backup-notice" className="border-b border-amber-900/60 bg-amber-950/40 px-4 py-2.5 text-sm text-amber-200 sm:px-6">
+    <div role="status" data-ui="backup-notice" className="border-b border-amber-900/60 bg-amber-950/40 px-4 py-2 text-[13px] leading-5 text-amber-200 sm:px-6 sm:py-2.5 sm:text-sm">
       {text}{" "}
       <a href="/settings/backups" className="font-medium underline">
         {backupNoticeAction(notice)}

@@ -159,17 +159,37 @@ def _oidc_failure(exc: oidc_auth_service.OIDCError) -> HTTPException:
 
 
 @router.get("/oidc/providers")
-def oidc_providers(workspace: str = Query(..., min_length=1, max_length=100)):
+def oidc_providers(workspace: str = Query(default="", max_length=100)):
+    """The sign-in page's single sign-on buttons. With ?workspace= (an optional pre-fill), that workspace's; without,
+    every provider when they all belong to one workspace, else none and byEmail: the page asks for the email first."""
     try:
-        return {"providers": oidc_auth_service.public_provider_rows(workspace_slug=workspace)}
+        if workspace.strip():
+            return {"providers": oidc_auth_service.public_provider_rows(workspace_slug=workspace.strip()), "byEmail": False}
+        return oidc_auth_service.sign_in_providers()
+    except oidc_auth_service.OIDCError as exc:
+        raise _oidc_failure(exc) from exc
+
+
+class OIDCDiscoverRequest(BaseModel):
+    email: Annotated[str, AfterValidator(lambda v: v.strip()[:254])]
+
+
+@router.post("/oidc/discover")
+def oidc_discover(payload: OIDCDiscoverRequest, request: Request):
+    """The providers for the domain of an email address (the sign-in page's "Continue with single sign-on"). The
+    answer depends on the domain only, never on whether the address has an account."""
+    if account_security.too_many_sign_ins(request):
+        raise HTTPException(status_code=429, detail=account_security.TOO_MANY)
+    try:
+        return {"providers": oidc_auth_service.discover_providers(payload.email)}
     except oidc_auth_service.OIDCError as exc:
         raise _oidc_failure(exc) from exc
 
 
 @router.get("/oidc/{provider_key}/start")
-def oidc_start(provider_key: str, response: Response, workspace: str = Query(..., min_length=1, max_length=100)):
+def oidc_start(provider_key: str, response: Response, workspace: str = Query(default="", max_length=100)):
     try:
-        authorization_url, browser = oidc_auth_service.start(provider_key=provider_key, workspace_slug=workspace)
+        authorization_url, browser = oidc_auth_service.start(provider_key=provider_key, workspace_slug=workspace.strip() or None)
     except oidc_auth_service.OIDCError as exc:
         raise _oidc_failure(exc) from exc
     response.set_cookie(oidc_auth_service.STATE_COOKIE, browser, max_age=settings.oidc_state_ttl_seconds, secure=True, httponly=True, samesite="lax", path="/")
