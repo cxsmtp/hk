@@ -34,6 +34,8 @@ from sqlalchemy import update as sql_update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.db import xact_lock
+
 KINDS = ("access", "correction", "erasure", "grievance", "nomination")
 STATUSES = ("received", "verifying", "in_progress", "completed", "refused")
 OPEN_STATUSES = ("received", "verifying", "in_progress")
@@ -671,6 +673,9 @@ def erase(db: Session, row: Any, *, actor: Any, now: dt.datetime | None = None) 
     if user is not None:
         if getattr(actor, "id", None) == user.id:
             raise DsrError("You cannot erase your own account: ask another administrator.", 409)
+        # The lock People takes before it counts the Owners (iam_service.keep_an_owner): two erasures, or an erasure
+        # and a role change, at the same moment are counted one after the other, so the last Owner always stays.
+        xact_lock.hold(db, "tenant-people", tenant_id)
         membership = db.scalar(select(UserTenantRole).where(UserTenantRole.user_id == user.id, UserTenantRole.tenant_id == tenant_id))
         if membership is not None and membership.role == "owner" and user.is_active and _active_owners(db, tenant_id) <= 1:
             raise DsrError("This person is the workspace's last active Owner: make someone else an Owner first.", 409)

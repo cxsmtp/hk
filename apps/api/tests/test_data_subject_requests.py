@@ -438,3 +438,34 @@ def test_the_dpdp_evidence_bundle_carries_the_requests_without_whom_they_are_abo
     desc = c.get("/compliance/packs/desc-isr/evidence", headers=owner["h"])
     with zipfile.ZipFile(io.BytesIO(desc.content)) as archive:
         assert "dataSubjectRequests" not in json.loads(archive.read("records.json"))
+
+
+def test_erasure_counts_the_owners_under_the_people_lock(monkeypatch):
+    """Two erasures (or an erasure and a role change) at the same moment must be counted one after the other."""
+
+    from app.services import data_subject_requests as dsr
+
+    seen: list[tuple] = []
+
+    def fake_hold(db, *parts):
+        seen.append(parts)
+        raise RuntimeError("stop after the lock")
+
+    monkeypatch.setattr(dsr.xact_lock, "hold", fake_hold)
+
+    class Row:
+        kind, status, tenant_id, subject_email = "erasure", "received", "t-1", "someone@example.test"
+
+    class User:
+        id = "u-2"
+
+    monkeypatch.setattr(dsr, "_subject", lambda db, row: User())
+
+    class Actor:
+        id = "u-1"
+
+    import pytest
+
+    with pytest.raises(RuntimeError, match="stop after the lock"):
+        dsr.erase(object(), Row(), actor=Actor())
+    assert seen == [("tenant-people", "t-1")]
