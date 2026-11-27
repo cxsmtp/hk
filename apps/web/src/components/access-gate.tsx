@@ -26,6 +26,7 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
   const [needed, setNeeded] = useState<AccessNeeded>(null);
   const [terms, setTerms] = useState<TermsState | null>(null);
   const [email, setEmail] = useState("");
+  const [fromInstaller, setFromInstaller] = useState(false);
 
   const check = useCallback(() => {
     const session = getSession();
@@ -38,6 +39,7 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
       .me()
       .then((me) => {
         setTerms(me?.terms ?? null);
+        setFromInstaller(Boolean(me?.password_from_installer));
         setNeeded(accessNeededFor(me));
       })
       .catch(() => undefined);
@@ -60,7 +62,7 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
     };
   }, [check]);
 
-  if (needed === "password") return <ChangePasswordScreen email={email} onDone={check} />;
+  if (needed === "password") return <ChangePasswordScreen email={email} fromInstaller={fromInstaller} onDone={check} />;
   if (needed === "terms") return <TermsScreen state={terms} onDone={() => window.location.reload()} />;
   return <>{children}</>;
 }
@@ -85,7 +87,7 @@ const labelClass = "mb-1.5 mt-3 block text-[13px] text-slate-400";
 const primaryClass = "min-h-[38px] rounded-lg bg-brand-500 px-4 text-sm font-semibold text-black disabled:opacity-60";
 const ghostClass = "min-h-[38px] rounded-lg border border-white/[0.1] px-4 text-sm text-slate-300";
 
-function ChangePasswordScreen({ email, onDone }: { email: string; onDone: () => void }) {
+function ChangePasswordScreen({ email, fromInstaller, onDone }: { email: string; fromInstaller: boolean; onDone: () => void }) {
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [repeat, setRepeat] = useState("");
@@ -114,7 +116,11 @@ function ChangePasswordScreen({ email, onDone }: { email: string; onDone: () => 
   return (
     <Screen>
       <h1 className="mb-2 text-xl font-semibold">Choose a new password</h1>
-      <p className="mb-1 text-sm text-slate-400">An administrator set a temporary password for you. Choose your own to continue.</p>
+      <p className="mb-1 text-sm text-slate-400">
+        {fromInstaller
+          ? "You signed in with the first administrator's password, the one the installer printed. Choose your own to continue."
+          : "An administrator set a temporary password for you. Choose your own to continue."}
+      </p>
       {email ? <p className="text-sm text-slate-300">{email}</p> : null}
       <form onSubmit={save} autoComplete="off">
         <label htmlFor="change-current" className={labelClass}>
@@ -247,11 +253,15 @@ function TermsScreen({ state, onDone }: { state: TermsState | null; onDone: () =
         </p>
       ) : (
         <>
-          {!readToEnd ? <p className="mt-3 text-[13px] text-slate-400">Read to the end to accept.</p> : null}
           <label className="mt-3 flex items-start gap-2 text-sm">
-            <input id="terms-read" type="checkbox" disabled={!readToEnd} checked={read} onChange={(e) => setRead(e.target.checked)} className="mt-1" />
+            <input id="terms-read" type="checkbox" disabled={!readToEnd} checked={read} onChange={(e) => setRead(e.target.checked)} className="mt-1" aria-describedby={readToEnd ? undefined : "terms-scroll-hint"} />
             <span>{forOrganisation ? "I have read the whole licence agreement, including its limits of liability." : "I have read these terms of use and accept them."}</span>
           </label>
+          {!readToEnd ? (
+            <p id="terms-scroll-hint" data-ui="terms-scroll-hint" className="ml-6 mt-1 text-[13px] font-medium text-amber-300">
+              Scroll to the end of the text above to accept.
+            </p>
+          ) : null}
           {forOrganisation ? (
             <div data-ui="terms-acceptor" className="mt-1 grid gap-x-3 sm:grid-cols-3">
               <div>

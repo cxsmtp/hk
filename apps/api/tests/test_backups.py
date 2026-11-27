@@ -793,6 +793,17 @@ def test_ready_for_production_checks_and_as_meant(api):
     assert c.put("/backups/readiness/backup.sealed", json={"accept": True}, headers=headers).status_code == 404
 
 
+def test_the_backup_folder_is_named_as_it_is_on_the_server(api, monkeypatch):
+    # deploy/compose.yaml gives the containers /backups, and BACKUP_DIR_ON_HOST: where that is on the server.
+    monkeypatch.setenv("BACKUP_DIR_ON_HOST", "/var/lib/hawk-ai/backups")
+    c = api["client"]
+    headers = owner(c)
+    assert c.get("/backups", headers=headers).json()["hostDir"] == "/var/lib/hawk-ai/backups"
+    by = {x["id"]: x for x in c.get("/backups/readiness", headers=headers).json()["checks"]}
+    assert by["backup.separate"]["detail"].startswith("They are on the same disk as the data (/var/lib/hawk-ai/backups)")
+    assert "data volume" not in by["backup.separate"]["detail"]
+
+
 # ---- pg_dump and pg_restore ----------------------------------------------------------------------------------------
 
 

@@ -105,6 +105,14 @@ def config(env: Mapping[str, str] | None = None) -> BackupConfig:
     )
 
 
+def host_dir(env: Mapping[str, str] | None = None) -> str:
+    """Where the backups are on the server itself (deploy/compose.yaml's BACKUP_DIR_ON_HOST): the containers only see
+    /backups. '' when not known (not deployed with compose)."""
+
+    env = os.environ if env is None else env
+    return str(env.get("BACKUP_DIR_ON_HOST") or "").strip()
+
+
 def key_store(cfg: BackupConfig | None = None) -> BackupKeyStore:
     return BackupKeyStore(data_dir=(cfg or config()).data_dir)
 

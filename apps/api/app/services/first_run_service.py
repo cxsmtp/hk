@@ -50,7 +50,7 @@ DEFAULT_ADMIN_EMAIL = "admin@hawk.local"
 FIRST_ADMIN_FILE_NAME = "first-admin-password.txt"
 #: The same lock infra/scripts/production_bootstrap.py takes: one first administrator, however many processes start.
 BOOTSTRAP_LOCK_ID = 7_269_001_010
-RESET_COMMAND = "python -m app.cli.reset_admin  (with Docker: docker compose exec api python -m app.cli.reset_admin)"
+RESET_COMMAND = "python -m app.cli.reset_admin  (with Docker: docker compose -f deploy/compose.yaml exec api python -m app.cli.reset_admin)"
 ADMIN_ROLES = ("owner", "admin")
 #: The first administrator's tenant, until the organisation's name is given (ORGANISATION_NAME, or with the terms).
 DEFAULT_TENANT_NAME = "My organisation"
@@ -105,6 +105,26 @@ def _write_owner_only(path: Path, content: str) -> None:
         os.write(fd, content.encode("utf-8"))
     finally:
         os.close(fd)
+
+
+def holds_installer_password(user: User) -> bool:
+    """Whether this person still signs in with the first administrator's generated password (printed by the
+    installer), not one an administrator set for them: the console says which when it asks for their own."""
+
+    if not getattr(user, "must_change_password", False):
+        return False
+    try:
+        generated = first_admin_file().read_text(encoding="utf-8").strip()
+    except OSError:
+        return False
+    if not generated:
+        return False
+    from app.core.security import verify_password
+
+    try:
+        return bool(verify_password(generated, user.hashed_password or ""))
+    except Exception:  # noqa: BLE001 - only which sentence the console shows
+        return False
 
 
 def remove_first_admin_file() -> None:

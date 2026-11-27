@@ -275,13 +275,13 @@ export default function BackupsSettingsPage() {
                     ) : (
                       sealed.text
                     )}{" "}
-                    Kept in <span className="mono">{b.dir}</span>.
+                    Kept in <span className="mono">{b.hostDir || b.dir}</span>{b.hostDir ? " on the server" : ""}.
                   </p>
                   {b.separate ? (
-                    <div className="callout">Backups go to their own place (BACKUP_DIR), away from the data: losing one disk does not lose both.</div>
+                    <div className="callout">Backups go to their own place (BACKUP_DIR{b.hostDir ? `: ${b.hostDir}` : ""}), away from the data: losing one disk does not lose both.</div>
                   ) : (
                     <div className="callout warn">
-                      Backups are in the data volume itself. Mount a second volume or a network share and set <b>BACKUP_DIR</b> to it, so losing one disk does not lose both.
+                      Backups are kept {b.hostDir ? <>in <span className="mono">{b.hostDir}</span>, </> : null}on the same disk as Hawk AI&apos;s data. Mount a second disk or a network share and set <b>BACKUP_DIR</b> in deploy/.env to it, so losing one disk does not lose both.
                     </div>
                   )}
                   {b.last && !b.last.ok ? (
