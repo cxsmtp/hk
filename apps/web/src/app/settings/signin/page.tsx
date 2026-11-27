@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { JoinSettingsPanel } from "@/components/iam/join-settings-panel";
+import { ServerSettingNote } from "@/components/server-setting-note";
 import { api } from "@/lib/api";
 import { autosave, SAVES_AS_YOU_TYPE } from "@/lib/ftr-autosave";
 import { idleHours, refusalFrom, RESET_POLICY_OPTIONS } from "@/lib/sign-in";
@@ -44,9 +45,11 @@ export default function SignInSettingsPage() {
   }, [load]);
 
   const loaded = Boolean(view);
+  // The sign-in rules are the whole server's: a workspace admin who is not one of its administrators reads them only.
+  const readOnly = view?.mayChange === false;
   useEffect(() => {
     const form = formRef.current;
-    if (!form || !loaded) return;
+    if (!form || !loaded || readOnly) return;
     const saver = autosave(
       form,
       async (f) => {
@@ -73,7 +76,7 @@ export default function SignInSettingsPage() {
       { status: statusRef.current },
     );
     return () => saver.stop();
-  }, [loaded]);
+  }, [loaded, readOnly]);
 
   async function testEmail() {
     setMailNote({ text: "Sending…", bad: false });
@@ -116,13 +119,14 @@ export default function SignInSettingsPage() {
             <span className="crumbs">how people sign in to Hawk AI · for the whole installation</span>
           </div>
         </div>
-        <div className="saved-banner">{SAVES_AS_YOU_TYPE}</div>
+        {readOnly ? <ServerSettingNote readOnly /> : <div className="saved-banner">{SAVES_AS_YOU_TYPE}</div>}
         {loadError ? <div className="callout warn">{loadError}</div> : null}
         {!view && !loadError ? <p className="muted small">Loading…</p> : null}
         {view ? (
           <>
             <JoinSettingsPanel />
             <form className="form" ref={formRef} autoComplete="off">
+              <fieldset className="ro-fieldset" disabled={readOnly} data-ui="signin-rules">
               <div className="grid g2">
                 <div className="panel">
                   <h2>Forgotten passwords</h2>
@@ -225,10 +229,13 @@ export default function SignInSettingsPage() {
                   </p>
                 </div>
               </div>
+              </fieldset>
             </form>
-            <div className="saved-foot" ref={statusRef}>
-              All changes are saved.
-            </div>
+            {readOnly ? null : (
+              <div className="saved-foot" ref={statusRef}>
+                All changes are saved.
+              </div>
+            )}
             <div className="grid g2 mt">
               <div className="panel">
                 <h2>
@@ -254,9 +261,11 @@ export default function SignInSettingsPage() {
                   <dd className="mono">{view.serverAddress || "No https address (PUBLIC_URL / WEB_ORIGIN)"}</dd>
                 </dl>
                 <div className="flex mt">
-                  <button type="button" onClick={testEmail} disabled={!view.email.configured}>
-                    Send a test email to me
-                  </button>
+                  {readOnly ? null : (
+                    <button type="button" onClick={testEmail} disabled={!view.email.configured}>
+                      Send a test email to me
+                    </button>
+                  )}
                   <span role="status" aria-live="polite" className={`small ${mailNote.bad ? "err" : "muted"}`}>
                     {mailNote.text}
                   </span>

@@ -7,7 +7,9 @@ import type { FormEvent } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { ServerSettingNote } from "@/components/server-setting-note";
 import { api } from "@/lib/api";
+import { useInstallationAdmin } from "@/lib/settings-console";
 import { errorMessageFrom } from "@/lib/licence";
 import { certificateFileData, networkAdvice, proxyNow, STEP_NAMES, TRUST_SOURCES, WINDOWS_EXPORT } from "@/lib/records";
 import type { NetworkInfo, NetworkResult, TrustDiagnosis, TrustedCertificate } from "@/lib/records";
@@ -135,6 +137,8 @@ function CertificateCard({ found, onTrusted }: { found: TrustDiagnosis; onTruste
  * Owners and admins only; it applies to the whole installation.
  */
 export default function NetworkSettingsPage() {
+  // The whole server's settings: a workspace admin who is not one of its administrators reads them only.
+  const readOnly = useInstallationAdmin() === false;
   const [info, setInfo] = useState<NetworkInfo | null>(null);
   const [certs, setCerts] = useState<TrustedCertificate[]>([]);
   const [loadError, setLoadError] = useState("");
@@ -275,7 +279,9 @@ export default function NetworkSettingsPage() {
           </div>
         ) : null}
         {!info && !loadError ? <p className="muted">Loading…</p> : null}
+        {info ? <ServerSettingNote readOnly={readOnly} /> : null}
         {info ? (
+          <fieldset className="ro-fieldset" disabled={readOnly}>
           <div className="grid">
             <div className="panel" id="set-network">
               <h2>Network &amp; proxy</h2>
@@ -416,6 +422,7 @@ export default function NetworkSettingsPage() {
               </div>
             </div>
           </div>
+          </fieldset>
         ) : null}
       </div>
     </AppShell>

@@ -25,6 +25,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.installation import require_installation_admin
 from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.models.monitoring import Connector
@@ -34,6 +35,8 @@ from app.services.audit_service import write_audit_log
 
 router = APIRouter(tags=["network"])
 admin_only = require_permission("network.manage")
+#: Writes change the whole server: only its administrators (app/core/installation.py).
+installation_admin = require_installation_admin("network.manage")
 
 CHECK_HINT = "Give the address of a service to check, for example graph.microsoft.com (one of the services your connectors use)."
 
@@ -217,7 +220,7 @@ async def check_network(body: dict[str, Any] | None = Body(default=None), ctx: T
 
 
 @router.put("/network")
-async def save_network(body: dict[str, Any] | None = Body(default=None), ctx: TenantContext = Depends(admin_only), db: Session = Depends(get_db)):
+async def save_network(body: dict[str, Any] | None = Body(default=None), ctx: TenantContext = Depends(installation_admin), db: Session = Depends(get_db)):
     """Save the proxy, after the same check: a proxy that cannot be reached, or refuses the service, is not saved."""
 
     body = body or {}
@@ -251,7 +254,7 @@ async def save_network(body: dict[str, Any] | None = Body(default=None), ctx: Te
 
 
 @router.delete("/network")
-def remove_network(ctx: TenantContext = Depends(admin_only), db: Session = Depends(get_db)):
+def remove_network(ctx: TenantContext = Depends(installation_admin), db: Session = Depends(get_db)):
     if not network_proxy.read_network():
         return _error(404, "No proxy is set here.")
     network_proxy.save_network(None)
@@ -307,7 +310,7 @@ async def diagnose(body: dict[str, Any] | None = Body(default=None), ctx: Tenant
 
 
 @router.post("/trust/presented")
-async def trust_presented(body: dict[str, Any] | None = Body(default=None), ctx: TenantContext = Depends(admin_only), db: Session = Depends(get_db)):
+async def trust_presented(body: dict[str, Any] | None = Body(default=None), ctx: TenantContext = Depends(installation_admin), db: Session = Depends(get_db)):
     """Trust the root a server presents, by the fingerprint the administrator was shown (looked up again here)."""
 
     body = body or {}
@@ -325,7 +328,7 @@ async def trust_presented(body: dict[str, Any] | None = Body(default=None), ctx:
 
 
 @router.post("/trust/upload")
-async def upload_certificate(body: dict[str, Any] | None = Body(default=None), ctx: TenantContext = Depends(admin_only), db: Session = Depends(get_db)):
+async def upload_certificate(body: dict[str, Any] | None = Body(default=None), ctx: TenantContext = Depends(installation_admin), db: Session = Depends(get_db)):
     """Upload certificate authorities; with the server that failed, only those its chain needs are kept."""
 
     body = body or {}
@@ -359,7 +362,7 @@ async def upload_certificate(body: dict[str, Any] | None = Body(default=None), c
 
 
 @router.delete("/trust/{fingerprint}")
-def remove_certificate(fingerprint: str, request: Request, ctx: TenantContext = Depends(admin_only), db: Session = Depends(get_db)):
+def remove_certificate(fingerprint: str, request: Request, ctx: TenantContext = Depends(installation_admin), db: Session = Depends(get_db)):
     del request
     removed = trust_store.store().remove(str(fingerprint))
     if removed is None:

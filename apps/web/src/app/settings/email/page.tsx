@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { ServerSettingNote } from "@/components/server-setting-note";
 import { api } from "@/lib/api";
 import { autosave, SAVES_AS_YOU_TYPE } from "@/lib/ftr-autosave";
 import { errorMessageFrom } from "@/lib/licence";
@@ -60,7 +61,8 @@ export default function EmailSettingsPage() {
 
   useEffect(() => {
     const form = formRef.current;
-    if (!form || !view) return;
+    // The email server is the whole server's: a workspace admin who is not one of its administrators reads it only.
+    if (!form || !view || view.mayChange === false) return;
     // Implicit TLS goes with port 465; 587 and 25 use STARTTLS.
     const port = form.elements.namedItem("port") as HTMLInputElement;
     const secure = form.elements.namedItem("secure") as HTMLInputElement;
@@ -163,7 +165,7 @@ export default function EmailSettingsPage() {
           {!view && !loadError ? <p className="muted">Loading…</p> : null}
           {view && x ? (
             <>
-              <div className="saved-banner">{SAVES_AS_YOU_TYPE}</div>
+              {view.mayChange === false ? <ServerSettingNote readOnly /> : <div className="saved-banner">{SAVES_AS_YOU_TYPE}</div>}
               <div className="panel">
                 <h2>
                   Email server (SMTP) {status}
@@ -173,6 +175,7 @@ export default function EmailSettingsPage() {
                   {view.source === "environment" ? " Until something is saved here, the SMTP_* settings the server was started with are used." : ""}
                 </p>
                 <form key={round} className="form" id="smtp" ref={formRef} data-nodraft data-password-set={x.passwordSet ? "1" : ""} autoComplete="off">
+                  <fieldset className="ro-fieldset" disabled={view.mayChange === false}>
                   <div className="row">
                     <label className="f">
                       Mail server
@@ -240,6 +243,8 @@ export default function EmailSettingsPage() {
                   ) : (
                     <div className="callout warn">&quot;Forgot your password?&quot; is not available yet: {view.reset.missing.join(" ")}</div>
                   )}
+                  </fieldset>
+                  {view.mayChange === false ? null : (
                   <div className="flex">
                     <button type="button" className="primary" id="smtp-test" onClick={testConnection}>
                       Test connection
@@ -249,13 +254,16 @@ export default function EmailSettingsPage() {
                       Send test email
                     </button>
                   </div>
+                  )}
                   <div className={`small ${msg.ok ? "ok-t" : "err"}`} id="smtp-msg" aria-live="polite">
                     {msg.text}
                   </div>
                 </form>
-                <div className="saved-foot" id="smtpsaved" ref={statusRef}>
-                  All changes are saved.
-                </div>
+                {view.mayChange === false ? null : (
+                  <div className="saved-foot" id="smtpsaved" ref={statusRef}>
+                    All changes are saved.
+                  </div>
+                )}
               </div>
             </>
           ) : null}

@@ -7,7 +7,9 @@ import type { FormEvent } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { ServerSettingNote } from "@/components/server-setting-note";
 import { api } from "@/lib/api";
+import { useInstallationAdmin } from "@/lib/settings-console";
 import {
   acmeLine,
   asksToConfirm,
@@ -47,6 +49,8 @@ const hardeningOf = (h: HttpsStatus): Hardening => ({ minVersion: h.minVersion, 
  * Owners and admins only.
  */
 export default function HttpsSettingsPage() {
+  // The whole server's settings: a workspace admin who is not one of its administrators reads them only.
+  const readOnly = useInstallationAdmin() === false;
   const [h, setH] = useState<HttpsStatus | null>(null);
   const [loadError, setLoadError] = useState("");
   const [err, setErr] = useState("");
@@ -218,7 +222,9 @@ export default function HttpsSettingsPage() {
             </div>
           ) : null}
           {!h && !loadError ? <p className="muted">Loading…</p> : null}
+          {h && hard && acme ? <ServerSettingNote readOnly={readOnly} /> : null}
           {h && hard && acme ? (
+            <fieldset className="ro-fieldset" disabled={readOnly}>
             <div className="grid g2">
               <div className="panel">
                 <h2>
@@ -461,6 +467,7 @@ export default function HttpsSettingsPage() {
                 </form>
               </div>
             </div>
+            </fieldset>
           ) : null}
         </div>
       </div>

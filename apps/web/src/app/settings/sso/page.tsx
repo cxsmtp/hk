@@ -5,6 +5,7 @@ import "@/styles/ftr.css";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { ServerSettingNote } from "@/components/server-setting-note";
 import { api } from "@/lib/api";
 import { autosave, SAVES_AS_YOU_TYPE } from "@/lib/ftr-autosave";
 import { domainList, refusalFrom } from "@/lib/sign-in";
@@ -39,9 +40,11 @@ export default function SingleSignOnPage() {
   }, [load]);
 
   const loaded = Boolean(view);
+  // Single sign-on is set for the whole server: a workspace admin who is not one of its administrators reads it only.
+  const readOnly = view?.mayChange === false;
   useEffect(() => {
     const form = formRef.current;
-    if (!form || !loaded) return;
+    if (!form || !loaded || readOnly) return;
     const saver = autosave(
       form,
       async (f) => {
@@ -64,7 +67,7 @@ export default function SingleSignOnPage() {
       { status: statusRef.current },
     );
     return () => saver.stop();
-  }, [loaded]);
+  }, [loaded, readOnly]);
 
   const sso = view?.sso;
   const provider = sso?.providers[0];
@@ -96,7 +99,7 @@ export default function SingleSignOnPage() {
             <span className="crumbs">sign in at your organisation&apos;s identity provider · for the whole installation</span>
           </div>
         </div>
-        <div className="saved-banner">{SAVES_AS_YOU_TYPE}</div>
+        {readOnly ? <ServerSettingNote readOnly /> : <div className="saved-banner">{SAVES_AS_YOU_TYPE}</div>}
         {loadError ? <div className="callout warn">{loadError}</div> : null}
         {!view && !loadError ? <p className="muted small">Loading…</p> : null}
         {view && sso ? (
@@ -104,6 +107,7 @@ export default function SingleSignOnPage() {
             <div className="panel">
               <h2>Identity provider (OpenID Connect) {chip}</h2>
               <form className="form" ref={formRef} autoComplete="off">
+                <fieldset className="ro-fieldset" disabled={readOnly}>
                 <label className="f">
                   Identity provider address (issuer) <span className="muted">set in OIDC_PROVIDERS_JSON</span>
                   <input value={provider?.issuer ?? ""} placeholder="https://login.microsoftonline.com/<tenant>/v2.0" disabled readOnly />
@@ -171,10 +175,13 @@ export default function SingleSignOnPage() {
                     <small>COMPANY_SSO_ENABLED on the server.</small>
                   </span>
                 </label>
+                </fieldset>
               </form>
-              <div className="saved-foot" ref={statusRef}>
-                All changes are saved.
-              </div>
+              {readOnly ? null : (
+                <div className="saved-foot" ref={statusRef}>
+                  All changes are saved.
+                </div>
+              )}
             </div>
             <div className="panel">
               <h2>This service, for the identity provider</h2>

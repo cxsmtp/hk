@@ -20,6 +20,7 @@ paths = [
   '''apps/api/tests/test_gateway_surface_c\.py$''',
   '''apps/api/tests/test_runtime_control_agent_actions\.py$''',
   '''apps/api/tests/test_pci_pan_leak_scan\.py$''',
+  '''apps/api/tests/test_pci_masking_precision\.py$''',
   '''apps/api/tests/test_simulation_catalog_runners\.py$''',
   '''apps/api/tests/test_llm_gateway_integration\.py$''',
   '''apps/api/app/services/simulation_catalog_runners\.py$''',

@@ -68,12 +68,16 @@ def card_brand(digits: str) -> str | None:
         return "discover"
     if 16 <= n <= 19 and 3528 <= four <= 3589:
         return "jcb"
-    if n == 14 and (300 <= three <= 305 or two in (36, 38)):
+    if n in (14, 16) and (300 <= three <= 305 or two in (36, 38, 39)):
         return "diners"
     if 16 <= n <= 19 and two == 62:
         return "unionpay"
     if 12 <= n <= 19 and (two == 50 or 56 <= two <= 69):
         return "maestro"
+    # RuPay's other ranges (60 and 65 are read above as Maestro and Discover), so that every number at-rest masking
+    # treats as a card (app/services/pci_controls.py CARD_NETWORKS) is also one here.
+    if n == 16 and (two in (81, 82) or three in (353, 356, 508)):
+        return "rupay"
     return None
 
 

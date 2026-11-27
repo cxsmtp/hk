@@ -6,9 +6,10 @@ import { ShieldCheck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { ServerSettingNote } from "@/components/server-setting-note";
 import { api } from "@/lib/api";
 import { errorMessageFrom } from "@/lib/licence";
-import { brandingImage, fileToBase64, setBranding } from "@/lib/settings-console";
+import { brandingImage, fileToBase64, setBranding, useInstallationAdmin } from "@/lib/settings-console";
 import type { BrandingPatch, BrandingView } from "@/lib/settings-console";
 
 const message = (error: unknown) => errorMessageFrom(error instanceof Error ? error.message : String(error ?? ""), "Something went wrong.");
@@ -28,6 +29,8 @@ export default function BrandingSettingsPage() {
   const [saved, setSaved] = useState<{ text: string; bad: boolean }>({ text: "All changes are saved.", bad: false });
   const [loadError, setLoadError] = useState("");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Branding is the whole server's: a workspace admin who is not one of its administrators sees it read-only.
+  const readOnly = useInstallationAdmin() === false;
 
   useEffect(() => {
     api
@@ -94,10 +97,11 @@ export default function BrandingSettingsPage() {
           {!good && !loadError ? <p className="muted">Loading…</p> : null}
           {good ? (
             <>
-              <div className="saved-banner">✓ Changes save as you type.</div>
+              {readOnly ? <ServerSettingNote readOnly /> : <div className="saved-banner">✓ Changes save as you type.</div>}
               <div className="panel brand-page">
                 <h2>Branding</h2>
                 <form className="form" id="bf" autoComplete="off" onSubmit={(event) => event.preventDefault()}>
+                  <fieldset className="ro-fieldset" disabled={readOnly}>
                   <div className="brand-grid">
                     <label className="f">
                       App name
@@ -177,11 +181,14 @@ export default function BrandingSettingsPage() {
                       </button>
                     ))}
                   </div>
+                  </fieldset>
                 </form>
               </div>
-              <div className={`saved-foot${saved.bad ? " bad" : ""}`} id="bsaved" role="status">
-                {saved.text}
-              </div>
+              {readOnly ? null : (
+                <div className={`saved-foot${saved.bad ? " bad" : ""}`} id="bsaved" role="status">
+                  {saved.text}
+                </div>
+              )}
             </>
           ) : null}
         </div>

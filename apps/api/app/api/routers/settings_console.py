@@ -26,6 +26,7 @@ from fastapi.responses import JSONResponse, Response
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.installation import SET_BY_SERVER, is_installation_admin, require_installation_admin
 from app.core.rbac import require_permission
 from app.core.tenant import TenantContext, require_tenant
 from app.db.session import get_db
@@ -35,6 +36,9 @@ from app.version import APP_VERSION, PACKAGE_VERSION, VERSION_FILE
 
 router = APIRouter(tags=["settings"])
 SettingsContext = Annotated[TenantContext, Depends(require_permission("settings.manage"))]
+#: Branding and the email server are kept once for the whole server: only its administrators change them
+#: (app/core/installation.py); a tenant's admins see them read-only.
+InstallationContext = Annotated[TenantContext, Depends(require_installation_admin("settings.manage"))]
 NO_STORE = {"Cache-Control": "no-store"}
 #: Third-party notices, when the image carries them (beside VERSION and CHANGELOG.md).
 NOTICE_FILES = ("THIRD_PARTY_NOTICES", "THIRD_PARTY_NOTICES.txt", "NOTICE", "NOTICE.txt")
@@ -70,8 +74,14 @@ def _organisation(db: Session) -> str:
 
 
 @router.get("/settings/me")
-def settings_me(ctx: TenantContext = Depends(require_tenant)):
-    return JSONResponse({"role": ctx.role_key, "permissions": sorted(ctx.permissions)}, headers=NO_STORE)
+def settings_me(ctx: TenantContext = Depends(require_tenant), db: Session = Depends(get_db)):
+    # installationAdmin: whether the settings of the whole server (sign-in rules, compliance, email, HTTPS, network,
+    # updates, backups, hands-off, branding, activation codes) may be changed, or only read (app/core/installation.py).
+    installation = is_installation_admin(db, ctx)
+    return JSONResponse(
+        {"role": ctx.role_key, "permissions": sorted(ctx.permissions), "installationAdmin": installation, "readOnlyNote": "" if installation else SET_BY_SERVER},
+        headers=NO_STORE,
+    )
 
 
 # ---- General --------------------------------------------------------------------------------------------------------
@@ -118,7 +128,7 @@ def branding_icon():
 
 
 @router.put("/settings/branding")
-def put_branding(ctx: SettingsContext, body: Annotated[dict[str, Any] | None, Body()] = None, db: Session = Depends(get_db)):
+def put_branding(ctx: InstallationContext, body: Annotated[dict[str, Any] | None, Body()] = None, db: Session = Depends(get_db)):
     body = body if isinstance(body, dict) else {}
     try:
         after, changed = branding.merge(branding.load(), body)
@@ -152,8 +162,8 @@ def smtp_view(db: Session) -> dict[str, Any]:
 
 @router.get("/settings/smtp")
 def get_smtp(ctx: SettingsContext, db: Session = Depends(get_db)):
-    del ctx
-    view = smtp_view(db)
+    may = is_installation_admin(db, ctx)
+    view = {**smtp_view(db), "mayChange": may, "readOnlyNote": "" if may else SET_BY_SERVER}
     db.commit()
     return JSONResponse(view, headers=NO_STORE)
 
@@ -166,7 +176,7 @@ def _send_waiting_copies(background: BackgroundTasks, db: Session) -> None:
 
 
 @router.put("/settings/smtp")
-async def put_smtp(ctx: SettingsContext, background: BackgroundTasks, body: Annotated[dict[str, Any] | None, Body()] = None, db: Session = Depends(get_db)):
+async def put_smtp(ctx: InstallationContext, background: BackgroundTasks, body: Annotated[dict[str, Any] | None, Body()] = None, db: Session = Depends(get_db)):
     body = body if isinstance(body, dict) else {}
     incoming = body.get("smtp") if isinstance(body.get("smtp"), dict) else None
     changed: list[str] = []
@@ -209,7 +219,7 @@ async def put_smtp(ctx: SettingsContext, background: BackgroundTasks, body: Anno
 
 
 @router.post("/settings/smtp/test")
-async def test_smtp(ctx: SettingsContext, background: BackgroundTasks, db: Session = Depends(get_db)):
+async def test_smtp(ctx: InstallationContext, background: BackgroundTasks, db: Session = Depends(get_db)):
     smtp = mailer.current()
     try:
         await run_in_threadpool(mailer.test_connection, smtp)
@@ -226,7 +236,7 @@ async def test_smtp(ctx: SettingsContext, background: BackgroundTasks, db: Sessi
 
 
 @router.post("/settings/smtp/send-test")
-async def send_test_smtp(ctx: SettingsContext, background: BackgroundTasks, body: Annotated[dict[str, Any] | None, Body()] = None, db: Session = Depends(get_db)):
+async def send_test_smtp(ctx: InstallationContext, background: BackgroundTasks, body: Annotated[dict[str, Any] | None, Body()] = None, db: Session = Depends(get_db)):
     body = body if isinstance(body, dict) else {}
     to = mailer.plain(body.get("to")).lower() or (str(ctx.user.email).lower() if ctx.user else "")
     if not mailer.EMAIL.match(to) or parseaddr(to)[1] != to:
@@ -254,7 +264,7 @@ async def send_test_smtp(ctx: SettingsContext, background: BackgroundTasks, body
 
 
 @router.delete("/settings/smtp")
-def forget_smtp(ctx: SettingsContext, db: Session = Depends(get_db)):
+def forget_smtp(ctx: InstallationContext, db: Session = Depends(get_db)):
     """Back to the environment's settings (SMTP_*): the saved ones, and their password, are removed."""
 
     mailer.forget_saved()

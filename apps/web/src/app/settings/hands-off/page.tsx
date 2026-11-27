@@ -5,6 +5,7 @@ import "../ftr-settings.css";
 import { useCallback, useEffect, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { ServerSettingNote } from "@/components/server-setting-note";
 import { api } from "@/lib/api";
 import { SelfCheckBox } from "@/components/self-check-box";
 import { DAYS, HOURS, handsOffPayload, readiness } from "@/lib/hands-off-settings";
@@ -100,6 +101,8 @@ export default function HandsOffSettingsPage() {
   }
 
   const h = view?.handsOff;
+  // Hands-off is the whole server's: a workspace admin who is not one of its administrators reads it only.
+  const readOnly = view?.canSave === false;
 
   return (
     <AppShell>
@@ -119,6 +122,7 @@ export default function HandsOffSettingsPage() {
             </div>
           ) : null}
           {!view && !loadError ? <p className="muted">Loading…</p> : null}
+          {view && h && form ? <ServerSettingNote readOnly={readOnly} /> : null}
           {view && h && form ? (
             <div className="grid g2">
               <div className="panel" id="set-handsoff">
@@ -148,6 +152,7 @@ export default function HandsOffSettingsPage() {
                 </ul>
 
                 <form className="form" onSubmit={(event) => event.preventDefault()} data-editing={editing ? "1" : ""}>
+                  <fieldset className="ro-fieldset" disabled={readOnly}>
                   <h3>1 · What should Hawk AI do on its own?</h3>
                   <label className="check">
                     <input type="checkbox" id="ho-status" checked={form.status} onChange={(event) => change({ status: event.target.checked })} />
@@ -209,6 +214,8 @@ export default function HandsOffSettingsPage() {
                     </>
                   ) : null}
 
+                  </fieldset>
+                  {readOnly ? null : (
                   <div className="flex">
                     <button type="button" className="primary" id="ho-save" onClick={() => save(true)}>
                       {h.on ? "Save" : "Turn on hands-off"}
@@ -225,6 +232,7 @@ export default function HandsOffSettingsPage() {
                       {status.text}
                     </span>
                   </div>
+                  )}
                 </form>
                 <h3 className="mt">Replies it understands</h3>
                 <div className="tw">
@@ -243,7 +251,7 @@ export default function HandsOffSettingsPage() {
 
               <div className="panel" id="ho-health">
                 <h2>Self-check</h2>
-                <SelfCheckBox health={health} onCheck={checkNow} busy={checking} />
+                <SelfCheckBox health={health} onCheck={checkNow} busy={checking} readOnly={readOnly} />
               </div>
             </div>
           ) : null}

@@ -422,3 +422,7 @@ table[data-cards="stack"] > tbody > tr > :is(td, th)[data-label]:not([data-label
 :root[data-theme="light"] .react-flow__minimap {
   background: #f8fafc;
 }
+
+/* A setting of the whole server, shown read-only to a workspace admin (components/server-setting-note.tsx). */
+fieldset.ro-fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+fieldset.ro-fieldset:disabled { opacity: 0.85; }

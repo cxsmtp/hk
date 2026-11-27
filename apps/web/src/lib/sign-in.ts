@@ -80,6 +80,9 @@ export const RESET_POLICY_OPTIONS: Array<[string, string]> = [
 
 /** The administrator's sign-in rules (/auth/sign-in-settings). */
 export type SignInSettings = {
+  /** False for a workspace admin who is not one of the server's administrators: the rules are shown read-only. */
+  mayChange?: boolean;
+  readOnlyNote?: string;
   passwordReset: "everyone" | "not-admins" | "off";
   passwordResetReady: { ready: boolean; policy: string; missing: string[] };
   twoStepRequired: boolean;

@@ -6,7 +6,7 @@ import type { Integrity, IntegrityState, UpdateSettings, UpdatesStatus } from "@
 import type { HandsOffSettings, HandsOffView, LinkAnswer, SelfCheckHealth } from "@/lib/hands-off-settings";
 import type { ApprovalDecision, ApprovalGrantView, ApprovalPolicy, ApprovalPolicyView, ApprovalRequestView, ApprovalScope } from "@/lib/ai-system-approvals";
 import type { DiagnosticsView } from "@/lib/self-recovery";
-import type { AboutView, BrandingPatch, BrandingView, GeneralView, SmtpSettings, SmtpView } from "@/lib/settings-console";
+import type { AboutView, BrandingPatch, BrandingView, GeneralView, SettingsMe, SmtpSettings, SmtpView } from "@/lib/settings-console";
 import type { ComplianceSettings, ComplianceView, PacksOverview, PackView } from "@/lib/compliance";
 import type { AuditPage, AuditVerify, ConnectorActivity, EvidenceSigning, Emailed, NetworkCheck, NetworkInfo, SupportChannel, SupportKind, SupportList, SupportRequest, TrustDiagnosis, TrustedCertificate } from "@/lib/records";
 import { approvalStatusFilters, mergeApprovalStatusResults } from "@/lib/approval-workflow";
@@ -846,7 +846,7 @@ export const api = {
   setReadiness: (id: string, accept: boolean) =>
     request<{ ok: boolean }>(`/backups/readiness/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify({ accept }) }),
   // Settings → General, Branding, Email (SMTP) and About, and the Settings menu (app/api/routers/settings_console.py).
-  getSettingsMe: () => request<{ role: string; permissions: string[] }>("/settings/me"),
+  getSettingsMe: () => request<SettingsMe>("/settings/me"),
   getGeneralSettings: () => request<GeneralView>("/settings/general"),
   getBranding: () => request<BrandingView>("/branding", undefined, false),
   saveBranding: (patch: BrandingPatch) => request<BrandingView>("/settings/branding", { method: "PUT", body: JSON.stringify(patch) }),

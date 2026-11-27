@@ -108,4 +108,22 @@ test("Activation codes shows the licence end date", async ({ page }) => {
   // The last day the licence covers, as the page writes it (src/lib/licence.ts lastDayOf).
   const lastDay = new Date(until - 1).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
   await expect(page.locator("[data-ui=licence-product]")).toContainText(`Until the end of ${lastDay} (UTC)`);
+  // The server's administrator may enter a code: the field is there, without the read-only note.
+  expect(activation.json.canManage).toBe(true);
+  await expect(page.locator("#activation-code")).toBeVisible();
+});
+
+test("One workspace: its owner is the server's administrator and changes the whole server's settings", async ({ page }) => {
+  // The first workspace's owners and admins are the server's administrators (app/core/installation.py): with one
+  // workspace nothing is read-only for them.
+  const me = await callApi(page, "GET", "/settings/me");
+  expect(me.status).toBe(200);
+  expect(me.json.installationAdmin).toBe(true);
+  await page.goto("/settings/signin");
+  await expect(page.getByRole("heading", { level: 1, name: "Sign-in" })).toBeVisible();
+  await expect(page.locator("input[name=minLength]")).toBeEnabled();
+  await expect(page.locator("[data-ui=server-setting-note]")).toHaveCount(0);
+  const compliance = await callApi(page, "GET", "/compliance");
+  expect(compliance.status).toBe(200);
+  expect(compliance.json.mayChange).toBe(true);
 });

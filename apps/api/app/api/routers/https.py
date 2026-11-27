@@ -19,6 +19,7 @@ from fastapi import APIRouter, Body, Depends, Request, Response
 from fastapi.responses import JSONResponse, PlainTextResponse
 from sqlalchemy.orm import Session
 
+from app.core.installation import require_installation_admin
 from app.core.rbac import require_permission
 from app.core.tenant import TenantContext
 from app.db.session import get_db
@@ -29,6 +30,8 @@ from app.services.https_manager import MODE_NAMES, HttpsError
 
 router = APIRouter(tags=["https"])
 admin_only = require_permission("security.https")
+#: Writes change the whole server: only its administrators (app/core/installation.py).
+installation_admin = require_installation_admin("security.https")
 FALLBACK_NAMES = {"environment": "the deployment's certificate", "self-signed": "a self-signed one"}
 
 
@@ -148,7 +151,7 @@ def https_inspect(request: Request, body: dict[str, Any] | None = Body(default=N
 
 
 @router.post("/https/certificate")
-def https_install(request: Request, body: dict[str, Any] | None = Body(default=None), db: Session = Depends(get_db), ctx: TenantContext = Depends(admin_only)):
+def https_install(request: Request, body: dict[str, Any] | None = Body(default=None), db: Session = Depends(get_db), ctx: TenantContext = Depends(installation_admin)):
     b = _body(body)
     try:
         report = https_runtime.manager().install(
@@ -173,7 +176,7 @@ def https_install(request: Request, body: dict[str, Any] | None = Body(default=N
 
 
 @router.post("/https/certificate/previous")
-def https_previous(request: Request, db: Session = Depends(get_db), ctx: TenantContext = Depends(admin_only)):
+def https_previous(request: Request, db: Session = Depends(get_db), ctx: TenantContext = Depends(installation_admin)):
     try:
         https_runtime.manager().restore_previous(by=_actor(ctx))
     except HttpsError as error:
@@ -183,7 +186,7 @@ def https_previous(request: Request, db: Session = Depends(get_db), ctx: TenantC
 
 
 @router.delete("/https/certificate")
-def https_remove(request: Request, confirm: str = "", db: Session = Depends(get_db), ctx: TenantContext = Depends(admin_only)):
+def https_remove(request: Request, confirm: str = "", db: Session = Depends(get_db), ctx: TenantContext = Depends(installation_admin)):
     try:
         fallback = https_runtime.manager().remove_uploaded(confirm=confirm == "1", by=_actor(ctx))
     except HttpsError as error:
@@ -198,7 +201,7 @@ def https_remove(request: Request, confirm: str = "", db: Session = Depends(get_
 
 
 @router.post("/https/self-signed")
-def https_self_signed(request: Request, body: dict[str, Any] | None = Body(default=None), db: Session = Depends(get_db), ctx: TenantContext = Depends(admin_only)):
+def https_self_signed(request: Request, body: dict[str, Any] | None = Body(default=None), db: Session = Depends(get_db), ctx: TenantContext = Depends(installation_admin)):
     names = _https_hosts(request, _body(body).get("names"))
     try:
         https_runtime.manager().self_sign(names=names, by=_actor(ctx))
@@ -209,7 +212,7 @@ def https_self_signed(request: Request, body: dict[str, Any] | None = Body(defau
 
 
 @router.post("/https/request")
-def https_request(request: Request, body: dict[str, Any] | None = Body(default=None), db: Session = Depends(get_db), ctx: TenantContext = Depends(admin_only)):
+def https_request(request: Request, body: dict[str, Any] | None = Body(default=None), db: Session = Depends(get_db), ctx: TenantContext = Depends(installation_admin)):
     b = _body(body)
     names = [str(n) for n in b.get("names")][:20] if isinstance(b.get("names"), list) else []
     try:
@@ -230,7 +233,7 @@ def https_request_csr(ctx: TenantContext = Depends(admin_only)):
 
 
 @router.post("/https/mode")
-def https_mode(request: Request, body: dict[str, Any] | None = Body(default=None), db: Session = Depends(get_db), ctx: TenantContext = Depends(admin_only)):
+def https_mode(request: Request, body: dict[str, Any] | None = Body(default=None), db: Session = Depends(get_db), ctx: TenantContext = Depends(installation_admin)):
     b = _body(body)
     mode = str(b.get("mode") or "")
     m = https_runtime.manager()
@@ -246,7 +249,7 @@ def https_mode(request: Request, body: dict[str, Any] | None = Body(default=None
 
 
 @router.post("/https/hardening")
-def https_hardening(request: Request, body: dict[str, Any] | None = Body(default=None), db: Session = Depends(get_db), ctx: TenantContext = Depends(admin_only)):
+def https_hardening(request: Request, body: dict[str, Any] | None = Body(default=None), db: Session = Depends(get_db), ctx: TenantContext = Depends(installation_admin)):
     b = _body(body)
     hsts = b.get("hsts") if isinstance(b.get("hsts"), dict) else None
     min_version = str(b.get("minVersion")) if b.get("minVersion") else None
@@ -285,7 +288,7 @@ def https_acme(request: Request, response: Response, ctx: TenantContext = Depend
 
 
 @router.post("/https/acme", status_code=202)
-def https_acme_start(request: Request, body: dict[str, Any] | None = Body(default=None), db: Session = Depends(get_db), ctx: TenantContext = Depends(admin_only)):
+def https_acme_start(request: Request, body: dict[str, Any] | None = Body(default=None), db: Session = Depends(get_db), ctx: TenantContext = Depends(installation_admin)):
     b = _body(body)
     service = https_runtime.acme()
     try:
@@ -305,7 +308,7 @@ def https_acme_start(request: Request, body: dict[str, Any] | None = Body(defaul
 
 
 @router.post("/https/acme/renew", status_code=202)
-def https_acme_renew(request: Request, db: Session = Depends(get_db), ctx: TenantContext = Depends(admin_only)):
+def https_acme_renew(request: Request, db: Session = Depends(get_db), ctx: TenantContext = Depends(installation_admin)):
     try:
         https_runtime.acme().renew(by=_actor(ctx))
     except HttpsError as error:
@@ -315,7 +318,7 @@ def https_acme_renew(request: Request, db: Session = Depends(get_db), ctx: Tenan
 
 
 @router.delete("/https/acme")
-def https_acme_disable(request: Request, db: Session = Depends(get_db), ctx: TenantContext = Depends(admin_only)):
+def https_acme_disable(request: Request, db: Session = Depends(get_db), ctx: TenantContext = Depends(installation_admin)):
     try:
         https_runtime.acme().disable()
     except HttpsError as error:
