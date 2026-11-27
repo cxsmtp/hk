@@ -19,7 +19,7 @@ from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, Request
 from fastapi.responses import JSONResponse, Response
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.api.routers.auth import SIGN_IN_UNAVAILABLE, two_step_challenge
@@ -308,9 +308,31 @@ def _acceptance_for(db: Session, user: User, acceptance_id: str) -> TermsAccepta
     row = db.get(TermsAcceptance, acceptance_id)
     if row is None:
         return _error(404, "No such acceptance.")
-    if row.user_id != user.id and not terms_service.may_accept_for_organisation(db, user):
-        return _error(403, "Only owners and admins can see other people’s acceptances.")
+    if row.user_id != user.id:
+        if not terms_service.may_accept_for_organisation(db, user):
+            return _error(403, "Only owners and admins can see other people’s acceptances.")
+        tenants = _admin_tenants(db, user)
+        if tenants is not None and row.tenant_id is not None and row.tenant_id not in tenants:
+            # Another tenant's acceptance (its people's names, email, address and browser): as if it did not exist.
+            return _error(404, "No such acceptance.")
     return row
+
+
+def _admin_tenants(db: Session, user: User) -> set[str] | None:
+    """The tenants whose acceptances this owner or admin may see: None for the installation's admins (the owners and
+    admins of its first tenant, as for the diagnostics bundle), who see every tenant's; else the tenants they are an
+    owner or admin of. An acceptance without a tenant (ACCEPT_TERMS, made by the deployer) is the installation's."""
+
+    from app.services.self_check import SelfCheck
+
+    tenants = set(
+        db.scalars(
+            select(UserTenantRole.tenant_id).where(
+                UserTenantRole.user_id == user.id, UserTenantRole.role.in_(terms_service.ORGANISATION_ROLES)
+            )
+        ).all()
+    )
+    return None if SelfCheck.default_tenant(db) in tenants else tenants
 
 
 def _with_copy(db: Session, row: TermsAcceptance) -> dict[str, Any]:
@@ -325,6 +347,9 @@ def list_acceptances(current_user: User = Depends(get_current_user), db: Session
     query = select(TermsAcceptance).order_by(TermsAcceptance.accepted_at.desc()).limit(200)
     if terms_service.may_accept_for_organisation(db, current_user):
         query = query.where(TermsAcceptance.scope == "organisation")
+        tenants = _admin_tenants(db, current_user)
+        if tenants is not None:
+            query = query.where(or_(TermsAcceptance.tenant_id.in_(tenants), TermsAcceptance.tenant_id.is_(None), TermsAcceptance.user_id == current_user.id))
     else:
         query = query.where(TermsAcceptance.user_id == current_user.id)
     rows = db.scalars(query).all()

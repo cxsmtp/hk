@@ -543,3 +543,20 @@ def test_upgrade_keeps_what_was_approved_as_blanket():
     assert ai_system_is_approved(row)
     # And one with no approval record at all (made before the workflow, not migrated) is read as before.
     assert ai_system_is_approved(AISystem(id="y", tenant_id="t", name="n", risk_tier="LOW", status="approved", metadata_json={"governance_state": "APPROVED"}))
+
+
+def test_an_operator_cannot_lower_the_risk_tier_into_a_laxer_policy(env):
+    """Checkmarx triage (PR 11): two operators could lower a CRITICAL system to LOW (whose default approvers include
+    operators) and approve it there. Lowering a tier takes one of its current approvers, or an owner or admin."""
+
+    system_id = _system(env, risk_tier="CRITICAL")
+    lowered = env["client"].patch(f"/ai-systems/{system_id}", headers=env["headers"]["operator"], json={"risk_tier": "LOW"})
+    assert lowered.status_code == 403, lowered.text
+    assert lowered.json()["detail"]["code"] == "risk_tier_lower_refused"
+    assert _load(env, system_id).risk_tier == "CRITICAL"
+    assert "ai_system.risk_tier.lower_refused" in _actions(env)
+    # Raising it, and other changes, still go through for an operator; an admin may lower it.
+    assert env["client"].patch(f"/ai-systems/{system_id}", headers=env["headers"]["operator"], json={"description": "x"}).status_code == 200
+    assert env["client"].patch(f"/ai-systems/{system_id}", headers=env["headers"]["admin"], json={"risk_tier": "LOW"}).status_code == 200
+    assert env["client"].patch(f"/ai-systems/{system_id}", headers=env["headers"]["operator"], json={"risk_tier": "HIGH"}).status_code == 200
+    assert _load(env, system_id).risk_tier == "HIGH"

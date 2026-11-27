@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.envelopes import ListEnvelope, paginate_rows
-from app.core.rbac import require_permission
+from app.core.rbac import holds, require_permission
 from app.core.tenant import TenantContext
 from app.db.models.ai_system import AISystem
 from app.db.models.ai_system_approval import AISystemApprovalGrant
@@ -324,6 +324,31 @@ def update_ai_system(
                     "pending_approval_request_id": pending.id if pending else None,
                 },
             )
+
+    # Lowering a classified system's risk tier would put it under a laxer approval policy (fewer approvers, more
+    # roles): only those who may approve its current tier, or owners and admins, may lower it.
+    requested_tier = str(payload.risk_tier).strip().upper() if payload.risk_tier is not None else None
+    if requested_tier is not None and 0 < _risk_rank(requested_tier) < _risk_rank(previous_risk_tier) and not holds(ctx, "settings.manage"):
+        old_tier = approvals.tier_of(previous_risk_tier)
+        approvers = approvals.load_config(db, ctx.tenant.id)["tiers"][old_tier]["approver_roles"] if old_tier else []
+        role = str(getattr(ctx, "role_key", None) or ctx.role or "").strip().lower()
+        if role not in {str(item).lower() for item in approvers}:
+            message = (
+                f"Only {', '.join(approvers) if approvers else 'owners and admins'} may lower this AI system's risk tier "
+                f"from {previous_risk_tier} (it would fall under a laxer approval policy)."
+            )
+            write_audit_log(
+                db,
+                tenant_id=ctx.tenant.id,
+                actor_user_id=actor_user_id,
+                actor_type="human",
+                action="ai_system.risk_tier.lower_refused",
+                resource_type="ai_system",
+                resource_id=row.id,
+                payload={"outcome": "refused", "reason": message, "from": previous_risk_tier, "to": requested_tier},
+            )
+            db.commit()
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={"code": "risk_tier_lower_refused", "message": message})
 
     for field in ["name", "description", "risk_tier", "status"]:
         value = getattr(payload, field)

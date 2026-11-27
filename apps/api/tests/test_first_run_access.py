@@ -814,3 +814,36 @@ def test_the_scheduler_sends_the_waiting_copies_every_five_minutes():
     entry = celery_app.conf.beat_schedule["terms-copy-emails"]
     assert entry["task"] == terms_jobs.TERMS_COPY_TASK == "app.jobs.terms_jobs.send_terms_copies"
     assert entry["schedule"] == 300.0
+
+
+@pytest.mark.terms_gate
+def test_another_tenants_admin_sees_only_their_own_tenants_acceptances(env, outbox):
+    """Checkmarx triage (PR 11): the acceptances carry people's names, email, address and browser. An owner or admin
+    of another tenant sees, downloads and re-sends only their own tenant's; the installation's admins see all."""
+
+    from datetime import datetime, timedelta, timezone
+
+    client = env["client"]
+    owner = _owner(env)
+    assert client.post("/terms/accept", headers=bearer(owner), json=_full()).status_code == 200
+    with env["db"]() as db:
+        other = Tenant(name="Other Co", slug="other-co", created_at=datetime.now(timezone.utc) + timedelta(days=1))
+        db.add(other)
+        db.commit()
+        other_id = other.id
+        owners_row = db.scalar(select(TermsAcceptance.id).where(TermsAcceptance.scope == "organisation"))
+    _add_member(env, other_id, "admin@other.example", role="admin")
+    admin = sign_in(client, "admin@other.example", NEW_PASSWORD)
+    mine = client.post("/terms/accept", headers=bearer(admin), json=_full(companyName="Other Co", fullName="Oscar Other", email="oscar@other.example"))
+    assert mine.status_code == 200, mine.text
+
+    listed = client.get("/terms/acceptances", headers=bearer(admin)).json()["acceptances"]
+    assert [item["email"] for item in listed] == ["oscar@other.example"]
+    assert client.get(f"/terms/acceptances/{owners_row}/copy", headers=bearer(admin)).status_code == 404
+    assert client.post(f"/terms/acceptances/{owners_row}/resend", headers=bearer(admin), json={"to": "x@attacker.example"}).status_code == 404
+    with env["db"]() as db:
+        assert db.scalar(select(func.count()).select_from(AuditLog).where(AuditLog.action == "terms.copy.resend")) == 0
+
+    # The installation's admins (its first tenant's) see every tenant's.
+    everyone = client.get("/terms/acceptances", headers=bearer(owner)).json()["acceptances"]
+    assert sorted(item["email"] for item in everyone) == ["olivia@acme.example", "oscar@other.example"]
