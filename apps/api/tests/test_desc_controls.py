@@ -296,12 +296,13 @@ def test_ntp_offset_from_a_local_server():
     server.bind(("127.0.0.1", 0))
     port = server.getsockname()[1]
 
-    def answer():
-        _, address = server.recvfrom(64)
+    def answer(echo: bool = True):
+        request, address = server.recvfrom(64)
         now = time.time() + 2.0 + 2_208_988_800  # two seconds ahead
         seconds, fraction = int(now), int((now % 1) * 2**32)
         reply = bytearray(48)
         reply[0], reply[1] = 0x24, 2
+        reply[24:32] = request[40:48] if echo else b"\x01" * 8  # originate = the client's transmit timestamp
         reply[32:48] = struct.pack("!IIII", seconds, fraction, seconds, fraction)
         server.sendto(bytes(reply), address)
 
@@ -311,9 +312,18 @@ def test_ntp_offset_from_a_local_server():
         result = compliance_service.ntp_offset("127.0.0.1", port=port)
     finally:
         thread.join(5)
-        server.close()
     assert result["ok"] is True and result["stratum"] == 2
     assert 1.5 < result["offsetSeconds"] < 2.5
+
+    # An answer that does not echo this request's timestamp (spoofed or stale) is not used.
+    thread = threading.Thread(target=answer, kwargs={"echo": False})
+    thread.start()
+    try:
+        result = compliance_service.ntp_offset("127.0.0.1", port=port)
+    finally:
+        thread.join(5)
+        server.close()
+    assert result["ok"] is False and "does not match" in result["reason"]
 
 
 # --- Settings → Compliance, About, CEF and the incident report -------------------------------------------------------

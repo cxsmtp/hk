@@ -239,20 +239,26 @@ def kernel_clock() -> dict[str, Any]:
 def ntp_offset(server: str, *, timeout: float = 2.0, port: int = 123) -> dict[str, Any]:
     """The offset of this clock from an NTP server (one SNTP request, RFC 4330): positive when this clock is behind."""
 
-    packet = b"\x23" + 47 * b"\0"  # LI 0, version 4, mode 3 (client)
     ntp_epoch = 2_208_988_800
+    # A random transmit timestamp the server must echo as its originate timestamp, and a connected socket (the kernel
+    # drops datagrams from any other address): an answer not from that server to this request is not used.
+    nonce = os.urandom(8)
+    packet = b"\x23" + 39 * b"\0" + nonce  # LI 0, version 4, mode 3 (client); transmit timestamp = nonce
     try:
         address = socket.getaddrinfo(server, port, type=socket.SOCK_DGRAM)[0][4]
         with socket.socket(socket.AF_INET6 if ":" in address[0] else socket.AF_INET, socket.SOCK_DGRAM) as sock:
             sock.settimeout(timeout)
+            sock.connect(address)
             sent = time.time()
-            sock.sendto(packet, address)
-            data, _ = sock.recvfrom(512)
+            sock.send(packet)
+            data = sock.recv(512)
             received = time.time()
     except OSError as exc:
         return {"server": server, "ok": False, "reason": type(exc).__name__}
     if len(data) < 48 or data[1] == 0:
         return {"server": server, "ok": False, "reason": "no usable answer (stratum 0)"}
+    if data[24:32] != nonce or (data[0] & 0x07) != 4:
+        return {"server": server, "ok": False, "reason": "the answer does not match the request"}
     rx_sec, rx_frac, tx_sec, tx_frac = struct.unpack("!IIII", data[32:48])
     server_rx = rx_sec - ntp_epoch + rx_frac / 2**32
     server_tx = tx_sec - ntp_epoch + tx_frac / 2**32

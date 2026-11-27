@@ -117,3 +117,17 @@ def test_a_restricted_finding_is_not_routed_as_internal_by_default() -> None:
     )
     task = orchestration_router._finding_task(row=row, overrides=orchestration_router.GuidanceOverrides())
     assert task.data_sensitivity == "restricted"
+
+
+def test_signed_in_person_cannot_file_an_interaction_as_someone_else(monkeypatch):
+    """The extension's own user id/email are hints only for an anonymous report; a signed-in person's event is theirs."""
+
+    import inspect
+
+    from app.services import browser_extension_service as svc
+
+    source = inspect.getsource(svc)
+    start = source.index("    if actor_user_id:\n        actor_user_email = _resolve_actor_user_email(db, actor_user_id)")
+    block = source[start : start + 400]
+    assert "event_user_id = actor_user_id" in block
+    assert 'event_user_id = _payload_text(payload, "user_id")' in block.split("else:")[1]
